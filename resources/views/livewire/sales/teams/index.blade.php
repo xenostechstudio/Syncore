@@ -17,10 +17,10 @@
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: New Button, Title, Gear --}}
             <div class="flex items-center gap-3">
-                <a href="{{ route('sales.customers.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                <a href="{{ route('sales.teams.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                     New
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Customers</span>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Sales Teams</span>
                 
                 {{-- Actions Menu (Gear) --}}
                 <flux:dropdown position="bottom" align="start">
@@ -52,11 +52,6 @@
                             <span>{{ count($selected) }} Selected</span>
                         </button>
 
-                        {{-- Create Invoice --}}
-                        <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                            Create Invoice
-                        </button>
-
                         {{-- Print --}}
                         <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
                             <flux:icon name="printer" class="size-4" />
@@ -80,22 +75,14 @@
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
-                                <button type="button" wire:click="deleteSelected" wire:confirm="Are you sure you want to delete the selected customers?" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <button type="button" wire:click="deleteSelected" wire:confirm="Are you sure you want to delete the selected teams?" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>
                                 <flux:menu.separator />
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <flux:icon name="x-circle" class="size-4" />
-                                    <span>Cancel</span>
-                                </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-text" class="size-4" />
-                                    <span>Create Invoice(s)</span>
-                                </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="user-plus" class="size-4" />
-                                    <span>Add/Remove Followers</span>
+                                    <span>Add Members</span>
                                 </button>
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="envelope" class="size-4" />
@@ -139,19 +126,19 @@
                                         <div class="space-y-1">
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" wire:model.live="filterActive" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Active Customers</span>
+                                                <span>Active Teams</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" wire:model.live="filterInactive" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Inactive Customers</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" wire:model.live="filterWithOrders" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>With Orders</span>
+                                                <span>Inactive Teams</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>My Customers</span>
+                                                <span>My Teams</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Has Target</span>
                                             </label>
                                         </div>
                                     </div>
@@ -168,19 +155,19 @@
                                         <div class="space-y-1">
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Salesperson</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Country</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>City</span>
+                                                <span>Leader</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
                                                 <span>Status</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Target Range</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Members Count</span>
                                             </label>
                                         </div>
                                     </div>
@@ -208,18 +195,18 @@
                     </button>
                 </div>
                 
-                @if($customers->hasPages())
+                @if($teams->hasPages())
                     <div class="flex items-center gap-1">
                         <button 
                             wire:click="previousPage" 
-                            @disabled($customers->onFirstPage())
+                            @disabled($teams->onFirstPage())
                             class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
                         >
                             <flux:icon name="chevron-left" class="size-4" />
                         </button>
                         <button 
                             wire:click="nextPage" 
-                            @disabled(!$customers->hasMorePages())
+                            @disabled(!$teams->hasMorePages())
                             class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
                         >
                             <flux:icon name="chevron-right" class="size-4" />
@@ -244,20 +231,17 @@
                                     class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
                                 >
                             </th>
-                            @if($visibleColumns['customer'])
-                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Customer</th>
+                            @if($visibleColumns['name'])
+                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Team Name</th>
                             @endif
-                            @if($visibleColumns['contact'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Contact</th>
+                            @if($visibleColumns['leader'])
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Leader</th>
                             @endif
-                            @if($visibleColumns['location'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Location</th>
+                            @if($visibleColumns['members'])
+                                <th scope="col" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Members</th>
                             @endif
-                            @if($visibleColumns['orders'])
-                                <th scope="col" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Orders</th>
-                            @endif
-                            @if($visibleColumns['total'])
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total Spent</th>
+                            @if($visibleColumns['target'])
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Target</th>
                             @endif
                             @if($visibleColumns['status'])
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
@@ -273,24 +257,20 @@
                                         <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Toggle Columns</div>
                                         <flux:menu.separator />
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.customer" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Customer</span>
+                                            <input type="checkbox" wire:model.live="visibleColumns.name" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Team Name</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.contact" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Contact</span>
+                                            <input type="checkbox" wire:model.live="visibleColumns.leader" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Leader</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.location" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Location</span>
+                                            <input type="checkbox" wire:model.live="visibleColumns.members" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Members</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.orders" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Orders</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.total" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Total Spent</span>
+                                            <input type="checkbox" wire:model.live="visibleColumns.target" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Target</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.status" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
@@ -302,56 +282,75 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                        @forelse ($customers as $customer)
+                        @forelse ($teams as $team)
                             <tr 
-                                onclick="window.location.href='{{ route('sales.customers.edit', $customer->id) }}'"
+                                onclick="window.location.href='{{ route('sales.teams.edit', $team->id) }}'"
                                 class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                             >
                                 <td class="py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
                                     <input 
                                         type="checkbox" 
                                         wire:model.live="selected"
-                                        value="{{ $customer->id }}"
+                                        value="{{ $team->id }}"
                                         class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
                                     >
                                 </td>
-                                @if($visibleColumns['customer'])
+                                @if($visibleColumns['name'])
                                     <td class="py-4 pl-2 pr-4">
                                         <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                                {{ strtoupper(substr($customer->name, 0, 2)) }}
+                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400">
+                                                <flux:icon name="user-group" variant="solid" class="size-4" />
                                             </div>
-                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $customer->name }}</span>
+                                            <div>
+                                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $team->name }}</span>
+                                                @if($team->description)
+                                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-xs">{{ $team->description }}</p>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                 @endif
-                                @if($visibleColumns['contact'])
+                                @if($visibleColumns['leader'])
                                     <td class="px-4 py-4">
-                                        <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ $customer->email }}</p>
-                                        <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ $customer->phone }}</p>
+                                        @if($team->leader)
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                                    {{ strtoupper(substr($team->leader->name, 0, 2)) }}
+                                                </div>
+                                                <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $team->leader->name }}</span>
+                                            </div>
+                                        @else
+                                            <span class="text-sm text-zinc-400 dark:text-zinc-500">-</span>
+                                        @endif
                                     </td>
                                 @endif
-                                @if($visibleColumns['location'])
-                                    <td class="px-4 py-4">
-                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $customer->city }}{{ $customer->country ? ', ' . $customer->country : '' }}</span>
-                                    </td>
-                                @endif
-                                @if($visibleColumns['orders'])
+                                @if($visibleColumns['members'])
                                     <td class="px-4 py-4 text-center">
-                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $customer->orders_count }}</span>
+                                        <span class="inline-flex items-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+                                            <flux:icon name="users" class="size-4" />
+                                            {{ $team->members_count }}
+                                        </span>
                                     </td>
                                 @endif
-                                @if($visibleColumns['total'])
+                                @if($visibleColumns['target'])
                                     <td class="px-4 py-4 text-right">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($customer->orders_sum_total ?? 0, 0, ',', '.') }}</span>
+                                        @if($team->target_amount)
+                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($team->target_amount, 0, ',', '.') }}</span>
+                                        @else
+                                            <span class="text-sm text-zinc-400 dark:text-zinc-500">-</span>
+                                        @endif
                                     </td>
                                 @endif
                                 @if($visibleColumns['status'])
                                     <td class="px-4 py-4">
-                                        @if($customer->status === 'active')
-                                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Active</span>
+                                        @if($team->is_active)
+                                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                Active
+                                            </span>
                                         @else
-                                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
+                                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                                Inactive
+                                            </span>
                                         @endif
                                     </td>
                                 @endif
@@ -359,14 +358,14 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-12 text-center">
+                                <td colspan="7" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center gap-3">
                                         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                                            <flux:icon name="users" class="size-6 text-zinc-400" />
+                                            <flux:icon name="user-group" class="size-6 text-zinc-400" />
                                         </div>
                                         <div>
-                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No customers found</p>
-                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Add your first customer to get started</p>
+                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No sales teams found</p>
+                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Create your first sales team to get started</p>
                                         </div>
                                     </div>
                                 </td>
@@ -379,50 +378,64 @@
             {{-- Grid View --}}
             <div class="-mx-4 sm:-mx-6 lg:-mx-8">
                 <div class="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:p-6 lg:p-8">
-                    @forelse ($customers as $customer)
-                        <div class="group relative rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+                    @forelse($teams as $team)
+                        <div class="group relative rounded-lg border border-zinc-200 bg-white p-5 transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
                             {{-- Checkbox --}}
                             <div class="absolute left-3 top-3" onclick="event.stopPropagation()">
                                 <input 
                                     type="checkbox" 
                                     wire:model.live="selected"
-                                    value="{{ $customer->id }}"
+                                    value="{{ $team->id }}"
                                     class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
                                 >
                             </div>
                             
-                            <a href="{{ route('sales.customers.edit', $customer->id) }}" wire:navigate class="block">
-                                <div class="flex items-center gap-3 pl-6">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-sm font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                        {{ strtoupper(substr($customer->name, 0, 2)) }}
+                            <a href="{{ route('sales.teams.edit', $team->id) }}" wire:navigate class="block">
+                                <div class="flex items-start justify-between pl-6">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400">
+                                        <flux:icon name="user-group" variant="solid" class="size-5" />
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="font-medium text-zinc-900 truncate dark:text-zinc-100">{{ $customer->name }}</p>
-                                        <p class="text-xs text-zinc-500 truncate dark:text-zinc-400">{{ $customer->email }}</p>
-                                    </div>
-                                    @if($customer->status === 'active')
-                                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Active</span>
+                                    @if($team->is_active)
+                                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                            Active
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                                            Inactive
+                                        </span>
                                     @endif
                                 </div>
+                                <div class="mt-4">
+                                    <h3 class="font-medium text-zinc-900 dark:text-zinc-100">{{ $team->name }}</h3>
+                                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400 truncate">{{ $team->description ?? 'No description' }}</p>
+                                </div>
                                 <div class="mt-4 flex items-center justify-between text-sm">
-                                    <span class="text-zinc-500 dark:text-zinc-400">{{ $customer->orders_count }} orders</span>
-                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($customer->orders_sum_total ?? 0, 0, ',', '.') }}</span>
+                                    <div class="flex items-center gap-1 text-zinc-500 dark:text-zinc-400">
+                                        <flux:icon name="users" class="size-4" />
+                                        <span>{{ $team->members_count }} members</span>
+                                    </div>
+                                    @if($team->target_amount)
+                                        <span class="text-zinc-500 dark:text-zinc-400">
+                                            Rp {{ number_format($team->target_amount, 0, ',', '.') }}
+                                        </span>
+                                    @endif
                                 </div>
                             </a>
                         </div>
                     @empty
-                        <div class="col-span-full py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                            No customers found
+                        <div class="col-span-full py-12 text-center">
+                            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                <flux:icon name="user-group" class="size-6 text-zinc-400" />
+                            </div>
+                            <h3 class="mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">No sales teams</h3>
+                            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Get started by creating a new sales team.</p>
+                            <a href="{{ route('sales.teams.create') }}" wire:navigate class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-100">
+                                <flux:icon name="plus" class="size-4" />
+                                Create Team
+                            </a>
                         </div>
                     @endforelse
                 </div>
-            </div>
-        @endif
-
-        {{-- Pagination --}}
-        @if($customers->hasPages())
-            <div class="border-t border-zinc-200 px-4 py-3 dark:border-zinc-800 sm:px-6 lg:px-8">
-                {{ $customers->links() }}
             </div>
         @endif
     </div>

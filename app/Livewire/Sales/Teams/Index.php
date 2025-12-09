@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Livewire\Sales\Customers;
+namespace App\Livewire\Sales\Teams;
 
-use App\Models\Sales\Customer;
+use App\Models\Sales\SalesTeam;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -10,20 +10,20 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
-#[Title('Customers')]
+#[Title('Sales Teams')]
 class Index extends Component
 {
     use WithPagination;
 
     #[Url]
     public string $search = '';
-    
+
     #[Url]
     public string $status = '';
 
     #[Url]
     public string $sort = 'latest';
-    
+
     public string $view = 'list';
 
     public array $selected = [];
@@ -32,18 +32,16 @@ class Index extends Component
     // Filters
     public bool $filterActive = false;
     public bool $filterInactive = false;
-    public bool $filterWithOrders = false;
 
     // Group By
     public string $groupBy = '';
 
     // Column visibility
     public array $visibleColumns = [
-        'customer' => true,
-        'contact' => true,
-        'location' => true,
-        'orders' => true,
-        'total' => true,
+        'name' => true,
+        'leader' => true,
+        'members' => true,
+        'target' => true,
         'status' => true,
     ];
 
@@ -67,7 +65,7 @@ class Index extends Component
     public function updatedSelectAll($value): void
     {
         if ($value) {
-            $this->selected = $this->getCustomersQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
+            $this->selected = $this->getTeamsQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
         } else {
             $this->selected = [];
         }
@@ -81,30 +79,27 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'sort', 'filterActive', 'filterInactive', 'filterWithOrders', 'groupBy']);
+        $this->reset(['search', 'status', 'sort', 'filterActive', 'filterInactive', 'groupBy']);
         $this->resetPage();
     }
 
     public function deleteSelected(): void
     {
-        Customer::whereIn('id', $this->selected)->delete();
+        SalesTeam::whereIn('id', $this->selected)->delete();
         $this->selected = [];
         $this->selectAll = false;
-        session()->flash('success', 'Selected customers deleted successfully.');
+        session()->flash('success', 'Selected teams deleted successfully.');
     }
 
-    private function getCustomersQuery()
+    private function getTeamsQuery()
     {
-        return Customer::query()
-            ->withCount('orders')
-            ->withSum(['orders' => fn($q) => $q->where('status', 'delivered')], 'total')
+        return SalesTeam::query()
+            ->with(['leader'])
+            ->withCount('members')
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('email', 'like', "%{$this->search}%")
-                ->orWhere('phone', 'like', "%{$this->search}%"))
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->when($this->filterActive, fn($q) => $q->where('status', 'active'))
-            ->when($this->filterInactive, fn($q) => $q->where('status', 'inactive'))
-            ->when($this->filterWithOrders, fn($q) => $q->has('orders'))
+                ->orWhere('description', 'like', "%{$this->search}%"))
+            ->when($this->filterActive, fn($q) => $q->where('is_active', true))
+            ->when($this->filterInactive, fn($q) => $q->where('is_active', false))
             ->when($this->sort === 'latest', fn($q) => $q->latest())
             ->when($this->sort === 'oldest', fn($q) => $q->oldest())
             ->when($this->sort === 'name_asc', fn($q) => $q->orderBy('name'))
@@ -113,10 +108,10 @@ class Index extends Component
 
     public function render()
     {
-        $customers = $this->getCustomersQuery()->paginate(12);
+        $teams = $this->getTeamsQuery()->paginate(12);
 
-        return view('livewire.sales.customers.index', [
-            'customers' => $customers,
+        return view('livewire.sales.teams.index', [
+            'teams' => $teams,
         ]);
     }
 }

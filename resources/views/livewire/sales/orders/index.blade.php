@@ -1,220 +1,476 @@
-<div class="space-y-4">
-    {{-- Header --}}
-    <div class="flex items-center justify-between">
-        <h1 class="text-xl font-normal text-zinc-900 dark:text-zinc-100">Sales Orders</h1>
-        <flux:button variant="primary" icon="plus" href="{{ route('sales.orders.create') }}" wire:navigate>
-            New Order
-        </flux:button>
+<div>
+    {{-- Flash Messages --}}
+    <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
+        @if(session('success'))
+            <x-ui.alert type="success" :duration="5000">
+                {{ session('success') }}
+            </x-ui.alert>
+        @endif
+
+        @if(session('error'))
+            <x-ui.alert type="error" :duration="7000">
+                {{ session('error') }}
+            </x-ui.alert>
+        @endif
+
+        @if(session('warning'))
+            <x-ui.alert type="warning" :duration="6000">
+                {{ session('warning') }}
+            </x-ui.alert>
+        @endif
+
+        @if(session('info'))
+            <x-ui.alert type="info" :duration="5000">
+                {{ session('info') }}
+            </x-ui.alert>
+        @endif
     </div>
 
-    {{-- Toolbar --}}
-    <div class="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-1 flex-wrap items-center gap-3">
-            {{-- Search --}}
-            <div class="relative">
-                <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-                <input 
-                    type="text" 
-                    wire:model.live.debounce.300ms="search"
-                    placeholder="Search orders..."
-                    class="w-64 rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm font-light text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-600"
-                />
+    <x-slot:header>
+        <div class="flex items-center justify-between gap-4">
+            {{-- Left Group: New Button, Title, Gear --}}
+            <div class="flex items-center gap-3">
+                <a href="{{ route('sales.orders.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                    New
+                </a>
+                <span class="text-md font-ligth text-zinc-600 dark:text-zinc-400">Quotation</span>
+                
+                {{-- Actions Menu (Gear) --}}
+                <flux:dropdown position="bottom" align="start">
+                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <flux:icon name="cog-6-tooth" class="size-5" />
+                    </button>
+
+                    <flux:menu class="w-48">
+                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <flux:icon name="arrow-down-tray" class="size-4" />
+                            <span>Import records</span>
+                        </button>
+                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <flux:icon name="arrow-up-tray" class="size-4" />
+                            <span>Export All</span>
+                        </button>
+                    </flux:menu>
+                </flux:dropdown>
             </div>
 
-            {{-- Status Filter --}}
-            <select 
-                wire:model.live="status"
-                class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-light text-zinc-600 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-            >
-                <option value="">All Status</option>
-                <option value="draft">Draft</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
+            {{-- Center Group: Search or Selection Toolbar --}}
+            <div class="flex flex-1 items-center justify-center">
+                @if(count($selected) > 0)
+                    {{-- Selection Toolbar --}}
+                    <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {{-- Count Selected Button --}}
+                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600">
+                            <flux:icon name="x-mark" class="size-4" />
+                            <span>{{ count($selected) }} Selected</span>
+                        </button>
 
-            {{-- Sort --}}
-            <select 
-                wire:model.live="sort"
-                class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-light text-zinc-600 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-            >
-                <option value="latest">Latest</option>
-                <option value="oldest">Oldest</option>
-                <option value="total_high">Total: High to Low</option>
-                <option value="total_low">Total: Low to High</option>
-            </select>
+                        {{-- Create Invoice --}}
+                        <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                            Create Invoice
+                        </button>
 
-            @if($search || $status || $sort !== 'latest')
-                <button wire:click="clearFilters" class="text-sm font-light text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-                    Clear filters
-                </button>
-            @endif
-        </div>
+                        {{-- Print --}}
+                        <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                            <flux:icon name="printer" class="size-4" />
+                            <span>Print</span>
+                        </button>
 
-        <x-ui.view-toggle :view="$view" />
-    </div>
+                        {{-- Actions Dropdown --}}
+                        <flux:dropdown position="bottom" align="center">
+                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                <flux:icon name="cog-6-tooth" class="size-4" />
+                                <span>Actions</span>
+                                <flux:icon name="chevron-down" class="size-3" />
+                            </button>
 
-    {{-- Results Count --}}
-    <div class="text-sm font-light text-zinc-500 dark:text-zinc-400">
-        {{ $orders->total() }} {{ Str::plural('order', $orders->total()) }}
-    </div>
-
-    {{-- Content --}}
-    @if($view === 'list')
-        <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-            <table class="w-full">
-                <thead>
-                    <tr class="border-b border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
-                        <th class="px-5 py-3 text-left text-xs font-normal text-zinc-500 dark:text-zinc-400">Order</th>
-                        <th class="px-5 py-3 text-left text-xs font-normal text-zinc-500 dark:text-zinc-400">Customer</th>
-                        <th class="px-5 py-3 text-left text-xs font-normal text-zinc-500 dark:text-zinc-400">Date</th>
-                        <th class="px-5 py-3 text-left text-xs font-normal text-zinc-500 dark:text-zinc-400">Total</th>
-                        <th class="px-5 py-3 text-left text-xs font-normal text-zinc-500 dark:text-zinc-400">Status</th>
-                        <th class="px-5 py-3 text-right text-xs font-normal text-zinc-500 dark:text-zinc-400"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    @forelse ($orders as $order)
-                        <tr class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                                        <svg class="size-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">{{ $order->order_number }}</p>
-                                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ $order->items->count() ?? 0 }} items</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-5 py-4">
-                                <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">{{ $order->customer->name }}</p>
-                                <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ $order->customer->city }}</p>
-                            </td>
-                            <td class="px-5 py-4">
-                                <p class="text-sm font-light text-zinc-600 dark:text-zinc-300">{{ $order->order_date->format('M d, Y') }}</p>
-                            </td>
-                            <td class="px-5 py-4">
-                                <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">${{ number_format($order->total, 2) }}</p>
-                            </td>
-                            <td class="px-5 py-4">
-                                @php
-                                    $statusConfig = match($order->status) {
-                                        'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Draft'],
-                                        'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Confirmed'],
-                                        'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Processing'],
-                                        'shipped' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400', 'label' => 'Shipped'],
-                                        'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Delivered'],
-                                        'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
-                                        default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($order->status)],
-                                    };
-                                @endphp
-                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-light {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                    {{ $statusConfig['label'] }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-4 text-right">
-                                <div class="flex items-center justify-end gap-1">
-                                    <button class="rounded p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="View">
-                                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </button>
-                                    <button class="rounded p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Create Delivery">
-                                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-5 py-12 text-center">
-                                <div class="flex flex-col items-center gap-3">
-                                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                                        <svg class="size-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No orders found</p>
-                                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    @else
-        {{-- Grid View --}}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            @forelse ($orders as $order)
-                <div class="rounded-lg border border-zinc-200 bg-white p-5 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                    <div class="mb-4 flex items-start justify-between">
-                        <div>
-                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">{{ $order->order_number }}</p>
-                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ $order->order_date->format('M d, Y') }}</p>
-                        </div>
-                        @php
-                            $statusConfig = match($order->status) {
-                                'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Draft'],
-                                'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Confirmed'],
-                                'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Processing'],
-                                'shipped' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400', 'label' => 'Shipped'],
-                                'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Delivered'],
-                                'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
-                                default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($order->status)],
-                            };
-                        @endphp
-                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-light {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                            {{ $statusConfig['label'] }}
-                        </span>
+                            <flux:menu class="w-56">
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="arrow-up-tray" class="size-4" />
+                                    <span>Export</span>
+                                </button>
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="document-duplicate" class="size-4" />
+                                    <span>Duplicate</span>
+                                </button>
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <flux:icon name="trash" class="size-4" />
+                                    <span>Delete</span>
+                                </button>
+                                <flux:menu.separator />
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="x-circle" class="size-4" />
+                                    <span>Cancel</span>
+                                </button>
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="document-text" class="size-4" />
+                                    <span>Create Invoice(s)</span>
+                                </button>
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="envelope" class="size-4" />
+                                    <span>Send an Email</span>
+                                </button>
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="check-circle" class="size-4" />
+                                    <span>Mark Quotation as Sent</span>
+                                </button>
+                            </flux:menu>
+                        </flux:dropdown>
                     </div>
-                    
-                    <div class="mb-4 flex items-center gap-3">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                            <svg class="size-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">{{ $order->customer->name }}</p>
-                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ $order->customer->city }}</p>
-                        </div>
-                    </div>
+                @else
+                    {{-- Search Input with Arrow Down Dropdown --}}
+                    <div class="relative flex h-9 w-[480px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
+                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                        <input 
+                            type="text" 
+                            wire:model.live.debounce.300ms="search"
+                            placeholder="Search..." 
+                            class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
+                        />
+                        {{-- Separator + Dropdown Button --}}
+                        <flux:dropdown position="bottom" align="end">
+                            <button class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
+                                <flux:icon name="chevron-down" class="size-4" />
+                            </button>
 
-                    <div class="flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                        <span class="text-lg font-normal text-zinc-900 dark:text-zinc-100">${{ number_format($order->total, 2) }}</span>
-                        <button class="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-light text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100">
-                            View Details
+                            {{-- Horizontal Dropdown Content --}}
+                            <flux:menu class="w-[480px]">
+                                <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
+                                    {{-- Filters Section --}}
+                                    <div class="flex-1 p-3">
+                                        <div class="mb-2 flex items-center justify-between">
+                                            <div class="flex items-center gap-1.5">
+                                                <flux:icon name="funnel" class="size-4 text-zinc-400" />
+                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Filters</span>
+                                            </div>
+                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">+ Add Custom</button>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>My Quotations</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Quotations to Send</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Sales Orders</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Cancelled</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {{-- Group By Section --}}
+                                    <div class="flex-1 p-3">
+                                        <div class="mb-2 flex items-center justify-between">
+                                            <div class="flex items-center gap-1.5">
+                                                <flux:icon name="rectangle-group" class="size-4 text-zinc-400" />
+                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Group By</span>
+                                            </div>
+                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">+ Add Custom</button>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Salesperson</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Customer</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Order Date</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Status</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Right Group: View Toggle, Pagination --}}
+            <div class="flex items-center gap-3">
+                <x-ui.view-toggle :view="$view" />
+                
+                @if($orders->hasPages())
+                    <div class="flex items-center gap-1">
+                        <button 
+                            wire:click="previousPage" 
+                            @disabled($orders->onFirstPage())
+                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
+                        >
+                            <flux:icon name="chevron-left" class="size-4" />
+                        </button>
+                        <button 
+                            wire:click="nextPage" 
+                            @disabled(!$orders->hasMorePages())
+                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
+                        >
+                            <flux:icon name="chevron-right" class="size-4" />
                         </button>
                     </div>
-                </div>
-            @empty
-                <div class="col-span-full py-12 text-center">
-                    <p class="text-sm font-light text-zinc-500 dark:text-zinc-400">No orders found</p>
-                </div>
-            @endforelse
+                @endif
+            </div>
         </div>
-    @endif
+    </x-slot:header>
 
-    {{-- Pagination --}}
-    @if($orders->hasPages())
-        <div class="flex items-center justify-between border-t border-zinc-200 pt-4 dark:border-zinc-800">
-            <p class="text-sm font-light text-zinc-500 dark:text-zinc-400">
-                Showing {{ $orders->firstItem() }} to {{ $orders->lastItem() }} of {{ $orders->total() }} results
-            </p>
-            {{ $orders->links('livewire.pagination') }}
-        </div>
-    @endif
+    {{-- Content --}}
+    <div>
+        @if($view === 'list')
+            <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
+                <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
+                    <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+                        <tr>
+                            <th scope="col" class="w-10 py-3 pl-4 pr-2 sm:pl-6 lg:pl-8">
+                                <input 
+                                    type="checkbox" 
+                                    wire:model.live="selectAll"
+                                    class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                                >
+                            </th>
+                            @if($visibleColumns['order'])
+                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Order</th>
+                            @endif
+                            @if($visibleColumns['customer'])
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Customer</th>
+                            @endif
+                            @if($visibleColumns['salesperson'])
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Salesperson</th>
+                            @endif
+                            @if($visibleColumns['date'])
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Date</th>
+                            @endif
+                            @if($visibleColumns['total'])
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total</th>
+                            @endif
+                            @if($visibleColumns['status'])
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                            @endif
+                            <th scope="col" class="w-10 py-3 pr-4 sm:pr-6 lg:pr-8">
+                                {{-- Column Config --}}
+                                <flux:dropdown position="bottom" align="end">
+                                    <button class="flex items-center justify-center rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="adjustments-horizontal" class="size-4" />
+                                    </button>
+
+                                    <flux:menu class="w-48">
+                                        <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Toggle Columns</div>
+                                        <flux:menu.separator />
+                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                            <input type="checkbox" wire:model.live="visibleColumns.order" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Order</span>
+                                        </label>
+                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                            <input type="checkbox" wire:model.live="visibleColumns.customer" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Customer</span>
+                                        </label>
+                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                            <input type="checkbox" wire:model.live="visibleColumns.salesperson" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Salesperson</span>
+                                        </label>
+                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                            <input type="checkbox" wire:model.live="visibleColumns.date" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Date</span>
+                                        </label>
+                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                            <input type="checkbox" wire:model.live="visibleColumns.total" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Total</span>
+                                        </label>
+                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                            <input type="checkbox" wire:model.live="visibleColumns.status" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Status</span>
+                                        </label>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                        @forelse ($orders as $order)
+                            <tr 
+                                onclick="window.location.href='{{ route('sales.orders.edit', $order->id) }}'"
+                                class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                            >
+                                <td class="py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                    <input 
+                                        type="checkbox" 
+                                        wire:model.live="selected"
+                                        value="{{ $order->id }}"
+                                        class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                                    >
+                                </td>
+                                @if($visibleColumns['order'])
+                                    <td class="py-4 pl-2 pr-4">
+                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $order->order_number }}</span>
+                                    </td>
+                                @endif
+                                @if($visibleColumns['customer'])
+                                    <td class="px-4 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ $order->customer->name }}</span>
+                                            <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $order->customer->city }}</span>
+                                        </div>
+                                    </td>
+                                @endif
+                                @if($visibleColumns['salesperson'])
+                                    <td class="px-4 py-4">
+                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $order->user->name ?? '-' }}</span>
+                                    </td>
+                                @endif
+                                @if($visibleColumns['date'])
+                                    <td class="px-4 py-4">
+                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $order->order_date->format('M d, Y') }}</span>
+                                    </td>
+                                @endif
+                                @if($visibleColumns['total'])
+                                    <td class="px-4 py-4 text-right">
+                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
+                                    </td>
+                                @endif
+                                @if($visibleColumns['status'])
+                                    <td class="px-4 py-4">
+                                        @php
+                                            $statusConfig = match($order->status) {
+                                                'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Draft'],
+                                                'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Confirmed'],
+                                                'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Processing'],
+                                                'shipped' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400', 'label' => 'Shipped'],
+                                                'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Delivered'],
+                                                'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
+                                                default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($order->status)],
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                            {{ $statusConfig['label'] }}
+                                        </span>
+                                    </td>
+                                @endif
+                                <td class="py-4 pr-4 sm:pr-6 lg:pr-8"></td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                            <svg class="size-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No orders found</p>
+                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                    @php
+                        $visibleCount = 1 + ($visibleColumns['order'] ? 1 : 0) + ($visibleColumns['customer'] ? 1 : 0) + ($visibleColumns['salesperson'] ? 1 : 0) + ($visibleColumns['date'] ? 1 : 0);
+                        $afterTotalCount = 1 + ($visibleColumns['status'] ? 1 : 0);
+                    @endphp
+                    <tfoot class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+                        <tr>
+                            <td colspan="{{ $visibleCount }}" class="py-3 pl-4 pr-4 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 sm:pl-6 lg:pl-8 dark:text-zinc-400">Total</td>
+                            @if($visibleColumns['total'])
+                                <td class="px-4 py-3 text-right text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                                    Rp {{ number_format($orders->sum('total'), 0, ',', '.') }}
+                                </td>
+                            @endif
+                            <td colspan="{{ $afterTotalCount }}"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        @else
+            {{-- Grid/Thumbnail View (Kanban Board) --}}
+            @php
+                $statuses = [
+                    'draft' => ['label' => 'Quotation', 'color' => 'zinc', 'headerBg' => 'bg-zinc-100 dark:bg-zinc-800'],
+                    'confirmed' => ['label' => 'Quotation Sent', 'color' => 'blue', 'headerBg' => 'bg-blue-50 dark:bg-blue-900/20'],
+                    'processing' => ['label' => 'Sales Order', 'color' => 'amber', 'headerBg' => 'bg-amber-50 dark:bg-amber-900/20'],
+                    'shipped' => ['label' => 'Shipped', 'color' => 'violet', 'headerBg' => 'bg-violet-50 dark:bg-violet-900/20'],
+                    'delivered' => ['label' => 'Done', 'color' => 'emerald', 'headerBg' => 'bg-emerald-50 dark:bg-emerald-900/20'],
+                    'cancelled' => ['label' => 'Cancelled', 'color' => 'red', 'headerBg' => 'bg-red-50 dark:bg-red-900/20'],
+                ];
+                $ordersByStatus = $orders->groupBy('status');
+            @endphp
+            <div class="flex gap-4 overflow-x-auto pb-4">
+                @foreach($statuses as $statusKey => $statusInfo)
+                    <div class="flex w-72 flex-shrink-0 flex-col rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        {{-- Column Header --}}
+                        <div class="flex items-center justify-between rounded-t-lg {{ $statusInfo['headerBg'] }} px-3 py-2.5">
+                            <div class="flex items-center gap-2">
+                                <span class="h-2 w-2 rounded-full bg-{{ $statusInfo['color'] }}-500"></span>
+                                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $statusInfo['label'] }}</span>
+                                <span class="rounded-full bg-white px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                    {{ $ordersByStatus->get($statusKey)?->count() ?? 0 }}
+                                </span>
+                            </div>
+                            <button class="rounded p-1 text-zinc-400 hover:bg-white hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                <flux:icon name="plus" class="size-4" />
+                            </button>
+                        </div>
+
+                        {{-- Column Cards --}}
+                        <div class="flex flex-1 flex-col gap-2 p-2">
+                            @forelse($ordersByStatus->get($statusKey, collect()) as $order)
+                                <a 
+                                    href="{{ route('sales.orders.edit', $order->id) }}"
+                                    wire:navigate
+                                    class="group rounded-lg border border-zinc-200 bg-white p-3 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-zinc-600"
+                                >
+                                    <div class="mb-2 flex items-start justify-between">
+                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $order->order_number }}</span>
+                                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $order->order_date->format('M d') }}</span>
+                                    </div>
+                                    <div class="mb-3 flex items-center gap-2">
+                                        <div class="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-700">
+                                            <svg class="size-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                            </svg>
+                                        </div>
+                                        <span class="text-xs text-zinc-600 dark:text-zinc-400">{{ $order->customer->name }}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
+                                        @if($order->user)
+                                            <div class="flex h-6 w-6 items-center justify-center rounded-full bg-{{ $statusInfo['color'] }}-100 text-xs font-medium text-{{ $statusInfo['color'] }}-700 dark:bg-{{ $statusInfo['color'] }}-900/30 dark:text-{{ $statusInfo['color'] }}-400">
+                                                {{ strtoupper(substr($order->user->name, 0, 1)) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="flex flex-1 items-center justify-center py-8">
+                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">No orders</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        {{-- Column Footer --}}
+                        @if($ordersByStatus->get($statusKey)?->count() > 0)
+                            <div class="border-t border-zinc-200 px-3 py-2 dark:border-zinc-700">
+                                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                                    Total: Rp {{ number_format($ordersByStatus->get($statusKey)->sum('total'), 0, ',', '.') }}
+                                </span>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
 </div>

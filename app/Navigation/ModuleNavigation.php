@@ -102,15 +102,31 @@ class ModuleNavigation
                     'icon' => 'clipboard-document-list',
                     'pattern' => 'sales.orders*',
                     'children' => [
-                        ['label' => 'All Orders', 'route' => 'sales.orders.index', 'pattern' => 'sales.orders.index'],
-                        ['label' => 'Create Sales Order', 'route' => 'sales.orders.create', 'pattern' => 'sales.orders.create'],
+                        ['label' => 'Quotation', 'route' => 'sales.orders.index', 'pattern' => 'sales.orders.index'],
+                        ['label' => 'All Orders', 'route' => 'sales.orders.index', 'pattern' => 'sales.orders.all'],
+                        ['label' => 'Sales Teams', 'route' => 'sales.orders.index', 'pattern' => 'sales.teams*'],
+                        ['label' => 'Customers', 'route' => 'sales.customers.index', 'pattern' => 'sales.customers*'],
                     ],
                 ],
                 [
-                    'label' => 'Customers',
-                    'route' => 'sales.customers.index',
-                    'icon' => 'users',
-                    'pattern' => 'sales.customers*',
+                    'label' => 'Invoice',
+                    'route' => 'sales.orders.index',
+                    'icon' => 'document-text',
+                    'pattern' => 'sales.invoices*',
+                    'children' => [
+                        ['label' => 'Orders to Invoice', 'route' => 'sales.orders.index', 'pattern' => 'sales.invoices.pending'],
+                        ['label' => 'Orders to Upsell', 'route' => 'sales.orders.index', 'pattern' => 'sales.invoices.upsell'],
+                    ],
+                ],
+                [
+                    'label' => 'Products',
+                    'route' => 'sales.orders.index',
+                    'icon' => 'cube',
+                    'pattern' => 'sales.products*',
+                    'children' => [
+                        ['label' => 'Products', 'route' => 'sales.orders.index', 'pattern' => 'sales.products.index'],
+                        ['label' => 'Pricelists', 'route' => 'sales.orders.index', 'pattern' => 'sales.pricelists*'],
+                    ],
                 ],
             ],
             'Delivery' => [

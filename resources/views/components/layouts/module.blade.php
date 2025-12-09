@@ -16,40 +16,38 @@
         @include('partials.head')
     </head>
     <body class="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-900">
-        {{-- Vercel-style Header with scroll behavior --}}
-        <header 
-            x-data="{ scrolled: false }"
-            x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 50 })"
-            :class="scrolled ? 'h-14' : 'h-[104px]'"
-            class="sticky top-0 z-50 border-b border-zinc-200 bg-white transition-all duration-200 dark:border-zinc-800 dark:bg-zinc-950"
-        >
-            <div class="flex h-full flex-col px-6">
-                {{-- Top Row: Logo, Module Name, Profile (hidden when scrolled) --}}
-                <div 
-                    :class="scrolled ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100 h-14'"
-                    class="flex items-center justify-between transition-all duration-200"
+        {{-- Sticky Header with Navigation --}}
+        <header class="sticky top-0 z-50 bg-white dark:bg-zinc-950">
+            <div class="flex h-14 items-center px-4 lg:px-6">
+                {{-- Left Side: Module Icon & Name with Back Navigation --}}
+                <a 
+                    href="{{ route('home') }}" 
+                    wire:navigate
+                    class="group flex items-center gap-2.5 pr-6 transition-colors"
+                    x-data="{ hovering: false }"
+                    @mouseenter="hovering = true"
+                    @mouseleave="hovering = false"
                 >
-                    <div class="flex items-center gap-3">
-                        {{-- Logo & Home --}}
-                        <a href="{{ route('home') }}" class="flex items-center transition-opacity hover:opacity-70" wire:navigate>
-                            <x-app-logo-icon class="h-6 w-6 text-zinc-900 dark:text-zinc-100" />
-                        </a>
-
-                        {{-- Separator --}}
-                        <span class="text-xl text-zinc-300 dark:text-zinc-700">/</span>
-
-                        {{-- Module Icon & Name --}}
-                        <div class="flex items-center gap-2.5">
-                            <flux:icon :name="$moduleMeta['icon']" class="size-5 text-zinc-600 dark:text-zinc-400" />
-                            <span class="text-base font-normal text-zinc-900 dark:text-zinc-100">{{ $displayName }}</span>
-                        </div>
+                    {{-- Icon Container with Swap Effect --}}
+                    <div class="relative flex h-8 w-8 items-center justify-center">
+                        {{-- Module Icon (default) --}}
+                        <flux:icon 
+                            :name="$moduleMeta['icon']" 
+                            class="absolute size-5 text-zinc-600 transition-all duration-200 dark:text-zinc-400"
+                            x-bind:class="hovering ? 'opacity-0 scale-75' : 'opacity-100 scale-100'"
+                        />
+                        {{-- Back Arrow (on hover) --}}
+                        <flux:icon 
+                            name="arrow-left" 
+                            class="absolute size-5 text-zinc-900 transition-all duration-200 dark:text-zinc-100"
+                            x-bind:class="hovering ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
+                        />
                     </div>
+                    {{-- Module Name --}}
+                    <span class="text-md font-medium text-zinc-900 whitespace-nowrap transition-colors group-hover:text-zinc-600 dark:text-zinc-100 dark:group-hover:text-zinc-300">{{ $displayName }}</span>
+                </a>
 
-                    {{-- Right Side: Profile --}}
-                    <x-ui.profile-dropdown />
-                </div>
-
-                {{-- Bottom Row: Navigation (becomes main row when scrolled) --}}
+                {{-- Middle: Navigation --}}
                 <nav 
                     x-data="{ 
                         indicatorLeft: 0,
@@ -87,19 +85,8 @@
                             this.updateIndicator();
                         }
                     }"
-                    class="relative -mb-px flex h-14 flex-1 items-center"
+                    class="relative hidden h-full items-center md:flex"
                 >
-                    {{-- Logo (only visible when scrolled) --}}
-                    <a 
-                        href="{{ route('home') }}" 
-                        wire:navigate
-                        :class="scrolled ? 'opacity-100 w-auto mr-6' : 'opacity-0 w-0 mr-0 overflow-hidden'"
-                        class="flex h-full items-center transition-all duration-200"
-                    >
-                        <x-app-logo-icon class="h-6 w-6 text-zinc-900 dark:text-zinc-100" />
-                    </a>
-
-                    {{-- Navigation Items Container --}}
                     <div x-ref="navContainer" class="relative flex h-full items-center gap-1">
                         {{-- Animated Underline Indicator --}}
                         <div 
@@ -124,7 +111,7 @@
                                 <a 
                                     href="{{ $routeExists ? route($nav['route']) : '#' }}" 
                                     wire:navigate
-                                    class="inline-flex h-full items-center gap-1.5 px-3 text-sm font-normal transition-colors {{ $isActive ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300' }}"
+                                    class="inline-flex h-full items-center gap-1.5 px-3 text-sm font-normal transition-colors whitespace-nowrap {{ $isActive ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300' }}"
                                 >
                                     <flux:icon :name="$nav['icon']" class="size-4" />
                                     <span>{{ $nav['label'] }}</span>
@@ -160,23 +147,27 @@
                             </div>
                         @endforeach
                     </div>
-
-                    {{-- Spacer --}}
-                    <div class="flex-1"></div>
-
-                    {{-- Profile (only visible when scrolled) --}}
-                    <div 
-                        :class="scrolled ? 'opacity-100' : 'opacity-0 pointer-events-none'" 
-                        class="flex h-full items-center transition-opacity duration-200"
-                    >
-                        <x-ui.profile-dropdown />
-                    </div>
                 </nav>
+
+                {{-- Spacer --}}
+                <div class="flex-1"></div>
+
+                {{-- Right Side: Profile --}}
+                <div class="flex items-center pl-4">
+                    <x-ui.profile-dropdown />
+                </div>
             </div>
+
+            {{-- Optional Header/Control Panel Slot --}}
+            @if (isset($header))
+                <div class="border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 lg:px-6">
+                    {{ $header }}
+                </div>
+            @endif
         </header>
 
         {{-- Main Content --}}
-        <main class="mx-auto w-full flex-1 px-6 py-6 sm:px-8 lg:px-16 xl:px-20 2xl:px-32">
+        <main class="mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-8">
             {{ $slot }}
         </main>
 

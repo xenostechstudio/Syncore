@@ -23,7 +23,11 @@ class Form extends Component
     public string $expected_delivery_date = '';
     public string $status = 'draft';
     public string $notes = '';
+    public string $terms = '';
     public string $shipping_address = '';
+    public ?string $orderNumber = null;
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
 
     // Order Items
     public array $items = [];
@@ -59,7 +63,11 @@ class Form extends Component
         $this->expected_delivery_date = $order->expected_delivery_date?->format('Y-m-d') ?? '';
         $this->status = $order->status;
         $this->notes = $order->notes ?? '';
+        $this->terms = $order->terms ?? '';
         $this->shipping_address = $order->shipping_address ?? '';
+        $this->orderNumber = $order->order_number;
+        $this->createdAt = $order->created_at->format('M d, Y \a\t H:i');
+        $this->updatedAt = $order->updated_at->format('M d, Y \a\t H:i');
 
         $this->items = $order->items->map(fn($item) => [
             'id' => $item->id,
@@ -141,6 +149,18 @@ class Form extends Component
         }
     }
 
+    public function reorderItems(int $from, int $to): void
+    {
+        if ($from === $to || !isset($this->items[$from])) {
+            return;
+        }
+
+        $item = $this->items[$from];
+        array_splice($this->items, $from, 1);
+        array_splice($this->items, $to, 0, [$item]);
+        $this->items = array_values($this->items);
+    }
+
     public function getSubtotalProperty(): float
     {
         return collect($this->items)->sum('total');
@@ -174,6 +194,7 @@ class Form extends Component
             'expected_delivery_date' => $this->expected_delivery_date ?: null,
             'status' => $this->status,
             'notes' => $this->notes,
+            'terms' => $this->terms,
             'shipping_address' => $this->shipping_address,
             'subtotal' => $this->subtotal,
             'tax' => $this->tax,
@@ -211,6 +232,17 @@ class Form extends Component
     {
         $this->status = 'confirmed';
         $this->save();
+    }
+
+    public function cancel(): void
+    {
+        if ($this->orderId) {
+            $order = SalesOrder::findOrFail($this->orderId);
+            $order->update(['status' => 'cancelled']);
+            
+            session()->flash('success', 'Order cancelled successfully.');
+            $this->redirect(route('sales.orders.index'), navigate: true);
+        }
     }
 
     public function render()

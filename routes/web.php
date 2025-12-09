@@ -14,9 +14,14 @@ use App\Livewire\Sales\Index as SalesIndex;
 use App\Livewire\Sales\Orders\Index as SalesOrdersIndex;
 use App\Livewire\Sales\Orders\Form as SalesOrderForm;
 use App\Livewire\Sales\Customers\Index as CustomersIndex;
+use App\Livewire\Sales\Teams\Index as SalesTeamsIndex;
 
 use App\Livewire\Delivery\Index as DeliveryIndex;
 use App\Livewire\Delivery\Orders\Index as DeliveryOrdersIndex;
+
+use App\Livewire\Invoicing\Index as InvoicingIndex;
+use App\Livewire\Invoicing\Invoices\Index as InvoicesIndex;
+use App\Livewire\Invoicing\Payments\Index as PaymentsIndex;
 
 use App\Livewire\Settings\Index as SettingsIndex;
 use App\Livewire\Settings\Users\Index as SettingsUsersIndex;
@@ -68,6 +73,13 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     
     // Customers
     Route::get('/customers', CustomersIndex::class)->name('customers.index');
+    Route::get('/customers/create', CustomersIndex::class)->name('customers.create');
+    Route::get('/customers/{id}/edit', CustomersIndex::class)->name('customers.edit');
+    
+    // Sales Teams
+    Route::get('/teams', SalesTeamsIndex::class)->name('teams.index');
+    Route::get('/teams/create', SalesTeamsIndex::class)->name('teams.create');
+    Route::get('/teams/{id}/edit', SalesTeamsIndex::class)->name('teams.edit');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('delivery')->name('delivery.')->group(function () {
@@ -75,6 +87,21 @@ Route::middleware(['auth', 'verified'])->prefix('delivery')->name('delivery.')->
     
     // Delivery Orders
     Route::get('/orders', DeliveryOrdersIndex::class)->name('orders.index');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('invoicing')->name('invoicing.')->group(function () {
+    Route::get('/', InvoicingIndex::class)->name('index');
+    
+    // Invoices
+    Route::get('/invoices', InvoicesIndex::class)->name('invoices.index');
+    Route::get('/invoices/create', InvoicesIndex::class)->name('invoices.create');
+    Route::get('/invoices/{id}/edit', InvoicesIndex::class)->name('invoices.edit');
+    
+    // Payments
+    Route::get('/payments', PaymentsIndex::class)->name('payments.index');
+    
+    // Reports
+    Route::view('/reports', 'livewire.invoicing.reports')->name('reports');
 });
 
 // General Setup Module
