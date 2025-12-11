@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('inventory_items', function (Blueprint $table) {
@@ -20,13 +17,11 @@ return new class extends Migration
             $table->decimal('cost_price', 10, 2)->nullable();
             $table->decimal('selling_price', 10, 2)->nullable();
             $table->string('status')->default('in_stock'); // in_stock, low_stock, out_of_stock
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('inventory_items');

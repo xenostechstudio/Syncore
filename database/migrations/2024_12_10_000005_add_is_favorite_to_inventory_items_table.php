@@ -6,24 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('inventory_items', function (Blueprint $table) {
-            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
+            if (! Schema::hasColumn('inventory_items', 'is_favorite')) {
+                $table->boolean('is_favorite')->default(false)->after('status');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('inventory_items', function (Blueprint $table) {
-            $table->dropForeign(['warehouse_id']);
-            $table->dropColumn('warehouse_id');
+            if (Schema::hasColumn('inventory_items', 'is_favorite')) {
+                $table->dropColumn('is_favorite');
+            }
         });
     }
 };

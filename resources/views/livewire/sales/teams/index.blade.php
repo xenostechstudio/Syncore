@@ -15,11 +15,24 @@
 
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
-            {{-- Left Group: New Button, Title, Gear --}}
+            {{-- Left Group: New Button (Dropdown), Title, Gear --}}
             <div class="flex items-center gap-3">
-                <a href="{{ route('sales.teams.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
+                <flux:dropdown position="bottom" align="start">
+                    <button class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                        New
+                        <flux:icon name="chevron-down" class="size-3" />
+                    </button>
+                    <flux:menu class="w-48">
+                        <a href="{{ route('sales.teams.create', ['type' => 'team']) }}" wire:navigate class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                            <flux:icon name="user-group" class="size-4" />
+                            <span>Sales Team</span>
+                        </a>
+                        <a href="{{ route('sales.teams.create', ['type' => 'salesperson']) }}" wire:navigate class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                            <flux:icon name="user" class="size-4" />
+                            <span>Salesperson</span>
+                        </a>
+                    </flux:menu>
+                </flux:dropdown>
                 <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Sales Teams</span>
                 
                 {{-- Actions Menu (Gear) --}}

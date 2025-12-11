@@ -6,11 +6,13 @@ use App\Models\Inventory\InventoryItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+
 class SalesOrderItem extends Model
 {
     protected $fillable = [
         'sales_order_id',
         'inventory_item_id',
+        'tax_id',
         'quantity',
         'unit_price',
         'discount',
@@ -31,5 +33,10 @@ class SalesOrderItem extends Model
     public function inventoryItem(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class);
+    }
+
+    public function tax(): BelongsTo
+    {
+        return $this->belongsTo(Tax::class);
     }
 }

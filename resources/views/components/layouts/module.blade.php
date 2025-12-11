@@ -119,7 +119,7 @@
                                 
                                 {{-- Hover Submenu --}}
                                 @if($hasChildren)
-                                    <div class="invisible absolute left-0 top-full z-50 min-w-[200px] rounded-lg border border-zinc-200 bg-white py-1 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:border-zinc-700 dark:bg-zinc-900">
+                                    <div class="invisible absolute left-0 top-full z-50 min-w-[180px] rounded-lg border border-zinc-200 bg-white py-1 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:border-zinc-700 dark:bg-zinc-900">
                                         @foreach($nav['children'] as $child)
                                             @php
                                                 $childRouteExists = \Route::has($child['route']);
@@ -128,17 +128,8 @@
                                             <a 
                                                 href="{{ $childRouteExists ? route($child['route']) : '#' }}" 
                                                 wire:navigate
-                                                class="flex items-center gap-2 px-4 py-2.5 text-sm transition-colors {{ $childIsActive ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100' }}"
+                                                class="block px-4 py-2 text-sm transition-colors {{ $childIsActive ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100' }}"
                                             >
-                                                @if(str_contains(strtolower($child['label']), 'create'))
-                                                    <svg class="size-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                                    </svg>
-                                                @else
-                                                    <svg class="size-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                                                    </svg>
-                                                @endif
                                                 {{ $child['label'] }}
                                             </a>
                                         @endforeach
@@ -152,16 +143,34 @@
                 {{-- Spacer --}}
                 <div class="flex-1"></div>
 
-                {{-- Right Side: Profile --}}
-                <div class="flex items-center pl-4">
+                {{-- Right Side: Company Name, Notification, Profile --}}
+                <div class="flex items-center gap-4 pl-4">
+                    {{-- Company Name --}}
+                    <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {{ config('app.company_name', 'Syncore') }}
+                    </span>
+
+                    {{-- Notification Icon --}}
+                    <button type="button" class="relative rounded-full p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+                        <flux:icon name="bell" variant="solid" class="size-5" />
+                        {{-- Notification Badge --}}
+                        <span class="absolute right-1.5 top-1.5 flex h-2 w-2">
+                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+                        </span>
+                    </button>
+
+                    {{-- Profile --}}
                     <x-ui.profile-dropdown />
                 </div>
             </div>
 
             {{-- Optional Header/Control Panel Slot --}}
             @if (isset($header))
-                <div class="border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 lg:px-6">
-                    {{ $header }}
+                <div class="flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-950 lg:px-6">
+                    <div class="w-full">
+                        {{ $header }}
+                    </div>
                 </div>
             @endif
         </header>

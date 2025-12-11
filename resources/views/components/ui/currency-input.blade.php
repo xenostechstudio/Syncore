@@ -1,5 +1,5 @@
 @props([
-    'symbol' => '$',
+    'symbol' => 'Rp',
     'label' => null,
     'error' => null,
     'hint' => null,
@@ -24,7 +24,7 @@
             step="{{ $step }}"
             min="{{ $min }}"
             placeholder="{{ $placeholder }}"
-            class="block w-full flex-1 rounded-none rounded-r-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-600"
+            class="block w-full flex-1 rounded-none rounded-r-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-transparent dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-600"
         />
     </div>
 

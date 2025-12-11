@@ -4,8 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Inventory\InventoryItem;
 use App\Models\Sales\Customer;
+use App\Models\Sales\PaymentTerm;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderItem;
+use App\Models\Sales\SalesTeam;
+use App\Models\Sales\Tax;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -13,6 +16,170 @@ class SalesSeeder extends Seeder
 {
     public function run(): void
     {
+        // Seed Indonesian-style taxes
+        $taxes = [
+            [
+                'name' => 'PPN 11%',
+                'code' => 'PPN11',
+                'rate' => 11.0,
+                'type' => 'percentage',
+                'scope' => 'sales',
+                'is_active' => true,
+                'include_in_price' => false,
+                'description' => 'Pajak Pertambahan Nilai 11% sesuai peraturan Indonesia.',
+            ],
+            [
+                'name' => 'PPN 11% (Termasuk Harga)',
+                'code' => 'PPN11_INC',
+                'rate' => 11.0,
+                'type' => 'percentage',
+                'scope' => 'sales',
+                'is_active' => true,
+                'include_in_price' => true,
+                'description' => 'PPN 11% sudah termasuk dalam harga jual.',
+            ],
+            [
+                'name' => 'PPN 0% (Ekspor)',
+                'code' => 'PPN0',
+                'rate' => 0.0,
+                'type' => 'percentage',
+                'scope' => 'sales',
+                'is_active' => true,
+                'include_in_price' => false,
+                'description' => 'PPN 0% untuk transaksi ekspor dan tertentu.',
+            ],
+            [
+                'name' => 'PPh 23 Jasa 2%',
+                'code' => 'PPH23_2',
+                'rate' => 2.0,
+                'type' => 'percentage',
+                'scope' => 'purchase',
+                'is_active' => true,
+                'include_in_price' => false,
+                'description' => 'PPh 23 atas jasa dengan tarif 2%.',
+            ],
+        ];
+
+        foreach ($taxes as $tax) {
+            Tax::firstOrCreate(
+                ['code' => $tax['code']],
+                $tax,
+            );
+        }
+
+        // Seed common payment terms
+        $paymentTerms = [
+            [
+                'name' => 'Immediate Payment',
+                'code' => 'IMMEDIATE',
+                'days' => 0,
+                'description' => 'Pembayaran segera saat invoice diterbitkan.',
+                'is_active' => true,
+                'sort_order' => 1,
+            ],
+            [
+                'name' => 'Net 15 Days',
+                'code' => 'NET15',
+                'days' => 15,
+                'description' => 'Jatuh tempo 15 hari setelah invoice.',
+                'is_active' => true,
+                'sort_order' => 2,
+            ],
+            [
+                'name' => 'Net 30 Days',
+                'code' => 'NET30',
+                'days' => 30,
+                'description' => 'Jatuh tempo 30 hari setelah invoice.',
+                'is_active' => true,
+                'sort_order' => 3,
+            ],
+            [
+                'name' => 'Net 45 Days',
+                'code' => 'NET45',
+                'days' => 45,
+                'description' => 'Jatuh tempo 45 hari setelah invoice.',
+                'is_active' => true,
+                'sort_order' => 4,
+            ],
+            [
+                'name' => 'Net 60 Days',
+                'code' => 'NET60',
+                'days' => 60,
+                'description' => 'Jatuh tempo 60 hari setelah invoice.',
+                'is_active' => true,
+                'sort_order' => 5,
+            ],
+        ];
+
+        foreach ($paymentTerms as $term) {
+            PaymentTerm::firstOrCreate(
+                ['code' => $term['code']],
+                $term,
+            );
+        }
+
+        // Seed sales users & teams
+        $salesUsersData = [
+            ['name' => 'Sales Manager', 'email' => 'sales.manager@example.com'],
+            ['name' => 'Account Executive 1', 'email' => 'ae1@example.com'],
+            ['name' => 'Account Executive 2', 'email' => 'ae2@example.com'],
+        ];
+
+        $salesUsers = collect();
+
+        foreach ($salesUsersData as $data) {
+            $salesUsers->push(
+                User::firstOrCreate(
+                    ['email' => $data['email']],
+                    [
+                        'name' => $data['name'],
+                        'password' => 'password',
+                        'email_verified_at' => now(),
+                    ],
+                ),
+            );
+        }
+
+        $teams = [
+            [
+                'name' => 'Domestic Sales',
+                'description' => 'Tim penjualan domestik Indonesia.',
+                'leader_email' => 'sales.manager@example.com',
+                'target_amount' => 500_000_000,
+                'members' => ['sales.manager@example.com', 'ae1@example.com', 'ae2@example.com'],
+            ],
+            [
+                'name' => 'Enterprise Sales',
+                'description' => 'Tim penjualan enterprise dan B2B.',
+                'leader_email' => 'ae1@example.com',
+                'target_amount' => 750_000_000,
+                'members' => ['ae1@example.com', 'ae2@example.com'],
+            ],
+        ];
+
+        foreach ($teams as $teamData) {
+            $leader = $salesUsers->firstWhere('email', $teamData['leader_email']);
+
+            $team = SalesTeam::firstOrCreate(
+                ['name' => $teamData['name']],
+                [
+                    'description' => $teamData['description'],
+                    'leader_id' => $leader?->id,
+                    'target_amount' => $teamData['target_amount'],
+                    'is_active' => true,
+                ],
+            );
+
+            $memberIds = $salesUsers
+                ->whereIn('email', $teamData['members'])
+                ->pluck('id')
+                ->all();
+
+            if (!empty($memberIds)) {
+                $team->members()->syncWithoutDetaching($memberIds);
+            }
+        }
+
         // Create customers
         $customers = [
             ['name' => 'PT Maju Bersama', 'email' => 'contact@majubersama.co.id', 'phone' => '+62 21 5551234', 'address' => 'Jl. Sudirman No. 123', 'city' => 'Jakarta', 'status' => 'active'],
@@ -53,7 +220,7 @@ class SalesSeeder extends Seeder
             $orderDate = now()->subDays($orderData['days_ago']);
             
             $order = SalesOrder::create([
-                'order_number' => 'SO' . $orderDate->format('Ymd') . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
+                'order_number' => SalesOrder::generateOrderNumber(),
                 'customer_id' => $orderData['customer_id'],
                 'user_id' => $user->id,
                 'order_date' => $orderDate,

@@ -9,18 +9,33 @@ use App\Livewire\Inventory\Index as InventoryIndex;
 use App\Livewire\Inventory\ItemForm as InventoryItemForm;
 use App\Livewire\Inventory\Items\Index as ItemsIndex;
 use App\Livewire\Inventory\Warehouses\Index as WarehousesIndex;
+use App\Livewire\Inventory\Categories\Index as CategoriesIndex;
+use App\Livewire\Inventory\Categories\Form as CategoryForm;
 
 use App\Livewire\Sales\Index as SalesIndex;
 use App\Livewire\Sales\Orders\Index as SalesOrdersIndex;
 use App\Livewire\Sales\Orders\Form as SalesOrderForm;
 use App\Livewire\Sales\Customers\Index as CustomersIndex;
 use App\Livewire\Sales\Teams\Index as SalesTeamsIndex;
+use App\Livewire\Sales\Teams\Form as SalesTeamForm;
+use App\Livewire\Sales\Customers\Form as CustomerForm;
+use App\Livewire\Sales\Products\Index as SalesProductsIndex;
+use App\Livewire\Sales\Products\Form as SalesProductForm;
+
+use App\Livewire\Sales\Configuration\Taxes\Index as TaxesIndex;
+use App\Livewire\Sales\Configuration\Taxes\Form as TaxForm;
+use App\Livewire\Sales\Configuration\PaymentTerms\Index as PaymentTermsIndex;
+use App\Livewire\Sales\Configuration\PaymentTerms\Form as PaymentTermForm;
+use App\Livewire\Sales\Configuration\Pricelists\Index as PricelistsIndex;
+use App\Livewire\Sales\Configuration\Pricelists\Form as PricelistForm;
 
 use App\Livewire\Delivery\Index as DeliveryIndex;
 use App\Livewire\Delivery\Orders\Index as DeliveryOrdersIndex;
+use App\Livewire\Delivery\Orders\Form as DeliveryOrderForm;
 
 use App\Livewire\Invoicing\Index as InvoicingIndex;
 use App\Livewire\Invoicing\Invoices\Index as InvoicesIndex;
+use App\Livewire\Invoicing\Invoices\Form as InvoiceForm;
 use App\Livewire\Invoicing\Payments\Index as PaymentsIndex;
 
 use App\Livewire\Settings\Index as SettingsIndex;
@@ -52,10 +67,15 @@ Route::view('dashboard', 'dashboard')
 Route::middleware(['auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
     Route::get('/', InventoryIndex::class)->name('index');
     
-    // Items
+    // Items/Products
     Route::get('/items', ItemsIndex::class)->name('items.index');
     Route::get('/items/create', InventoryItemForm::class)->name('items.create');
     Route::get('/items/{id}/edit', InventoryItemForm::class)->name('items.edit');
+    
+    // Categories
+    Route::get('/categories', CategoriesIndex::class)->name('categories.index');
+    Route::get('/categories/create', CategoryForm::class)->name('categories.create');
+    Route::get('/categories/{id}/edit', CategoryForm::class)->name('categories.edit');
     
     // Warehouses
     Route::get('/warehouses', WarehousesIndex::class)->name('warehouses.index');
@@ -68,18 +88,39 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     
     // Orders
     Route::get('/orders', SalesOrdersIndex::class)->name('orders.index');
+    Route::get('/orders/all', SalesOrdersIndex::class)->name('orders.all');
     Route::get('/orders/create', SalesOrderForm::class)->name('orders.create');
     Route::get('/orders/{id}/edit', SalesOrderForm::class)->name('orders.edit');
     
     // Customers
     Route::get('/customers', CustomersIndex::class)->name('customers.index');
-    Route::get('/customers/create', CustomersIndex::class)->name('customers.create');
-    Route::get('/customers/{id}/edit', CustomersIndex::class)->name('customers.edit');
+    Route::get('/customers/create', CustomerForm::class)->name('customers.create');
+    Route::get('/customers/{id}/edit', CustomerForm::class)->name('customers.edit');
     
     // Sales Teams
     Route::get('/teams', SalesTeamsIndex::class)->name('teams.index');
-    Route::get('/teams/create', SalesTeamsIndex::class)->name('teams.create');
-    Route::get('/teams/{id}/edit', SalesTeamsIndex::class)->name('teams.edit');
+    Route::get('/teams/create', SalesTeamForm::class)->name('teams.create');
+    Route::get('/teams/{id}/edit', SalesTeamForm::class)->name('teams.edit');
+
+    // Products (Sales view of Inventory Items)
+    Route::get('/products', SalesProductsIndex::class)->name('products.index');
+    Route::get('/products/create', SalesProductForm::class)->name('products.create');
+    Route::get('/products/{id}/edit', SalesProductForm::class)->name('products.edit');
+    
+    // Configuration - Taxes
+    Route::get('/configuration/taxes', TaxesIndex::class)->name('configuration.taxes.index');
+    Route::get('/configuration/taxes/create', TaxForm::class)->name('configuration.taxes.create');
+    Route::get('/configuration/taxes/{id}/edit', TaxForm::class)->name('configuration.taxes.edit');
+    
+    // Configuration - Payment Terms
+    Route::get('/configuration/payment-terms', PaymentTermsIndex::class)->name('configuration.payment-terms.index');
+    Route::get('/configuration/payment-terms/create', PaymentTermForm::class)->name('configuration.payment-terms.create');
+    Route::get('/configuration/payment-terms/{id}/edit', PaymentTermForm::class)->name('configuration.payment-terms.edit');
+    
+    // Configuration - Pricelists
+    Route::get('/configuration/pricelists', PricelistsIndex::class)->name('configuration.pricelists.index');
+    Route::get('/configuration/pricelists/create', PricelistForm::class)->name('configuration.pricelists.create');
+    Route::get('/configuration/pricelists/{id}/edit', PricelistForm::class)->name('configuration.pricelists.edit');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('delivery')->name('delivery.')->group(function () {
@@ -87,6 +128,8 @@ Route::middleware(['auth', 'verified'])->prefix('delivery')->name('delivery.')->
     
     // Delivery Orders
     Route::get('/orders', DeliveryOrdersIndex::class)->name('orders.index');
+    Route::get('/orders/create', DeliveryOrderForm::class)->name('orders.create');
+    Route::get('/orders/{id}/edit', DeliveryOrderForm::class)->name('orders.edit');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('invoicing')->name('invoicing.')->group(function () {
@@ -94,8 +137,8 @@ Route::middleware(['auth', 'verified'])->prefix('invoicing')->name('invoicing.')
     
     // Invoices
     Route::get('/invoices', InvoicesIndex::class)->name('invoices.index');
-    Route::get('/invoices/create', InvoicesIndex::class)->name('invoices.create');
-    Route::get('/invoices/{id}/edit', InvoicesIndex::class)->name('invoices.edit');
+    Route::get('/invoices/create', InvoiceForm::class)->name('invoices.create');
+    Route::get('/invoices/{id}/edit', InvoiceForm::class)->name('invoices.edit');
     
     // Payments
     Route::get('/payments', PaymentsIndex::class)->name('payments.index');

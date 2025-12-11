@@ -58,10 +58,16 @@ class SalesOrder extends Model
     public static function generateOrderNumber(): string
     {
         $prefix = 'SO';
-        $date = now()->format('Ymd');
-        $lastOrder = self::whereDate('created_at', today())->latest()->first();
-        $sequence = $lastOrder ? (int) substr($lastOrder->order_number, -4) + 1 : 1;
-        
-        return $prefix . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        $lastOrder = self::orderByDesc('id')->first();
+        $sequence = 1;
+
+        if ($lastOrder && $lastOrder->order_number) {
+            $digits = preg_replace('/\D/', '', $lastOrder->order_number);
+            if ($digits !== '') {
+                $sequence = (int) substr($digits, -4) + 1;
+            }
+        }
+
+        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }

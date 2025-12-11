@@ -29,6 +29,15 @@ class Index extends Component
     public array $selected = [];
     public bool $selectAll = false;
 
+    // Context: 'quotations' (default) or 'orders'
+    public string $mode = 'quotations';
+
+    public function mount(): void
+    {
+        $routeName = request()->route()->getName();
+        $this->mode = $routeName === 'sales.orders.all' ? 'orders' : 'quotations';
+    }
+
     // Column visibility
     public array $visibleColumns = [
         'order' => true,
@@ -90,6 +99,7 @@ class Index extends Component
             ->with(['customer', 'user'])
             ->when($this->search, fn($q) => $q->where('order_number', 'like', "%{$this->search}%")
                 ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%")))
+            ->when($this->mode === 'orders', fn($q) => $q->where('status', 'processing'))
             ->when($this->status, fn($q) => $q->where('status', $this->status))
             ->when($this->sort === 'latest', fn($q) => $q->latest())
             ->when($this->sort === 'oldest', fn($q) => $q->oldest())

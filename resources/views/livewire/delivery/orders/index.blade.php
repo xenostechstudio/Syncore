@@ -1,64 +1,88 @@
-<div class="space-y-4">
-    {{-- Header --}}
-    <div class="flex items-center justify-between">
-        <h1 class="text-xl font-normal text-zinc-900 dark:text-zinc-100">Delivery Orders</h1>
-        <flux:button variant="primary" icon="plus">
-            New Delivery
-        </flux:button>
-    </div>
-
-    {{-- Toolbar --}}
-    <div class="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-1 flex-wrap items-center gap-3">
-            {{-- Search --}}
-            <div class="relative">
-                <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-                <input 
-                    type="text" 
-                    wire:model.live.debounce.300ms="search"
-                    placeholder="Search deliveries..."
-                    class="w-64 rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm font-light text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-600"
-                />
+<div>
+    <x-slot:header>
+        <div class="flex items-center justify-between gap-4">
+            {{-- Left Group: New Button, Title --}}
+            <div class="flex items-center gap-3">
+                <a href="{{ route('delivery.orders.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                    New
+                </a>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Delivery Orders</span>
             </div>
 
-            {{-- Status Filter --}}
-            <select 
-                wire:model.live="status"
-                class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-light text-zinc-600 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-            >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="picked">Picked</option>
-                <option value="in_transit">In Transit</option>
-                <option value="delivered">Delivered</option>
-                <option value="failed">Failed</option>
-                <option value="returned">Returned</option>
-            </select>
+            {{-- Center Group: Search + Filters --}}
+            <div class="flex flex-1 items-center justify-center">
+                <div class="flex items-center gap-3">
+                    {{-- Search --}}
+                    <div class="relative">
+                        <flux:icon name="magnifying-glass" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                        <input 
+                            type="text" 
+                            wire:model.live.debounce.300ms="search"
+                            placeholder="Search deliveries..."
+                            class="w-72 rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm font-light text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-600"
+                        />
+                    </div>
 
-            {{-- Sort --}}
-            <select 
-                wire:model.live="sort"
-                class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-light text-zinc-600 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-            >
-                <option value="latest">Latest</option>
-                <option value="oldest">Oldest</option>
-                <option value="delivery_date">Delivery Date</option>
-            </select>
+                    {{-- Status Filter --}}
+                    <select 
+                        wire:model.live="status"
+                        class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-light text-zinc-600 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                    >
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="picked">Picked</option>
+                        <option value="in_transit">In Transit</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="failed">Failed</option>
+                        <option value="returned">Returned</option>
+                    </select>
 
-            @if($search || $status || $sort !== 'latest')
-                <button wire:click="clearFilters" class="text-sm font-light text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-                    Clear filters
-                </button>
-            @endif
+                    {{-- Sort --}}
+                    <select 
+                        wire:model.live="sort"
+                        class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-light text-zinc-600 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                    >
+                        <option value="latest">Latest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="delivery_date">Delivery Date</option>
+                    </select>
+
+                    @if($search || $status || $sort !== 'latest')
+                        <button wire:click="clearFilters" class="text-sm font-light text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+                            Clear filters
+                        </button>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Right Group: View Toggle + Pagination --}}
+            <div class="flex items-center gap-3">
+                <x-ui.view-toggle :view="$view" />
+
+                @if($deliveries->hasPages())
+                    <div class="flex items-center gap-1">
+                        <button 
+                            wire:click="previousPage" 
+                            @disabled($deliveries->onFirstPage())
+                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
+                        >
+                            <flux:icon name="chevron-left" class="size-4" />
+                        </button>
+                        <button 
+                            wire:click="nextPage" 
+                            @disabled(!$deliveries->hasMorePages())
+                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
+                        >
+                            <flux:icon name="chevron-right" class="size-4" />
+                        </button>
+                    </div>
+                @endif
+            </div>
         </div>
-
-        <x-ui.view-toggle :view="$view" />
-    </div>
+    </x-slot:header>
 
     {{-- Results Count --}}
-    <div class="text-sm font-light text-zinc-500 dark:text-zinc-400">
+    <div class="mb-3 text-sm font-light text-zinc-500 dark:text-zinc-400">
         {{ $deliveries->total() }} {{ Str::plural('delivery', $deliveries->total()) }}
     </div>
 
