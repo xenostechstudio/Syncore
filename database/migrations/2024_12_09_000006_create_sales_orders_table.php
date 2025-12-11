@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('total', 15, 2)->default(0);
             $table->text('notes')->nullable();
+            $table->text('terms')->nullable();
             $table->text('shipping_address')->nullable();
             $table->timestamps();
         });
@@ -28,7 +29,8 @@ return new class extends Migration
         Schema::create('sales_order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sales_order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('inventory_item_id')->constrained()->onDelete('cascade');
+            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->foreignId('tax_id')->nullable()->constrained('taxes')->nullOnDelete();
             $table->integer('quantity');
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);

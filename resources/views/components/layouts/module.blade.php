@@ -97,7 +97,9 @@
 
                         @foreach($navItems as $index => $nav)
                             @php
-                                $isActive = request()->routeIs($nav['pattern']);
+                                // Handle multiple patterns separated by |
+                                $patterns = explode('|', $nav['pattern']);
+                                $isActive = collect($patterns)->contains(fn($p) => request()->routeIs(trim($p)));
                                 $hasChildren = isset($nav['children']) && count($nav['children']) > 0;
                                 $routeExists = \Route::has($nav['route']);
                             @endphp

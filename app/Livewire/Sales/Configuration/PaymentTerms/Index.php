@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Sales\Configuration\PaymentTerms;
 
+use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Sales\PaymentTerm;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Payment Terms')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -62,7 +62,7 @@ class Index extends Component
                 ->orWhere('code', 'like', "%{$this->search}%"))
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.sales.configuration.payment-terms.index', [
             'paymentTerms' => $paymentTerms,

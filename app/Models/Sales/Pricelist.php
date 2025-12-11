@@ -2,7 +2,7 @@
 
 namespace App\Models\Sales;
 
-use App\Models\Inventory\InventoryItem;
+use App\Models\Inventory\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -35,7 +35,7 @@ class Pricelist extends Model
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(InventoryItem::class, 'pricelist_items')
+        return $this->belongsToMany(Product::class, 'pricelist_items', 'pricelist_id', 'product_id')
             ->withPivot(['price', 'min_quantity', 'start_date', 'end_date'])
             ->withTimestamps();
     }

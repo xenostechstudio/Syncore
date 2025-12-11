@@ -16,7 +16,7 @@
                 </div>
                 <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
                     @forelse($recentItems->take(5) as $item)
-                        <a href="{{ route('inventory.items.edit', $item->id) }}" wire:navigate class="flex items-center justify-between px-4 py-2 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 odd:bg-white even:bg-zinc-50/50 dark:odd:bg-zinc-900 dark:even:bg-zinc-900/50">
+                        <a href="{{ route('inventory.products.edit', $item->id) }}" wire:navigate class="flex items-center justify-between px-4 py-2 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 odd:bg-white even:bg-zinc-50/50 dark:odd:bg-zinc-900 dark:even:bg-zinc-900/50">
                             <span class="text-sm font-light text-zinc-600 dark:text-zinc-300">{{ $item->name }}</span>
                             <span class="text-sm font-normal {{ $item->quantity < 10 ? 'text-red-600 dark:text-red-400' : 'text-zinc-900 dark:text-zinc-100' }}">{{ number_format($item->quantity) }}</span>
                         </a>
@@ -25,7 +25,7 @@
                     @endforelse
                 </div>
                 <div class="border-t border-zinc-100 px-5 py-3 dark:border-zinc-800">
-                    <a href="{{ route('inventory.items.index') }}" wire:navigate class="text-xs font-light text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+                    <a href="{{ route('inventory.products.index') }}" wire:navigate class="text-xs font-light text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
                         View all items →
                     </a>
                 </div>
@@ -90,7 +90,7 @@
                 <flux:dropdown position="bottom" align="end">
                     <flux:button variant="primary" class="h-9" icon-trailing="chevron-down">Add New</flux:button>
                     <flux:menu>
-                        <flux:menu.item href="{{ route('inventory.items.create') }}" wire:navigate>
+                        <flux:menu.item href="{{ route('inventory.products.create') }}" wire:navigate>
                             <span class="flex items-center gap-2">
                                 <svg class="size-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
@@ -125,7 +125,7 @@
                 <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
                     <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
                         @forelse($recentItems as $item)
-                            <a href="{{ route('inventory.items.edit', $item->id) }}" wire:navigate class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer">
+                            <a href="{{ route('inventory.products.edit', $item->id) }}" wire:navigate class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer">
                                 <div class="flex items-center gap-4">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
                                         <svg class="size-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">

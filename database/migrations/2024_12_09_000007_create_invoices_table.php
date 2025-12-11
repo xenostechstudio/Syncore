@@ -30,7 +30,7 @@ return new class extends Migration
         Schema::create('invoice_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
-            $table->foreignId('inventory_item_id')->nullable()->constrained('inventory_items')->nullOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
             $table->string('description')->nullable();
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 15, 2)->default(0);
@@ -41,12 +41,14 @@ return new class extends Migration
 
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
+            $table->string('payment_number')->unique();
             $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
             $table->date('payment_date');
             $table->decimal('amount', 15, 2);
             $table->string('payment_method')->nullable();
             $table->string('reference')->nullable();
             $table->text('notes')->nullable();
+            $table->string('status')->default('completed');
             $table->timestamps();
         });
     }

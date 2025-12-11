@@ -2,7 +2,7 @@
 
 namespace App\Models\Invoicing;
 
-use App\Models\Inventory\InventoryItem;
+use App\Models\Inventory\Product;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +13,7 @@ class InvoiceItem extends Model
 
     protected $fillable = [
         'invoice_id',
-        'inventory_item_id',
+        'product_id',
         'description',
         'quantity',
         'unit_price',
@@ -33,8 +33,8 @@ class InvoiceItem extends Model
         return $this->belongsTo(Invoice::class);
     }
 
-    public function inventoryItem(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(InventoryItem::class);
+        return $this->belongsTo(Product::class);
     }
 }

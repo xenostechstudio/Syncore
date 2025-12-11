@@ -1,4 +1,4 @@
-<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false }">
+<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showInvoiceModal: $wire.entangle('showInvoiceModal') }">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -43,6 +43,34 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Center Group: Invoice Link Buttons --}}
+            @if($invoices->count() > 0)
+                <div class="flex items-center gap-2">
+                    @foreach($invoices as $invoice)
+                        <a 
+                            href="{{ route('invoicing.invoices.edit', $invoice->id) }}" 
+                            wire:navigate
+                            class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-400 dark:hover:bg-violet-900/50"
+                        >
+                            <flux:icon name="document-text" class="size-4" />
+                            <span>{{ $invoice->invoice_number }}</span>
+                            @php
+                                $invoiceStatusConfig = match($invoice->status) {
+                                    'draft' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                    'sent' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
+                                    'partial' => ['bg' => 'bg-amber-200 dark:bg-amber-800', 'text' => 'text-amber-700 dark:text-amber-300'],
+                                    'paid' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
+                                    default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                };
+                            @endphp
+                            <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $invoiceStatusConfig['bg'] }} {{ $invoiceStatusConfig['text'] }}">
+                                {{ ucfirst($invoice->status) }}
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </x-slot:header>
 
@@ -100,7 +128,7 @@
                             <flux:icon name="document-check" class="size-4" />
                             Save
                         </button>
-                    @elseif($status === 'draft' || $status === 'confirmed')
+                    @elseif($status === 'quotation' || $status === 'draft' || $status === 'confirmed')
                         {{-- Draft/Confirmed: Show Confirm button (primary) --}}
                         <button 
                             type="button"
@@ -118,16 +146,18 @@
                             <flux:icon name="document-check" class="size-4" />
                             Save
                         </button>
-                    @elseif($status === 'processing')
-                        {{-- Sales Order (processing): Show Create Invoice button (primary) --}}
-                        <button 
-                            type="button"
-                            wire:click="createInvoice"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                        >
-                            <flux:icon name="document-text" class="size-4" />
-                            Create Invoice
-                        </button>
+                    @elseif($status === \App\Enums\SalesOrderState::SALES_ORDER->value)
+                        {{-- Sales Order: Show Create Invoice button (primary) only if no invoices exist --}}
+                        @if($invoices->count() === 0)
+                            <button 
+                                type="button"
+                                wire:click="openInvoiceModal"
+                                class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            >
+                                <flux:icon name="document-text" class="size-4" />
+                                Create Invoice
+                            </button>
+                        @endif
                         <button 
                             type="button"
                             wire:click="save"
@@ -165,12 +195,7 @@
 
                 {{-- Stepper (Right side of col-span-9, same line as buttons) --}}
                 @php
-                    $steps = [
-                        ['key' => 'draft', 'label' => 'Quotation'],
-                        ['key' => 'confirmed', 'label' => 'Quotation Sent'],
-                        ['key' => 'processing', 'label' => 'Sales Order'],
-                        ['key' => 'delivered', 'label' => 'Done'],
-                    ];
+                    $steps = \App\Enums\SalesOrderState::steps();
                     $currentIndex = collect($steps)->search(fn($s) => $s['key'] === $status);
                     if ($currentIndex === false) $currentIndex = 0;
                     $isCancelled = $status === 'cancelled';
@@ -292,6 +317,105 @@
                         class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
                         Confirm Order
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Invoice Creation Modal --}}
+        <div 
+            x-show="showInvoiceModal" 
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            {{-- Backdrop --}}
+            <div class="absolute inset-0 bg-black/50" @click="showInvoiceModal = false"></div>
+            
+            {{-- Modal Content --}}
+            <div 
+                class="relative w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                @click.outside="showInvoiceModal = false"
+            >
+                <div class="mb-6 flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/30">
+                        <flux:icon name="document-text" class="size-5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Create Invoice</h3>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Choose payment type for this invoice</p>
+                    </div>
+                </div>
+                
+                {{-- Payment Type Options --}}
+                <div class="mb-6 space-y-3">
+                    {{-- Regular Payment --}}
+                    <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-zinc-200 p-4 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800" :class="{ 'border-violet-500 bg-violet-50 dark:bg-violet-900/20': $wire.invoiceType === 'regular' }">
+                        <input type="radio" wire:model="invoiceType" value="regular" class="mt-0.5 h-4 w-4 border-zinc-300 text-violet-600 focus:ring-violet-500" />
+                        <div class="flex-1">
+                            <p class="font-medium text-zinc-900 dark:text-zinc-100">Regular Payment</p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Invoice for the full order amount</p>
+                            <p class="mt-1 text-sm font-medium text-violet-600 dark:text-violet-400">Rp {{ number_format($this->total, 0, ',', '.') }}</p>
+                        </div>
+                    </label>
+
+                    {{-- Down Payment (Percentage) --}}
+                    <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-zinc-200 p-4 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800" :class="{ 'border-violet-500 bg-violet-50 dark:bg-violet-900/20': $wire.invoiceType === 'down_payment_percentage' }">
+                        <input type="radio" wire:model="invoiceType" value="down_payment_percentage" class="mt-0.5 h-4 w-4 border-zinc-300 text-violet-600 focus:ring-violet-500" />
+                        <div class="flex-1">
+                            <p class="font-medium text-zinc-900 dark:text-zinc-100">Down Payment (Percentage)</p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Invoice for a percentage of the order</p>
+                            <div class="mt-2" x-show="$wire.invoiceType === 'down_payment_percentage'" x-transition>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" wire:model.live="downPaymentPercentage" min="1" max="100" step="1" class="w-24 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-violet-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="%" />
+                                    <span class="text-sm text-zinc-500">%</span>
+                                    <span class="text-sm font-medium text-violet-600 dark:text-violet-400">= Rp {{ number_format($this->total * ($downPaymentPercentage / 100), 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+
+                    {{-- Down Payment (Fixed Amount) --}}
+                    <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-zinc-200 p-4 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800" :class="{ 'border-violet-500 bg-violet-50 dark:bg-violet-900/20': $wire.invoiceType === 'down_payment_fixed' }">
+                        <input type="radio" wire:model="invoiceType" value="down_payment_fixed" class="mt-0.5 h-4 w-4 border-zinc-300 text-violet-600 focus:ring-violet-500" />
+                        <div class="flex-1">
+                            <p class="font-medium text-zinc-900 dark:text-zinc-100">Down Payment (Fixed Amount)</p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Invoice for a specific amount</p>
+                            <div class="mt-2" x-show="$wire.invoiceType === 'down_payment_fixed'" x-transition>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-zinc-500">Rp</span>
+                                    <input type="number" wire:model.live="downPaymentAmount" min="0" step="1000" class="w-40 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-violet-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Amount" />
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="flex justify-end gap-3">
+                    <button 
+                        type="button"
+                        @click="showInvoiceModal = false"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="button"
+                        wire:click="createInvoice"
+                        class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
+                    >
+                        Create Invoice Draft
                     </button>
                 </div>
             </div>
@@ -492,12 +616,13 @@
                         showColumnMenu: false,
                         columns: {
                             product: { label: 'Product', visible: true, required: true },
-                            description: { label: 'Description', visible: false },
+                            description: { label: 'Description', visible: false, required: false },
                             qty: { label: 'Quantity', visible: true, required: true },
                             unit_price: { label: 'Unit Price', visible: true, required: true },
-                            discount: { label: 'Discount (%)', visible: false },
-                            taxes: { label: 'Taxes', visible: true },
+                            discount: { label: 'Discount (%)', visible: false, required: false },
+                            taxes: { label: 'Taxes', visible: true, required: false },
                             subtotal: { label: 'Subtotal', visible: true, required: true },
+                            subtotal_after_tax: { label: 'After Tax', visible: false, required: false },
                         },
                         isColumnVisible(key) {
                             return this.columns[key] && this.columns[key].visible;
@@ -517,6 +642,7 @@
                                     <th x-show="isColumnVisible('unit_price')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Unit Price</th>
                                     <th x-show="isColumnVisible('taxes')" class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 whitespace-nowrap dark:text-zinc-400">Taxes</th>
                                     <th x-show="isColumnVisible('subtotal')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Subtotal</th>
+                                    <th x-show="isColumnVisible('subtotal_after_tax')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 whitespace-nowrap dark:text-zinc-400">After Tax</th>
                                     <th class="w-10 pl-2 pr-2 py-2.5 text-right">
                                         {{-- Column Visibility Toggle --}}
                                         <div class="relative inline-flex items-center justify-end">
@@ -534,16 +660,15 @@
                                                 x-transition
                                                 class="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
                                             >
-                                                <div class="px-3 py-2 text-xs font-medium uppercase tracking-wider text-zinc-400">Show Columns</div>
-                                                <template x-for="(col, key) in columns" :key="key">
+                                                <template x-for="key in Object.keys(columns)" :key="key">
                                                     <label class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                         <input 
                                                             type="checkbox" 
-                                                            x-model="col.visible" 
-                                                            :disabled="col.required"
+                                                            x-model="columns[key].visible"
+                                                            :disabled="columns[key].required === true"
                                                             class="rounded border-zinc-300 text-violet-600 focus:ring-violet-500 disabled:opacity-50"
                                                         />
-                                                        <span x-text="col.label" :class="col.required ? 'text-zinc-400' : ''"></span>
+                                                        <span x-text="columns[key].label" :class="columns[key].required === true ? 'text-zinc-400' : ''"></span>
                                                     </label>
                                                 </template>
                                             </div>
@@ -597,7 +722,7 @@
                                         {{-- Product Selection (Searchable) --}}
                                         <td x-show="isColumnVisible('product')" class="w-48 px-3 py-2 overflow-visible">
                                             <div x-data="{ open: false, search: '' }" class="relative">
-                                                @if($item['inventory_item_id'])
+                                                @if($item['product_id'])
                                                     <button 
                                                         type="button"
                                                         @click="open = true; $nextTick(() => $refs.productSearch{{ $index }}.focus())"
@@ -645,7 +770,7 @@
                                                         />
                                                     </div>
                                                     <div class="max-h-48 overflow-auto py-1">
-                                                        @foreach($inventoryItems as $invItem)
+                                                        @foreach($products as $invItem)
                                                             <button 
                                                                 type="button"
                                                                 x-show="'{{ strtolower($invItem->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($invItem->sku ?? '') }}'.includes(search.toLowerCase()) || search === ''"
@@ -747,9 +872,31 @@
                                             </div>
                                         </td>
 
-                                        {{-- Subtotal --}}
                                         <td x-show="isColumnVisible('subtotal')" class="px-3 py-2 text-right">
                                             <span class="text-sm text-zinc-900 dark:text-zinc-100">Rp {{ number_format($item['total'], 0, ',', '.') }}</span>
+                                        </td>
+
+                                        <td x-show="isColumnVisible('subtotal_after_tax')" class="px-3 py-2 text-right">
+                                            @php
+                                                $lineBase = (float) ($item['total'] ?? 0);
+                                                $lineTax = 0.0;
+
+                                                if (! empty($item['tax_id'])) {
+                                                    $lineTaxModel = $taxes->firstWhere('id', $item['tax_id']);
+
+                                                    if ($lineTaxModel) {
+                                                        if ($lineTaxModel->type === 'percentage') {
+                                                            $lineTax = $lineBase * ((float) $lineTaxModel->rate / 100);
+                                                        } else {
+                                                            $lineTax = (float) $lineTaxModel->rate;
+                                                        }
+                                                    }
+                                                }
+
+                                                $lineAfterTax = $lineBase + $lineTax;
+                                            @endphp
+
+                                            <span class="text-sm text-zinc-900 dark:text-zinc-100">Rp {{ number_format($lineAfterTax, 0, ',', '.') }}</span>
                                         </td>
 
                                         {{-- Remove --}}

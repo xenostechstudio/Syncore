@@ -24,10 +24,24 @@ class Index extends Component
     public string $view = 'list';
     public array $selected = [];
     public bool $selectAll = false;
+    
+    public array $visibleColumns = [
+        'invoice_number' => true,
+        'customer' => true,
+        'invoice_date' => true,
+        'due_date' => true,
+        'total' => true,
+        'status' => true,
+    ];
 
     public function setView(string $view): void
     {
         $this->view = $view;
+    }
+
+    public function toggleColumn(string $column): void
+    {
+        $this->visibleColumns[$column] = !($this->visibleColumns[$column] ?? true);
     }
 
     public function updatingSearch(): void

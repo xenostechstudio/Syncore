@@ -48,7 +48,7 @@ class Index extends Component
         $warehouses = Warehouse::query()
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('location', 'like', "%{$this->search}%"))
-            ->withCount('items')
+            ->withCount('products')
             ->latest()
             ->paginate($this->perPage);
 

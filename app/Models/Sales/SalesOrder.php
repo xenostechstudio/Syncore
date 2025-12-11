@@ -2,7 +2,9 @@
 
 namespace App\Models\Sales;
 
+use App\Enums\SalesOrderState;
 use App\Models\Delivery\DeliveryOrder;
+use App\Models\Invoicing\Invoice;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,6 +25,7 @@ class SalesOrder extends Model
         'discount',
         'total',
         'notes',
+        'terms',
         'shipping_address',
     ];
 
@@ -34,6 +37,43 @@ class SalesOrder extends Model
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
     ];
+
+    public function getStateAttribute(): SalesOrderState
+    {
+        return SalesOrderState::tryFrom($this->status) ?? SalesOrderState::QUOTATION;
+    }
+
+    public function transitionTo(SalesOrderState $state): bool
+    {
+        $this->status = $state->value;
+        return $this->save();
+    }
+
+    public function confirm(): bool
+    {
+        if (!$this->state->canConfirm()) {
+            return false;
+        }
+        return $this->transitionTo(SalesOrderState::SALES_ORDER);
+    }
+
+    public function lock(): bool
+    {
+        // Locking an order conceptually means marking it as done (delivered)
+        if ($this->state !== SalesOrderState::SALES_ORDER) {
+            return false;
+        }
+
+        return $this->transitionTo(SalesOrderState::DONE);
+    }
+
+    public function cancelOrder(): bool
+    {
+        if (!$this->state->canCancel()) {
+            return false;
+        }
+        return $this->transitionTo(SalesOrderState::CANCELLED);
+    }
 
     public function customer(): BelongsTo
     {
@@ -53,6 +93,11 @@ class SalesOrder extends Model
     public function deliveryOrders(): HasMany
     {
         return $this->hasMany(DeliveryOrder::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
     }
 
     public static function generateOrderNumber(): string

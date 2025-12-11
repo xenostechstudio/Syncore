@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Inventory\Items;
 
-use App\Models\Inventory\InventoryItem;
+use App\Livewire\Concerns\WithManualPagination;
+use App\Models\Inventory\Product;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Products')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -50,7 +50,7 @@ class Index extends Component
     public function updatedSelectAll($value): void
     {
         if ($value) {
-            $this->selected = InventoryItem::query()
+            $this->selected = Product::query()
                 ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                     ->orWhere('sku', 'like', "%{$this->search}%"))
                 ->when($this->status, fn($q) => $q->where('status', $this->status))
@@ -91,25 +91,25 @@ class Index extends Component
 
     public function toggleFavorite(int $id): void
     {
-        $item = InventoryItem::findOrFail($id);
-        $item->update(['is_favorite' => !$item->is_favorite]);
+        $product = Product::findOrFail($id);
+        $product->update(['is_favorite' => !$product->is_favorite]);
     }
 
     public function delete(int $id): void
     {
-        InventoryItem::findOrFail($id)->delete();
+        Product::findOrFail($id)->delete();
         $this->selected = array_filter($this->selected, fn($s) => $s != $id);
     }
 
     public function deleteSelected(): void
     {
-        InventoryItem::whereIn('id', $this->selected)->delete();
+        Product::whereIn('id', $this->selected)->delete();
         $this->clearSelection();
     }
 
     public function render()
     {
-        $items = InventoryItem::query()
+        $products = Product::query()
             ->with('category')
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('sku', 'like', "%{$this->search}%"))
@@ -121,12 +121,12 @@ class Index extends Component
             ->when($this->sort === 'price_low', fn($q) => $q->orderBy('selling_price'))
             ->when($this->sort === 'stock_high', fn($q) => $q->orderByDesc('quantity'))
             ->when($this->sort === 'stock_low', fn($q) => $q->orderBy('quantity'))
-            ->paginate($this->perPage);
+            ->paginate($this->perPage, ['*'], 'page', $this->page);
 
-        // Group items by status for kanban view
-        $itemsByStatus = null;
+        // Group products by status for kanban view
+        $productsByStatus = null;
         if ($this->view === 'kanban') {
-            $itemsByStatus = InventoryItem::query()
+            $productsByStatus = Product::query()
                 ->with('category')
                 ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                     ->orWhere('sku', 'like', "%{$this->search}%"))
@@ -135,8 +135,8 @@ class Index extends Component
         }
 
         return view('livewire.inventory.items.index', [
-            'items' => $items,
-            'itemsByStatus' => $itemsByStatus,
+            'items' => $products,
+            'itemsByStatus' => $productsByStatus,
         ]);
     }
 }

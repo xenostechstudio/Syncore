@@ -13,8 +13,9 @@
         @endif
     </div>
 
-    <x-slot:header>
-        <div class="flex items-center justify-between gap-4">
+    {{-- Header Bar (inside Livewire root div so wire:click works) --}}
+    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <div class="flex w-full items-center justify-between gap-4">
             {{-- Left Group: New Button, Title, Gear --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('sales.customers.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
@@ -110,22 +111,22 @@
                     </div>
                 @else
                     {{-- Search Input with Arrow Down Dropdown --}}
-                    <div class="relative flex h-9 w-[480px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                        <input 
-                            type="text" 
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Search..." 
-                            class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
-                        />
-                        {{-- Separator + Dropdown Button --}}
-                        <flux:dropdown position="bottom" align="end">
-                            <button class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
+                    <flux:dropdown position="bottom" align="center" class="w-[480px]">
+                        <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
+                            <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                            <input 
+                                type="text" 
+                                wire:model.live.debounce.300ms="search"
+                                placeholder="Search..." 
+                                class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
+                            />
+                            <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
                                 <flux:icon name="chevron-down" class="size-4" />
                             </button>
+                        </div>
 
-                            {{-- Horizontal Dropdown Content --}}
-                            <flux:menu class="w-[480px]">
+                        {{-- Horizontal Dropdown Content --}}
+                        <flux:menu class="w-[480px]">
                                 <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
                                     {{-- Filters Section --}}
                                     <div class="flex-1 p-3">
@@ -186,49 +187,42 @@
                                     </div>
                                 </div>
                             </flux:menu>
-                        </flux:dropdown>
-                    </div>
+                    </flux:dropdown>
                 @endif
             </div>
 
-            {{-- Right Group: View Toggle, Pagination --}}
+            {{-- Right Group: Pagination Info + View Toggle --}}
             <div class="flex items-center gap-3">
-                <div class="flex items-center rounded-lg border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800">
-                    <button 
-                        wire:click="setView('list')"
-                        class="rounded-md p-1.5 transition-colors {{ $view === 'list' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }}"
-                    >
-                        <flux:icon name="list-bullet" class="size-4" />
-                    </button>
-                    <button 
-                        wire:click="setView('grid')"
-                        class="rounded-md p-1.5 transition-colors {{ $view === 'grid' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }}"
-                    >
-                        <flux:icon name="squares-2x2" class="size-4" />
-                    </button>
-                </div>
-                
-                @if($customers->hasPages())
-                    <div class="flex items-center gap-1">
+                {{-- Pagination Info & Navigation --}}
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                        {{ $customers->firstItem() ?? 0 }}-{{ $customers->lastItem() ?? 0 }}/{{ $customers->total() }}
+                    </span>
+                    <div class="flex items-center gap-0.5">
                         <button 
-                            wire:click="previousPage" 
+                            type="button"
+                            wire:click="goToPreviousPage"
                             @disabled($customers->onFirstPage())
-                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
+                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                         >
                             <flux:icon name="chevron-left" class="size-4" />
                         </button>
                         <button 
-                            wire:click="nextPage" 
+                            type="button"
+                            wire:click="goToNextPage"
                             @disabled(!$customers->hasMorePages())
-                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
+                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                         >
                             <flux:icon name="chevron-right" class="size-4" />
                         </button>
                     </div>
-                @endif
+                </div>
+
+                {{-- View Toggle --}}
+                <x-ui.view-toggle :view="$view" :views="['list', 'grid']" />
             </div>
         </div>
-    </x-slot:header>
+    </div>
 
     {{-- Content --}}
     <div>

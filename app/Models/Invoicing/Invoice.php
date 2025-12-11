@@ -47,9 +47,20 @@ class Invoice extends Model
 
         static::creating(function ($invoice) {
             if (empty($invoice->invoice_number)) {
-                $lastInvoice = static::latest('id')->first();
-                $nextNumber = $lastInvoice ? ((int) substr($lastInvoice->invoice_number, 4)) + 1 : 1;
-                $invoice->invoice_number = 'INV-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                $year = now()->year;
+                $prefix = "INV/{$year}/";
+
+                // Get all invoice numbers for the current year and compute the next numeric suffix in PHP
+                $lastNumber = static::where('invoice_number', 'like', $prefix . '%')
+                    ->pluck('invoice_number')
+                    ->map(function (string $number) use ($prefix) {
+                        return (int) substr($number, strlen($prefix));
+                    })
+                    ->max() ?? 0;
+
+                $nextNumber = $lastNumber + 1;
+
+                $invoice->invoice_number = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
             }
         });
     }

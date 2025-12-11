@@ -42,6 +42,12 @@ class ModuleNavigation
                 'description' => 'Shipment tracking',
                 'color' => 'violet',
             ],
+            'Invoicing' => [
+                'name' => 'Invoicing',
+                'icon' => 'document-text',
+                'description' => 'Invoice and payment management',
+                'color' => 'emerald',
+            ],
             'Settings' => [
                 'name' => 'General Setup',
                 'icon' => 'cog-6-tooth',
@@ -67,13 +73,23 @@ class ModuleNavigation
                     'pattern' => 'inventory.index',
                 ],
                 [
-                    'label' => 'Items',
-                    'route' => 'inventory.items.index',
-                    'icon' => 'cube',
-                    'pattern' => 'inventory.items*',
+                    'label' => 'Operations',
+                    'route' => 'inventory.transfers.index',
+                    'icon' => 'arrows-right-left',
+                    'pattern' => 'inventory.transfers*|inventory.adjustments*',
                     'children' => [
-                        ['label' => 'All Items', 'route' => 'inventory.items.index', 'pattern' => 'inventory.items.index'],
-                        ['label' => 'Categories', 'route' => 'inventory.items.index', 'pattern' => 'inventory.items.categories*'],
+                        ['label' => 'Transfers', 'route' => 'inventory.transfers.index', 'pattern' => 'inventory.transfers*'],
+                        ['label' => 'Adjustments', 'route' => 'inventory.adjustments.index', 'pattern' => 'inventory.adjustments*'],
+                    ],
+                ],
+                [
+                    'label' => 'Products',
+                    'route' => 'inventory.products.index',
+                    'icon' => 'cube',
+                    'pattern' => 'inventory.products*',
+                    'children' => [
+                        ['label' => 'Products', 'route' => 'inventory.products.index', 'pattern' => 'inventory.products*'],
+                        ['label' => 'Categories', 'route' => 'inventory.categories.index', 'pattern' => 'inventory.categories*'],
                     ],
                 ],
                 [
@@ -81,12 +97,6 @@ class ModuleNavigation
                     'route' => 'inventory.warehouses.index',
                     'icon' => 'building-storefront',
                     'pattern' => 'inventory.warehouses*',
-                ],
-                [
-                    'label' => 'Stock Movements',
-                    'route' => 'inventory.index',
-                    'icon' => 'arrows-right-left',
-                    'pattern' => 'inventory.movements*',
                 ],
             ],
             'Sales' => [
@@ -114,7 +124,7 @@ class ModuleNavigation
                     'icon' => 'document-text',
                     'pattern' => 'sales.invoices*',
                     'children' => [
-                        ['label' => 'Orders to Invoice', 'route' => 'sales.orders.index', 'pattern' => 'sales.invoices.pending'],
+                        ['label' => 'Orders to Invoice', 'route' => 'sales.invoices.pending', 'pattern' => 'sales.invoices.pending'],
                         ['label' => 'Orders to Upsell', 'route' => 'sales.orders.index', 'pattern' => 'sales.invoices.upsell'],
                     ],
                 ],
@@ -158,6 +168,32 @@ class ModuleNavigation
                     'route' => 'delivery.index',
                     'icon' => 'map-pin',
                     'pattern' => 'delivery.tracking*',
+                ],
+            ],
+            'Invoicing' => [
+                [
+                    'label' => 'Overview',
+                    'route' => 'invoicing.index',
+                    'icon' => 'chart-bar-square',
+                    'pattern' => 'invoicing.index',
+                ],
+                [
+                    'label' => 'Invoices',
+                    'route' => 'invoicing.invoices.index',
+                    'icon' => 'document-text',
+                    'pattern' => 'invoicing.invoices*',
+                ],
+                [
+                    'label' => 'Payments',
+                    'route' => 'invoicing.payments.index',
+                    'icon' => 'banknotes',
+                    'pattern' => 'invoicing.payments*',
+                ],
+                [
+                    'label' => 'Reports',
+                    'route' => 'invoicing.reports',
+                    'icon' => 'chart-pie',
+                    'pattern' => 'invoicing.reports*',
                 ],
             ],
             'Settings' => [

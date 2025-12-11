@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Sales\Configuration\Taxes;
 
+use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Sales\Tax;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Taxes')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -61,7 +61,7 @@ class Index extends Component
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('code', 'like', "%{$this->search}%"))
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.sales.configuration.taxes.index', [
             'taxes' => $taxes,

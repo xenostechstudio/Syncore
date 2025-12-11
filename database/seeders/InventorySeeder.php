@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Inventory\InventoryItem;
+use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use Illuminate\Database\Seeder;
 
@@ -25,7 +25,7 @@ class InventorySeeder extends Seeder
             'contact_info' => '+62 31 555 0200',
         ]);
 
-        InventoryItem::create([
+        Product::create([
             'name' => 'MacBook Pro 16"',
             'sku' => 'MBP-16-2024',
             'description' => 'Apple MacBook Pro 16" with M3 Max',
@@ -35,7 +35,7 @@ class InventorySeeder extends Seeder
             'status' => 'in_stock',
         ]);
 
-        InventoryItem::create([
+        Product::create([
             'name' => 'Dell XPS 15',
             'sku' => 'DELL-XPS-15',
             'description' => 'Dell XPS 15 Laptop',
@@ -45,7 +45,7 @@ class InventorySeeder extends Seeder
             'status' => 'in_stock',
         ]);
 
-        InventoryItem::create([
+        Product::create([
             'name' => 'Monitor LG UltraFine',
             'sku' => 'LG-UF-27',
             'description' => 'LG UltraFine 5K Display',
@@ -55,7 +55,7 @@ class InventorySeeder extends Seeder
             'status' => 'low_stock',
         ]);
 
-        InventoryItem::create([
+        Product::create([
             'name' => 'Keychron K2 Pro',
             'sku' => 'KC-K2P-RGB',
             'description' => 'Mechanical Keyboard Wireless',
@@ -85,7 +85,7 @@ class InventorySeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            InventoryItem::create($item);
+            Product::create($item);
         }
     }
 }

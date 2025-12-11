@@ -25,10 +25,42 @@ class Index extends Component
     public string $sort = 'latest';
     
     public string $view = 'list';
+    public array $selected = [];
+    public bool $selectAll = false;
+    
+    public array $visibleColumns = [
+        'delivery_number' => true,
+        'sales_order' => true,
+        'recipient' => true,
+        'courier' => true,
+        'delivery_date' => true,
+        'status' => true,
+    ];
 
     public function setView(string $view): void
     {
         $this->view = $view;
+    }
+
+    public function toggleColumn(string $column): void
+    {
+        $this->visibleColumns[$column] = !($this->visibleColumns[$column] ?? true);
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selected = [];
+        $this->selectAll = false;
+    }
+
+    public function deleteSelected(): void
+    {
+        if (count($this->selected) > 0) {
+            \App\Models\Delivery\DeliveryOrder::whereIn('id', $this->selected)->delete();
+            $this->selected = [];
+            $this->selectAll = false;
+            session()->flash('success', 'Selected delivery orders deleted successfully.');
+        }
     }
 
     public function updatingSearch(): void

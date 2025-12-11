@@ -39,9 +39,9 @@ class Form extends Component
     {
         $validated = $this->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:inventory_categories,code,' . $this->categoryId,
+            'code' => 'nullable|string|max:50|unique:product_categories,code,' . $this->categoryId,
             'description' => 'nullable|string',
-            'parent_id' => 'nullable|exists:inventory_categories,id',
+            'parent_id' => 'nullable|exists:product_categories,id',
             'color' => 'nullable|string|max:20',
             'is_active' => 'boolean',
             'sort_order' => 'integer',

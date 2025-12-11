@@ -2,7 +2,7 @@
 
 namespace App\Models\Sales;
 
-use App\Models\Inventory\InventoryItem;
+use App\Models\Inventory\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -10,7 +10,7 @@ class PricelistItem extends Model
 {
     protected $fillable = [
         'pricelist_id',
-        'inventory_item_id',
+        'product_id',
         'price',
         'min_quantity',
         'start_date',
@@ -31,6 +31,6 @@ class PricelistItem extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(InventoryItem::class, 'inventory_item_id');
+        return $this->belongsTo(Product::class);
     }
 }

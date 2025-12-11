@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Sales\Products;
 
-use App\Models\Inventory\InventoryItem;
+use App\Livewire\Concerns\WithManualPagination;
+use App\Models\Inventory\Product;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Products')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -24,7 +24,10 @@ class Index extends Component
     #[Url]
     public string $sort = 'latest';
 
-    public string $view = 'list';
+    #[Url]
+    public string $groupBy = '';
+
+    public string $view = 'list'; // list, grid, kanban
 
     public array $selected = [];
     public bool $selectAll = false;
@@ -60,9 +63,14 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'sort']);
+        $this->reset(['search', 'status', 'sort', 'groupBy']);
         $this->resetPage();
         $this->clearSelection();
+    }
+
+    public function updatedGroupBy(): void
+    {
+        $this->resetPage();
     }
 
     public function updatedSelected(): void
@@ -90,14 +98,14 @@ class Index extends Component
 
     public function toggleFavorite(int $id): void
     {
-        $item = InventoryItem::findOrFail($id);
-        $item->is_favorite = ! $item->is_favorite;
-        $item->save();
+        $product = Product::findOrFail($id);
+        $product->is_favorite = ! $product->is_favorite;
+        $product->save();
     }
 
     private function getProductsQuery()
     {
-        return InventoryItem::query()
+        return Product::query()
             ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('sku', 'like', "%{$this->search}%"))
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
@@ -112,10 +120,29 @@ class Index extends Component
 
     public function render()
     {
-        $products = $this->getProductsQuery()->paginate(15);
+        // For kanban view, get all products (no pagination) grouped by status
+        if ($this->view === 'kanban') {
+            $allProducts = $this->getProductsQuery()->get();
+            $groupedProducts = [
+                'in_stock' => $allProducts->where('status', 'in_stock')->values(),
+                'low_stock' => $allProducts->where('status', 'low_stock')->values(),
+                'out_of_stock' => $allProducts->where('status', 'out_of_stock')->values(),
+            ];
+            
+            // Paginate current kanban view page for header info
+            $products = $this->getProductsQuery()->paginate(15, ['*'], 'page', $this->page);
+            
+            return view('livewire.sales.products.index', [
+                'products' => $products,
+                'groupedProducts' => $groupedProducts,
+            ]);
+        }
+
+        $products = $this->getProductsQuery()->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.sales.products.index', [
             'products' => $products,
+            'groupedProducts' => [],
         ]);
     }
 }

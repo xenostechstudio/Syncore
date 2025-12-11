@@ -8,6 +8,7 @@ use Livewire\Volt\Volt;
 use App\Livewire\Inventory\Index as InventoryIndex;
 use App\Livewire\Inventory\ItemForm as InventoryItemForm;
 use App\Livewire\Inventory\Items\Index as ItemsIndex;
+use App\Livewire\Inventory\Products\Form as InventoryProductForm;
 use App\Livewire\Inventory\Warehouses\Index as WarehousesIndex;
 use App\Livewire\Inventory\Categories\Index as CategoriesIndex;
 use App\Livewire\Inventory\Categories\Form as CategoryForm;
@@ -28,6 +29,7 @@ use App\Livewire\Sales\Configuration\PaymentTerms\Index as PaymentTermsIndex;
 use App\Livewire\Sales\Configuration\PaymentTerms\Form as PaymentTermForm;
 use App\Livewire\Sales\Configuration\Pricelists\Index as PricelistsIndex;
 use App\Livewire\Sales\Configuration\Pricelists\Form as PricelistForm;
+use App\Livewire\Sales\Invoices\OrdersToInvoice as SalesOrdersToInvoice;
 
 use App\Livewire\Delivery\Index as DeliveryIndex;
 use App\Livewire\Delivery\Orders\Index as DeliveryOrdersIndex;
@@ -40,6 +42,7 @@ use App\Livewire\Invoicing\Payments\Index as PaymentsIndex;
 
 use App\Livewire\Settings\Index as SettingsIndex;
 use App\Livewire\Settings\Users\Index as SettingsUsersIndex;
+use App\Livewire\Settings\Users\Form as SettingsUsersForm;
 use App\Livewire\Settings\Roles\Index as SettingsRolesIndex;
 use App\Livewire\Settings\Localization\Index as SettingsLocalizationIndex;
 use App\Livewire\Settings\Company\Index as SettingsCompanyIndex;
@@ -67,10 +70,20 @@ Route::view('dashboard', 'dashboard')
 Route::middleware(['auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
     Route::get('/', InventoryIndex::class)->name('index');
     
-    // Items/Products
-    Route::get('/items', ItemsIndex::class)->name('items.index');
-    Route::get('/items/create', InventoryItemForm::class)->name('items.create');
-    Route::get('/items/{id}/edit', InventoryItemForm::class)->name('items.edit');
+    // Operations - Transfers
+    Route::get('/transfers', \App\Livewire\Inventory\Transfers\Index::class)->name('transfers.index');
+    Route::get('/transfers/create', \App\Livewire\Inventory\Transfers\Form::class)->name('transfers.create');
+    Route::get('/transfers/{id}/edit', \App\Livewire\Inventory\Transfers\Form::class)->name('transfers.edit');
+    
+    // Operations - Adjustments
+    Route::get('/adjustments', \App\Livewire\Inventory\Adjustments\Index::class)->name('adjustments.index');
+    Route::get('/adjustments/create', \App\Livewire\Inventory\Adjustments\Form::class)->name('adjustments.create');
+    Route::get('/adjustments/{id}/edit', \App\Livewire\Inventory\Adjustments\Form::class)->name('adjustments.edit');
+    
+    // Products
+    Route::get('/products', ItemsIndex::class)->name('products.index');
+    Route::get('/products/create', InventoryProductForm::class)->name('products.create');
+    Route::get('/products/{id}/edit', InventoryProductForm::class)->name('products.edit');
     
     // Categories
     Route::get('/categories', CategoriesIndex::class)->name('categories.index');
@@ -79,8 +92,8 @@ Route::middleware(['auth', 'verified'])->prefix('inventory')->name('inventory.')
     
     // Warehouses
     Route::get('/warehouses', WarehousesIndex::class)->name('warehouses.index');
-    Route::get('/warehouses/create', \App\Livewire\Inventory\WarehouseForm::class)->name('warehouses.create');
-    Route::get('/warehouses/{id}/edit', \App\Livewire\Inventory\WarehouseForm::class)->name('warehouses.edit');
+    Route::get('/warehouses/create', \App\Livewire\Inventory\Warehouses\Form::class)->name('warehouses.create');
+    Route::get('/warehouses/{id}/edit', \App\Livewire\Inventory\Warehouses\Form::class)->name('warehouses.edit');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(function () {
@@ -91,6 +104,9 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     Route::get('/orders/all', SalesOrdersIndex::class)->name('orders.all');
     Route::get('/orders/create', SalesOrderForm::class)->name('orders.create');
     Route::get('/orders/{id}/edit', SalesOrderForm::class)->name('orders.edit');
+    
+    // Orders to Invoice
+    Route::get('/invoices/orders', SalesOrdersToInvoice::class)->name('invoices.pending');
     
     // Customers
     Route::get('/customers', CustomersIndex::class)->name('customers.index');
@@ -153,8 +169,8 @@ Route::middleware(['auth', 'verified'])->prefix('setup')->name('settings.')->gro
     
     // Users
     Route::get('/users', SettingsUsersIndex::class)->name('users.index');
-    Route::get('/users/create', SettingsUsersIndex::class)->name('users.create');
-    Route::get('/users/{id}/edit', SettingsUsersIndex::class)->name('users.edit');
+    Route::get('/users/create', SettingsUsersForm::class)->name('users.create');
+    Route::get('/users/{id}/edit', SettingsUsersForm::class)->name('users.edit');
     
     // Roles & Permissions
     Route::get('/roles', SettingsRolesIndex::class)->name('roles.index');

@@ -3,6 +3,7 @@
 namespace App\Livewire\Invoicing\Invoices;
 
 use App\Models\Invoicing\Invoice;
+use App\Models\Invoicing\Payment;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use Illuminate\Support\Facades\Auth;
@@ -27,10 +28,15 @@ class Form extends Component
     public float $tax = 0;
     public float $discount = 0;
     public float $total = 0;
-    public float $paid_amount = 0;
-    public ?string $paid_date = null;
 
     public ?string $invoice_number = null;
+    
+    // Payment modal
+    public bool $showPaymentModal = false;
+    public float $paymentAmount = 0;
+    public string $paymentDate = '';
+    public string $paymentMethod = 'bank_transfer';
+    public string $paymentReference = '';
 
     public function mount(?int $id = null): void
     {
@@ -48,7 +54,7 @@ class Form extends Component
 
     protected function loadInvoice(): void
     {
-        $invoice = Invoice::with(['customer', 'salesOrder', 'items.inventoryItem'])
+        $invoice = Invoice::with(['customer', 'salesOrder', 'items.product', 'payments'])
             ->findOrFail($this->invoiceId);
 
         $this->customer_id = $invoice->customer_id;
@@ -62,8 +68,6 @@ class Form extends Component
         $this->tax = (float) $invoice->tax;
         $this->discount = (float) $invoice->discount;
         $this->total = (float) $invoice->total;
-        $this->paid_amount = (float) $invoice->paid_amount;
-        $this->paid_date = $invoice->paid_date?->format('Y-m-d');
         $this->invoice_number = $invoice->invoice_number;
     }
 
@@ -74,8 +78,6 @@ class Form extends Component
             'invoice_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:invoice_date',
             'status' => 'required|string|max:50',
-            'paid_amount' => 'nullable|numeric|min:0',
-            'paid_date' => 'nullable|date',
         ]);
 
         $data = [
@@ -90,8 +92,6 @@ class Form extends Component
             'tax' => $this->tax,
             'discount' => $this->discount,
             'total' => $this->total,
-            'paid_amount' => $this->paid_amount,
-            'paid_date' => $this->paid_date ?: null,
         ];
 
         if ($this->invoiceId) {
@@ -119,19 +119,88 @@ class Form extends Component
         }
     }
 
+    public function openPaymentModal(): void
+    {
+        $this->paymentAmount = 0;
+        $this->paymentDate = now()->format('Y-m-d');
+        $this->paymentMethod = 'bank_transfer';
+        $this->paymentReference = '';
+        $this->showPaymentModal = true;
+    }
+
+    public function closePaymentModal(): void
+    {
+        $this->showPaymentModal = false;
+    }
+
+    public function addPayment(): void
+    {
+        $this->validate([
+            'paymentAmount' => 'required|numeric|min:0.01',
+            'paymentDate' => 'required|date',
+            'paymentMethod' => 'required|string',
+        ]);
+
+        $invoice = Invoice::with('payments')->findOrFail($this->invoiceId);
+        $paidAmount = $invoice->payments->sum('amount');
+        $remaining = $invoice->total - $paidAmount;
+
+        if ($this->paymentAmount > $remaining) {
+            $this->addError('paymentAmount', 'Payment amount cannot exceed remaining amount.');
+            return;
+        }
+
+        // Generate payment number
+        $year = now()->year;
+        $prefix = "PAY/{$year}/";
+        $lastPayment = Payment::where('payment_number', 'like', $prefix . '%')
+            ->orderByRaw("CAST(SUBSTRING(payment_number, LENGTH(?) + 1) AS UNSIGNED) DESC", [$prefix])
+            ->first();
+        $nextNumber = $lastPayment ? ((int) substr($lastPayment->payment_number, strlen($prefix))) + 1 : 1;
+        $paymentNumber = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+        Payment::create([
+            'payment_number' => $paymentNumber,
+            'invoice_id' => $this->invoiceId,
+            'amount' => $this->paymentAmount,
+            'payment_date' => $this->paymentDate,
+            'payment_method' => $this->paymentMethod,
+            'reference' => $this->paymentReference ?: null,
+            'status' => 'completed',
+        ]);
+
+        // Update invoice status based on payment
+        $newPaidAmount = $paidAmount + $this->paymentAmount;
+        if ($newPaidAmount >= $invoice->total) {
+            $invoice->update(['status' => 'paid', 'paid_amount' => $newPaidAmount]);
+            $this->status = 'paid';
+        } else {
+            $invoice->update(['status' => 'partial', 'paid_amount' => $newPaidAmount]);
+            $this->status = 'partial';
+        }
+
+        $this->showPaymentModal = false;
+        session()->flash('success', 'Payment recorded successfully.');
+    }
+
     public function render()
     {
         $customers = Customer::orderBy('name')->get();
         $salesOrders = SalesOrder::with('customer')->orderByDesc('order_date')->limit(50)->get();
 
         $invoice = $this->invoiceId
-            ? Invoice::with(['customer', 'items.inventoryItem'])->find($this->invoiceId)
+            ? Invoice::with(['customer', 'items.product', 'payments', 'salesOrder'])->find($this->invoiceId)
             : null;
+
+        $paidAmount = $invoice ? $invoice->payments->sum('amount') : 0;
+        $remainingAmount = $invoice ? $invoice->total - $paidAmount : 0;
 
         return view('livewire.invoicing.invoices.form', [
             'customers' => $customers,
             'salesOrders' => $salesOrders,
             'invoice' => $invoice,
+            'paidAmount' => $paidAmount,
+            'remainingAmount' => $remainingAmount,
         ]);
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
-    protected $table = 'inventory_categories';
+    protected $table = 'product_categories';
 
     protected $fillable = [
         'name',
@@ -35,9 +35,9 @@ class Category extends Model
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-    public function items(): HasMany
+    public function products(): HasMany
     {
-        return $this->hasMany(InventoryItem::class, 'category_id');
+        return $this->hasMany(Product::class, 'category_id');
     }
 
     public function getFullPathAttribute(): string

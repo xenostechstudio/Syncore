@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Inventory\InventoryItem;
+use App\Models\Inventory\Product;
 use App\Models\Sales\Customer;
 use App\Models\Sales\PaymentTerm;
 use App\Models\Sales\SalesOrder;
@@ -195,7 +195,7 @@ class SalesSeeder extends Seeder
         }
 
         // Get items and user for orders
-        $items = InventoryItem::all();
+        $items = Product::all();
         $user = User::first();
         
         if ($items->isEmpty() || !$user) {
@@ -243,7 +243,7 @@ class SalesSeeder extends Seeder
 
                 SalesOrderItem::create([
                     'sales_order_id' => $order->id,
-                    'inventory_item_id' => $item->id,
+                    'product_id' => $item->id,
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'discount' => $discount,

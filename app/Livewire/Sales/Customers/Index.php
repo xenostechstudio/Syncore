@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Sales\Customers;
 
+use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Sales\Customer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Customers')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -113,7 +113,7 @@ class Index extends Component
 
     public function render()
     {
-        $customers = $this->getCustomersQuery()->paginate(12);
+        $customers = $this->getCustomersQuery()->paginate(12, ['*'], 'page', $this->page);
 
         return view('livewire.sales.customers.index', [
             'customers' => $customers,

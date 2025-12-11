@@ -1,18 +1,45 @@
 <div x-data="{ 
+    activeTab: 'items',
     showSendMessage: false,
     showLogNote: false,
-    showScheduleActivity: false
+    showScheduleActivity: false,
+    showCancelModal: false
 }">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
-            {{-- Left: Back + Title --}}
+            {{-- Left Group: Back Button, Title, Gear Dropdown --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('delivery.orders.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                     <flux:icon name="arrow-left" class="size-5" />
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    {{ $deliveryId ? ($delivery_number ?? 'Delivery') : 'New Delivery Order' }}
-                </span>
+                <div class="flex flex-col">
+                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Delivery Order</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            {{ $deliveryId ? ($delivery_number ?? 'Delivery') : 'New Delivery Order' }}
+                        </span>
+                        <flux:dropdown position="bottom" align="start">
+                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                <flux:icon name="cog-6-tooth" class="size-4" />
+                            </button>
+                            <flux:menu class="w-40">
+                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="document-duplicate" class="size-4" />
+                                    <span>Duplicate</span>
+                                </button>
+                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="printer" class="size-4" />
+                                    <span>Print</span>
+                                </button>
+                                <flux:menu.separator />
+                                <button type="button" wire:click="delete" wire:confirm="Are you sure?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <flux:icon name="trash" class="size-4" />
+                                    <span>Delete</span>
+                                </button>
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+                </div>
             </div>
         </div>
     </x-slot:header>
@@ -36,30 +63,68 @@
         @endif
     </div>
 
-    {{-- Action Bar --}}
+    {{-- Action Buttons Bar --}}
     <div class="-mx-4 -mt-6 bg-zinc-50 px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:bg-zinc-900/50">
         <div class="grid grid-cols-12 items-center gap-6">
+            {{-- Left: Action Buttons (col-span-9) --}}
             <div class="col-span-9 flex items-center justify-between">
                 <div class="flex flex-wrap items-center gap-2">
                     <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                         <flux:icon name="document-check" class="size-4" />
                         Save
                     </button>
-                    @if($deliveryId)
-                        <button type="button" wire:click="delete" wire:confirm="Are you sure you want to delete this delivery?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400">
-                            <flux:icon name="trash" class="size-4" />
-                            Delete
+                    <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                        <flux:icon name="printer" class="size-4" />
+                        Print
+                    </button>
+                    @if($deliveryId && !in_array($status, ['delivered', 'returned']))
+                        <button type="button" @click="showCancelModal = true" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
+                            <flux:icon name="x-mark" class="size-4" />
+                            Cancel
                         </button>
                     @endif
                 </div>
 
-                {{-- Status Badge --}}
-                <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                    {{ ucfirst(str_replace('_', ' ', $status)) }}
-                </span>
+                {{-- Stepper --}}
+                @php
+                    $steps = [
+                        ['key' => 'pending', 'label' => 'Pending'],
+                        ['key' => 'picked', 'label' => 'Picked'],
+                        ['key' => 'in_transit', 'label' => 'In Transit'],
+                        ['key' => 'delivered', 'label' => 'Delivered'],
+                    ];
+                    $currentIndex = collect($steps)->search(fn($s) => $s['key'] === $status);
+                    if ($currentIndex === false) $currentIndex = 0;
+                    $isFailed = $status === 'failed';
+                    $isReturned = $status === 'returned';
+                @endphp
+                @if($isFailed)
+                    <span class="inline-flex h-[38px] items-center rounded-lg bg-red-100 px-4 text-sm font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">Failed</span>
+                @elseif($isReturned)
+                    <span class="inline-flex h-[38px] items-center rounded-lg bg-amber-100 px-4 text-sm font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Returned</span>
+                @else
+                    <div class="flex items-center">
+                        @foreach($steps as $index => $step)
+                            @php
+                                $isActive = $index === $currentIndex;
+                                $isCompleted = $index < $currentIndex;
+                                $isPending = $index > $currentIndex;
+                                $isFirst = $index === 0;
+                            @endphp
+                            <div class="relative flex items-center {{ !$isFirst ? '-ml-2' : '' }}" style="z-index: {{ count($steps) - $index }};">
+                                <div class="relative flex h-[38px] items-center px-4 {{ $isActive ? 'bg-violet-600 text-white' : '' }} {{ $isCompleted ? 'bg-emerald-500 text-white' : '' }} {{ $isPending ? 'bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400' : '' }}" style="clip-path: polygon({{ $isFirst ? '0 0' : '10px 0' }}, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, {{ $isFirst ? '0 100%' : '10px 100%' }}, {{ $isFirst ? '0 50%' : '0 100%, 10px 50%, 0 0' }});">
+                                    <span class="flex items-center gap-1 text-sm font-medium whitespace-nowrap">
+                                        @if($isCompleted)<flux:icon name="check" class="size-4" />@endif
+                                        {{ $step['label'] }}
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
-            {{-- Chatter Icons --}}
+            {{-- Right: Chatter Icons (col-span-3) --}}
             <div class="col-span-3 flex items-center justify-end gap-1">
                 <button @click="showSendMessage = !showSendMessage; showLogNote = false; showScheduleActivity = false" :class="showSendMessage ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'" class="rounded-lg p-2 transition-colors" title="Send message">
                     <flux:icon name="chat-bubble-left" class="size-5" />
@@ -180,7 +245,7 @@
                                         @foreach($delivery->items as $item)
                                             <tr>
                                                 <td class="px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100">
-                                                    {{ $item->salesOrderItem->inventoryItem->name ?? '-' }}
+                                                    {{ $item->salesOrderItem->product->name ?? '-' }}
                                                 </td>
                                                 <td class="px-3 py-2 text-right text-sm text-zinc-600 dark:text-zinc-300">
                                                     {{ $item->salesOrderItem->quantity ?? 0 }}

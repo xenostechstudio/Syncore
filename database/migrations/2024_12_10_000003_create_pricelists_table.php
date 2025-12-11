@@ -26,7 +26,7 @@ return new class extends Migration
         Schema::create('pricelist_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pricelist_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('inventory_item_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->decimal('price', 15, 2);
             $table->integer('min_quantity')->default(1);
             $table->date('start_date')->nullable();

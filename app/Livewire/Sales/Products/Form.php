@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Sales\Products;
 
-use App\Models\Inventory\InventoryItem;
+use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Tax;
 use Livewire\Attributes\Layout;
@@ -14,14 +14,14 @@ use Livewire\Component;
 #[Title('Product')]
 class Form extends Component
 {
-    public ?InventoryItem $item = null;
+    public ?Product $item = null;
     public bool $editing = false;
 
     #[Validate('required|string|max:255')]
     public string $name = '';
 
-    #[Validate('required|string|max:50|unique:inventory_items,sku')]
-    public string $sku = '';
+    #[Validate('nullable|string|max:50|unique:products,sku')]
+    public ?string $sku = null;
 
     #[Validate('nullable|string|max:1000')]
     public ?string $description = null;
@@ -67,7 +67,7 @@ class Form extends Component
     public function mount(?int $id = null): void
     {
         if ($id) {
-            $this->item = InventoryItem::findOrFail($id);
+            $this->item = Product::findOrFail($id);
             $this->editing = true;
 
             $this->name = $this->item->name;
@@ -79,6 +79,7 @@ class Form extends Component
             $this->status = $this->item->status;
             $this->warehouse_id = $this->item->warehouse_id;
             $this->is_favorite = (bool) ($this->item->is_favorite ?? false);
+            $this->sales_tax_id = $this->item->sales_tax_id;
         }
     }
 
@@ -94,7 +95,7 @@ class Form extends Component
         $rules = $this->getRules();
 
         if ($this->editing && $this->item) {
-            $rules['sku'] = 'required|string|max:50|unique:inventory_items,sku,' . $this->item->id;
+            $rules['sku'] = 'nullable|string|max:50|unique:products,sku,' . $this->item->id;
         }
 
         $validated = $this->validate($rules);
@@ -110,11 +111,12 @@ class Form extends Component
         // Only persist fields that exist on InventoryItem
         $itemData = [
             'name' => $validated['name'],
-            'sku' => $validated['sku'],
+            'sku' => (isset($validated['sku']) && $validated['sku'] !== '') ? $validated['sku'] : null,
             'description' => $validated['description'] ?? null,
             'quantity' => $validated['quantity'],
             'cost_price' => $validated['cost_price'] ?? null,
             'selling_price' => $validated['selling_price'] ?? null,
+            'sales_tax_id' => $validated['sales_tax_id'] ?? null,
             'status' => $validated['status'],
             'warehouse_id' => $validated['warehouse_id'] ?? null,
             'is_favorite' => $validated['is_favorite'] ?? false,
@@ -124,7 +126,7 @@ class Form extends Component
             $this->item->update($itemData);
             session()->flash('success', 'Product updated successfully.');
         } else {
-            $this->item = InventoryItem::create($itemData);
+            $this->item = Product::create($itemData);
             $this->editing = true;
             session()->flash('success', 'Product created successfully.');
         }

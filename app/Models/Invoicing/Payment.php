@@ -11,12 +11,14 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
+        'payment_number',
         'invoice_id',
         'payment_date',
         'amount',
         'payment_method',
         'reference',
         'notes',
+        'status',
     ];
 
     protected $casts = [

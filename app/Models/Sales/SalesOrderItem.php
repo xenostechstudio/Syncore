@@ -2,7 +2,7 @@
 
 namespace App\Models\Sales;
 
-use App\Models\Inventory\InventoryItem;
+use App\Models\Inventory\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,7 +11,7 @@ class SalesOrderItem extends Model
 {
     protected $fillable = [
         'sales_order_id',
-        'inventory_item_id',
+        'product_id',
         'tax_id',
         'quantity',
         'unit_price',
@@ -30,9 +30,9 @@ class SalesOrderItem extends Model
         return $this->belongsTo(SalesOrder::class);
     }
 
-    public function inventoryItem(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(InventoryItem::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function tax(): BelongsTo

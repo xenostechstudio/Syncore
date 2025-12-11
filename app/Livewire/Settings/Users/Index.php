@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Settings\Users;
 
+use App\Livewire\Concerns\WithManualPagination;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Settings'])]
 #[Title('Users')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -41,6 +41,11 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatedSort(): void
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         $query = User::query();
@@ -58,13 +63,18 @@ class Index extends Component
             $query->whereNull('email_verified_at');
         }
 
-        $query->orderBy(
-            $this->sort === 'oldest' ? 'created_at' : 'created_at',
-            $this->sort === 'oldest' ? 'asc' : 'desc'
-        );
+        if ($this->sort === 'oldest') {
+            $query->orderBy('created_at', 'asc');
+        } elseif ($this->sort === 'name') {
+            $query->orderBy('name', 'asc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $users = $query->paginate(12, ['*'], 'page', $this->page);
 
         return view('livewire.settings.users.index', [
-            'users' => $query->paginate(12),
+            'users' => $users,
         ]);
     }
 }

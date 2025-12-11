@@ -2,12 +2,16 @@
 
 namespace App\Livewire\Sales\Orders;
 
-use App\Models\Inventory\InventoryItem;
+use App\Enums\SalesOrderState;
+use App\Models\Inventory\Product;
+use App\Models\Invoicing\Invoice;
+use App\Models\Invoicing\InvoiceItem;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderItem;
 use App\Models\Sales\Tax;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -38,7 +42,13 @@ class Form extends Component
     // UI State
     public bool $showCustomerModal = false;
     public bool $showItemModal = false;
+    public bool $showInvoiceModal = false;
     public string $itemSearch = '';
+
+    // Invoice Creation Options
+    public string $invoiceType = 'regular'; // regular, down_payment_percentage, down_payment_fixed
+    public float $downPaymentPercentage = 0;
+    public float $downPaymentAmount = 0;
 
     // History/Activity Log
     public array $activityLog = [];
@@ -59,7 +69,7 @@ class Form extends Component
 
     public function loadOrder(): void
     {
-        $order = SalesOrder::with(['customer', 'items.inventoryItem', 'items.tax'])->findOrFail($this->orderId);
+        $order = SalesOrder::with(['customer', 'items.product', 'items.tax'])->findOrFail($this->orderId);
 
         $this->customer_id = $order->customer_id;
         $this->order_date = $order->order_date->format('Y-m-d');
@@ -74,9 +84,9 @@ class Form extends Component
 
         $this->items = $order->items->map(fn($item) => [
             'id' => $item->id,
-            'inventory_item_id' => $item->inventory_item_id,
-            'name' => $item->inventoryItem->name ?? '',
-            'sku' => $item->inventoryItem->sku ?? '',
+            'product_id' => $item->product_id,
+            'name' => $item->product->name ?? '',
+            'sku' => $item->product->sku ?? '',
             'tax_id' => $item->tax_id,
             'quantity' => $item->quantity,
             'unit_price' => $item->unit_price,
@@ -108,7 +118,7 @@ class Form extends Component
     {
         $this->items[] = [
             'id' => null,
-            'inventory_item_id' => null,
+            'product_id' => null,
             'name' => '',
             'sku' => '',
             'tax_id' => null,
@@ -127,12 +137,13 @@ class Form extends Component
 
     public function selectItem(int $index, int $itemId): void
     {
-        $item = InventoryItem::find($itemId);
+        $item = Product::find($itemId);
         if ($item) {
-            $this->items[$index]['inventory_item_id'] = $item->id;
+            $this->items[$index]['product_id'] = $item->id;
             $this->items[$index]['name'] = $item->name;
             $this->items[$index]['sku'] = $item->sku;
             $this->items[$index]['unit_price'] = $item->selling_price ?? 0;
+            $this->items[$index]['tax_id'] = $item->sales_tax_id;
             $this->calculateItemTotal($index);
         }
     }
@@ -211,7 +222,7 @@ class Form extends Component
     public function save(): void
     {
         // Filter out empty items (no product selected)
-        $validItems = collect($this->items)->filter(fn($item) => !empty($item['inventory_item_id']))->values()->toArray();
+        $validItems = collect($this->items)->filter(fn($item) => !empty($item['product_id']))->values()->toArray();
         
         // Check if there are valid items
         if (empty($validItems)) {
@@ -226,7 +237,7 @@ class Form extends Component
             'customer_id' => 'required|exists:customers,id',
             'order_date' => 'required|date',
             'items' => 'required|array|min:1',
-            'items.*.inventory_item_id' => 'required|exists:inventory_items,id',
+            'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
         ], [
@@ -234,7 +245,7 @@ class Form extends Component
             'order_date.required' => 'Please enter the order date.',
             'items.required' => 'Please add at least one product to the order.',
             'items.min' => 'Please add at least one product to the order.',
-            'items.*.inventory_item_id.required' => 'Please select a product for all order lines.',
+            'items.*.product_id.required' => 'Please select a product for all order lines.',
             'items.*.quantity.required' => 'Please enter quantity for all products.',
             'items.*.quantity.min' => 'Quantity must be at least 1.',
             'items.*.unit_price.required' => 'Please enter unit price for all products.',
@@ -247,7 +258,7 @@ class Form extends Component
     public function confirm(): void
     {
         // Filter out empty items (no product selected)
-        $validItems = collect($this->items)->filter(fn($item) => !empty($item['inventory_item_id']))->values()->toArray();
+        $validItems = collect($this->items)->filter(fn($item) => !empty($item['product_id']))->values()->toArray();
         
         // Check if there are valid items
         if (empty($validItems)) {
@@ -263,7 +274,7 @@ class Form extends Component
             'customer_id' => 'required|exists:customers,id',
             'order_date' => 'required|date',
             'items' => 'required|array|min:1',
-            'items.*.inventory_item_id' => 'required|exists:inventory_items,id',
+            'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
         ], [
@@ -271,25 +282,122 @@ class Form extends Component
             'order_date.required' => 'Please enter the order date.',
             'items.required' => 'Please add at least one product to the order.',
             'items.min' => 'Please add at least one product to the order.',
-            'items.*.inventory_item_id.required' => 'Please select a product for all order lines.',
+            'items.*.product_id.required' => 'Please select a product for all order lines.',
             'items.*.quantity.required' => 'Please enter quantity for all products.',
             'items.*.quantity.min' => 'Quantity must be at least 1.',
             'items.*.unit_price.required' => 'Please enter unit price for all products.',
             'items.*.unit_price.min' => 'Unit price cannot be negative.',
         ]);
 
-        // Only change status after validation passes - set to 'processing' (Sales Order)
-        $this->status = 'processing';
+        // Only change status after validation passes - set to 'sales_order'
+        $this->status = SalesOrderState::SALES_ORDER->value;
         $this->saveOrder();
         
         session()->flash('success', 'Order confirmed successfully. Status changed to Sales Order.');
     }
 
+    public function openInvoiceModal(): void
+    {
+        $this->invoiceType = 'regular';
+        $this->downPaymentPercentage = 0;
+        $this->downPaymentAmount = 0;
+        $this->showInvoiceModal = true;
+    }
+
     public function createInvoice(): void
     {
-        // TODO: Implement invoice creation logic
-        // For now, just show a message
-        session()->flash('success', 'Invoice creation feature coming soon.');
+        if (!$this->orderId) {
+            session()->flash('error', 'Please save the order first.');
+            return;
+        }
+
+        $order = SalesOrder::with('items.product')->findOrFail($this->orderId);
+        
+        if (!$order->state->canCreateInvoice()) {
+            session()->flash('error', 'Cannot create invoice for this order status.');
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $invoiceTotal = 0;
+            $invoiceSubtotal = 0;
+            $invoiceTax = 0;
+
+            // Calculate invoice amount based on type
+            if ($this->invoiceType === 'regular') {
+                $invoiceSubtotal = (float) $order->subtotal;
+                $invoiceTax = (float) $order->tax;
+                $invoiceTotal = (float) $order->total;
+            } elseif ($this->invoiceType === 'down_payment_percentage') {
+                $percentage = max(0, min(100, $this->downPaymentPercentage));
+                $invoiceSubtotal = (float) $order->subtotal * ($percentage / 100);
+                $invoiceTax = (float) $order->tax * ($percentage / 100);
+                $invoiceTotal = (float) $order->total * ($percentage / 100);
+            } elseif ($this->invoiceType === 'down_payment_fixed') {
+                $invoiceTotal = max(0, min((float) $order->total, $this->downPaymentAmount));
+                // Proportionally calculate subtotal and tax
+                $ratio = $invoiceTotal / max(1, (float) $order->total);
+                $invoiceSubtotal = (float) $order->subtotal * $ratio;
+                $invoiceTax = (float) $order->tax * $ratio;
+            }
+
+            // Create invoice
+            $invoice = Invoice::create([
+                'customer_id' => $order->customer_id,
+                'sales_order_id' => $order->id,
+                'invoice_date' => now(),
+                'due_date' => now()->addDays(30),
+                'status' => 'draft',
+                'subtotal' => $invoiceSubtotal,
+                'tax' => $invoiceTax,
+                'discount' => 0,
+                'total' => $invoiceTotal,
+                'notes' => $this->invoiceType !== 'regular' 
+                    ? 'Down Payment for ' . $order->order_number 
+                    : null,
+            ]);
+
+            // Create invoice items
+            if ($this->invoiceType === 'regular') {
+                foreach ($order->items as $orderItem) {
+                    InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'product_id' => $orderItem->product_id,
+                        'description' => $orderItem->product->name ?? '',
+                        'quantity' => $orderItem->quantity,
+                        'unit_price' => $orderItem->unit_price,
+                        'discount' => $orderItem->discount,
+                        'total' => $orderItem->total,
+                    ]);
+                }
+            } else {
+                // For down payments, create a single line item
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'product_id' => null,
+                    'description' => $this->invoiceType === 'down_payment_percentage'
+                        ? "Down Payment ({$this->downPaymentPercentage}%) for {$order->order_number}"
+                        : "Down Payment for {$order->order_number}",
+                    'quantity' => 1,
+                    'unit_price' => $invoiceTotal,
+                    'discount' => 0,
+                    'total' => $invoiceTotal,
+                ]);
+            }
+
+            DB::commit();
+
+            $this->showInvoiceModal = false;
+            session()->flash('success', 'Invoice draft created successfully.');
+            
+            // Redirect to the invoice
+            $this->redirect(route('invoicing.invoices.edit', $invoice->id), navigate: true);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Failed to create invoice: ' . $e->getMessage());
+        }
     }
     
     private function saveOrder(): void
@@ -320,10 +428,10 @@ class Form extends Component
         }
 
         foreach ($this->items as $item) {
-            if ($item['inventory_item_id']) {
+            if ($item['product_id']) {
                 SalesOrderItem::create([
                     'sales_order_id' => $order->id,
-                    'inventory_item_id' => $item['inventory_item_id'],
+                    'product_id' => $item['product_id'],
                     'tax_id' => $item['tax_id'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
@@ -341,17 +449,22 @@ class Form extends Component
     {
         if ($this->orderId) {
             $order = SalesOrder::findOrFail($this->orderId);
-            $order->update(['status' => 'cancelled']);
+            $order->update(['status' => SalesOrderState::CANCELLED->value]);
             
             session()->flash('success', 'Order cancelled successfully.');
             $this->redirect(route('sales.orders.index'), navigate: true);
         }
     }
 
+    public function getStateProperty(): SalesOrderState
+    {
+        return SalesOrderState::tryFrom($this->status) ?? SalesOrderState::QUOTATION;
+    }
+
     public function render()
     {
         $customers = Customer::where('status', 'active')->orderBy('name')->get();
-        $inventoryItems = InventoryItem::query()
+        $products = Product::query()
             ->when($this->itemSearch, fn($q) => $q->where('name', 'like', "%{$this->itemSearch}%")
                 ->orWhere('sku', 'like', "%{$this->itemSearch}%"))
             ->where('status', '!=', 'out_of_stock')
@@ -367,11 +480,17 @@ class Form extends Component
             ->orderBy('name')
             ->get();
 
+        // Get invoices linked to this sales order
+        $invoices = $this->orderId 
+            ? Invoice::where('sales_order_id', $this->orderId)->get() 
+            : collect();
+
         return view('livewire.sales.orders.form', [
             'customers' => $customers,
-            'inventoryItems' => $inventoryItems,
+            'products' => $products,
             'selectedCustomer' => $selectedCustomer,
             'taxes' => $taxes,
+            'invoices' => $invoices,
         ]);
     }
 }

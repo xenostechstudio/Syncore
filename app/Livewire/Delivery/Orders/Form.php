@@ -141,7 +141,7 @@ class Form extends Component
         $warehouses = Warehouse::orderBy('name')->get();
 
         $delivery = $this->deliveryId
-            ? DeliveryOrder::with(['salesOrder.customer', 'items.salesOrderItem.inventoryItem'])
+            ? DeliveryOrder::with(['salesOrder.customer', 'items.salesOrderItem.product'])
                 ->find($this->deliveryId)
             : null;
 
