@@ -24,6 +24,7 @@ class Index extends Component
     #[Url]
     public string $sort = 'latest';
     
+    #[Url]
     public string $view = 'list';
 
     public array $selected = [];
@@ -57,6 +58,10 @@ class Index extends Component
 
     public function setView(string $view): void
     {
+        if (! in_array($view, ['list', 'grid', 'kanban'])) {
+            return;
+        }
+
         $this->view = $view;
     }
 

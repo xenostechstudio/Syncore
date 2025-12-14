@@ -3,11 +3,11 @@
     <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
         <div class="flex w-full items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <a href="{{ route('settings.users.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                <a href="{{ route('purchase.suppliers.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                     New
                 </a>
                 <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    Users
+                    Suppliers
                 </span>
                 <flux:dropdown position="bottom" align="start">
                     <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
@@ -175,7 +175,7 @@
                                 >
                             </th>
                             @if($visibleColumns['user'])
-                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">User</th>
+                                <th class="py-3 pl-2 pr-4 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Supplier</th>
                             @endif
                             @if($visibleColumns['status'])
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
@@ -210,16 +210,18 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                        @forelse($users as $user)
+                        @forelse($suppliers as $supplier)
                             <tr 
-                                onclick="window.location.href='{{ route('settings.users.edit', $user->id) }}'"
-                                class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                wire:navigate
+                                href="{{ route('purchase.suppliers.edit', $supplier->id) }}"
+                                class="group cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                onclick="window.location.href='{{ route('purchase.suppliers.edit', $supplier->id) }}'"
                             >
                                 <td class="py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
                                     <input 
                                         type="checkbox" 
                                         wire:model.live="selected"
-                                        value="{{ $user->id }}"
+                                        value="{{ $supplier->id }}"
                                         class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
                                     >
                                 </td>
@@ -255,7 +257,7 @@
                                     </td>
                                 @endif
                                 <td class="py-4 pr-4 sm:pr-6 lg:pr-8" onclick="event.stopPropagation()">
-                                    <a href="{{ route('settings.users.edit', $user->id) }}" wire:navigate class="inline-flex rounded-md p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
+                                    <a href="{{ route('purchase.suppliers.edit', $supplier->id) }}" wire:navigate class="inline-flex rounded-md p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
                                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
                                         </svg>
@@ -265,9 +267,10 @@
                         @empty
                             @php
                                 $emptyColspan = 2
-                                    + ($visibleColumns['user'] ? 1 : 0)
-                                    + ($visibleColumns['status'] ? 1 : 0)
-                                    + ($visibleColumns['joined'] ? 1 : 0);
+                                    + ($visibleColumns['supplier'] ? 1 : 0)
+                                    + ($visibleColumns['contact'] ? 1 : 0)
+                                    + ($visibleColumns['email'] ? 1 : 0)
+                                    + ($visibleColumns['status'] ? 1 : 0);
                             @endphp
                             <tr>
                                 <td colspan="{{ $emptyColspan }}" class="px-6 py-12 text-center">
@@ -278,7 +281,7 @@
                                             </svg>
                                         </div>
                                         <div>
-                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No users found</p>
+                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No suppliers found</p>
                                             <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
                                         </div>
                                     </div>
@@ -291,17 +294,17 @@
         @else
             {{-- Grid View --}}
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                @forelse($users as $user)
-                    <a href="{{ route('settings.users.edit', $user->id) }}" wire:navigate class="relative block rounded-lg border border-zinc-200 bg-white p-3 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                        <span class="absolute right-2 top-2 inline-flex h-2 w-2 rounded-full {{ $user->email_verified_at ? 'bg-emerald-500' : 'bg-amber-500' }}"></span>
+                @forelse($suppliers as $supplier)
+                    <a href="{{ route('purchase.suppliers.edit', $supplier->id) }}" wire:navigate class="relative block rounded-lg border border-zinc-200 bg-white p-3 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+                        <span class="absolute right-2 top-2 inline-flex h-2 w-2 rounded-full {{ $supplier->is_active ? 'bg-emerald-500' : 'bg-zinc-400' }}"></span>
                         <div class="flex items-start gap-3">
                             <div class="relative flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-sm font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                {{ $user->initials() }}
+                                {{ strtoupper(substr($supplier->name, 0, 2)) }}
                             </div>
                             <div class="min-w-0 flex-1">
-                                <h3 class="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $user->name }}</h3>
-                                <p class="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400">{{ $user->email }}</p>
-                                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Joined {{ $user->created_at->format('M d, Y') }}</p>
+                                <h3 class="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $supplier->name }}</h3>
+                                <p class="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400">{{ $supplier->email ?? 'No email' }}</p>
+                                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">{{ $supplier->city ?? 'N/A' }}</p>
                             </div>
                         </div>
                     </a>
@@ -310,7 +313,7 @@
                         <svg class="mx-auto size-12 text-zinc-300 dark:text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                         </svg>
-                        <p class="mt-4 text-sm font-light text-zinc-500 dark:text-zinc-400">No users found</p>
+                        <p class="mt-4 text-sm font-light text-zinc-500 dark:text-zinc-400">No suppliers found</p>
                     </div>
                 @endforelse
             </div>

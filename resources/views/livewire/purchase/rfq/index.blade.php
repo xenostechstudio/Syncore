@@ -26,26 +26,16 @@
         @endif
     </div>
 
-    @php
-        $isOrdersToInvoicePage = request()->routeIs('sales.invoices.pending');
-    @endphp
-
-    {{-- Header Bar (inside Livewire root div so wire:click works) --}}
+    {{-- Header Bar --}}
     <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
         <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group: Title, Gear (no New button for Orders to Invoice) --}}
+            {{-- Left Group: New Button, Title, Gear --}}
             <div class="flex items-center gap-3">
-                @unless($isOrdersToInvoicePage)
-                    <a href="{{ route('sales.orders.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                        New
-                    </a>
-                @endunless
-                <span class="text-md font-ligth text-zinc-600 dark:text-zinc-400">
-                    @if($isOrdersToInvoicePage)
-                        Orders to Invoice
-                    @else
-                        {{ $mode === 'orders' ? 'Orders' : 'Quotations' }}
-                    @endif
+                <a href="{{ route('purchase.rfq.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                    New
+                </a>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
+                    Request for Quotation
                 </span>
                 
                 {{-- Actions Menu (Gear) --}}
@@ -72,24 +62,16 @@
                 @if(count($selected) > 0)
                     {{-- Selection Toolbar --}}
                     <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                        {{-- Count Selected Button --}}
                         <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600">
                             <flux:icon name="x-mark" class="size-4" />
                             <span>{{ count($selected) }} Selected</span>
                         </button>
 
-                        {{-- Create Invoice --}}
-                        <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                            Create Invoice
-                        </button>
-
-                        {{-- Print --}}
                         <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
                             <flux:icon name="printer" class="size-4" />
                             <span>Print</span>
                         </button>
 
-                        {{-- Actions Dropdown --}}
                         <flux:dropdown position="bottom" align="center">
                             <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
                                 <flux:icon name="cog-6-tooth" class="size-4" />
@@ -112,20 +94,12 @@
                                 </button>
                                 <flux:menu.separator />
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <flux:icon name="x-circle" class="size-4" />
-                                    <span>Cancel</span>
-                                </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-text" class="size-4" />
-                                    <span>Create Invoice(s)</span>
+                                    <flux:icon name="check-circle" class="size-4" />
+                                    <span>Confirm Order</span>
                                 </button>
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="envelope" class="size-4" />
-                                    <span>Send an Email</span>
-                                </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <flux:icon name="check-circle" class="size-4" />
-                                    <span>Mark Quotation as Sent</span>
+                                    <span>Send by Email</span>
                                 </button>
                             </flux:menu>
                         </flux:dropdown>
@@ -161,15 +135,15 @@
                                         <div class="space-y-1">
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>My Quotations</span>
+                                                <span>My RFQs</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Quotations to Send</span>
+                                                <span>RFQs to Send</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Sales Orders</span>
+                                                <span>RFQ Sent</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
@@ -190,11 +164,7 @@
                                         <div class="space-y-1">
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Salesperson</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Customer</span>
+                                                <span>Supplier</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
@@ -212,26 +182,26 @@
                 @endif
             </div>
 
-            {{-- Right Group: Pagination Info + View Toggle --}}
+            {{-- Right Group: Pagination + View Toggle --}}
             <div class="flex items-center gap-3">
-                {{-- Pagination Info & Navigation --}}
+                {{-- Pagination Info --}}
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $orders->firstItem() ?? 0 }}-{{ $orders->lastItem() ?? 0 }}/{{ $orders->total() }}
+                        {{ (($page - 1) * $perPage) + 1 }}-{{ min($page * $perPage, $total) }} of {{ $total }}
                     </span>
                     <div class="flex items-center gap-0.5">
                         <button 
                             type="button"
-                            wire:click="goToPreviousPage"
-                            @disabled($orders->onFirstPage())
+                            wire:click="goToPreviousPage" 
+                            @disabled($page <= 1)
                             class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                         >
                             <flux:icon name="chevron-left" class="size-4" />
                         </button>
                         <button 
                             type="button"
-                            wire:click="goToNextPage"
-                            @disabled(!$orders->hasMorePages())
+                            wire:click="goToNextPage" 
+                            @disabled($page >= $totalPages)
                             class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                         >
                             <flux:icon name="chevron-right" class="size-4" />
@@ -240,14 +210,14 @@
                 </div>
 
                 {{-- View Toggle --}}
-                <x-ui.view-toggle :view="$view" :views="['list', 'grid', 'kanban']" />
+                <x-ui.view-toggle :view="$viewType" />
             </div>
         </div>
     </div>
 
     {{-- Content --}}
     <div>
-        @if($view === 'list')
+        @if($viewType === 'list')
             <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
                 <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
                     <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
@@ -259,14 +229,11 @@
                                     class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
                                 >
                             </th>
-                            @if($visibleColumns['order'])
-                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Order</th>
+                            @if($visibleColumns['rfq'])
+                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Reference</th>
                             @endif
-                            @if($visibleColumns['customer'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Customer</th>
-                            @endif
-                            @if($visibleColumns['salesperson'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Salesperson</th>
+                            @if($visibleColumns['supplier'])
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Supplier</th>
                             @endif
                             @if($visibleColumns['date'])
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Date</th>
@@ -288,16 +255,12 @@
                                         <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Toggle Columns</div>
                                         <flux:menu.separator />
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.order" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Order</span>
+                                            <input type="checkbox" wire:model.live="visibleColumns.rfq" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Reference</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.customer" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Customer</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.salesperson" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Salesperson</span>
+                                            <input type="checkbox" wire:model.live="visibleColumns.supplier" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                            <span>Supplier</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.date" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
@@ -317,78 +280,74 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                        @forelse ($orders as $order)
+                        @forelse ($rfqs as $rfq)
                             <tr 
-                                onclick="window.location.href='{{ route('sales.orders.edit', $order->id) }}'"
+                                onclick="window.location.href='{{ route('purchase.rfq.edit', $rfq->id) }}'"
                                 class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                             >
                                 <td class="py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
                                     <input 
                                         type="checkbox" 
                                         wire:model.live="selected"
-                                        value="{{ $order->id }}"
+                                        value="{{ $rfq->id }}"
                                         class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
                                     >
                                 </td>
-                                @if($visibleColumns['order'])
+                                @if($visibleColumns['rfq'])
                                     <td class="py-4 pl-2 pr-4">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $order->order_number }}</span>
+                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $rfq->reference }}</span>
                                     </td>
                                 @endif
-                                @if($visibleColumns['customer'])
+                                @if($visibleColumns['supplier'])
                                     <td class="px-4 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ $order->customer->name }}</span>
-                                            <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $order->customer->city }}</span>
-                                        </div>
-                                    </td>
-                                @endif
-                                @if($visibleColumns['salesperson'])
-                                    <td class="px-4 py-4">
-                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $order->user->name ?? '-' }}</span>
+                                        <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ $rfq->supplier_name }}</span>
                                     </td>
                                 @endif
                                 @if($visibleColumns['date'])
                                     <td class="px-4 py-4">
-                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $order->order_date->format('M d, Y') }}</span>
+                                        <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ \Carbon\Carbon::parse($rfq->order_date)->format('M d, Y') }}</span>
                                     </td>
                                 @endif
                                 @if($visibleColumns['total'])
                                     <td class="px-4 py-4 text-right">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
+                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">${{ number_format($rfq->total, 2) }}</span>
                                     </td>
                                 @endif
                                 @if($visibleColumns['status'])
                                     <td class="px-4 py-4">
                                         @php
-                                            $statusConfig = match($order->status) {
-                                                'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Quotation'],
-                                                'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Quotation Sent'],
-                                                'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Sales Order'],
-                                                'shipped' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400', 'label' => 'Shipped'],
-                                                'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Done'],
-                                                'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
-                                                default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($order->status)],
-                                            };
+                                            $statusColors = [
+                                                'rfq' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+                                                'sent' => 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400',
+                                                'cancelled' => 'bg-zinc-50 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400',
+                                            ];
                                         @endphp
-                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                            {{ $statusConfig['label'] }}
+                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusColors[$rfq->status] ?? 'bg-zinc-50 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400' }}">
+                                            {{ ucfirst(str_replace('_', ' ', $rfq->status)) }}
                                         </span>
                                     </td>
                                 @endif
                                 <td class="py-4 pr-4 sm:pr-6 lg:pr-8"></td>
                             </tr>
                         @empty
+                            @php
+                                $emptyColspan = 2
+                                    + ($visibleColumns['rfq'] ? 1 : 0)
+                                    + ($visibleColumns['supplier'] ? 1 : 0)
+                                    + ($visibleColumns['date'] ? 1 : 0)
+                                    + ($visibleColumns['total'] ? 1 : 0)
+                                    + ($visibleColumns['status'] ? 1 : 0);
+                            @endphp
                             <tr>
-                                <td colspan="8" class="px-6 py-12 text-center">
+                                <td colspan="{{ $emptyColspan }}" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center gap-3">
                                         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
                                             <svg class="size-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No orders found</p>
+                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No RFQs found</p>
                                             <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
                                         </div>
                                     </div>
@@ -396,156 +355,39 @@
                             </tr>
                         @endforelse
                     </tbody>
-                    @php
-                        $visibleCount = 1 + ($visibleColumns['order'] ? 1 : 0) + ($visibleColumns['customer'] ? 1 : 0) + ($visibleColumns['salesperson'] ? 1 : 0) + ($visibleColumns['date'] ? 1 : 0);
-                        $afterTotalCount = 1 + ($visibleColumns['status'] ? 1 : 0);
-                    @endphp
-                    <tfoot class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
-                        <tr>
-                            <td colspan="{{ $visibleCount }}" class="py-3 pl-4 pr-4 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 sm:pl-6 lg:pl-8 dark:text-zinc-400">Total</td>
-                            @if($visibleColumns['total'])
-                                <td class="px-4 py-3 text-right text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                                    Rp {{ number_format($orders->sum('total'), 0, ',', '.') }}
-                                </td>
-                            @endif
-                            <td colspan="{{ $afterTotalCount }}"></td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
-        @elseif($view === 'grid')
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                @forelse($orders as $order)
-                    @php
-                        $statusConfig = match($order->status) {
-                            'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Quotation'],
-                            'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Quotation Sent'],
-                            'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Sales Order'],
-                            'shipped' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400', 'label' => 'Shipped'],
-                            'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Done'],
-                            'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
-                            default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($order->status)],
-                        };
-                    @endphp
-                    <a 
-                        href="{{ route('sales.orders.edit', $order->id) }}"
-                        wire:navigate
-                        class="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
-                    >
-                        <div class="flex items-center justify-between gap-3">
-                            <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{{ $order->order_number }}</p>
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                {{ $statusConfig['label'] }}
-                            </span>
-                        </div>
-                        <div class="mt-3 space-y-1">
-                            <p class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ $order->customer->name }}</p>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $order->customer->city ?? '—' }}</p>
-                        </div>
-
-                        <div class="mt-4 flex flex-wrap gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                            <div class="flex items-center gap-1">
-                                <flux:icon name="calendar" class="size-4" />
-                                <span>{{ $order->order_date->format('d M Y') }}</span>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <flux:icon name="user" class="size-4" />
-                                <span>{{ $order->user->name ?? 'Unassigned' }}</span>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <flux:icon name="cube" class="size-4" />
-                                <span>{{ $order->items_count ?? $order->items()->count() }} items</span>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                            <p class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total, 0, ',', '.') }}</p>
-                            <div class="flex items-center gap-2 text-xs text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300">
-                                View details
-                                <flux:icon name="arrow-up-right" class="size-4" />
+        @else
+            {{-- Grid View --}}
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                @forelse($rfqs as $rfq)
+                    <a href="{{ route('purchase.rfq.edit', $rfq->id) }}" wire:navigate class="relative block rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+                        @php
+                            $statusColors = [
+                                'rfq' => 'bg-blue-500',
+                                'sent' => 'bg-purple-500',
+                                'cancelled' => 'bg-zinc-400',
+                            ];
+                        @endphp
+                        <span class="absolute right-2 top-2 inline-flex h-2 w-2 rounded-full {{ $statusColors[$rfq->status] ?? 'bg-zinc-400' }}"></span>
+                        
+                        <div class="space-y-2">
+                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $rfq->reference }}</h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $rfq->supplier_name }}</p>
+                            <div class="flex items-center justify-between pt-2">
+                                <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ \Carbon\Carbon::parse($rfq->order_date)->format('M d, Y') }}</span>
+                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">${{ number_format($rfq->total, 2) }}</span>
                             </div>
                         </div>
                     </a>
                 @empty
-                    <div class="col-span-full rounded-2xl border border-dashed border-zinc-200 p-10 text-center dark:border-zinc-800">
-                        <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">No orders to display</p>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Adjust your filters or create a new order.</p>
+                    <div class="col-span-full rounded-lg border border-zinc-200 bg-white px-5 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900">
+                        <svg class="mx-auto size-12 text-zinc-300 dark:text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        <p class="mt-4 text-sm font-light text-zinc-500 dark:text-zinc-400">No RFQs found</p>
                     </div>
                 @endforelse
-            </div>
-        @elseif($view === 'kanban')
-            {{-- Grid/Thumbnail View (Kanban Board) --}}
-            @php
-                $statuses = [
-                    'draft' => ['label' => 'Quotation', 'color' => 'zinc', 'headerBg' => 'bg-zinc-100 dark:bg-zinc-800'],
-                    'confirmed' => ['label' => 'Quotation Sent', 'color' => 'blue', 'headerBg' => 'bg-blue-50 dark:bg-blue-900/20'],
-                    'processing' => ['label' => 'Sales Order', 'color' => 'amber', 'headerBg' => 'bg-amber-50 dark:bg-amber-900/20'],
-                    'shipped' => ['label' => 'Shipped', 'color' => 'violet', 'headerBg' => 'bg-violet-50 dark:bg-violet-900/20'],
-                    'delivered' => ['label' => 'Done', 'color' => 'emerald', 'headerBg' => 'bg-emerald-50 dark:bg-emerald-900/20'],
-                    'cancelled' => ['label' => 'Cancelled', 'color' => 'red', 'headerBg' => 'bg-red-50 dark:bg-red-900/20'],
-                ];
-                $ordersByStatus = $orders->groupBy('status');
-            @endphp
-            <div class="flex gap-4 overflow-x-auto pb-4">
-                @foreach($statuses as $statusKey => $statusInfo)
-                    <div class="flex w-72 flex-shrink-0 flex-col rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                        {{-- Column Header --}}
-                        <div class="flex items-center justify-between rounded-t-lg {{ $statusInfo['headerBg'] }} px-3 py-2.5">
-                            <div class="flex items-center gap-2">
-                                <span class="h-2 w-2 rounded-full bg-{{ $statusInfo['color'] }}-500"></span>
-                                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $statusInfo['label'] }}</span>
-                                <span class="rounded-full bg-white px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                                    {{ $ordersByStatus->get($statusKey)?->count() ?? 0 }}
-                                </span>
-                            </div>
-                        </div>
-
-                        {{-- Column Cards --}}
-                        <div class="flex flex-1 flex-col gap-2 p-2">
-                            @forelse($ordersByStatus->get($statusKey, collect()) as $order)
-                                <a 
-                                    href="{{ route('sales.orders.edit', $order->id) }}"
-                                    wire:navigate
-                                    class="group rounded-lg border border-zinc-200 bg-white p-3 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-zinc-600"
-                                >
-                                    <div class="mb-2 flex items-start justify-between">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $order->order_number }}</span>
-                                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $order->order_date->format('M d') }}</span>
-                                    </div>
-                                    <div class="mb-3 flex items-center gap-2">
-                                        <div class="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-700">
-                                            <svg class="size-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                            </svg>
-                                        </div>
-                                        <span class="text-xs text-zinc-600 dark:text-zinc-400">{{ $order->customer->name }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
-                                        @if($order->user)
-                                            <div class="flex h-6 w-6 items-center justify-center rounded-full bg-{{ $statusInfo['color'] }}-100 text-xs font-medium text-{{ $statusInfo['color'] }}-700 dark:bg-{{ $statusInfo['color'] }}-900/30 dark:text-{{ $statusInfo['color'] }}-400">
-                                                {{ strtoupper(substr($order->user->name, 0, 1)) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                </a>
-                            @empty
-                                <div class="flex flex-1 items-center justify-center py-8">
-                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">No orders</p>
-                                </div>
-                            @endforelse
-                        </div>
-
-                        {{-- Column Footer --}}
-                        @if($ordersByStatus->get($statusKey)?->count() > 0)
-                            <div class="border-t border-zinc-200 px-3 py-2 dark:border-zinc-700">
-                                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                                    Total: Rp {{ number_format($ordersByStatus->get($statusKey)->sum('total'), 0, ',', '.') }}
-                                </span>
-                            </div>
-                        @endif
-                    </div>
-                @endforeach
             </div>
         @endif
     </div>

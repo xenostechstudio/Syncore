@@ -149,7 +149,7 @@
                 <div class="flex items-center gap-4 pl-4">
                     {{-- Company Name --}}
                     <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        {{ config('app.company_name', 'Syncore') }}
+                        {{ \App\Models\Settings\CompanyProfile::getCompanyName() }}
                     </span>
 
                     {{-- Notification Icon --}}

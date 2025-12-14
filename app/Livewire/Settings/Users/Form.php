@@ -16,8 +16,17 @@ class Form extends Component
     public ?int $userId = null;
     public string $name = '';
     public string $email = '';
+    public string $phone = '';
+    public ?string $out_of_office_date = null;
+    public string $out_of_office_message = '';
     public string $password = '';
+    public string $password_confirmation = '';
+    public string $current_password = '';
     public bool $is_active = true;
+
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+    public array $activityLog = [];
 
     public function mount(?int $id = null): void
     {
@@ -28,6 +37,27 @@ class Form extends Component
             $this->name = $user->name;
             $this->email = $user->email;
             $this->is_active = $user->email_verified_at !== null;
+
+            $this->createdAt = $user->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $user->updated_at->format('M d, Y \a\t H:i');
+
+            $this->activityLog = [
+                [
+                    'type' => 'created',
+                    'message' => 'User created',
+                    'user' => Auth::user()?->name ?? 'System',
+                    'time' => $this->createdAt,
+                ],
+            ];
+
+            if ($user->updated_at->gt($user->created_at)) {
+                $this->activityLog[] = [
+                    'type' => 'updated',
+                    'message' => 'User updated',
+                    'user' => Auth::user()?->name ?? 'System',
+                    'time' => $this->updatedAt,
+                ];
+            }
         }
     }
 
@@ -44,10 +74,19 @@ class Form extends Component
             ],
         ];
 
+        // Create flow: validate basic fields first, then prompt for password via modal.
+        if ($this->userId === null && $this->password === '') {
+            $this->validate($rules);
+            $this->dispatch('open-change-password-modal');
+            return;
+        }
+
         if ($this->userId === null) {
-            $rules['password'] = ['required', 'string', 'min:8'];
+            $rules['password'] = ['required', 'string', 'min:8', 'confirmed'];
+            $rules['password_confirmation'] = ['required'];
         } elseif ($this->password !== '') {
-            $rules['password'] = ['nullable', 'string', 'min:8'];
+            $rules['password'] = ['nullable', 'string', 'min:8', 'confirmed'];
+            $rules['password_confirmation'] = ['required_with:password', 'same:password'];
         }
 
         $this->validate($rules);

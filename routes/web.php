@@ -44,8 +44,16 @@ use App\Livewire\Settings\Index as SettingsIndex;
 use App\Livewire\Settings\Users\Index as SettingsUsersIndex;
 use App\Livewire\Settings\Users\Form as SettingsUsersForm;
 use App\Livewire\Settings\Roles\Index as SettingsRolesIndex;
+use App\Livewire\Settings\Roles\Form as SettingsRolesForm;
 use App\Livewire\Settings\Localization\Index as SettingsLocalizationIndex;
 use App\Livewire\Settings\Company\Index as SettingsCompanyIndex;
+
+use App\Livewire\Purchase\Rfq\Index as PurchaseRfqIndex;
+use App\Livewire\Purchase\Rfq\Form as PurchaseRfqForm;
+use App\Livewire\Purchase\Orders\Index as PurchaseOrdersIndex;
+use App\Livewire\Purchase\Orders\Form as PurchaseOrdersForm;
+use App\Livewire\Purchase\Suppliers\Index as PurchaseSuppliersIndex;
+use App\Livewire\Purchase\Suppliers\Form as PurchaseSuppliersForm;
 
 Route::post('/locale', function (Request $request) {
     $locale = $request->input('locale');
@@ -67,7 +75,7 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->prefix('inventory')->name('inventory.')->group(function () {
+Route::middleware(['auth', 'verified', 'permission:access.inventory'])->prefix('inventory')->name('inventory.')->group(function () {
     Route::get('/', InventoryIndex::class)->name('index');
     
     // Operations - Transfers
@@ -96,7 +104,7 @@ Route::middleware(['auth', 'verified'])->prefix('inventory')->name('inventory.')
     Route::get('/warehouses/{id}/edit', \App\Livewire\Inventory\Warehouses\Form::class)->name('warehouses.edit');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(function () {
+Route::middleware(['auth', 'verified', 'permission:access.sales'])->prefix('sales')->name('sales.')->group(function () {
     Route::get('/', SalesIndex::class)->name('index');
     
     // Orders
@@ -139,7 +147,7 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     Route::get('/configuration/pricelists/{id}/edit', PricelistForm::class)->name('configuration.pricelists.edit');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('delivery')->name('delivery.')->group(function () {
+Route::middleware(['auth', 'verified', 'permission:access.delivery'])->prefix('delivery')->name('delivery.')->group(function () {
     Route::get('/', DeliveryIndex::class)->name('index');
     
     // Delivery Orders
@@ -148,7 +156,7 @@ Route::middleware(['auth', 'verified'])->prefix('delivery')->name('delivery.')->
     Route::get('/orders/{id}/edit', DeliveryOrderForm::class)->name('orders.edit');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('invoicing')->name('invoicing.')->group(function () {
+Route::middleware(['auth', 'verified', 'permission:access.invoicing'])->prefix('invoicing')->name('invoicing.')->group(function () {
     Route::get('/', InvoicingIndex::class)->name('index');
     
     // Invoices
@@ -163,8 +171,27 @@ Route::middleware(['auth', 'verified'])->prefix('invoicing')->name('invoicing.')
     Route::view('/reports', 'livewire.invoicing.reports')->name('reports');
 });
 
+Route::middleware(['auth', 'verified', 'permission:access.purchase'])->prefix('purchase')->name('purchase.')->group(function () {
+    Route::get('/', \App\Livewire\Purchase\Index::class)->name('index');
+    
+    // Request for Quotation
+    Route::get('/rfq', PurchaseRfqIndex::class)->name('rfq.index');
+    Route::get('/rfq/create', PurchaseRfqForm::class)->name('rfq.create');
+    Route::get('/rfq/{id}/edit', PurchaseRfqForm::class)->name('rfq.edit');
+    
+    // Purchase Orders
+    Route::get('/orders', PurchaseOrdersIndex::class)->name('orders.index');
+    Route::get('/orders/create', PurchaseOrdersForm::class)->name('orders.create');
+    Route::get('/orders/{id}/edit', PurchaseOrdersForm::class)->name('orders.edit');
+    
+    // Suppliers
+    Route::get('/suppliers', PurchaseSuppliersIndex::class)->name('suppliers.index');
+    Route::get('/suppliers/create', PurchaseSuppliersForm::class)->name('suppliers.create');
+    Route::get('/suppliers/{id}/edit', PurchaseSuppliersForm::class)->name('suppliers.edit');
+});
+
 // General Setup Module
-Route::middleware(['auth', 'verified'])->prefix('setup')->name('settings.')->group(function () {
+Route::middleware(['auth', 'verified', 'permission:access.settings'])->prefix('setup')->name('settings.')->group(function () {
     Route::get('/', SettingsIndex::class)->name('index');
     
     // Users
@@ -174,6 +201,8 @@ Route::middleware(['auth', 'verified'])->prefix('setup')->name('settings.')->gro
     
     // Roles & Permissions
     Route::get('/roles', SettingsRolesIndex::class)->name('roles.index');
+    Route::get('/roles/create', SettingsRolesForm::class)->name('roles.create');
+    Route::get('/roles/{id}/edit', SettingsRolesForm::class)->name('roles.edit');
     
     // Localization
     Route::get('/localization', SettingsLocalizationIndex::class)->name('localization.index');

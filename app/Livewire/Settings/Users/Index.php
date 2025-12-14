@@ -26,14 +26,32 @@ class Index extends Component
 
     public string $view = 'list';
 
+    public array $selected = [];
+    public bool $selectAll = false;
+
+    public array $visibleColumns = [
+        'user' => true,
+        'status' => true,
+        'joined' => true,
+    ];
+
     public function setView(string $view): void
     {
         $this->view = $view;
     }
 
-    public function updatedSearch(): void
+    public function toggleColumn(string $column): void
+    {
+        if (isset($this->visibleColumns[$column])) {
+            $this->visibleColumns[$column] = !$this->visibleColumns[$column];
+        }
+    }
+
+    public function updatingSearch(): void
     {
         $this->resetPage();
+        $this->selected = [];
+        $this->selectAll = false;
     }
 
     public function updatedStatus(): void
@@ -46,7 +64,34 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function render()
+    public function updatedSelected(): void
+    {
+        $this->selectAll = false;
+    }
+
+    public function updatedSelectAll($value): void
+    {
+        if ($value) {
+            $this->selected = $this->getUsersQuery()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
+        } else {
+            $this->selected = [];
+        }
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selected = [];
+        $this->selectAll = false;
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'status', 'sort']);
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
+    private function getUsersQuery()
     {
         $query = User::query();
 
@@ -71,7 +116,12 @@ class Index extends Component
             $query->orderBy('created_at', 'desc');
         }
 
-        $users = $query->paginate(12, ['*'], 'page', $this->page);
+        return $query;
+    }
+
+    public function render()
+    {
+        $users = $this->getUsersQuery()->paginate(12, ['*'], 'page', $this->page);
 
         return view('livewire.settings.users.index', [
             'users' => $users,

@@ -196,6 +196,37 @@ class ModuleNavigation
                     'pattern' => 'invoicing.reports*',
                 ],
             ],
+            'Purchase' => [
+                [
+                    'label' => 'Overview',
+                    'route' => 'purchase.index',
+                    'icon' => 'chart-bar',
+                    'pattern' => 'purchase.index',
+                ],
+                [
+                    'label' => 'Orders',
+                    'route' => 'purchase.rfq.index',
+                    'icon' => 'clipboard-document-list',
+                    'pattern' => 'purchase.rfq*|purchase.orders*',
+                    'children' => [
+                        ['label' => 'Request for Quotation', 'route' => 'purchase.rfq.index', 'pattern' => 'purchase.rfq*'],
+                        ['label' => 'Purchase Orders', 'route' => 'purchase.orders.index', 'pattern' => 'purchase.orders*'],
+                        ['label' => 'Suppliers', 'route' => 'purchase.suppliers.index', 'pattern' => 'purchase.suppliers*'],
+                    ],
+                ],
+                [
+                    'label' => 'Products',
+                    'route' => 'purchase.rfq.index',
+                    'icon' => 'cube',
+                    'pattern' => 'purchase.products*',
+                ],
+                [
+                    'label' => 'Configuration',
+                    'route' => 'purchase.rfq.index',
+                    'icon' => 'cog-6-tooth',
+                    'pattern' => 'purchase.configuration*',
+                ],
+            ],
             'Settings' => [
                 [
                     'label' => 'Overview',
