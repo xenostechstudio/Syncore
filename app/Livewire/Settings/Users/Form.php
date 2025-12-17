@@ -36,6 +36,7 @@ class Form extends Component
             $this->userId = $user->id;
             $this->name = $user->name;
             $this->email = $user->email;
+            $this->phone = $user->phone ?? '';
             $this->is_active = $user->email_verified_at !== null;
 
             $this->createdAt = $user->created_at->format('M d, Y \a\t H:i');
@@ -72,6 +73,7 @@ class Form extends Component
                 'max:255',
                 Rule::unique(User::class, 'email')->ignore($this->userId),
             ],
+            'phone' => ['nullable', 'string', 'max:30'],
         ];
 
         // Create flow: validate basic fields first, then prompt for password via modal.
@@ -99,6 +101,7 @@ class Form extends Component
 
         $user->name = $this->name;
         $user->email = $this->email;
+        $user->phone = $this->phone ?: null;
 
         if ($this->password !== '') {
             $user->password = $this->password;

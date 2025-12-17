@@ -96,16 +96,16 @@
             {{-- Left: Action Buttons (col-span-9) --}}
             <div class="col-span-9 flex items-center justify-between">
                 <div class="flex flex-wrap items-center gap-2">
-                    <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                        <flux:icon name="document-check" class="size-4" />
-                        Save
-                    </button>
                     @if($invoiceId && $status !== 'paid' && $status !== 'cancelled')
-                        <button type="button" wire:click="openPaymentModal" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50">
+                        <button type="button" wire:click="openPaymentModal" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                             <flux:icon name="banknotes" class="size-4" />
                             Add Payment
                         </button>
                     @endif
+                    <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                        <flux:icon name="document-check" class="size-4" />
+                        Save
+                    </button>
                     <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
                         <flux:icon name="printer" class="size-4" />
                         Print
@@ -381,47 +381,49 @@
                                         </tr>
                                     @endif
                                 </tbody>
-                                {{-- Table Footer with Totals --}}
-                                <tfoot class="border-t border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/30">
-                                    <tr>
-                                        <td colspan="4" rowspan="5" class="px-4 py-3 align-top">
-                                            {{-- Notes (Transparent) --}}
-                                            <textarea 
-                                                wire:model="notes"
-                                                rows="3"
-                                                placeholder="Notes..."
-                                                class="w-full max-w-md resize-none border-0 bg-transparent px-0 py-0 text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-300 dark:placeholder-zinc-500"
-                                            ></textarea>
-                                        </td>
-                                        <td class="px-4 py-2 text-right text-sm text-zinc-500 dark:text-zinc-400">Subtotal</td>
-                                        <td class="px-4 py-2 text-right text-sm text-zinc-900 dark:text-zinc-100">Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="px-4 py-2 text-right text-sm text-zinc-500 dark:text-zinc-400">Taxes</td>
-                                        <td class="px-4 py-2 text-right text-sm text-zinc-900 dark:text-zinc-100">Rp {{ number_format($tax, 0, ',', '.') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="px-4 py-2 text-right text-sm text-zinc-500 dark:text-zinc-400">Discount</td>
-                                        <td class="px-4 py-2 text-right text-sm text-zinc-900 dark:text-zinc-100">Rp {{ number_format($discount, 0, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="border-t border-zinc-200 dark:border-zinc-700">
-                                        <td class="px-4 py-2 text-right text-sm font-medium text-zinc-900 dark:text-zinc-100">Total</td>
-                                        <td class="px-4 py-2 text-right text-lg font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($total, 0, ',', '.') }}</td>
-                                    </tr>
+                            </table>
+                        </div>
+
+                        {{-- Table Footer with Totals --}}
+                        <div class="border-t border-zinc-100 bg-zinc-50/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/30">
+                            <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                                <div class="flex-1">
+                                    {{-- Notes (Transparent) --}}
+                                    <textarea 
+                                        wire:model="notes"
+                                        rows="3"
+                                        placeholder="Notes..."
+                                        class="w-full resize-none border-0 bg-transparent px-0 py-0 text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-300 dark:placeholder-zinc-500"
+                                    ></textarea>
+                                </div>
+
+                                <div class="w-full space-y-2 lg:w-72">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-zinc-500 dark:text-zinc-400">Untaxed Amount</span>
+                                        <span class="text-zinc-900 dark:text-zinc-100">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-zinc-500 dark:text-zinc-400">Taxes</span>
+                                        <span class="text-zinc-900 dark:text-zinc-100">Rp {{ number_format($tax, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between border-t border-zinc-200 pt-2 dark:border-zinc-700">
+                                        <span class="font-medium text-zinc-900 dark:text-zinc-100">Total</span>
+                                        <span class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($total, 0, ',', '.') }}</span>
+                                    </div>
                                     @if($paidAmount > 0)
-                                        <tr>
-                                            <td class="px-4 py-2 text-right text-sm text-emerald-600 dark:text-emerald-400">Paid</td>
-                                            <td class="px-4 py-2 text-right text-sm font-medium text-emerald-600 dark:text-emerald-400">Rp {{ number_format($paidAmount, 0, ',', '.') }}</td>
-                                        </tr>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-emerald-600 dark:text-emerald-400">Paid</span>
+                                            <span class="font-medium text-emerald-600 dark:text-emerald-400">Rp {{ number_format($paidAmount, 0, ',', '.') }}</span>
+                                        </div>
                                     @endif
                                     @if($remainingAmount > 0)
-                                        <tr>
-                                            <td class="px-4 py-2 text-right text-sm font-medium text-zinc-500 dark:text-zinc-400">Amount Due</td>
-                                            <td class="px-4 py-2 text-right text-sm font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($remainingAmount, 0, ',', '.') }}</td>
-                                        </tr>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="font-medium text-zinc-500 dark:text-zinc-400">Amount Due</span>
+                                            <span class="font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($remainingAmount, 0, ',', '.') }}</span>
+                                        </div>
                                     @endif
-                                </tfoot>
-                            </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -693,206 +695,192 @@
     {{-- Payment Modal --}}
     @if($showPaymentModal)
         <div 
-            class="fixed inset-0 z-50 flex items-center justify-center p-4"
-            x-data="{ 
-                amount: {{ $remainingAmount }},
-                formatCurrency(value) {
-                    return new Intl.NumberFormat('id-ID').format(value);
-                }
-            }"
-            x-trap.noscroll="true"
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
         >
+            <div class="absolute inset-0 bg-zinc-900/60" wire:click="closePaymentModal"></div>
+
             <div 
-                class="absolute inset-0 bg-black/60 backdrop-blur-sm" 
-                wire:click="closePaymentModal"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-            ></div>
-            <div 
-                class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-zinc-900"
-                x-transition:enter="transition ease-out duration-300"
+                class="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900 dark:ring-white/10"
+                x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
             >
                 {{-- Header with gradient --}}
-                <div class="relative bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-5">
+                <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Record Payment</h3>
+                        <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Choose payment method for this invoice</p>
+                    </div>
+
                     <button 
-                        type="button" 
-                        wire:click="closePaymentModal" 
-                        class="absolute right-4 top-4 rounded-full p-1 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+                        type="button"
+                        wire:click="closePaymentModal"
+                        class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        aria-label="Close"
                     >
                         <flux:icon name="x-mark" class="size-5" />
                     </button>
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-                            <flux:icon name="banknotes" class="size-6 text-white" />
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-semibold text-white">Record Payment</h3>
-                            <p class="text-sm text-emerald-100">{{ $invoice_number }}</p>
-                        </div>
-                    </div>
                 </div>
 
                 {{-- Payment Summary Cards --}}
-                <div class="border-b border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-800/50">
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-center">
-                            <p class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Invoice Total</p>
-                            <p class="mt-1 text-lg font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($total, 0, ',', '.') }}</p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Paid</p>
-                            <p class="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">Rp {{ number_format($paidAmount, 0, ',', '.') }}</p>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Remaining</p>
-                            <p class="mt-1 text-lg font-bold text-amber-600 dark:text-amber-400">Rp {{ number_format($remainingAmount, 0, ',', '.') }}</p>
-                        </div>
-                    </div>
-                    {{-- Progress bar --}}
-                    <div class="mt-4">
-                        <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                            <span>Payment Progress</span>
-                            <span>{{ $total > 0 ? round(($paidAmount / $total) * 100) : 0 }}%</span>
-                        </div>
-                        <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
-                            <div 
-                                class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
-                                style="width: {{ $total > 0 ? min(($paidAmount / $total) * 100, 100) : 0 }}%"
-                            ></div>
-                        </div>
-                    </div>
-                </div>
+                <div class="px-6 py-5">
+                    <div class="flex items-start justify-between gap-6">
+                        <span class="pt-1 text-sm font-medium text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Payment Method</span>
+                        <div class="flex-1 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
+                                <input type="radio" wire:model="paymentType" value="manual" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
+                                <div class="min-w-0 whitespace-nowrap leading-snug">
+                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Manual Payment</span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Record payment received offline (cash/bank transfer).</span>
+                                </div>
+                            </label>
 
-                {{-- Payment Form --}}
-                <div class="space-y-5 px-6 py-5">
-                    {{-- Amount Input with Quick Fill --}}
-                    <div>
-                        <label class="mb-2 flex items-center justify-between">
-                            <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Amount <span class="text-red-500">*</span></span>
-                            <button 
-                                type="button"
-                                wire:click="$set('paymentAmount', {{ $remainingAmount }})"
-                                class="text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-                            >
-                                Pay Full Amount
-                            </button>
-                        </label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Rp</span>
-                            <input 
-                                type="number" 
-                                step="0.01"
-                                wire:model="paymentAmount"
-                                placeholder="0"
-                                class="w-full rounded-xl border border-zinc-200 bg-white py-3 pl-10 pr-4 text-lg font-semibold text-zinc-900 placeholder-zinc-300 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                            />
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
+                                <input type="radio" wire:model="paymentType" value="xendit" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
+                                <div class="min-w-0 whitespace-nowrap leading-snug">
+                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Xendit</span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Generate payment link + QR and wait for webhook update.</span>
+                                </div>
+                            </label>
                         </div>
-                        @error('paymentAmount') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
-                        {{-- Quick amount buttons --}}
-                        <div class="mt-2 flex flex-wrap gap-2">
-                            @if($remainingAmount > 0)
-                                <button 
-                                    type="button"
-                                    wire:click="$set('paymentAmount', {{ $remainingAmount * 0.25 }})"
-                                    class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                                >
-                                    25%
-                                </button>
-                                <button 
-                                    type="button"
-                                    wire:click="$set('paymentAmount', {{ $remainingAmount * 0.5 }})"
-                                    class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                                >
-                                    50%
-                                </button>
-                                <button 
-                                    type="button"
-                                    wire:click="$set('paymentAmount', {{ $remainingAmount * 0.75 }})"
-                                    class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                                >
-                                    75%
-                                </button>
-                                <button 
-                                    type="button"
-                                    wire:click="$set('paymentAmount', {{ $remainingAmount }})"
-                                    class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50"
-                                >
-                                    100%
-                                </button>
+                    </div>
+
+                    <div class="mt-5 space-y-4">
+                        <div x-show="$wire.paymentType === 'manual'" x-transition>
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <div class="sm:col-span-2">
+                                    <label class="mb-2 flex items-center justify-between">
+                                        <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Amount <span class="text-red-500">*</span></span>
+                                        <button 
+                                            type="button"
+                                            wire:click="$set('paymentAmount', {{ $remainingAmount }})"
+                                            class="text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                                        >
+                                            Pay Full Amount
+                                        </button>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Rp</span>
+                                        <input 
+                                            type="number" 
+                                            step="0.01"
+                                            wire:model="paymentAmount"
+                                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 pl-10 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                        />
+                                    </div>
+                                    @error('paymentAmount') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Date <span class="text-red-500">*</span></label>
+                                    <input type="date" wire:model="paymentDate" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                </div>
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Method <span class="text-red-500">*</span></label>
+                                    <select wire:model="paymentMethod" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="cash">Cash</option>
+                                        <option value="credit_card">Credit Card</option>
+                                        <option value="check">Check</option>
+                                        <option value="e_wallet">E-Wallet</option>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Reference / Transaction ID</label>
+                                    <input type="text" wire:model="paymentReference" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div x-show="$wire.paymentType === 'xendit'" x-transition>
+                            @if(!$this->xenditConfigured)
+                                <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
+                                    Xendit is not configured. Please add your API keys in Settings &gt; Payment Gateway.
+                                </div>
+                            @elseif($invoice && $invoice->xendit_invoice_url && !in_array(strtolower((string) ($invoice->xendit_status ?? 'pending')), ['paid', 'expired'], true))
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Payment URL</span>
+                                            <span class="rounded px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{{ strtoupper((string) ($invoice->xendit_status ?? 'pending')) }}</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <input 
+                                                type="text" 
+                                                readonly
+                                                value="{{ $invoice->xendit_invoice_url }}"
+                                                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                            />
+                                        </div>
+                                        <div class="mt-3 flex justify-end">
+                                            <a href="{{ $invoice->xendit_invoice_url }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                                                <flux:icon name="arrow-top-right-on-square" class="size-4" />
+                                                Open
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">QR Code</span>
+                                        <div class="mt-3 flex items-center justify-center">
+                                            <img 
+                                                alt="Xendit payment QR"
+                                                class="h-48 w-48 rounded-lg bg-white p-2"
+                                                src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ urlencode($invoice->xendit_invoice_url) }}"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
+                                    No pending Xendit payment found. Generate a new payment link to continue.
+                                </div>
                             @endif
                         </div>
-                    </div>
-
-                    {{-- Two column layout for date and method --}}
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Date <span class="text-red-500">*</span></label>
-                            <input 
-                                type="date" 
-                                wire:model="paymentDate"
-                                class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                            />
-                        </div>
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Method <span class="text-red-500">*</span></label>
-                            <select 
-                                wire:model="paymentMethod"
-                                class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                            >
-                                <option value="bank_transfer">Bank Transfer</option>
-                                <option value="cash">Cash</option>
-                                <option value="credit_card">Credit Card</option>
-                                <option value="check">Check</option>
-                                <option value="e_wallet">E-Wallet</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {{-- Reference --}}
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Reference / Transaction ID</label>
-                        <input 
-                            type="text" 
-                            wire:model="paymentReference"
-                            placeholder="e.g., TRX-123456789"
-                            class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                        />
                     </div>
                 </div>
 
                 {{-- Footer Actions --}}
-                <div class="flex items-center justify-between border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-800/50">
+                <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
                     <button 
                         type="button"
                         wire:click="closePaymentModal"
-                        class="rounded-xl border border-zinc-300 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >
                         Cancel
                     </button>
+
                     <button 
                         type="button"
                         wire:click="addPayment"
-                        wire:loading.attr="disabled"
-                        wire:loading.class="opacity-50 cursor-not-allowed"
-                        class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-2.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-700 hover:to-emerald-600 hover:shadow-emerald-500/30"
+                        x-show="$wire.paymentType === 'manual'"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                        <wire:loading.remove wire:target="addPayment">
-                            <flux:icon name="check" class="size-4" />
-                            Record Payment
-                        </wire:loading.remove>
-                        <wire:loading wire:target="addPayment">
-                            <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Processing...
-                        </wire:loading>
+                        <flux:icon name="banknotes" class="size-4" />
+                        Record Payment
+                    </button>
+
+                    <button 
+                        type="button"
+                        wire:click="createXenditPayment"
+                        wire:loading.attr="disabled"
+                        x-show="$wire.paymentType === 'xendit'"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                        <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                        <span wire:loading.remove wire:target="createXenditPayment">Generate / Reuse Xendit</span>
+                        <span wire:loading wire:target="createXenditPayment">Processing...</span>
                     </button>
                 </div>
             </div>
         </div>
     @endif
-</div>

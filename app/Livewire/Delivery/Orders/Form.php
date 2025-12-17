@@ -97,7 +97,7 @@ class Form extends Component
             'delivery_date' => $this->delivery_date,
             'actual_delivery_date' => $this->actual_delivery_date ?: null,
             'status' => $this->status,
-            'shipping_address' => $this->shipping_address ?: null,
+            'shipping_address' => (string) ($this->shipping_address ?? ''),
             'recipient_name' => $this->recipient_name,
             'recipient_phone' => $this->recipient_phone ?: null,
             'tracking_number' => $this->tracking_number ?: null,

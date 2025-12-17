@@ -48,119 +48,104 @@
             {{-- Center: Search with single horizontal dropdown (Filters / Sort / Group) --}}
             <div class="flex flex-1 items-center justify-center">
                 {{-- Wrapper for searchbox + dropdown to center dropdown on searchbox --}}
-                <flux:dropdown position="bottom" align="center" class="w-[360px]">
-                    <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                        <input 
-                            type="text" 
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Search products..." 
-                            class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
-                        />
-                        <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 bg-white/80 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 dark:hover:text-zinc-200">
-                            <flux:icon name="chevron-down" class="size-4" />
-                        </button>
-                    </div>
-
-                    <flux:menu class="w-[640px] max-w-[90vw]">
-                            <div class="flex flex-col gap-4 p-3 md:flex-row">
-                                {{-- Filters column --}}
-                                <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
-                                    <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                        <flux:icon name="funnel" class="size-3.5" />
-                                        <span>Filters</span>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <button type="button" wire:click="$set('status', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>All Status</span>
-                                            @if(empty($status))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('status', 'in_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <div class="flex items-center gap-2">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                                <span>In Stock</span>
-                                            </div>
-                                            @if($status === 'in_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('status', 'low_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <div class="flex items-center gap-2">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                                                <span>Low Stock</span>
-                                            </div>
-                                            @if($status === 'low_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('status', 'out_of_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <div class="flex items-center gap-2">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                                                <span>Out of Stock</span>
-                                            </div>
-                                            @if($status === 'out_of_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- Sort column --}}
-                                <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:px-3 dark:border-zinc-700">
-                                    <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                        <flux:icon name="arrows-up-down" class="size-3.5" />
-                                        <span>Sort By</span>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <button type="button" wire:click="$set('sort', 'latest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Latest</span>
-                                            @if($sort === 'latest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('sort', 'oldest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Oldest</span>
-                                            @if($sort === 'oldest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('sort', 'name')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Name A-Z</span>
-                                            @if($sort === 'name')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('sort', 'price_high')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Price: High to Low</span>
-                                            @if($sort === 'price_high')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('sort', 'price_low')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Price: Low to High</span>
-                                            @if($sort === 'price_low')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('sort', 'stock_high')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Stock: High to Low</span>
-                                            @if($sort === 'stock_high')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('sort', 'stock_low')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Stock: Low to High</span>
-                                            @if($sort === 'stock_low')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- Group column --}}
-                                <div class="flex-1 md:pl-3">
-                                    <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                        <flux:icon name="rectangle-group" class="size-3.5" />
-                                        <span>Group By</span>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <button type="button" wire:click="$set('groupBy', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>None</span>
-                                            @if(empty($groupBy))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('groupBy', 'status')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Status</span>
-                                            @if($groupBy === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                        <button type="button" wire:click="$set('groupBy', 'category')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <span>Category</span>
-                                            @if($groupBy === 'category')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                        </button>
-                                    </div>
-                                </div>
+                <x-ui.searchbox-dropdown placeholder="Search products...">
+                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                        {{-- Filters column --}}
+                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="funnel" class="size-3.5" />
+                                <span>Filters</span>
                             </div>
-                        </flux:menu>
-                </flux:dropdown>
+                            <div class="space-y-1">
+                                <button type="button" wire:click="$set('status', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>All Status</span>
+                                    @if(empty($status))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('status', 'in_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <div class="flex items-center gap-2">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                        <span>In Stock</span>
+                                    </div>
+                                    @if($status === 'in_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('status', 'low_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <div class="flex items-center gap-2">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                        <span>Low Stock</span>
+                                    </div>
+                                    @if($status === 'low_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('status', 'out_of_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <div class="flex items-center gap-2">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                                        <span>Out of Stock</span>
+                                    </div>
+                                    @if($status === 'out_of_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Sort column --}}
+                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:px-3 dark:border-zinc-700">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="arrows-up-down" class="size-3.5" />
+                                <span>Sort By</span>
+                            </div>
+                            <div class="space-y-1">
+                                <button type="button" wire:click="$set('sort', 'latest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Latest</span>
+                                    @if($sort === 'latest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('sort', 'oldest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Oldest</span>
+                                    @if($sort === 'oldest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('sort', 'name')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Name A-Z</span>
+                                    @if($sort === 'name')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('sort', 'price_high')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Price: High to Low</span>
+                                    @if($sort === 'price_high')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('sort', 'price_low')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Price: Low to High</span>
+                                    @if($sort === 'price_low')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('sort', 'stock_high')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Stock: High to Low</span>
+                                    @if($sort === 'stock_high')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('sort', 'stock_low')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Stock: Low to High</span>
+                                    @if($sort === 'stock_low')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Group column --}}
+                        <div class="flex-1 md:pl-3">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="rectangle-group" class="size-3.5" />
+                                <span>Group By</span>
+                            </div>
+                            <div class="space-y-1">
+                                <button type="button" wire:click="$set('groupBy', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>None</span>
+                                    @if(empty($groupBy))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('groupBy', 'status')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Status</span>
+                                    @if($groupBy === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                <button type="button" wire:click="$set('groupBy', 'category')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>Category</span>
+                                    @if($groupBy === 'category')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </x-ui.searchbox-dropdown>
             </div>
 
             {{-- Right Group: Pagination Info + View Toggle --}}
@@ -336,178 +321,408 @@
                 </div>
             </div>
         @elseif($view === 'list')
+            @php
+                $isGroupedList = !empty($groupBy);
+                $columnsCount = 3;
+                if($visibleColumns['name']) $columnsCount++;
+                if($visibleColumns['sku']) $columnsCount++;
+                if($visibleColumns['price']) $columnsCount++;
+                if($visibleColumns['stock']) $columnsCount++;
+                if($visibleColumns['status']) $columnsCount++;
+            @endphp
+
             <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
-                <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-                    <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
-                        <tr>
-                            {{-- Select All --}}
-                            <th class="w-10 py-3 pl-4 pr-2 sm:pl-6 lg:pl-8">
-                                <input 
-                                    type="checkbox" 
-                                    wire:model.live="selectAll"
-                                    class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                @if($isGroupedList)
+                    <div class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                        @forelse($groupedListProducts as $group)
+                            @php
+                                $isOpen = in_array($group['id'], $openGroups ?? [], true);
+                            @endphp
+
+                            <div class="bg-white dark:bg-zinc-900">
+                                <button
+                                    type="button"
+                                    wire:click="toggleGroup('{{ $group['id'] }}')"
+                                    class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left sm:px-6 lg:px-8 hover:bg-zinc-50 dark:hover:bg-zinc-800/40"
                                 >
-                            </th>
-                            {{-- Favorite column (no header label) --}}
-                            <th class="w-10 px-2 py-3"></th>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ $group['label'] }}</span>
+                                            <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                                {{ count($group['items']) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <flux:icon name="chevron-down" class="size-4 text-zinc-400 transition-transform {{ $isOpen ? 'rotate-180' : '' }}" />
+                                    </div>
+                                </button>
 
-                            @if($visibleColumns['name'])
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Name</th>
-                            @endif
-                            @if($visibleColumns['sku'])
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">SKU</th>
-                            @endif
-                            @if($visibleColumns['price'])
-                                <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Price</th>
-                            @endif
-                            @if($visibleColumns['stock'])
-                                <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Stock</th>
-                            @endif
-                            @if($visibleColumns['status'])
-                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
-                            @endif
+                                @if($isOpen)
+                                    <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
+                                        <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+                                            <tr>
+                                                {{-- Select All --}}
+                                                <th class="w-10 py-3 pl-4 pr-2 sm:pl-6 lg:pl-8">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        wire:model.live="selectAll"
+                                                        class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                                                    >
+                                                </th>
+                                                {{-- Favorite column (no header label) --}}
+                                                <th class="w-10 px-2 py-3"></th>
 
-                            {{-- Column visibility toggle --}}
-                            <th class="w-10 py-3 pr-4 text-right sm:pr-6 lg:pr-8">
-                                <flux:dropdown position="bottom" align="end">
-                                    <button class="flex items-center justify-center rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                        <flux:icon name="adjustments-horizontal" class="size-4" />
-                                    </button>
+                                                @if($visibleColumns['name'])
+                                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Name</th>
+                                                @endif
+                                                @if($visibleColumns['sku'])
+                                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">SKU</th>
+                                                @endif
+                                                @if($visibleColumns['price'])
+                                                    <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Price</th>
+                                                @endif
+                                                @if($visibleColumns['stock'])
+                                                    <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Stock</th>
+                                                @endif
+                                                @if($visibleColumns['status'])
+                                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                                                @endif
 
-                                    <flux:menu class="w-48">
-                                        <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Toggle Columns</div>
-                                        <flux:menu.separator />
-                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.name" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Name</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.sku" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>SKU</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.price" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Price</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Stock</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" wire:model.live="visibleColumns.status" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Status</span>
-                                        </label>
-                                    </flux:menu>
-                                </flux:dropdown>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                        @forelse($products as $product)
-                            <tr 
-                                onclick="window.location.href='{{ route('sales.products.edit', $product->id) }}'"
-                                class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                            >
-                                {{-- Row selection --}}
-                                <td class="py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                                {{-- Column visibility toggle --}}
+                                                <th class="w-10 py-3 pr-4 text-right sm:pr-6 lg:pr-8">
+                                                    <flux:dropdown position="bottom" align="end">
+                                                        <button class="flex items-center justify-center rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                                            <flux:icon name="adjustments-horizontal" class="size-4" />
+                                                        </button>
+
+                                                        <flux:menu class="w-48">
+                                                            <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Toggle Columns</div>
+                                                            <flux:menu.separator />
+                                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                                <input type="checkbox" wire:model.live="visibleColumns.name" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                                <span>Name</span>
+                                                            </label>
+                                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                                <input type="checkbox" wire:model.live="visibleColumns.sku" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                                <span>SKU</span>
+                                                            </label>
+                                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                                <input type="checkbox" wire:model.live="visibleColumns.price" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                                <span>Price</span>
+                                                            </label>
+                                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                                <input type="checkbox" wire:model.live="visibleColumns.stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                                <span>Stock</span>
+                                                            </label>
+                                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                                <input type="checkbox" wire:model.live="visibleColumns.status" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                                <span>Status</span>
+                                                            </label>
+                                                        </flux:menu>
+                                                    </flux:dropdown>
+                                                </th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                            @forelse($group['items'] as $product)
+                                                <tr 
+                                                    onclick="window.location.href='{{ route('sales.products.edit', $product->id) }}'"
+                                                    class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                                >
+                                                    {{-- Row selection --}}
+                                                    <td class="py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            wire:model.live="selected"
+                                                            value="{{ $product->id }}"
+                                                            class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                                                        >
+                                                    </td>
+
+                                                    {{-- Favorite star --}}
+                                                    <td class="px-2 py-3 text-center" onclick="event.stopPropagation()">
+                                                        <button 
+                                                            type="button"
+                                                            wire:click="toggleFavorite({{ $product->id }})"
+                                                            class="inline-flex items-center justify-center"
+                                                        >
+                                                            <flux:icon 
+                                                                name="star" 
+                                                                class="size-4 {{ $product->is_favorite ? 'text-amber-400' : 'text-zinc-300 hover:text-amber-300' }}"
+                                                            />
+                                                        </button>
+                                                    </td>
+
+                                                    {{-- Name --}}
+                                                    @if($visibleColumns['name'])
+                                                        <td class="px-4 py-3">
+                                                            <div class="flex flex-col">
+                                                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $product->name }}</span>
+                                                                @if($product->description)
+                                                                    <span class="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">{{ $product->description }}</span>
+                                                                @endif
+                                                            </div>
+                                                        </td>
+                                                    @endif
+
+                                                    {{-- SKU --}}
+                                                    @if($visibleColumns['sku'])
+                                                        <td class="px-4 py-3">
+                                                            <code class="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                                                {{ $product->sku }}
+                                                            </code>
+                                                        </td>
+                                                    @endif
+
+                                                    {{-- Price --}}
+                                                    @if($visibleColumns['price'])
+                                                        <td class="px-4 py-3 text-right">
+                                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</span>
+                                                        </td>
+                                                    @endif
+
+                                                    {{-- Stock --}}
+                                                    @if($visibleColumns['stock'])
+                                                        <td class="px-4 py-3 text-right">
+                                                            <span class="text-sm text-zinc-700 dark:text-zinc-300">{{ number_format($product->quantity) }}</span>
+                                                        </td>
+                                                    @endif
+
+                                                    {{-- Status --}}
+                                                    @if($visibleColumns['status'])
+                                                        <td class="px-4 py-3">
+                                                            @php
+                                                                $statusConfig = match($product->status) {
+                                                                    'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-500/10', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
+                                                                    'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-500/10', 'text' => 'text-amber-700 dark:text-amber-400', 'dot' => 'bg-amber-500'],
+                                                                    'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-500/10', 'text' => 'text-red-700 dark:text-red-400', 'dot' => 'bg-red-500'],
+                                                                    default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-700 dark:text-zinc-300', 'dot' => 'bg-zinc-500'],
+                                                                };
+                                                            @endphp
+                                                            <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                                                <span class="h-1.5 w-1.5 rounded-full {{ $statusConfig['dot'] }}"></span>
+                                                                {{ ucfirst(str_replace('_', ' ', $product->status)) }}
+                                                            </span>
+                                                        </td>
+                                                    @endif
+
+                                                    {{-- Empty cell for alignment with header actions --}}
+                                                    <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="{{ $columnsCount }}" class="px-6 py-10 text-center">
+                                                        <div class="flex flex-col items-center gap-3">
+                                                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                                                <flux:icon name="cube" class="size-6 text-zinc-400" />
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No products found</p>
+                                                                <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
+                                                            </div>
+                                                            <flux:button variant="secondary" size="sm" wire:click="clearFilters">
+                                                                Clear Filters
+                                                            </flux:button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                        <flux:icon name="cube" class="size-6 text-zinc-400" />
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No products found</p>
+                                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
+                                    </div>
+                                    <flux:button variant="secondary" size="sm" wire:click="clearFilters">
+                                        Clear Filters
+                                    </flux:button>
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                @else
+                    <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
+                        <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+                            <tr>
+                                {{-- Select All --}}
+                                <th class="w-10 py-3 pl-4 pr-2 sm:pl-6 lg:pl-8">
                                     <input 
                                         type="checkbox" 
-                                        wire:model.live="selected"
-                                        value="{{ $product->id }}"
+                                        wire:model.live="selectAll"
                                         class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
                                     >
-                                </td>
+                                </th>
+                                {{-- Favorite column (no header label) --}}
+                                <th class="w-10 px-2 py-3"></th>
 
-                                {{-- Favorite star --}}
-                                <td class="px-2 py-3 text-center" onclick="event.stopPropagation()">
-                                    <button 
-                                        type="button"
-                                        wire:click="toggleFavorite({{ $product->id }})"
-                                        class="inline-flex items-center justify-center"
-                                    >
-                                        <flux:icon 
-                                            name="star" 
-                                            class="size-4 {{ $product->is_favorite ? 'text-amber-400' : 'text-zinc-300 hover:text-amber-300' }}"
-                                        />
-                                    </button>
-                                </td>
-
-                                {{-- Name --}}
                                 @if($visibleColumns['name'])
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $product->name }}</span>
-                                            @if($product->description)
-                                                <span class="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">{{ $product->description }}</span>
-                                            @endif
-                                        </div>
-                                    </td>
+                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Name</th>
                                 @endif
-
-                                {{-- SKU --}}
                                 @if($visibleColumns['sku'])
-                                    <td class="px-4 py-3">
-                                        <code class="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                            {{ $product->sku }}
-                                        </code>
-                                    </td>
+                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">SKU</th>
                                 @endif
-
-                                {{-- Price --}}
                                 @if($visibleColumns['price'])
-                                    <td class="px-4 py-3 text-right">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</span>
-                                    </td>
+                                    <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Price</th>
                                 @endif
-
-                                {{-- Stock --}}
                                 @if($visibleColumns['stock'])
-                                    <td class="px-4 py-3 text-right">
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-300">{{ number_format($product->quantity) }}</span>
-                                    </td>
+                                    <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Stock</th>
                                 @endif
-
-                                {{-- Status --}}
                                 @if($visibleColumns['status'])
-                                    <td class="px-4 py-3">
-                                        @php
-                                            $statusConfig = match($product->status) {
-                                                'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-500/10', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
-                                                'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-500/10', 'text' => 'text-amber-700 dark:text-amber-400', 'dot' => 'bg-amber-500'],
-                                                'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-500/10', 'text' => 'text-red-700 dark:text-red-400', 'dot' => 'bg-red-500'],
-                                                default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-700 dark:text-zinc-300', 'dot' => 'bg-zinc-500'],
-                                            };
-                                        @endphp
-                                        <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                            <span class="h-1.5 w-1.5 rounded-full {{ $statusConfig['dot'] }}"></span>
-                                            {{ ucfirst(str_replace('_', ' ', $product->status)) }}
-                                        </span>
-                                    </td>
+                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
                                 @endif
 
-                                {{-- Empty cell for alignment with header actions --}}
-                                <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
+                                {{-- Column visibility toggle --}}
+                                <th class="w-10 py-3 pr-4 text-right sm:pr-6 lg:pr-8">
+                                    <flux:dropdown position="bottom" align="end">
+                                        <button class="flex items-center justify-center rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                            <flux:icon name="adjustments-horizontal" class="size-4" />
+                                        </button>
+
+                                        <flux:menu class="w-48">
+                                            <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Toggle Columns</div>
+                                            <flux:menu.separator />
+                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" wire:model.live="visibleColumns.name" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Name</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" wire:model.live="visibleColumns.sku" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>SKU</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" wire:model.live="visibleColumns.price" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Price</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" wire:model.live="visibleColumns.stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Stock</span>
+                                            </label>
+                                            <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                                <input type="checkbox" wire:model.live="visibleColumns.status" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                <span>Status</span>
+                                            </label>
+                                        </flux:menu>
+                                    </flux:dropdown>
+                                </th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center">
-                                    <div class="flex flex-col items-center gap-3">
-                                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                                            <flux:icon name="cube" class="size-6 text-zinc-400" />
+                        </thead>
+                        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                            @forelse($products as $product)
+                                <tr 
+                                    onclick="window.location.href='{{ route('sales.products.edit', $product->id) }}'"
+                                    class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                >
+                                    {{-- Row selection --}}
+                                    <td class="py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                        <input 
+                                            type="checkbox" 
+                                            wire:model.live="selected"
+                                            value="{{ $product->id }}"
+                                            class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                                        >
+                                    </td>
+
+                                    {{-- Favorite star --}}
+                                    <td class="px-2 py-3 text-center" onclick="event.stopPropagation()">
+                                        <button 
+                                            type="button"
+                                            wire:click="toggleFavorite({{ $product->id }})"
+                                            class="inline-flex items-center justify-center"
+                                        >
+                                            <flux:icon 
+                                                name="star" 
+                                                class="size-4 {{ $product->is_favorite ? 'text-amber-400' : 'text-zinc-300 hover:text-amber-300' }}"
+                                            />
+                                        </button>
+                                    </td>
+
+                                    {{-- Name --}}
+                                    @if($visibleColumns['name'])
+                                        <td class="px-4 py-3">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $product->name }}</span>
+                                                @if($product->description)
+                                                    <span class="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">{{ $product->description }}</span>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    @endif
+
+                                    {{-- SKU --}}
+                                    @if($visibleColumns['sku'])
+                                        <td class="px-4 py-3">
+                                            <code class="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                                {{ $product->sku }}
+                                            </code>
+                                        </td>
+                                    @endif
+
+                                    {{-- Price --}}
+                                    @if($visibleColumns['price'])
+                                        <td class="px-4 py-3 text-right">
+                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($product->selling_price ?? 0, 0, ',', '.') }}</span>
+                                        </td>
+                                    @endif
+
+                                    {{-- Stock --}}
+                                    @if($visibleColumns['stock'])
+                                        <td class="px-4 py-3 text-right">
+                                            <span class="text-sm text-zinc-700 dark:text-zinc-300">{{ number_format($product->quantity) }}</span>
+                                        </td>
+                                    @endif
+
+                                    {{-- Status --}}
+                                    @if($visibleColumns['status'])
+                                        <td class="px-4 py-3">
+                                            @php
+                                                $statusConfig = match($product->status) {
+                                                    'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-500/10', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
+                                                    'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-500/10', 'text' => 'text-amber-700 dark:text-amber-400', 'dot' => 'bg-amber-500'],
+                                                    'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-500/10', 'text' => 'text-red-700 dark:text-red-400', 'dot' => 'bg-red-500'],
+                                                    default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-700 dark:text-zinc-300', 'dot' => 'bg-zinc-500'],
+                                                };
+                                            @endphp
+                                            <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                                <span class="h-1.5 w-1.5 rounded-full {{ $statusConfig['dot'] }}"></span>
+                                                {{ ucfirst(str_replace('_', ' ', $product->status)) }}
+                                            </span>
+                                        </td>
+                                    @endif
+
+                                    {{-- Empty cell for alignment with header actions --}}
+                                    <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ $columnsCount }}" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                                <flux:icon name="cube" class="size-6 text-zinc-400" />
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No products found</p>
+                                                <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
+                                            </div>
+                                            <flux:button variant="secondary" size="sm" wire:click="clearFilters">
+                                                Clear Filters
+                                            </flux:button>
                                         </div>
-                                        <div>
-                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No products found</p>
-                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
-                                        </div>
-                                        <flux:button variant="secondary" size="sm" wire:click="clearFilters">
-                                            Clear Filters
-                                        </flux:button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                @endif
             </div>
         @elseif($view === 'grid')
             {{-- Grid View --}}

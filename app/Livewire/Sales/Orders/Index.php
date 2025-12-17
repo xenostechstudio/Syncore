@@ -23,6 +23,9 @@ class Index extends Component
     
     #[Url]
     public string $sort = 'latest';
+
+    #[Url]
+    public string $groupBy = '';
     
     #[Url]
     public string $view = 'list';
@@ -72,6 +75,21 @@ class Index extends Component
         $this->selectAll = false;
     }
 
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSort(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedGroupBy(): void
+    {
+        $this->resetPage();
+    }
+
     public function updatedSelected(): void
     {
         $this->selectAll = false;
@@ -94,7 +112,7 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'sort']);
+        $this->reset(['search', 'status', 'sort', 'groupBy']);
         $this->resetPage();
     }
 
@@ -102,8 +120,10 @@ class Index extends Component
     {
         return SalesOrder::query()
             ->with(['customer', 'user'])
-            ->when($this->search, fn($q) => $q->where('order_number', 'like', "%{$this->search}%")
-                ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%")))
+            ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
+                ->where('order_number', 'like', "%{$this->search}%")
+                ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%"))
+            ))
             ->when($this->mode === 'orders', fn($q) => $q->where('status', 'processing'))
             ->when($this->status, fn($q) => $q->where('status', $this->status))
             ->when($this->sort === 'latest', fn($q) => $q->latest())

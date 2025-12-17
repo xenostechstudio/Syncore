@@ -26,62 +26,62 @@ class InventorySeeder extends Seeder
         ]);
 
         Product::create([
-            'name' => 'MacBook Pro 16"',
-            'sku' => 'MBP-16-2024',
-            'description' => 'Apple MacBook Pro 16" with M3 Max',
+            'name' => 'Apple MacBook Pro 16-inch (M3 Max, 14‑core CPU, 30‑core GPU, 36GB, 1TB) - Space Black',
+            'sku' => 'APPLE-MBP16-M3MAX-36-1TB-SB',
+            'description' => 'Apple MacBook Pro 16-inch with M3 Max, 36GB unified memory, 1TB SSD (Space Black).',
             'quantity' => 25,
-            'cost_price' => 2500.00,
-            'selling_price' => 3200.00,
+            'cost_price' => 56000000.00,
+            'selling_price' => 61499000.00,
             'status' => 'in_stock',
         ]);
 
         Product::create([
-            'name' => 'Dell XPS 15',
-            'sku' => 'DELL-XPS-15',
-            'description' => 'Dell XPS 15 Laptop',
+            'name' => 'Dell XPS 15 9530 (Core i7-13700H, 16GB, 512GB SSD, RTX 4050 6GB, 15.6" OLED 3.5K Touch)',
+            'sku' => 'DELL-XPS15-9530-I7-16-512-RTX4050',
+            'description' => 'Dell XPS 15 9530 with Intel Core i7-13700H, 16GB RAM, 512GB SSD, NVIDIA RTX 4050 6GB, 15.6" OLED 3.5K touchscreen.',
             'quantity' => 10,
-            'cost_price' => 1800.00,
-            'selling_price' => 2400.00,
+            'cost_price' => 35999000.00,
+            'selling_price' => 39999000.00,
             'status' => 'in_stock',
         ]);
 
         Product::create([
-            'name' => 'Monitor LG UltraFine',
-            'sku' => 'LG-UF-27',
-            'description' => 'LG UltraFine 5K Display',
+            'name' => 'LG UltraFine 5K 27" IPS (27MD5KA-B) - Thunderbolt 3',
+            'sku' => 'LG-27MD5KA-B-5K',
+            'description' => 'LG UltraFine 5K 27-inch IPS monitor (27MD5KA-B) with Thunderbolt 3 and USB-C connectivity.',
             'quantity' => 5,
-            'cost_price' => 800.00,
-            'selling_price' => 1299.00,
+            'cost_price' => 26999000.00,
+            'selling_price' => 29999000.00,
             'status' => 'low_stock',
         ]);
 
         Product::create([
-            'name' => 'Keychron K2 Pro',
-            'sku' => 'KC-K2P-RGB',
-            'description' => 'Mechanical Keyboard Wireless',
+            'name' => 'Keychron K2 Pro QMK/VIA 75% Wireless Mechanical Keyboard (RGB, Aluminum Frame)',
+            'sku' => 'KEYCHRON-K2PRO-RGB-ALU',
+            'description' => 'Keychron K2 Pro QMK/VIA 75% compact wireless mechanical keyboard with RGB backlight and aluminum frame.',
             'quantity' => 0,
-            'cost_price' => 80.00,
-            'selling_price' => 120.00,
+            'cost_price' => 1250000.00,
+            'selling_price' => 1520000.00,
             'status' => 'out_of_stock',
         ]);
 
         // Additional items for scroll testing
         $items = [
-            ['name' => 'iPhone 15 Pro Max', 'sku' => 'IPH-15PM-256', 'description' => 'Apple iPhone 15 Pro Max 256GB', 'quantity' => 50, 'cost_price' => 1100.00, 'selling_price' => 1399.00, 'status' => 'in_stock'],
-            ['name' => 'iPad Pro 12.9"', 'sku' => 'IPAD-PRO-12', 'description' => 'Apple iPad Pro 12.9" M2', 'quantity' => 30, 'cost_price' => 900.00, 'selling_price' => 1199.00, 'status' => 'in_stock'],
-            ['name' => 'AirPods Pro 2', 'sku' => 'APP-2-USB', 'description' => 'Apple AirPods Pro 2nd Gen', 'quantity' => 100, 'cost_price' => 180.00, 'selling_price' => 249.00, 'status' => 'in_stock'],
-            ['name' => 'Magic Keyboard', 'sku' => 'MK-TOUCH-ID', 'description' => 'Apple Magic Keyboard with Touch ID', 'quantity' => 8, 'cost_price' => 150.00, 'selling_price' => 199.00, 'status' => 'low_stock'],
-            ['name' => 'Magic Mouse', 'sku' => 'MM-3-BLK', 'description' => 'Apple Magic Mouse Black', 'quantity' => 45, 'cost_price' => 80.00, 'selling_price' => 99.00, 'status' => 'in_stock'],
-            ['name' => 'Studio Display', 'sku' => 'ASD-27-5K', 'description' => 'Apple Studio Display 27" 5K', 'quantity' => 3, 'cost_price' => 1400.00, 'selling_price' => 1599.00, 'status' => 'low_stock'],
-            ['name' => 'Mac Mini M2', 'sku' => 'MM-M2-512', 'description' => 'Apple Mac Mini M2 512GB', 'quantity' => 20, 'cost_price' => 550.00, 'selling_price' => 699.00, 'status' => 'in_stock'],
-            ['name' => 'Mac Studio', 'sku' => 'MS-M2U-1TB', 'description' => 'Apple Mac Studio M2 Ultra', 'quantity' => 2, 'cost_price' => 3500.00, 'selling_price' => 3999.00, 'status' => 'low_stock'],
-            ['name' => 'Apple Watch Ultra 2', 'sku' => 'AWU-2-49', 'description' => 'Apple Watch Ultra 2 49mm', 'quantity' => 15, 'cost_price' => 700.00, 'selling_price' => 799.00, 'status' => 'in_stock'],
-            ['name' => 'HomePod Mini', 'sku' => 'HPM-2-WHT', 'description' => 'Apple HomePod Mini White', 'quantity' => 60, 'cost_price' => 80.00, 'selling_price' => 99.00, 'status' => 'in_stock'],
-            ['name' => 'Apple TV 4K', 'sku' => 'ATV-4K-128', 'description' => 'Apple TV 4K 128GB', 'quantity' => 25, 'cost_price' => 130.00, 'selling_price' => 149.00, 'status' => 'in_stock'],
-            ['name' => 'AirTag 4 Pack', 'sku' => 'AT-4PK', 'description' => 'Apple AirTag 4 Pack', 'quantity' => 80, 'cost_price' => 80.00, 'selling_price' => 99.00, 'status' => 'in_stock'],
-            ['name' => 'MagSafe Charger', 'sku' => 'MSC-15W', 'description' => 'Apple MagSafe Charger 15W', 'quantity' => 0, 'cost_price' => 30.00, 'selling_price' => 39.00, 'status' => 'out_of_stock'],
-            ['name' => 'USB-C Cable 2m', 'sku' => 'USBC-2M-WVN', 'description' => 'Apple USB-C Woven Cable 2m', 'quantity' => 200, 'cost_price' => 25.00, 'selling_price' => 35.00, 'status' => 'in_stock'],
-            ['name' => 'Thunderbolt 4 Cable', 'sku' => 'TB4-1M-PRO', 'description' => 'Apple Thunderbolt 4 Pro Cable', 'quantity' => 12, 'cost_price' => 100.00, 'selling_price' => 129.00, 'status' => 'in_stock'],
+            ['name' => 'Apple iPhone 17 Pro Max 256GB - Cosmic Orange', 'sku' => 'APPLE-IP17PM-256-CO', 'description' => 'Apple iPhone 17 Pro Max 256GB (Cosmic Orange).', 'quantity' => 50, 'cost_price' => 23000000.00, 'selling_price' => 25749000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple iPad Pro 13-inch (M4) Wi‑Fi 512GB Standard Glass - Space Black', 'sku' => 'APPLE-IPADPRO13-M4-512-SB', 'description' => 'Apple iPad Pro 13-inch (M4) Wi‑Fi 512GB, Standard Glass (Space Black).', 'quantity' => 30, 'cost_price' => 28000000.00, 'selling_price' => 31499000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple AirPods Pro (2nd generation) with MagSafe Case (USB‑C)', 'sku' => 'APPLE-AIRPODS-PRO2-USBC', 'description' => 'Apple AirPods Pro (2nd generation) with MagSafe Charging Case (USB‑C).', 'quantity' => 100, 'cost_price' => 3150000.00, 'selling_price' => 3699000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple Magic Keyboard with Touch ID (US English)', 'sku' => 'APPLE-MK-TOUCHID-US', 'description' => 'Apple Magic Keyboard with Touch ID (US English).', 'quantity' => 8, 'cost_price' => 2550000.00, 'selling_price' => 2999000.00, 'status' => 'low_stock'],
+            ['name' => 'Apple Magic Mouse - Black Multi-Touch Surface', 'sku' => 'APPLE-MAGICMOUSE-BLK', 'description' => 'Apple Magic Mouse (Black Multi-Touch Surface).', 'quantity' => 45, 'cost_price' => 1500000.00, 'selling_price' => 1799000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple Studio Display 27-inch 5K - Standard Glass - Tilt-adjustable stand', 'sku' => 'APPLE-STUDIODISPLAY-TILT', 'description' => 'Apple Studio Display 27-inch 5K, Standard Glass, Tilt-adjustable stand.', 'quantity' => 3, 'cost_price' => 25000000.00, 'selling_price' => 27999000.00, 'status' => 'low_stock'],
+            ['name' => 'Apple Mac mini (M2, 8‑core CPU, 10‑core GPU, 256GB SSD)', 'sku' => 'APPLE-MACMINI-M2-256', 'description' => 'Apple Mac mini with M2 chip, 256GB SSD.', 'quantity' => 20, 'cost_price' => 9000000.00, 'selling_price' => 10499000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple Mac Studio (M2 Ultra, 24‑core CPU, 60‑core GPU, 64GB, 1TB)', 'sku' => 'APPLE-MACSTUDIO-M2U-64-1TB', 'description' => 'Apple Mac Studio with M2 Ultra, 64GB unified memory, 1TB SSD.', 'quantity' => 2, 'cost_price' => 64000000.00, 'selling_price' => 70999000.00, 'status' => 'low_stock'],
+            ['name' => 'Apple Watch Ultra 2 GPS + Cellular 49mm Titanium Case with Ocean Band', 'sku' => 'APPLE-WATCHU2-49-OCEAN', 'description' => 'Apple Watch Ultra 2 GPS + Cellular 49mm Titanium Case with Ocean Band.', 'quantity' => 15, 'cost_price' => 14000000.00, 'selling_price' => 15999000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple HomePod mini - White', 'sku' => 'APPLE-HPMINI-WHT', 'description' => 'Apple HomePod mini (White).', 'quantity' => 60, 'cost_price' => 1800000.00, 'selling_price' => 2149000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple TV 4K (3rd generation) 128GB Wi‑Fi + Ethernet', 'sku' => 'APPLE-ATV4K-3RD-128-ETH', 'description' => 'Apple TV 4K (3rd generation) with 128GB storage (Wi‑Fi + Ethernet).', 'quantity' => 25, 'cost_price' => 2400000.00, 'selling_price' => 2857000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple AirTag (4 Pack)', 'sku' => 'APPLE-AIRTAG-4PK', 'description' => 'Apple AirTag (4 Pack).', 'quantity' => 80, 'cost_price' => 1250000.00, 'selling_price' => 1499000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple MagSafe Charger (1 m)', 'sku' => 'APPLE-MAGSAFE-1M', 'description' => 'Apple MagSafe Charger (1 m).', 'quantity' => 0, 'cost_price' => 800000.00, 'selling_price' => 969000.00, 'status' => 'out_of_stock'],
+            ['name' => 'Apple 240W USB‑C Charge Cable (2 m)', 'sku' => 'APPLE-USBC-240W-2M', 'description' => 'Apple 240W USB‑C Charge Cable (2 m).', 'quantity' => 200, 'cost_price' => 450000.00, 'selling_price' => 549000.00, 'status' => 'in_stock'],
+            ['name' => 'Apple Thunderbolt 4 (USB‑C) Pro Cable (1 m)', 'sku' => 'APPLE-TB4-PRO-1M', 'description' => 'Apple Thunderbolt 4 (USB‑C) Pro Cable (1 m).', 'quantity' => 12, 'cost_price' => 1250000.00, 'selling_price' => 1499000.00, 'status' => 'in_stock'],
         ];
 
         foreach ($items as $item) {

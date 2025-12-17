@@ -1,4 +1,4 @@
-<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showInvoiceModal: $wire.entangle('showInvoiceModal') }">
+<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showInvoiceModal: $wire.entangle('showInvoiceModal'), showDeliveryModal: $wire.entangle('showDeliveryModal') }">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -44,9 +44,34 @@
                 </div>
             </div>
 
-            {{-- Center Group: Invoice Link Buttons --}}
-            @if($invoices->count() > 0)
+            {{-- Right Group: Related Documents (Delivery first, then Invoice) --}}
+            @if($orderId && $status === \App\Enums\SalesOrderState::SALES_ORDER->value)
                 <div class="flex items-center gap-2">
+                    @foreach($deliveries as $delivery)
+                        <a 
+                            href="{{ route('delivery.orders.edit', $delivery->id) }}" 
+                            wire:navigate
+                            class="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
+                        >
+                            <flux:icon name="truck" class="size-4" />
+                            <span>{{ $delivery->delivery_number }}</span>
+                            @php
+                                $deliveryStatusConfig = match($delivery->status) {
+                                    'pending' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                    'picked' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
+                                    'in_transit' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
+                                    'delivered' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
+                                    'failed' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
+                                    'returned' => ['bg' => 'bg-amber-200 dark:bg-amber-800', 'text' => 'text-amber-700 dark:text-amber-300'],
+                                    default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                };
+                            @endphp
+                            <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $deliveryStatusConfig['bg'] }} {{ $deliveryStatusConfig['text'] }}">
+                                {{ ucfirst(str_replace('_', ' ', $delivery->status)) }}
+                            </span>
+                        </a>
+                    @endforeach
+
                     @foreach($invoices as $invoice)
                         <a 
                             href="{{ route('invoicing.invoices.edit', $invoice->id) }}" 
@@ -158,6 +183,16 @@
                                 Create Invoice
                             </button>
                         @endif
+                        @if($deliveries->count() === 0)
+                            <button 
+                                type="button"
+                                wire:click="openDeliveryModal"
+                                class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            >
+                                <flux:icon name="truck" class="size-4" />
+                                Create Delivery
+                            </button>
+                        @endif
                         <button 
                             type="button"
                             wire:click="save"
@@ -174,13 +209,26 @@
                         <flux:icon name="envelope" class="size-4" />
                         Send
                     </button>
-                    <button 
-                        type="button"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        <flux:icon name="printer" class="size-4" />
-                        Print
-                    </button>
+                    @if($orderId)
+                        <a 
+                            href="{{ route('sales.orders.print', $orderId) }}"
+                            target="_blank"
+                            rel="noopener"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                        >
+                            <flux:icon name="printer" class="size-4" />
+                            Print
+                        </a>
+                    @else
+                        <button 
+                            type="button"
+                            disabled
+                            class="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-600"
+                        >
+                            <flux:icon name="printer" class="size-4" />
+                            Print
+                        </button>
+                    @endif
                     @if($orderId && $status !== 'cancelled')
                         <button 
                             type="button"
@@ -335,11 +383,11 @@
             x-transition:leave-end="opacity-0"
         >
             {{-- Backdrop --}}
-            <div class="absolute inset-0 bg-black/50" @click="showInvoiceModal = false"></div>
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showInvoiceModal = false"></div>
             
             {{-- Modal Content --}}
             <div 
-                class="relative w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
+                class="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900 dark:ring-white/10"
                 x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
@@ -348,61 +396,96 @@
                 x-transition:leave-end="opacity-0 scale-95"
                 @click.outside="showInvoiceModal = false"
             >
-                <div class="mb-6 flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/30">
-                        <flux:icon name="document-text" class="size-5 text-violet-600 dark:text-violet-400" />
-                    </div>
+                <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
                     <div>
-                        <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Create Invoice</h3>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Choose payment type for this invoice</p>
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Create Invoice</h3>
+                        <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Choose payment type for this invoice</p>
                     </div>
+
+                    <button 
+                        type="button"
+                        @click="showInvoiceModal = false"
+                        class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        aria-label="Close"
+                    >
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
                 </div>
                 
                 {{-- Payment Type Options --}}
-                <div class="mb-6 space-y-3">
-                    {{-- Regular Payment --}}
-                    <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-zinc-200 p-4 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800" :class="{ 'border-violet-500 bg-violet-50 dark:bg-violet-900/20': $wire.invoiceType === 'regular' }">
-                        <input type="radio" wire:model="invoiceType" value="regular" class="mt-0.5 h-4 w-4 border-zinc-300 text-violet-600 focus:ring-violet-500" />
-                        <div class="flex-1">
-                            <p class="font-medium text-zinc-900 dark:text-zinc-100">Regular Payment</p>
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Invoice for the full order amount</p>
-                            <p class="mt-1 text-sm font-medium text-violet-600 dark:text-violet-400">Rp {{ number_format($this->total, 0, ',', '.') }}</p>
-                        </div>
-                    </label>
+                <div class="px-6 py-5">
+                    <div class="flex items-start justify-between gap-6">
+                        <span class="pt-1 text-sm font-medium text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Payment Type</span>
+                        <div class="flex-1 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+                            {{-- Regular Payment --}}
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
+                                <input type="radio" wire:model="invoiceType" value="regular" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
+                                <div class="min-w-0 whitespace-nowrap leading-snug">
+                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Regular (Full Amount)</span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Create an invoice for the full order total.</span>
+                                </div>
+                            </label>
 
-                    {{-- Down Payment (Percentage) --}}
-                    <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-zinc-200 p-4 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800" :class="{ 'border-violet-500 bg-violet-50 dark:bg-violet-900/20': $wire.invoiceType === 'down_payment_percentage' }">
-                        <input type="radio" wire:model="invoiceType" value="down_payment_percentage" class="mt-0.5 h-4 w-4 border-zinc-300 text-violet-600 focus:ring-violet-500" />
-                        <div class="flex-1">
-                            <p class="font-medium text-zinc-900 dark:text-zinc-100">Down Payment (Percentage)</p>
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Invoice for a percentage of the order</p>
-                            <div class="mt-2" x-show="$wire.invoiceType === 'down_payment_percentage'" x-transition>
+                            {{-- Down Payment (Percentage) --}}
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
+                                <input type="radio" wire:model="invoiceType" value="down_payment_percentage" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
+                                <div class="min-w-0 whitespace-nowrap leading-snug">
+                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Down Payment (Percentage)</span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Invoice a percentage of the order (e.g. 30%).</span>
+                                </div>
+                            </label>
+
+                            {{-- Down Payment (Fixed Amount) --}}
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
+                                <input type="radio" wire:model="invoiceType" value="down_payment_fixed" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
+                                <div class="min-w-0 whitespace-nowrap leading-snug">
+                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Down Payment (Fixed Amount)</span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Invoice a specific amount now (e.g. Rp 5.000.000).</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                        <div x-show="$wire.invoiceType === 'down_payment_percentage'" x-transition>
+                            <div class="flex items-center gap-4">
+                                <span class="pt-1 pr-6 text-sm font-medium text-zinc-700 dark:text-zinc-300">Percentage</span>
                                 <div class="flex items-center gap-2">
-                                    <input type="number" wire:model.live="downPaymentPercentage" min="1" max="100" step="1" class="w-24 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-violet-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="%" />
+                                    <input type="number" wire:model.live="downPaymentPercentage" min="1" max="100" step="1" class="w-24 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="%" />
                                     <span class="text-sm text-zinc-500">%</span>
-                                    <span class="text-sm font-medium text-violet-600 dark:text-violet-400">= Rp {{ number_format($this->total * ($downPaymentPercentage / 100), 0, ',', '.') }}</span>
                                 </div>
                             </div>
                         </div>
-                    </label>
 
-                    {{-- Down Payment (Fixed Amount) --}}
-                    <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-zinc-200 p-4 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800" :class="{ 'border-violet-500 bg-violet-50 dark:bg-violet-900/20': $wire.invoiceType === 'down_payment_fixed' }">
-                        <input type="radio" wire:model="invoiceType" value="down_payment_fixed" class="mt-0.5 h-4 w-4 border-zinc-300 text-violet-600 focus:ring-violet-500" />
-                        <div class="flex-1">
-                            <p class="font-medium text-zinc-900 dark:text-zinc-100">Down Payment (Fixed Amount)</p>
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Invoice for a specific amount</p>
-                            <div class="mt-2" x-show="$wire.invoiceType === 'down_payment_fixed'" x-transition>
+                        <div x-show="$wire.invoiceType === 'down_payment_fixed'" x-transition>
+                            <div class="flex items-center gap-4">
+                                <span class="pt-1 pr-6 text-sm font-medium text-zinc-700 dark:text-zinc-300">Amount</span>
                                 <div class="flex items-center gap-2">
                                     <span class="text-sm text-zinc-500">Rp</span>
-                                    <input type="number" wire:model.live="downPaymentAmount" min="0" step="1000" class="w-40 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-violet-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Amount" />
+                                    <input type="number" wire:model.live="downPaymentAmount" min="0" step="1000" class="w-40 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Amount" />
                                 </div>
                             </div>
                         </div>
-                    </label>
+
+                        @php
+                            $invoiceAmount = $this->total;
+                            if ($invoiceType === 'down_payment_percentage') {
+                                $invoiceAmount = $this->total * (($downPaymentPercentage ?? 0) / 100);
+                            } elseif ($invoiceType === 'down_payment_fixed') {
+                                $invoiceAmount = min($this->total, (float) ($downPaymentAmount ?? 0));
+                            }
+                        @endphp
+
+                        <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+                            <div class="flex items-center">
+                                <span class="text-sm pr-4 text-zinc-600 dark:text-zinc-400">Invoice Amount</span>
+                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($invoiceAmount, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="flex justify-end gap-3">
+                <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
                     <button 
                         type="button"
                         @click="showInvoiceModal = false"
@@ -413,9 +496,113 @@
                     <button 
                         type="button"
                         wire:click="createInvoice"
-                        class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
+                        <flux:icon name="document-text" class="size-4" />
                         Create Invoice Draft
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div 
+            x-show="showDeliveryModal" 
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showDeliveryModal = false"></div>
+
+            <div 
+                class="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900 dark:ring-white/10"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                @click.outside="showDeliveryModal = false"
+            >
+                <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Create Delivery Order</h3>
+                        <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Confirm delivery information before creating the delivery order</p>
+                    </div>
+
+                    <button 
+                        type="button"
+                        @click="showDeliveryModal = false"
+                        class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        aria-label="Close"
+                    >
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+
+                <div class="px-6 py-5">
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Warehouse</label>
+                            <select wire:model.live="deliveryWarehouseId" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                                <option value="">Select warehouse...</option>
+                                @foreach($warehouses as $warehouse)
+                                    <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Delivery Date</label>
+                            <input type="date" wire:model.live="deliveryDate" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Recipient Name</label>
+                            <input type="text" wire:model.live="deliveryRecipientName" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Recipient name" />
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Recipient Phone</label>
+                            <input type="text" wire:model.live="deliveryRecipientPhone" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Recipient phone" />
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Courier</label>
+                            <input type="text" wire:model.live="deliveryCourier" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Courier" />
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Tracking Number</label>
+                            <input type="text" wire:model.live="deliveryTrackingNumber" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Tracking number" />
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Notes</label>
+                            <textarea rows="3" wire:model.live="deliveryNotes" class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+                    <button 
+                        type="button"
+                        @click="showDeliveryModal = false"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="button"
+                        wire:click="createDeliveryOrder"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                        <flux:icon name="truck" class="size-4" />
+                        Create Delivery Draft
                     </button>
                 </div>
             </div>
@@ -1192,30 +1379,6 @@
                                     <div>
                                         <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Source Document</label>
                                         <input type="text" placeholder="Reference of the source document..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Campaign</label>
-                                        <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                            <option value="">Select campaign...</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Medium</label>
-                                        <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                            <option value="">Select medium...</option>
-                                            <option value="1">Email</option>
-                                            <option value="2">Phone</option>
-                                            <option value="3">Website</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Source</label>
-                                        <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                            <option value="">Select source...</option>
-                                            <option value="1">Newsletter</option>
-                                            <option value="2">Google Ads</option>
-                                            <option value="3">Referral</option>
-                                        </select>
                                     </div>
                                 </div>
                             </div>

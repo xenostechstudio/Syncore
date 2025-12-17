@@ -126,6 +126,12 @@
                             </svg>
                             Company Profile
                         </a>
+                        <a href="{{ route('settings.payment-gateway.index') }}" wire:navigate class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                            </svg>
+                            Payment Gateway
+                        </a>
                     </div>
                 </div>
             </div>
@@ -204,6 +210,25 @@
                             <h3 class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Company</h3>
                             <p class="mt-1 text-xs font-light text-zinc-500 dark:text-zinc-400">Company profile, logo, and business details</p>
                             <p class="mt-2 text-xs text-zinc-400 dark:text-zinc-500">Configure</p>
+                        </div>
+                        <svg class="size-4 text-zinc-300 transition-colors group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </div>
+                </a>
+
+                {{-- Payment Gateway Card --}}
+                <a href="{{ route('settings.payment-gateway.index') }}" wire:navigate class="group rounded-2xl border border-zinc-200 bg-white p-5 transition-all hover:border-zinc-300 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                            <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Payment Gateway</h3>
+                            <p class="mt-1 text-xs font-light text-zinc-500 dark:text-zinc-400">Configure Xendit and other payment integrations</p>
+                            <p class="mt-2 text-xs text-zinc-400 dark:text-zinc-500">{{ config('xendit.secret_key') ? 'Configured' : 'Not configured' }}</p>
                         </div>
                         <svg class="size-4 text-zinc-300 transition-colors group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

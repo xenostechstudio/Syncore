@@ -29,6 +29,8 @@ class Index extends Component
 
     public string $view = 'list'; // list, grid, kanban
 
+    public array $openGroups = [];
+
     public array $selected = [];
     public bool $selectAll = false;
 
@@ -71,6 +73,21 @@ class Index extends Component
     public function updatedGroupBy(): void
     {
         $this->resetPage();
+        $this->openGroups = [];
+    }
+
+    public function toggleGroup(string $groupId): void
+    {
+        if (in_array($groupId, $this->openGroups, true)) {
+            $this->openGroups = array_values(array_filter(
+                $this->openGroups,
+                fn ($id) => $id !== $groupId
+            ));
+
+            return;
+        }
+
+        $this->openGroups[] = $groupId;
     }
 
     public function updatedSelected(): void
@@ -106,8 +123,11 @@ class Index extends Component
     private function getProductsQuery()
     {
         return Product::query()
-            ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('sku', 'like', "%{$this->search}%"))
+            ->when($this->groupBy === 'category', fn ($q) => $q->with('category'))
+            ->when($this->search, fn ($q) => $q->where(fn ($qq) => $qq
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('sku', 'like', "%{$this->search}%")
+            ))
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->when($this->sort === 'latest', fn ($q) => $q->latest())
             ->when($this->sort === 'oldest', fn ($q) => $q->oldest())
@@ -116,6 +136,75 @@ class Index extends Component
             ->when($this->sort === 'price_low', fn ($q) => $q->orderBy('selling_price'))
             ->when($this->sort === 'stock_high', fn ($q) => $q->orderByDesc('quantity'))
             ->when($this->sort === 'stock_low', fn ($q) => $q->orderBy('quantity'));
+    }
+
+    private function groupLabel(string $groupKey): string
+    {
+        if ($this->groupBy === 'status') {
+            return ucfirst(str_replace('_', ' ', $groupKey));
+        }
+
+        return $groupKey;
+    }
+
+    private function groupProducts($products): array
+    {
+        if (empty($this->groupBy)) {
+            return [];
+        }
+
+        if ($this->groupBy === 'status') {
+            $grouped = $products->groupBy(fn ($p) => $p->status ?: 'unknown');
+
+            $orderedKeys = ['in_stock', 'low_stock', 'out_of_stock', 'unknown'];
+            $result = [];
+
+            foreach ($orderedKeys as $key) {
+                if (! $grouped->has($key)) {
+                    continue;
+                }
+
+                $label = $this->groupLabel($key);
+                $result[] = [
+                    'id' => md5("{$this->groupBy}:{$key}"),
+                    'label' => $label,
+                    'items' => $grouped->get($key)->values(),
+                ];
+            }
+
+            foreach ($grouped as $key => $items) {
+                if (in_array($key, $orderedKeys, true)) {
+                    continue;
+                }
+
+                $label = $this->groupLabel((string) $key);
+                $result[] = [
+                    'id' => md5("{$this->groupBy}:{$key}"),
+                    'label' => $label,
+                    'items' => $items->values(),
+                ];
+            }
+
+            return $result;
+        }
+
+        if ($this->groupBy === 'category') {
+            $grouped = $products->groupBy(fn ($p) => $p->category?->name ?: 'Uncategorized');
+
+            return $grouped
+                ->sortKeys()
+                ->map(function ($items, $key) {
+                    return [
+                        'id' => md5("{$this->groupBy}:{$key}"),
+                        'label' => (string) $key,
+                        'items' => $items->values(),
+                    ];
+                })
+                ->values()
+                ->all();
+        }
+
+        return [];
     }
 
     public function render()
@@ -135,14 +224,25 @@ class Index extends Component
             return view('livewire.sales.products.index', [
                 'products' => $products,
                 'groupedProducts' => $groupedProducts,
+                'groupedListProducts' => [],
             ]);
         }
 
         $products = $this->getProductsQuery()->paginate(15, ['*'], 'page', $this->page);
 
+        $groupedListProducts = [];
+        if ($this->view === 'list' && ! empty($this->groupBy)) {
+            $groupedListProducts = $this->groupProducts($products->getCollection());
+
+            if (empty($this->openGroups) && ! empty($groupedListProducts)) {
+                $this->openGroups = [$groupedListProducts[0]['id']];
+            }
+        }
+
         return view('livewire.sales.products.index', [
             'products' => $products,
             'groupedProducts' => [],
+            'groupedListProducts' => $groupedListProducts,
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\Payment;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
+use App\Services\XenditService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -33,6 +34,7 @@ class Form extends Component
     
     // Payment modal
     public bool $showPaymentModal = false;
+    public string $paymentType = 'manual';
     public float $paymentAmount = 0;
     public string $paymentDate = '';
     public string $paymentMethod = 'bank_transfer';
@@ -121,7 +123,16 @@ class Form extends Component
 
     public function openPaymentModal(): void
     {
-        $this->paymentAmount = 0;
+        $remainingAmount = 0;
+        if ($this->invoiceId) {
+            $invoice = Invoice::with('payments')->find($this->invoiceId);
+            if ($invoice) {
+                $remainingAmount = max(0, (float) $invoice->total - (float) $invoice->payments->sum('amount'));
+            }
+        }
+
+        $this->paymentType = 'manual';
+        $this->paymentAmount = $remainingAmount > 0 ? $remainingAmount : 0;
         $this->paymentDate = now()->format('Y-m-d');
         $this->paymentMethod = 'bank_transfer';
         $this->paymentReference = '';
@@ -181,6 +192,50 @@ class Form extends Component
 
         $this->showPaymentModal = false;
         session()->flash('success', 'Payment recorded successfully.');
+    }
+
+    public function createXenditPayment(bool $forceNew = false): void
+    {
+        if (!$this->invoiceId) {
+            session()->flash('error', 'Please save the invoice first.');
+            return;
+        }
+
+        $invoice = Invoice::with(['customer', 'items.product'])->findOrFail($this->invoiceId);
+
+        if ($this->status === 'paid') {
+            session()->flash('error', 'This invoice is already paid.');
+            return;
+        }
+
+        $xenditService = app(XenditService::class);
+
+        if (!$xenditService->isConfigured()) {
+            session()->flash('error', 'Xendit is not configured. Please add your API keys in Settings > Payment Gateway.');
+            return;
+        }
+
+        if (!$forceNew && !empty($invoice->xendit_invoice_id) && !empty($invoice->xendit_invoice_url)) {
+            $status = strtolower((string) ($invoice->xendit_status ?? ''));
+            if (!in_array($status, ['paid', 'expired'], true)) {
+                session()->flash('success', 'Using existing pending Xendit payment.');
+                return;
+            }
+        }
+
+        $result = $xenditService->createInvoice($invoice);
+
+        if ($result['success']) {
+            session()->flash('success', 'Xendit payment link created successfully.');
+            $this->showPaymentModal = true;
+        } else {
+            session()->flash('error', $result['message']);
+        }
+    }
+
+    public function getXenditConfiguredProperty(): bool
+    {
+        return app(XenditService::class)->isConfigured();
     }
 
     public function render()

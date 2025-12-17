@@ -3,7 +3,10 @@
 namespace App\Livewire\Sales\Orders;
 
 use App\Enums\SalesOrderState;
+use App\Models\Delivery\DeliveryOrder;
+use App\Models\Delivery\DeliveryOrderItem;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\Warehouse;
 use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\InvoiceItem;
 use App\Models\Sales\Customer;
@@ -43,12 +46,22 @@ class Form extends Component
     public bool $showCustomerModal = false;
     public bool $showItemModal = false;
     public bool $showInvoiceModal = false;
+    public bool $showDeliveryModal = false;
     public string $itemSearch = '';
 
     // Invoice Creation Options
     public string $invoiceType = 'regular'; // regular, down_payment_percentage, down_payment_fixed
     public float $downPaymentPercentage = 0;
     public float $downPaymentAmount = 0;
+
+    // Delivery Creation Options
+    public ?int $deliveryWarehouseId = null;
+    public string $deliveryDate = '';
+    public string $deliveryRecipientName = '';
+    public string $deliveryRecipientPhone = '';
+    public string $deliveryCourier = '';
+    public string $deliveryTrackingNumber = '';
+    public string $deliveryNotes = '';
 
     // History/Activity Log
     public array $activityLog = [];
@@ -57,6 +70,7 @@ class Form extends Component
     {
         $this->order_date = now()->format('Y-m-d');
         $this->expected_delivery_date = now()->addDays(7)->format('Y-m-d');
+        $this->deliveryDate = now()->format('Y-m-d');
 
         if ($id) {
             $this->orderId = $id;
@@ -64,6 +78,97 @@ class Form extends Component
         } else {
             // Add one empty item row
             $this->addItem();
+        }
+    }
+
+    public function openDeliveryModal(): void
+    {
+        if (!$this->orderId) {
+            session()->flash('error', 'Please save/confirm the sales order first.');
+            return;
+        }
+
+        if ($this->status !== SalesOrderState::SALES_ORDER->value) {
+            session()->flash('error', 'Delivery order can only be created for confirmed sales orders.');
+            return;
+        }
+
+        $order = SalesOrder::with(['customer'])->findOrFail($this->orderId);
+
+        $this->deliveryWarehouseId = Warehouse::query()->orderBy('name')->value('id');
+        $this->deliveryDate = now()->format('Y-m-d');
+        $this->deliveryRecipientName = $order->customer->name ?? '';
+        $this->deliveryRecipientPhone = $order->customer->phone ?? '';
+        $this->deliveryCourier = '';
+        $this->deliveryTrackingNumber = '';
+        $this->deliveryNotes = '';
+
+        $this->showDeliveryModal = true;
+    }
+
+    public function closeDeliveryModal(): void
+    {
+        $this->showDeliveryModal = false;
+    }
+
+    public function createDeliveryOrder(): void
+    {
+        if (!$this->orderId) {
+            session()->flash('error', 'Sales order not found.');
+            return;
+        }
+
+        if ($this->status !== SalesOrderState::SALES_ORDER->value) {
+            session()->flash('error', 'Delivery order can only be created for confirmed sales orders.');
+            return;
+        }
+
+        $this->validate([
+            'deliveryWarehouseId' => 'required|integer',
+            'deliveryDate' => 'required|date',
+            'deliveryRecipientName' => 'nullable|string|max:255',
+            'deliveryRecipientPhone' => 'nullable|string|max:255',
+            'deliveryCourier' => 'nullable|string|max:255',
+            'deliveryTrackingNumber' => 'nullable|string|max:255',
+            'deliveryNotes' => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $order = SalesOrder::with(['customer', 'items'])->findOrFail($this->orderId);
+
+            $delivery = DeliveryOrder::create([
+                'delivery_number' => DeliveryOrder::generateDeliveryNumber(),
+                'sales_order_id' => $order->id,
+                'warehouse_id' => $this->deliveryWarehouseId,
+                'user_id' => Auth::id(),
+                'delivery_date' => $this->deliveryDate,
+                'status' => 'pending',
+                'shipping_address' => $order->shipping_address ?? ($order->customer->address ?? ''),
+                'recipient_name' => $this->deliveryRecipientName ?: ($order->customer->name ?? null),
+                'recipient_phone' => $this->deliveryRecipientPhone ?: ($order->customer->phone ?? null),
+                'notes' => $this->deliveryNotes ?: null,
+                'tracking_number' => $this->deliveryTrackingNumber ?: null,
+                'courier' => $this->deliveryCourier ?: null,
+            ]);
+
+            foreach ($order->items as $item) {
+                DeliveryOrderItem::create([
+                    'delivery_order_id' => $delivery->id,
+                    'sales_order_item_id' => $item->id,
+                    'quantity_to_deliver' => (int) $item->quantity,
+                    'quantity_delivered' => 0,
+                ]);
+            }
+
+            DB::commit();
+
+            $this->showDeliveryModal = false;
+            session()->flash('success', 'Delivery order created successfully.');
+            $this->redirect(route('delivery.orders.edit', $delivery->id), navigate: true);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Failed to create delivery order: ' . $e->getMessage());
         }
     }
 
@@ -480,9 +585,15 @@ class Form extends Component
             ->orderBy('name')
             ->get();
 
+        $warehouses = Warehouse::query()->orderBy('name')->get();
+
         // Get invoices linked to this sales order
         $invoices = $this->orderId 
             ? Invoice::where('sales_order_id', $this->orderId)->get() 
+            : collect();
+
+        $deliveries = $this->orderId
+            ? DeliveryOrder::where('sales_order_id', $this->orderId)->get()
             : collect();
 
         return view('livewire.sales.orders.form', [
@@ -490,7 +601,9 @@ class Form extends Component
             'products' => $products,
             'selectedCustomer' => $selectedCustomer,
             'taxes' => $taxes,
+            'warehouses' => $warehouses,
             'invoices' => $invoices,
+            'deliveries' => $deliveries,
         ]);
     }
 }

@@ -47,6 +47,7 @@ use App\Livewire\Settings\Roles\Index as SettingsRolesIndex;
 use App\Livewire\Settings\Roles\Form as SettingsRolesForm;
 use App\Livewire\Settings\Localization\Index as SettingsLocalizationIndex;
 use App\Livewire\Settings\Company\Index as SettingsCompanyIndex;
+use App\Livewire\Settings\PaymentGateway\Index as SettingsPaymentGatewayIndex;
 
 use App\Livewire\Purchase\Rfq\Index as PurchaseRfqIndex;
 use App\Livewire\Purchase\Rfq\Form as PurchaseRfqForm;
@@ -112,6 +113,7 @@ Route::middleware(['auth', 'verified', 'permission:access.sales'])->prefix('sale
     Route::get('/orders/all', SalesOrdersIndex::class)->name('orders.all');
     Route::get('/orders/create', SalesOrderForm::class)->name('orders.create');
     Route::get('/orders/{id}/edit', SalesOrderForm::class)->name('orders.edit');
+    Route::get('/orders/{id}/print', \App\Http\Controllers\Sales\SalesOrderPrintController::class)->name('orders.print');
     
     // Orders to Invoice
     Route::get('/invoices/orders', SalesOrdersToInvoice::class)->name('invoices.pending');
@@ -209,6 +211,9 @@ Route::middleware(['auth', 'verified', 'permission:access.settings'])->prefix('s
     
     // Company
     Route::get('/company', SettingsCompanyIndex::class)->name('company.index');
+    
+    // Payment Gateway
+    Route::get('/payment-gateway', SettingsPaymentGatewayIndex::class)->name('payment-gateway.index');
 });
 
 Route::middleware(['auth'])->group(function () {

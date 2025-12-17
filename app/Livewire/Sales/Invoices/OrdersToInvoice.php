@@ -25,6 +25,9 @@ class OrdersToInvoice extends Component
     #[Url]
     public string $sort = 'latest';
 
+    #[Url]
+    public string $groupBy = '';
+
     public string $view = 'list';
 
     public array $selected = [];
@@ -62,6 +65,21 @@ class OrdersToInvoice extends Component
         $this->selectAll = false;
     }
 
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSort(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedGroupBy(): void
+    {
+        $this->resetPage();
+    }
+
     public function updatedSelected(): void
     {
         $this->selectAll = false;
@@ -87,7 +105,7 @@ class OrdersToInvoice extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'sort']);
+        $this->reset(['search', 'status', 'sort', 'groupBy']);
         $this->resetPage();
     }
 
@@ -96,12 +114,10 @@ class OrdersToInvoice extends Component
         return SalesOrder::query()
             ->with(['customer', 'user'])
             ->where('status', SalesOrderState::SALES_ORDER->value)
-            ->when($this->search, function ($q) {
-                $q->where('order_number', 'like', "%{$this->search}%")
-                    ->orWhereHas('customer', function ($q) {
-                        $q->where('name', 'like', "%{$this->search}%");
-                    });
-            })
+            ->when($this->search, fn ($q) => $q->where(fn ($qq) => $qq
+                ->where('order_number', 'like', "%{$this->search}%")
+                ->orWhereHas('customer', fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
+            ))
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->when($this->sort === 'latest', fn ($q) => $q->latest())
             ->when($this->sort === 'oldest', fn ($q) => $q->oldest())
