@@ -8,6 +8,7 @@ use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Services\XenditService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -164,8 +165,14 @@ class Form extends Component
         // Generate payment number
         $year = now()->year;
         $prefix = "PAY/{$year}/";
+
+        $castType = match (DB::connection()->getDriverName()) {
+            'pgsql', 'sqlite' => 'INTEGER',
+            default => 'UNSIGNED',
+        };
+
         $lastPayment = Payment::where('payment_number', 'like', $prefix . '%')
-            ->orderByRaw("CAST(SUBSTRING(payment_number, LENGTH(?) + 1) AS UNSIGNED) DESC", [$prefix])
+            ->orderByRaw("CAST(SUBSTRING(payment_number, LENGTH(?) + 1) AS {$castType}) DESC", [$prefix])
             ->first();
         $nextNumber = $lastPayment ? ((int) substr($lastPayment->payment_number, strlen($prefix))) + 1 : 1;
         $paymentNumber = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);

@@ -74,12 +74,14 @@ class ModuleNavigation
                 ],
                 [
                     'label' => 'Operations',
-                    'route' => 'inventory.transfers.index',
+                    'route' => 'inventory.warehouse-in.index',
                     'icon' => 'arrows-right-left',
-                    'pattern' => 'inventory.transfers*|inventory.adjustments*',
+                    'pattern' => 'inventory.warehouse-in*|inventory.warehouse-out*|inventory.transfers*|inventory.adjustments*',
                     'children' => [
-                        ['label' => 'Transfers', 'route' => 'inventory.transfers.index', 'pattern' => 'inventory.transfers*'],
-                        ['label' => 'Adjustments', 'route' => 'inventory.adjustments.index', 'pattern' => 'inventory.adjustments*'],
+                        ['label' => 'Inbound', 'route' => 'inventory.warehouse-in.index', 'pattern' => 'inventory.warehouse-in*'],
+                        ['label' => 'Outbound', 'route' => 'inventory.warehouse-out.index', 'pattern' => 'inventory.warehouse-out*'],
+                        ['label' => 'Internal Transfer', 'route' => 'inventory.transfers.index', 'pattern' => 'inventory.transfers*'],
+                        ['label' => 'Stock Adjustment', 'route' => 'inventory.adjustments.index', 'pattern' => 'inventory.adjustments*'],
                     ],
                 ],
                 [
@@ -88,8 +90,9 @@ class ModuleNavigation
                     'icon' => 'cube',
                     'pattern' => 'inventory.products*',
                     'children' => [
-                        ['label' => 'Products', 'route' => 'inventory.products.index', 'pattern' => 'inventory.products*'],
+                        ['label' => 'Products', 'route' => 'inventory.products.index', 'pattern' => 'inventory.products.index|inventory.products.create|inventory.products.edit'],
                         ['label' => 'Categories', 'route' => 'inventory.categories.index', 'pattern' => 'inventory.categories*'],
+                        ['label' => 'Pricelists', 'route' => 'inventory.products.pricelists.index', 'pattern' => 'inventory.products.pricelists*'],
                     ],
                 ],
                 [

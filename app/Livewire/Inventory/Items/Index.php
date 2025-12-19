@@ -4,6 +4,8 @@ namespace App\Livewire\Inventory\Items;
 
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\Warehouse;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -29,6 +31,9 @@ class Index extends Component
     
     #[Url]
     public string $view = 'list';
+
+    #[Url]
+    public ?int $warehouse_id = null;
 
     public array $selected = [];
     public bool $selectAll = false;
@@ -109,6 +114,11 @@ class Index extends Component
 
     public function render()
     {
+        $warehouses = Warehouse::orderBy('name')->get();
+        if (! $this->warehouse_id) {
+            $this->warehouse_id = $warehouses->first()?->id;
+        }
+
         $products = Product::query()
             ->with('category')
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
@@ -122,6 +132,56 @@ class Index extends Component
             ->when($this->sort === 'stock_high', fn($q) => $q->orderByDesc('quantity'))
             ->when($this->sort === 'stock_low', fn($q) => $q->orderBy('quantity'))
             ->paginate($this->perPage, ['*'], 'page', $this->page);
+
+        if ($this->warehouse_id) {
+            $productIds = $products->getCollection()->pluck('id')->values()->all();
+
+            $onHand = DB::table('inventory_stocks')
+                ->where('warehouse_id', $this->warehouse_id)
+                ->whereIn('product_id', $productIds)
+                ->pluck('quantity', 'product_id');
+
+            $forecastIn = DB::table('inventory_adjustment_items as iai')
+                ->join('inventory_adjustments as ia', 'ia.id', '=', 'iai.inventory_adjustment_id')
+                ->where('ia.warehouse_id', $this->warehouse_id)
+                ->whereNull('ia.posted_at')
+                ->where('ia.adjustment_type', 'increase')
+                ->whereNotIn('ia.status', ['cancelled'])
+                ->whereIn('iai.product_id', $productIds)
+                ->selectRaw('iai.product_id, SUM(iai.counted_quantity) as qty')
+                ->groupBy('iai.product_id')
+                ->pluck('qty', 'iai.product_id');
+
+            $forecastOut = DB::table('delivery_order_items as doi')
+                ->join('delivery_orders as do', 'do.id', '=', 'doi.delivery_order_id')
+                ->join('sales_order_items as soi', 'soi.id', '=', 'doi.sales_order_item_id')
+                ->where('do.warehouse_id', $this->warehouse_id)
+                ->whereNotIn('do.status', ['delivered', 'returned'])
+                ->whereNotExists(function ($q) {
+                    $q->selectRaw('1')
+                        ->from('inventory_adjustments as ia2')
+                        ->whereColumn('ia2.source_delivery_order_id', 'do.id')
+                        ->whereNotNull('ia2.posted_at');
+                })
+                ->whereIn('soi.product_id', $productIds)
+                ->selectRaw('soi.product_id, SUM(doi.quantity_to_deliver) as qty')
+                ->groupBy('soi.product_id')
+                ->pluck('qty', 'soi.product_id');
+
+            $products->getCollection()->transform(function ($item) use ($onHand, $forecastIn, $forecastOut) {
+                $pid = $item->id;
+                $hand = (int) ($onHand[$pid] ?? 0);
+                $in = (int) ($forecastIn[$pid] ?? 0);
+                $out = (int) ($forecastOut[$pid] ?? 0);
+                $available = $hand + $in - $out;
+
+                $item->setAttribute('on_hand', $hand);
+                $item->setAttribute('forecast_in', $in);
+                $item->setAttribute('forecast_out', $out);
+                $item->setAttribute('available', $available);
+                return $item;
+            });
+        }
 
         // Group products by status for kanban view
         $productsByStatus = null;
@@ -137,6 +197,7 @@ class Index extends Component
         return view('livewire.inventory.items.index', [
             'items' => $products,
             'itemsByStatus' => $productsByStatus,
+            'warehouses' => $warehouses,
         ]);
     }
 }

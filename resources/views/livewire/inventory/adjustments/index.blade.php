@@ -12,10 +12,16 @@
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: New Button, Title, Gear --}}
             <div class="flex items-center gap-3">
-                <a href="{{ route('inventory.adjustments.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                @php
+                    $isIn = request()->routeIs('inventory.warehouse-in.*');
+                    $isOut = request()->routeIs('inventory.warehouse-out.*');
+                    $createRoute = $isIn ? 'inventory.warehouse-in.create' : ($isOut ? 'inventory.warehouse-out.create' : 'inventory.adjustments.create');
+                    $title = $isIn ? 'Inbound' : ($isOut ? 'Outbound' : 'Stock Adjustment');
+                @endphp
+                <a href="{{ route($createRoute) }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                     New
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Adjustments</span>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ $title }}</span>
                 
                 {{-- Actions Menu (Gear) --}}
                 <flux:dropdown position="bottom" align="start">

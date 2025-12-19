@@ -5,6 +5,7 @@ namespace App\Livewire\Inventory\Products;
 use App\Models\Inventory\Category;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductPricelistRule;
+use App\Models\Inventory\InventoryStock;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Pricelist;
 use App\Models\User;
@@ -136,10 +137,36 @@ class Form extends Component
 
         if ($this->editing && $this->product) {
             $this->product->update($validated);
+            $product = $this->product->refresh();
             session()->flash('success', 'Product updated successfully.');
         } else {
-            Product::create($validated);
+            $product = Product::create($validated);
             session()->flash('success', 'Product created successfully.');
+        }
+
+        if (! empty($validated['warehouse_id'])) {
+            InventoryStock::query()->updateOrCreate(
+                [
+                    'warehouse_id' => $validated['warehouse_id'],
+                    'product_id' => $product->id,
+                ],
+                [
+                    'quantity' => (int) ($validated['quantity'] ?? 0),
+                ]
+            );
+
+            $totalQty = (int) InventoryStock::query()
+                ->where('product_id', $product->id)
+                ->sum('quantity');
+
+            $status = $totalQty === 0
+                ? 'out_of_stock'
+                : ($totalQty < 10 ? 'low_stock' : 'in_stock');
+
+            $product->update([
+                'quantity' => $totalQty,
+                'status' => $status,
+            ]);
         }
 
         $this->redirect(route('inventory.products.index'), navigate: true);
@@ -148,10 +175,17 @@ class Form extends Component
     // Pricelist Rules Methods
     public function openPriceModal(?int $ruleId = null): void
     {
+        if (! $this->productId) {
+            session()->flash('error', 'Please save the product first before setting pricelist prices.');
+            return;
+        }
+
         $this->resetPriceModal();
         
         if ($ruleId) {
-            $rule = ProductPricelistRule::find($ruleId);
+            $rule = ProductPricelistRule::query()
+                ->where('product_id', $this->productId)
+                ->find($ruleId);
             if ($rule) {
                 $this->editingRuleId = $rule->id;
                 $this->rule_price_type = $rule->price_type;
@@ -181,15 +215,28 @@ class Form extends Component
 
     public function savePriceRule(): void
     {
-        $validated = $this->validate([
+        if (! $this->productId || ! $this->product) {
+            session()->flash('error', 'Please save the product first before setting pricelist prices.');
+            return;
+        }
+
+        $rules = [
             'rule_price_type' => 'required|in:fixed,discount',
-            'rule_fixed_price' => 'nullable|numeric|min:0',
-            'rule_discount_percentage' => 'nullable|numeric|min:0|max:100',
             'rule_min_quantity' => 'required|integer|min:1',
             'rule_date_start' => 'nullable|date',
             'rule_date_end' => 'nullable|date|after_or_equal:rule_date_start',
-            'rule_pricelist_id' => 'nullable|exists:pricelists,id',
-        ]);
+            'rule_pricelist_id' => 'required|exists:pricelists,id',
+        ];
+
+        if ($this->rule_price_type === 'fixed') {
+            $rules['rule_fixed_price'] = 'required|numeric|min:0';
+            $rules['rule_discount_percentage'] = 'nullable|numeric|min:0|max:100';
+        } else {
+            $rules['rule_fixed_price'] = 'nullable|numeric|min:0';
+            $rules['rule_discount_percentage'] = 'required|numeric|min:0|max:100';
+        }
+
+        $validated = $this->validate($rules);
 
         $data = [
             'product_id' => $this->productId,
@@ -203,7 +250,10 @@ class Form extends Component
         ];
 
         if ($this->editingRuleId) {
-            ProductPricelistRule::find($this->editingRuleId)->update($data);
+            ProductPricelistRule::query()
+                ->where('product_id', $this->productId)
+                ->find($this->editingRuleId)
+                ?->update($data);
         } else {
             ProductPricelistRule::create($data);
         }
@@ -215,7 +265,16 @@ class Form extends Component
 
     public function deletePriceRule(int $ruleId): void
     {
-        ProductPricelistRule::find($ruleId)?->delete();
+        if (! $this->productId || ! $this->product) {
+            session()->flash('error', 'Please save the product first before modifying pricelist prices.');
+            return;
+        }
+
+        ProductPricelistRule::query()
+            ->where('product_id', $this->productId)
+            ->find($ruleId)
+            ?->delete();
+
         $this->product->refresh();
     }
 

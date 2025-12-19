@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
-#[Title('Transfer')]
+#[Title('Internal Transfer')]
 class Form extends Component
 {
     public ?int $transferId = null;

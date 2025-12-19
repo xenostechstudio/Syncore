@@ -6,6 +6,7 @@
     salesToggle: true,
     purchaseToggle: false,
     showCancelModal: false,
+    showPriceModal: @entangle('showPriceModal'),
 }">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
@@ -372,107 +373,109 @@
 
                         {{-- Tab: Inventory --}}
                         <div x-show="activeTab === 'inventory'" x-cloak>
-                            {{-- Logistics Section --}}
-                            <div class="mb-6">
-                                <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Logistics</h3>
-                                <div class="grid grid-cols-2 gap-x-8 gap-y-4">
-                                    {{-- Responsible --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Responsible</label>
-                                        <div class="flex-1 relative">
-                                            <select
-                                                wire:model="responsible_id"
-                                                class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                            >
-                                                <option value="">Select user...</option>
-                                                @foreach($users as $user)
-                                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                            <div class="mb-6 grid gap-x-8 gap-y-6 lg:grid-cols-2">
+                                {{-- Logistics Section --}}
+                                <div>
+                                    <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Logistics</h3>
+                                    <div class="space-y-2">
+                                        {{-- Responsible --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Responsible</label>
+                                            <div class="flex-1 relative">
+                                                <select
+                                                    wire:model="responsible_id"
+                                                    class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                >
+                                                    <option value="">Select user...</option>
+                                                    @foreach($users as $user)
+                                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {{-- Weight --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Weight</label>
-                                        <div class="flex-1 flex items-center gap-2">
-                                            <input 
-                                                type="number"
-                                                step="0.001"
-                                                wire:model="weight"
-                                                placeholder="0.000"
-                                                class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                            />
-                                            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">kg</span>
+                                        {{-- Weight --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Weight</label>
+                                            <div class="flex-1 flex items-center gap-2">
+                                                <input 
+                                                    type="number"
+                                                    step="0.001"
+                                                    wire:model="weight"
+                                                    placeholder="0.000"
+                                                    class="w-32 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none sm:w-40 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                />
+                                                <span class="shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-400">kg</span>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {{-- Volume --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Volume</label>
-                                        <div class="flex-1 flex items-center gap-2">
-                                            <input 
-                                                type="number"
-                                                step="0.001"
-                                                wire:model="volume"
-                                                placeholder="0.000"
-                                                class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                            />
-                                            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">m³</span>
+                                        {{-- Volume --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Volume</label>
+                                            <div class="flex-1 flex items-center gap-2">
+                                                <input 
+                                                    type="number"
+                                                    step="0.001"
+                                                    wire:model="volume"
+                                                    placeholder="0.000"
+                                                    class="w-32 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none sm:w-40 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                />
+                                                <span class="shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-400">m³</span>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {{-- Customer Lead Time --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Lead Time</label>
-                                        <div class="flex-1 flex items-center gap-2">
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                wire:model="customer_lead_time"
-                                                placeholder="0"
-                                                class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                            />
-                                            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">days</span>
+                                        {{-- Customer Lead Time --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Lead Time</label>
+                                            <div class="flex-1 flex items-center gap-2">
+                                                <input 
+                                                    type="number"
+                                                    min="0"
+                                                    wire:model="customer_lead_time"
+                                                    placeholder="0"
+                                                    class="w-24 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none sm:w-32 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                />
+                                                <span class="shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-400">days</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {{-- Operations Section --}}
-                            <div class="mb-6">
-                                <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Operations</h3>
-                                <div class="grid grid-cols-2 gap-x-8 gap-y-4">
-                                    {{-- Warehouse --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Warehouse</label>
-                                        <div class="flex-1 relative">
-                                            <select
-                                                wire:model="warehouse_id"
-                                                class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                            >
-                                                <option value="">Select warehouse...</option>
-                                                @foreach($warehouses as $warehouse)
-                                                    <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                {{-- Operations Section --}}
+                                <div>
+                                    <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Operations</h3>
+                                    <div class="space-y-2">
+                                        {{-- Warehouse --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Warehouse</label>
+                                            <div class="flex-1 relative">
+                                                <select
+                                                    wire:model="warehouse_id"
+                                                    class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                >
+                                                    <option value="">Select warehouse...</option>
+                                                    @foreach($warehouses as $warehouse)
+                                                        <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {{-- Quantity --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">On Hand</label>
-                                        <div class="flex-1 flex items-center gap-2">
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                wire:model="quantity"
-                                                placeholder="0"
-                                                class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                            />
-                                            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">units</span>
+                                        {{-- Quantity --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">On Hand</label>
+                                            <div class="flex-1 flex items-center gap-2">
+                                                <input 
+                                                    type="number"
+                                                    min="0"
+                                                    wire:model="quantity"
+                                                    placeholder="0"
+                                                    class="w-24 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none sm:w-32 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                />
+                                                <span class="shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-400">units</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -503,53 +506,132 @@
 
                         {{-- Tab: Prices --}}
                         <div x-show="activeTab === 'prices'" x-cloak>
-                            <div class="grid grid-cols-2 gap-x-8 gap-y-4">
-                                {{-- Cost Price --}}
-                                <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Cost Price</label>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Rp</span>
-                                        <input 
-                                            type="text"
-                                            wire:model="cost_price"
-                                            placeholder="0"
-                                            class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                        />
-                                    </div>
-                                    @error('cost_price') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
+                            <div x-data="{ showColumnMenu: false }">
+                                @if(! $productId)
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Save the product first to set different prices per pricelist.</p>
+                                @else
+                                    <div class="-mx-5 -mt-5 -mb-5">
+                                        <div class="overflow-visible">
+                                            <table class="w-full">
+                                                <thead>
+                                                    <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                                                        <th class="w-10 px-2 py-2.5"></th>
+                                                        <th class="w-56 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Pricelist</th>
+                                                        <th class="w-28 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Type</th>
+                                                        <th class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Value</th>
+                                                        <th class="w-24 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
+                                                        <th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 whitespace-nowrap dark:text-zinc-400">Validity</th>
+                                                        <th class="w-10 pl-2 pr-2 py-2.5 text-right">
+                                                            <div class="relative inline-flex items-center justify-end">
+                                                                <button 
+                                                                    type="button"
+                                                                    @click="showColumnMenu = !showColumnMenu"
+                                                                    class="flex items-center justify-center rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                                                                    title="Show/Hide Columns"
+                                                                >
+                                                                    <flux:icon name="adjustments-horizontal" class="size-4" />
+                                                                </button>
+                                                                <div 
+                                                                    x-show="showColumnMenu" 
+                                                                    @click.outside="showColumnMenu = false"
+                                                                    x-transition
+                                                                    class="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+                                                                >
+                                                                    <a 
+                                                                        href="{{ route('inventory.products.pricelists.index') }}"
+                                                                        wire:navigate
+                                                                        class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                                                                    >
+                                                                        <flux:icon name="cog-6-tooth" class="size-4 text-zinc-400" />
+                                                                        <span>Configure Pricelists</span>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
 
-                                {{-- Selling Price --}}
-                                <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Selling Price</label>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Rp</span>
-                                        <input 
-                                            type="text"
-                                            wire:model="selling_price"
-                                            placeholder="0"
-                                            class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                        />
-                                    </div>
-                                    @error('selling_price') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
+                                            <tbody class="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+                                                @forelse($pricelistRules as $rule)
+                                                    <tr class="group cursor-pointer hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30" wire:click="openPriceModal({{ $rule->id }})">
+                                                        <td class="px-2 py-2">
+                                                            <div class="flex cursor-grab items-center justify-center text-zinc-300 transition-opacity hover:text-zinc-500 dark:text-zinc-600 dark:hover:text-zinc-400">
+                                                                <svg class="size-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/>
+                                                                </svg>
+                                                            </div>
+                                                        </td>
 
-                            @if($cost_price && $selling_price && $selling_price > $cost_price)
-                                <div class="mt-6 rounded-lg bg-emerald-50 p-4 dark:bg-emerald-900/20">
-                                    <div class="flex items-center gap-3">
-                                        <flux:icon.chart-bar class="size-5 text-emerald-600" />
-                                        <div>
-                                            <p class="text-sm font-medium text-emerald-800 dark:text-emerald-200">
-                                                Profit Margin: {{ number_format((($selling_price - $cost_price) / $cost_price) * 100, 1) }}%
-                                            </p>
-                                            <p class="text-xs text-emerald-600 dark:text-emerald-400">
-                                                Profit per unit: {{ Number::currency($selling_price - $cost_price) }}
-                                            </p>
+                                                        <td class="w-56 px-3 py-2 overflow-visible">
+                                                            <div>
+                                                                <p class="text-sm text-zinc-900 dark:text-zinc-100">{{ $rule->pricelist?->name ?? '-' }}</p>
+                                                                <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ $rule->pricelist?->code ?? '' }}</p>
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="px-3 py-2">
+                                                            <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $rule->price_type === 'discount' ? 'Discount' : 'Fixed' }}</span>
+                                                        </td>
+
+                                                        <td class="px-3 py-2 text-right">
+                                                            @if($rule->price_type === 'discount')
+                                                                <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ number_format((float) $rule->discount_percentage, 2) }}%</span>
+                                                            @else
+                                                                <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ Number::currency($rule->fixed_price ?? 0) }}</span>
+                                                            @endif
+                                                        </td>
+
+                                                        <td class="px-3 py-2 text-right">
+                                                            <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ $rule->min_quantity }}</span>
+                                                        </td>
+
+                                                        <td class="px-3 py-2">
+                                                            <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                                                                {{ $rule->date_start?->format('Y-m-d') ?? '-' }} – {{ $rule->date_end?->format('Y-m-d') ?? '-' }}
+                                                            </span>
+                                                        </td>
+
+                                                        <td class="pl-2 pr-2 py-2 text-right">
+                                                            <div class="flex items-center justify-end">
+                                                                <button
+                                                                    type="button"
+                                                                    wire:click.stop="deletePriceRule({{ $rule->id }})"
+                                                                    wire:confirm="Delete this pricelist price?"
+                                                                    class="rounded p-1 text-zinc-300 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100 dark:text-zinc-600 dark:hover:text-red-400"
+                                                                    title="Delete"
+                                                                >
+                                                                    <flux:icon name="trash" class="size-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="7" class="px-4 py-8 text-center text-sm text-zinc-400">
+                                                            No items added yet
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                        <div class="border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
+                                            <div class="flex items-center justify-between">
+                                                <button
+                                                    type="button"
+                                                    wire:click="openPriceModal"
+                                                    class="inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                                >
+                                                    <flux:icon name="plus" class="size-4" />
+                                                    Add a line
+                                                </button>
+                                                @error('rule_pricelist_id') <p class="text-sm text-red-500">{{ $message }}</p> @enderror
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -720,4 +802,139 @@
             </a>
         </x-slot:actions>
     </x-ui.confirm-modal>
+
+    <div
+        x-show="showPriceModal"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showPriceModal = false"></div>
+
+        <div
+            class="relative z-10 w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900"
+            @click.outside="showPriceModal = false"
+        >
+            <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+                <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                    {{ $editingRuleId ? 'Edit Pricelist Price' : 'Add Pricelist Price' }}
+                </h3>
+                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Set a different price for a specific pricelist.</p>
+            </div>
+
+            <div class="px-6 py-5">
+                <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div class="col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Pricelist</label>
+                        <div class="relative">
+                            <select
+                                wire:model="rule_pricelist_id"
+                                class="w-full appearance-none rounded-lg border border-zinc-200 bg-white px-3 py-2 pr-8 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                            >
+                                <option value="">Select pricelist...</option>
+                                @foreach($pricelists as $pl)
+                                    <option value="{{ $pl->id }}">{{ $pl->name }} ({{ $pl->code }})</option>
+                                @endforeach
+                            </select>
+                            <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                        </div>
+                        @error('rule_pricelist_id') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Price Type</label>
+                        <select
+                            wire:model.live="rule_price_type"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                            <option value="fixed">Fixed</option>
+                            <option value="discount">Discount</option>
+                        </select>
+                        @error('rule_price_type') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Minimum Quantity</label>
+                        <input
+                            type="number"
+                            min="1"
+                            wire:model="rule_min_quantity"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        />
+                        @error('rule_min_quantity') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div x-show="$wire.rule_price_type === 'fixed'" x-cloak>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Fixed Price</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            wire:model="rule_fixed_price"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        />
+                        @error('rule_fixed_price') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div x-show="$wire.rule_price_type === 'discount'" x-cloak>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Discount Percentage</label>
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max="100"
+                                wire:model="rule_discount_percentage"
+                                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                            />
+                            <span class="shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-400">%</span>
+                        </div>
+                        @error('rule_discount_percentage') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Start Date</label>
+                        <input
+                            type="date"
+                            wire:model="rule_date_start"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        />
+                        @error('rule_date_start') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">End Date</label>
+                        <input
+                            type="date"
+                            wire:model="rule_date_end"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        />
+                        @error('rule_date_end') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <button
+                    type="button"
+                    wire:click="$set('showPriceModal', false)"
+                    class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    wire:click="savePriceRule"
+                    class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

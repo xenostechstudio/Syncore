@@ -9,6 +9,8 @@ use App\Livewire\Inventory\Index as InventoryIndex;
 use App\Livewire\Inventory\ItemForm as InventoryItemForm;
 use App\Livewire\Inventory\Items\Index as ItemsIndex;
 use App\Livewire\Inventory\Products\Form as InventoryProductForm;
+use App\Livewire\Inventory\Products\Pricelists\Index as InventoryProductPricelistsIndex;
+use App\Livewire\Inventory\Products\Pricelists\Form as InventoryProductPricelistForm;
 use App\Livewire\Inventory\Warehouses\Index as WarehousesIndex;
 use App\Livewire\Inventory\Categories\Index as CategoriesIndex;
 use App\Livewire\Inventory\Categories\Form as CategoryForm;
@@ -88,11 +90,25 @@ Route::middleware(['auth', 'verified', 'permission:access.inventory'])->prefix('
     Route::get('/adjustments', \App\Livewire\Inventory\Adjustments\Index::class)->name('adjustments.index');
     Route::get('/adjustments/create', \App\Livewire\Inventory\Adjustments\Form::class)->name('adjustments.create');
     Route::get('/adjustments/{id}/edit', \App\Livewire\Inventory\Adjustments\Form::class)->name('adjustments.edit');
+
+    // Operations - Warehouse IN / OUT
+    Route::get('/warehouse-in', \App\Livewire\Inventory\Adjustments\Index::class)->name('warehouse-in.index');
+    Route::get('/warehouse-in/create', \App\Livewire\Inventory\Adjustments\Form::class)->name('warehouse-in.create');
+    Route::get('/warehouse-in/{id}/edit', \App\Livewire\Inventory\Adjustments\Form::class)->name('warehouse-in.edit');
+
+    Route::get('/warehouse-out', \App\Livewire\Inventory\Adjustments\Index::class)->name('warehouse-out.index');
+    Route::get('/warehouse-out/create', \App\Livewire\Inventory\Adjustments\Form::class)->name('warehouse-out.create');
+    Route::get('/warehouse-out/{id}/edit', \App\Livewire\Inventory\Adjustments\Form::class)->name('warehouse-out.edit');
     
     // Products
     Route::get('/products', ItemsIndex::class)->name('products.index');
     Route::get('/products/create', InventoryProductForm::class)->name('products.create');
     Route::get('/products/{id}/edit', InventoryProductForm::class)->name('products.edit');
+
+    // Products - Pricelists
+    Route::get('/products/pricelists', InventoryProductPricelistsIndex::class)->name('products.pricelists.index');
+    Route::get('/products/pricelists/create', InventoryProductPricelistForm::class)->name('products.pricelists.create');
+    Route::get('/products/pricelists/{id}/edit', InventoryProductPricelistForm::class)->name('products.pricelists.edit');
     
     // Categories
     Route::get('/categories', CategoriesIndex::class)->name('categories.index');

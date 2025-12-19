@@ -125,7 +125,8 @@
                                         @foreach($nav['children'] as $child)
                                             @php
                                                 $childRouteExists = \Route::has($child['route']);
-                                                $childIsActive = request()->routeIs($child['pattern']);
+                                                $childPatterns = explode('|', $child['pattern']);
+                                                $childIsActive = collect($childPatterns)->contains(fn($p) => request()->routeIs(trim($p)));
                                             @endphp
                                             <a 
                                                 href="{{ $childRouteExists ? route($child['route']) : '#' }}" 

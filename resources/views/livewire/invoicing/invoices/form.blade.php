@@ -65,6 +65,20 @@
                     >
                         <flux:icon name="shopping-cart" class="size-4" />
                         <span>{{ $invoice->salesOrder->order_number }}</span>
+                        @php
+                            $soStatus = $invoice->salesOrder->status;
+                            $soStatusConfig = match($soStatus) {
+                                'quotation', 'draft' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                'confirmed', 'sales_order', 'processing' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
+                                'shipped', 'in_progress' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
+                                'delivered', 'done', 'paid' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
+                                'cancelled', 'canceled' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
+                                default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                            };
+                        @endphp
+                        <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $soStatusConfig['bg'] }} {{ $soStatusConfig['text'] }}">
+                            {{ ucfirst(str_replace('_', ' ', $soStatus)) }}
+                        </span>
                     </a>
                 </div>
             @endif

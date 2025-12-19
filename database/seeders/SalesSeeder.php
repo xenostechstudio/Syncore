@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\SalesOrderState;
 use App\Models\Inventory\Product;
+use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Customer;
 use App\Models\Sales\PaymentTerm;
 use App\Models\Sales\SalesOrder;
@@ -195,7 +197,15 @@ class SalesSeeder extends Seeder
         }
 
         // Get items and user for orders
-        $items = Product::all();
+        $mainWarehouseId = Warehouse::query()->orderBy('id')->value('id');
+
+        $items = $mainWarehouseId
+            ? Product::query()->where('warehouse_id', $mainWarehouseId)->get()
+            : Product::all();
+
+        if ($items->isEmpty()) {
+            $items = Product::all();
+        }
         $user = User::first();
         
         if ($items->isEmpty() || !$user) {
@@ -204,16 +214,16 @@ class SalesSeeder extends Seeder
 
         // Create sales orders
         $orders = [
-            ['customer_id' => 1, 'status' => 'delivered', 'days_ago' => 15],
-            ['customer_id' => 2, 'status' => 'shipped', 'days_ago' => 5],
-            ['customer_id' => 3, 'status' => 'processing', 'days_ago' => 2],
-            ['customer_id' => 1, 'status' => 'confirmed', 'days_ago' => 1],
-            ['customer_id' => 4, 'status' => 'draft', 'days_ago' => 0],
-            ['customer_id' => 5, 'status' => 'delivered', 'days_ago' => 30],
-            ['customer_id' => 2, 'status' => 'delivered', 'days_ago' => 25],
-            ['customer_id' => 3, 'status' => 'cancelled', 'days_ago' => 10],
-            ['customer_id' => 4, 'status' => 'processing', 'days_ago' => 3],
-            ['customer_id' => 5, 'status' => 'confirmed', 'days_ago' => 1],
+            ['customer_id' => 1, 'days_ago' => 15],
+            ['customer_id' => 2, 'days_ago' => 5],
+            ['customer_id' => 3, 'days_ago' => 2],
+            ['customer_id' => 1, 'days_ago' => 1],
+            ['customer_id' => 4, 'days_ago' => 0],
+            ['customer_id' => 5, 'days_ago' => 30],
+            ['customer_id' => 2, 'days_ago' => 25],
+            ['customer_id' => 3, 'days_ago' => 10],
+            ['customer_id' => 4, 'days_ago' => 3],
+            ['customer_id' => 5, 'days_ago' => 1],
         ];
 
         foreach ($orders as $index => $orderData) {
@@ -225,7 +235,7 @@ class SalesSeeder extends Seeder
                 'user_id' => $user->id,
                 'order_date' => $orderDate,
                 'expected_delivery_date' => $orderDate->copy()->addDays(7),
-                'status' => $orderData['status'],
+                'status' => SalesOrderState::SALES_ORDER->value,
                 'shipping_address' => Customer::find($orderData['customer_id'])->address,
                 'notes' => $index % 3 === 0 ? 'Priority order' : null,
             ]);

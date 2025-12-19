@@ -11,7 +11,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
-#[Title('Adjustments')]
+#[Title('Stock Adjustment')]
 class Index extends Component
 {
     use WithPagination;
@@ -45,6 +45,17 @@ class Index extends Component
         'items' => true,
         'status' => true,
     ];
+
+    public function mount(): void
+    {
+        if (request()->routeIs('inventory.warehouse-in.*')) {
+            $this->adjustmentType = 'increase';
+        }
+
+        if (request()->routeIs('inventory.warehouse-out.*')) {
+            $this->adjustmentType = 'decrease';
+        }
+    }
 
     public function setView(string $view): void
     {

@@ -4,15 +4,17 @@ namespace App\Livewire\Inventory\Adjustments;
 
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\InventoryAdjustmentItem;
+use App\Models\Inventory\InventoryStock;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
-#[Title('Adjustment')]
+#[Title('Stock Adjustment')]
 class Form extends Component
 {
     public ?int $adjustmentId = null;
@@ -38,6 +40,13 @@ class Form extends Component
             $this->editing = true;
             $this->loadAdjustment();
         } else {
+            if (request()->routeIs('inventory.warehouse-in.*')) {
+                $this->adjustment_type = 'increase';
+            }
+
+            if (request()->routeIs('inventory.warehouse-out.*')) {
+                $this->adjustment_type = 'decrease';
+            }
             $this->addItem();
         }
     }
@@ -72,7 +81,7 @@ class Form extends Component
             'name' => '',
             'sku' => '',
             'system_quantity' => 0,
-            'counted_quantity' => 0,
+            'counted_quantity' => in_array($this->adjustment_type, ['increase', 'decrease'], true) ? 1 : 0,
             'difference' => 0,
         ];
     }
@@ -90,15 +99,64 @@ class Form extends Component
             $this->items[$index]['product_id'] = $product->id;
             $this->items[$index]['name'] = $product->name;
             $this->items[$index]['sku'] = $product->sku;
-            $this->items[$index]['system_quantity'] = $product->quantity;
+            $this->items[$index]['system_quantity'] = $this->warehouse_id
+                ? (int) (InventoryStock::query()
+                    ->where('warehouse_id', $this->warehouse_id)
+                    ->where('product_id', $product->id)
+                    ->value('quantity') ?? 0)
+                : 0;
             $this->calculateDifference($index);
+        }
+    }
+
+    public function updatedWarehouseId(): void
+    {
+        if (! $this->warehouse_id) {
+            return;
+        }
+
+        $productIds = collect($this->items)
+            ->pluck('product_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($productIds)) {
+            return;
+        }
+
+        $stocks = InventoryStock::query()
+            ->where('warehouse_id', $this->warehouse_id)
+            ->whereIn('product_id', $productIds)
+            ->pluck('quantity', 'product_id');
+
+        foreach ($this->items as $index => $item) {
+            $pid = $item['product_id'] ?? null;
+            if (! $pid) {
+                continue;
+            }
+
+            $this->items[$index]['system_quantity'] = (int) ($stocks[$pid] ?? 0);
+            $this->calculateDifference((int) $index);
         }
     }
 
     public function calculateDifference(int $index): void
     {
         $item = &$this->items[$index];
-        $item['difference'] = $item['counted_quantity'] - $item['system_quantity'];
+
+        if ($this->adjustment_type === 'increase') {
+            $item['difference'] = (int) ($item['counted_quantity'] ?? 0);
+            return;
+        }
+
+        if ($this->adjustment_type === 'decrease') {
+            $item['difference'] = -1 * (int) ($item['counted_quantity'] ?? 0);
+            return;
+        }
+
+        $item['difference'] = (int) ($item['counted_quantity'] ?? 0) - (int) ($item['system_quantity'] ?? 0);
     }
 
     public function updatedItems($value, $key): void
@@ -110,13 +168,50 @@ class Form extends Component
         }
     }
 
+    public function updatedAdjustmentType(): void
+    {
+        foreach (array_keys($this->items) as $index) {
+            $this->calculateDifference((int) $index);
+        }
+    }
+
     public function save(): void
+    {
+        $adjustment = $this->persist();
+
+        $editRoute = request()->routeIs('inventory.warehouse-in.*')
+            ? 'inventory.warehouse-in.edit'
+            : (request()->routeIs('inventory.warehouse-out.*') ? 'inventory.warehouse-out.edit' : 'inventory.adjustments.edit');
+
+        session()->flash('success', 'Adjustment saved successfully.');
+        $this->redirect(route($editRoute, $adjustment->id), navigate: true);
+    }
+
+    public function validateAndPost(): void
+    {
+        try {
+            $adjustment = $this->persist();
+            $adjustment->post();
+
+            $editRoute = request()->routeIs('inventory.warehouse-in.*')
+                ? 'inventory.warehouse-in.edit'
+                : (request()->routeIs('inventory.warehouse-out.*') ? 'inventory.warehouse-out.edit' : 'inventory.adjustments.edit');
+
+            $this->status = $adjustment->status;
+            session()->flash('success', 'Stock updated successfully.');
+            $this->redirect(route($editRoute, $adjustment->id), navigate: true);
+        } catch (\Throwable $e) {
+            session()->flash('error', 'Failed to validate: ' . $e->getMessage());
+        }
+    }
+
+    private function persist(): InventoryAdjustment
     {
         $validItems = collect($this->items)->filter(fn($item) => !empty($item['product_id']))->values()->toArray();
 
         if (empty($validItems)) {
             $this->addError('items', 'Please add at least one product to the adjustment.');
-            return;
+            throw new \RuntimeException('No products selected.');
         }
 
         $this->items = $validItems;
@@ -130,38 +225,48 @@ class Form extends Component
             'items.*.counted_quantity' => 'required|integer|min:0',
         ]);
 
-        $data = [
-            'warehouse_id' => $this->warehouse_id,
-            'user_id' => Auth::id(),
-            'adjustment_date' => $this->adjustment_date,
-            'adjustment_type' => $this->adjustment_type,
-            'status' => $this->status,
-            'reason' => $this->reason ?: null,
-            'notes' => $this->notes ?: null,
-        ];
+        return DB::transaction(function () {
+            $data = [
+                'warehouse_id' => $this->warehouse_id,
+                'user_id' => Auth::id(),
+                'adjustment_date' => $this->adjustment_date,
+                'adjustment_type' => $this->adjustment_type,
+                'status' => $this->status,
+                'reason' => $this->reason ?: null,
+                'notes' => $this->notes ?: null,
+            ];
 
-        if ($this->adjustmentId) {
-            $adjustment = InventoryAdjustment::findOrFail($this->adjustmentId);
-            $adjustment->update($data);
-            $adjustment->items()->delete();
-        } else {
-            $data['adjustment_number'] = InventoryAdjustment::generateAdjustmentNumber();
-            $adjustment = InventoryAdjustment::create($data);
-            $this->adjustmentId = $adjustment->id;
-        }
+            if ($this->adjustmentId) {
+                $adjustment = InventoryAdjustment::findOrFail($this->adjustmentId);
+                $adjustment->update($data);
+                $adjustment->items()->delete();
+            } else {
+                $data['adjustment_number'] = InventoryAdjustment::generateAdjustmentNumber($this->adjustment_type);
+                $adjustment = InventoryAdjustment::create($data);
+                $this->adjustmentId = $adjustment->id;
+            }
 
-        foreach ($this->items as $item) {
-            InventoryAdjustmentItem::create([
-                'inventory_adjustment_id' => $adjustment->id,
-                'product_id' => $item['product_id'],
-                'system_quantity' => $item['system_quantity'],
-                'counted_quantity' => $item['counted_quantity'],
-                'difference' => $item['counted_quantity'] - $item['system_quantity'],
-            ]);
-        }
+            foreach ($this->items as $item) {
+                $counted = (int) ($item['counted_quantity'] ?? 0);
+                $system = (int) ($item['system_quantity'] ?? 0);
 
-        session()->flash('success', 'Adjustment saved successfully.');
-        $this->redirect(route('inventory.adjustments.edit', $adjustment->id), navigate: true);
+                $difference = match ($this->adjustment_type) {
+                    'increase' => $counted,
+                    'decrease' => -1 * $counted,
+                    default => $counted - $system,
+                };
+
+                InventoryAdjustmentItem::create([
+                    'inventory_adjustment_id' => $adjustment->id,
+                    'product_id' => $item['product_id'],
+                    'system_quantity' => $system,
+                    'counted_quantity' => $counted,
+                    'difference' => $difference,
+                ]);
+            }
+
+            return $adjustment;
+        });
     }
 
     public function render()

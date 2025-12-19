@@ -7,10 +7,10 @@
                     <flux:icon name="arrow-left" class="size-5" />
                 </a>
                 <div class="flex flex-col">
-                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Transfer</span>
+                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Internal Transfer</span>
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            {{ $editing && $transfer ? $transfer->transfer_number : 'New Transfer' }}
+                            {{ $editing && $transfer ? $transfer->transfer_number : 'New Internal Transfer' }}
                         </span>
 
                         {{-- Header actions dropdown --}}
@@ -167,7 +167,7 @@
                 <div class="p-5">
                     {{-- Title inside card --}}
                     <h1 class="mb-5 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-                        {{ $editing && $transfer ? $transfer->transfer_number : 'New' }}
+                        {{ $editing && $transfer ? $transfer->transfer_number : 'New Internal Transfer' }}
                     </h1>
                     
                     <div class="grid gap-6 sm:grid-cols-2">

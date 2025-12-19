@@ -25,6 +25,14 @@
                 <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
                     Products
                 </span>
+
+                @if(isset($warehouses))
+                    <select wire:model.live="warehouse_id" class="h-9 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm text-zinc-700 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                        @foreach($warehouses as $wh)
+                            <option value="{{ $wh->id }}">{{ $wh->name }}</option>
+                        @endforeach
+                    </select>
+                @endif
                 
                 {{-- Actions Menu (Gear) --}}
                 <flux:dropdown position="bottom" align="start">
@@ -339,15 +347,34 @@
                                 @endif
                                 @if($visibleColumns['stock'])
                                     <td class="px-4 py-4">
+                                        @php
+                                            $onHand = $item->on_hand ?? null;
+                                            $forecastIn = $item->forecast_in ?? null;
+                                            $forecastOut = $item->forecast_out ?? null;
+                                            $available = $item->available ?? null;
+                                            $showForecast = $onHand !== null && $forecastIn !== null && $forecastOut !== null && $available !== null;
+                                            $displayQty = $showForecast ? (int) $available : (int) $item->quantity;
+                                        @endphp
+
                                         <div class="flex items-center gap-2">
                                             <div class="h-1.5 w-12 rounded-full bg-zinc-100 dark:bg-zinc-800">
-                                                <div 
-                                                    class="h-full rounded-full {{ $item->quantity < 10 ? 'bg-red-500' : ($item->quantity < 30 ? 'bg-amber-500' : 'bg-emerald-500') }}" 
-                                                    style="width: {{ min(100, max(5, ($item->quantity / 100) * 100)) }}%"
+                                                <div
+                                                    class="h-full rounded-full {{ $displayQty < 10 ? 'bg-red-500' : ($displayQty < 30 ? 'bg-amber-500' : 'bg-emerald-500') }}"
+                                                    style="width: {{ min(100, max(5, ($displayQty / 100) * 100)) }}%"
                                                 ></div>
                                             </div>
-                                            <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ number_format($item->quantity) }}</span>
+                                            <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ number_format($displayQty) }}</span>
                                         </div>
+
+                                        @if($showForecast)
+                                            <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                                On Hand: {{ number_format((int) $onHand) }}
+                                                <span class="mx-1">|</span>
+                                                In: {{ number_format((int) $forecastIn) }}
+                                                <span class="mx-1">|</span>
+                                                Out: {{ number_format((int) $forecastOut) }}
+                                            </div>
+                                        @endif
                                     </td>
                                 @endif
                                 @if($visibleColumns['price'])

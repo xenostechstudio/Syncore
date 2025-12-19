@@ -23,6 +23,7 @@
 
                         $soNumber = $so?->order_number ?? ($so ? ('SO #' . $so->id) : null);
                         $soId = $so?->id;
+                        $soStatus = $so?->status;
                     @endphp
                     <div class="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                         <span>Delivery Order</span>
@@ -65,16 +66,69 @@
                 </div>
             </div>
 
-            @if($soId && $soNumber)
+            @php
+                $wh = null;
+                if (isset($delivery) && $delivery && $delivery->warehouse) {
+                    $wh = $delivery->warehouse;
+                } elseif (!empty($warehouse_id ?? null)) {
+                    $wh = $warehouses->firstWhere('id', $warehouse_id);
+                }
+                $whName = $wh?->name;
+            @endphp
+
+            @if((isset($outboundAdjustment) && $outboundAdjustment) || ($soId && $soNumber))
                 <div class="flex items-center gap-2">
-                    <a 
-                        href="{{ route('sales.orders.edit', $soId) }}" 
-                        wire:navigate
-                        class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
-                    >
-                        <flux:icon name="shopping-cart" class="size-4" />
-                        <span>{{ $soNumber }}</span>
-                    </a>
+                    @if(isset($outboundAdjustment) && $outboundAdjustment)
+                        <a
+                            href="{{ route('inventory.warehouse-out.edit', $outboundAdjustment->id) }}"
+                            wire:navigate
+                            class="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-900/30 dark:text-sky-400 dark:hover:bg-sky-900/50"
+                        >
+                            <flux:icon name="building-storefront" class="size-4" />
+                            <span>{{ $outboundAdjustment->adjustment_number }}</span>
+                            @if(!empty($outboundAdjustment->status))
+                                @php
+                                    $outboundStatusConfig = match($outboundAdjustment->status) {
+                                        'draft' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                        'pending' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
+                                        'approved' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
+                                        'completed' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
+                                        'cancelled' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
+                                        default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                    };
+                                @endphp
+                                <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $outboundStatusConfig['bg'] }} {{ $outboundStatusConfig['text'] }}">
+                                    {{ ucfirst(str_replace('_', ' ', $outboundAdjustment->status)) }}
+                                </span>
+                            @endif
+                        </a>
+                    @endif
+
+                    @if($soId && $soNumber)
+                        <a 
+                            href="{{ route('sales.orders.edit', $soId) }}" 
+                            wire:navigate
+                            class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
+                        >
+                            <flux:icon name="shopping-cart" class="size-4" />
+                            <span>{{ $soNumber }}</span>
+                            @if(!empty($soStatus))
+                                @php
+                                    $soStatusConfig = match($soStatus) {
+                                        'quotation', 'draft' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                        'confirmed', 'sales_order', 'processing' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
+                                        'shipped', 'in_progress' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
+                                        'delivered', 'done', 'paid' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
+                                        'cancelled', 'canceled' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
+                                        default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
+                                    };
+                                @endphp
+                                <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $soStatusConfig['bg'] }} {{ $soStatusConfig['text'] }}">
+                                    {{ ucfirst(str_replace('_', ' ', $soStatus)) }}
+                                </span>
+                            @endif
+                        </a>
+                    @endif
                 </div>
             @endif
         </div>
@@ -85,6 +139,11 @@
         @if(session('success'))
             <x-ui.alert type="success" :duration="5000">
                 {{ session('success') }}
+            </x-ui.alert>
+        @endif
+        @if(session('error'))
+            <x-ui.alert type="error" :duration="10000">
+                {{ session('error') }}
             </x-ui.alert>
         @endif
         @if($errors->any())
@@ -105,10 +164,25 @@
             {{-- Left: Action Buttons (col-span-9) --}}
             <div class="col-span-9 flex items-center justify-between">
                 <div class="flex flex-wrap items-center gap-2">
-                    <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                    @php
+                        $nextStatusLabel = \App\Enums\DeliveryOrderState::tryFrom($status)?->nextActionLabel();
+                    @endphp
+                    @if($deliveryId && $nextStatusLabel)
+                        <button type="button" wire:click="openStatusTransitionModal" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                            <flux:icon name="check" class="size-4" />
+                            {{ $nextStatusLabel }}
+                        </button>
+                    @endif
+                    <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
                         <flux:icon name="document-check" class="size-4" />
                         Save
                     </button>
+                    @if($deliveryId && $status === 'delivered')
+                        <button type="button" wire:click="openReturnModal" class="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700">
+                            <flux:icon name="arrow-uturn-left" class="size-4" />
+                            Return
+                        </button>
+                    @endif
                     <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
                         <flux:icon name="printer" class="size-4" />
                         Print
@@ -123,12 +197,7 @@
 
                 {{-- Stepper --}}
                 @php
-                    $steps = [
-                        ['key' => 'pending', 'label' => 'Pending'],
-                        ['key' => 'picked', 'label' => 'Picked'],
-                        ['key' => 'in_transit', 'label' => 'In Transit'],
-                        ['key' => 'delivered', 'label' => 'Delivered'],
-                    ];
+                    $steps = \App\Enums\DeliveryOrderState::steps();
                     $currentIndex = collect($steps)->search(fn($s) => $s['key'] === $status);
                     if ($currentIndex === false) $currentIndex = 0;
                     $isFailed = $status === 'failed';
@@ -345,6 +414,52 @@
                                 No delivery lines yet.
                             </div>
                         @endif
+
+                        @if(isset($returns) && $returns->count())
+                            <div class="border-t border-zinc-100 p-5 dark:border-zinc-800">
+                                <div class="mb-3 flex items-center justify-between">
+                                    <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Returns</h3>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead>
+                                            <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Return</th>
+                                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Warehouse</th>
+                                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Date</th>
+                                                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                                                <th class="w-28 px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+                                            @foreach($returns as $ret)
+                                                <tr class="group hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
+                                                    <td class="px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100">
+                                                        {{ $ret->return_number }}
+                                                    </td>
+                                                    <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
+                                                        {{ $ret->warehouse?->name ?? '-' }}
+                                                    </td>
+                                                    <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
+                                                        {{ $ret->return_date?->format('Y-m-d') ?? '-' }}
+                                                    </td>
+                                                    <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
+                                                        {{ ucfirst($ret->status) }}
+                                                    </td>
+                                                    <td class="px-4 py-3 text-right">
+                                                        @if($ret->status === 'draft')
+                                                            <button type="button" wire:click="receiveReturn({{ $ret->id }})" class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                                                                Receive
+                                                            </button>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <div x-show="activeTab === 'recipient'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
@@ -552,4 +667,167 @@
             </div>
         </div>
     </div>
+
+    @if($showReturnModal)
+        <div class="fixed inset-0 z-[400] flex items-center justify-center bg-black/40 p-4">
+            <div class="w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
+                    <div>
+                        <div class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Delivery Return</div>
+                        <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Create Return</div>
+                    </div>
+                    <button type="button" wire:click="closeReturnModal" class="rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+
+                <div class="space-y-4 p-5">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Warehouse <span class="text-red-500">*</span></label>
+                            <select wire:model="return_warehouse_id" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                                <option value="">Select warehouse...</option>
+                                @foreach($warehouses as $wh)
+                                    <option value="{{ $wh->id }}">{{ $wh->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Return Date <span class="text-red-500">*</span></label>
+                            <input type="date" wire:model="return_date" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Notes</label>
+                            <textarea rows="2" wire:model="return_notes" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+                                    <th class="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Product</th>
+                                    <th class="w-28 px-4 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Delivered</th>
+                                    <th class="w-28 px-4 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Returned</th>
+                                    <th class="w-28 px-4 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Max</th>
+                                    <th class="w-32 px-4 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                @foreach($return_items as $i => $row)
+                                    <tr>
+                                        <td class="px-4 py-3">
+                                            <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $row['product_name'] ?? '-' }}</div>
+                                            <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $row['sku'] ?? '' }}</div>
+                                        </td>
+                                        <td class="px-4 py-3 text-right text-sm text-zinc-600 dark:text-zinc-300">{{ (int) ($row['delivered'] ?? 0) }}</td>
+                                        <td class="px-4 py-3 text-right text-sm text-zinc-600 dark:text-zinc-300">{{ (int) ($row['already_returned'] ?? 0) }}</td>
+                                        <td class="px-4 py-3 text-right text-sm text-zinc-600 dark:text-zinc-300">{{ (int) ($row['max'] ?? 0) }}</td>
+                                        <td class="px-4 py-3 text-right">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="{{ (int) ($row['max'] ?? 0) }}"
+                                                wire:model.live="return_items.{{ $i }}.quantity"
+                                                @disabled(((int) ($row['max'] ?? 0)) <= 0)
+                                                class="w-24 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-right focus:border-zinc-400 focus:outline-none disabled:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:disabled:bg-zinc-800/50"
+                                            />
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 border-t border-zinc-200 bg-zinc-50 px-5 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <button type="button" wire:click="closeReturnModal" class="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                        Cancel
+                    </button>
+                    <button type="button" wire:click="createReturn" class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                        Create Return
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($showStatusModal)
+        <div class="fixed inset-0 z-[410] flex items-center justify-center bg-black/40 p-4">
+            <div class="w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
+                    <div>
+                        <div class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Delivery Order</div>
+                        <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $status_modal_title }}</div>
+                    </div>
+                    <button type="button" wire:click="closeStatusTransitionModal" class="rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+
+                <div class="space-y-4 p-5">
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200">
+                        {{ $status_modal_message }}
+                    </div>
+
+                    <div class="grid gap-3 rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-800 sm:grid-cols-2">
+                        <div>
+                            <div class="text-xs text-zinc-500 dark:text-zinc-400">Delivery Order</div>
+                            <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $status_modal_summary['delivery_number'] ?? '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-zinc-500 dark:text-zinc-400">Next Status</div>
+                            <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $status_modal_summary['next_status'] ?? '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-zinc-500 dark:text-zinc-400">Customer</div>
+                            <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $status_modal_summary['customer_name'] ?? '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-zinc-500 dark:text-zinc-400">Warehouse</div>
+                            <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $status_modal_summary['warehouse_name'] ?? '-' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-zinc-500 dark:text-zinc-400">Total Qty</div>
+                            <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ (int) ($status_modal_summary['total_qty'] ?? 0) }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-zinc-500 dark:text-zinc-400">Courier / Tracking</div>
+                            <div class="font-medium text-zinc-900 dark:text-zinc-100">
+                                @php
+                                    $courier = $status_modal_summary['courier'] ?? '';
+                                    $tracking = $status_modal_summary['tracking_number'] ?? '';
+                                @endphp
+                                {{ trim(($courier ? $courier : '') . ($tracking ? (' / ' . $tracking) : '')) ?: '-' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    @if(!$status_modal_can_confirm && !empty($status_modal_shortages))
+                        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300">
+                            <div class="font-medium">Insufficient stock:</div>
+                            <ul class="mt-1 list-inside list-disc text-xs">
+                                @foreach($status_modal_shortages as $s)
+                                    <li>
+                                        {{ $s['product_name'] }}
+                                        @if(!empty($s['sku'])) ({{ $s['sku'] }}) @endif
+                                        - Required {{ (int) ($s['required'] ?? 0) }}, Available {{ (int) ($s['available'] ?? 0) }}, Short {{ (int) ($s['shortage'] ?? 0) }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="flex items-center justify-end gap-2 border-t border-zinc-200 bg-zinc-50 px-5 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <button type="button" wire:click="closeStatusTransitionModal" class="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                        Cancel
+                    </button>
+                    <button type="button" wire:click="confirmStatusTransition" @disabled(!$status_modal_can_confirm) class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

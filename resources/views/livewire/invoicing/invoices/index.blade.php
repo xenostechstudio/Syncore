@@ -14,8 +14,8 @@
         @endif
     </div>
 
-    <x-slot:header>
-        <div class="flex items-center justify-between gap-4">
+    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <div class="flex w-full items-center justify-between gap-4">
             {{-- Left Group: New Button, Title, Gear --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('invoicing.invoices.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
@@ -79,76 +79,96 @@
                         </flux:dropdown>
                     </div>
                 @else
-                    {{-- Search Input with Filter Dropdown --}}
-                    <div class="relative flex h-9 w-[480px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                        <input 
-                            type="text" 
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Search invoices..." 
-                            class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
-                        />
-                        <flux:dropdown position="bottom" align="end">
-                            <button class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
-                                <flux:icon name="chevron-down" class="size-4" />
-                            </button>
-                            <flux:menu class="w-48">
-                                <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Filter by Status</div>
-                                <flux:menu.separator />
-                                <button type="button" wire:click="$set('status', '')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm {{ $status === '' ? 'bg-zinc-100 dark:bg-zinc-800' : '' }} text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <span>All</span>
-                                </button>
-                                <button type="button" wire:click="$set('status', 'draft')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm {{ $status === 'draft' ? 'bg-zinc-100 dark:bg-zinc-800' : '' }} text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <span class="h-2 w-2 rounded-full bg-zinc-400"></span>
-                                    <span>Draft</span>
-                                </button>
-                                <button type="button" wire:click="$set('status', 'sent')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm {{ $status === 'sent' ? 'bg-zinc-100 dark:bg-zinc-800' : '' }} text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-                                    <span>Sent</span>
-                                </button>
-                                <button type="button" wire:click="$set('status', 'partial')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm {{ $status === 'partial' ? 'bg-zinc-100 dark:bg-zinc-800' : '' }} text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <span class="h-2 w-2 rounded-full bg-amber-500"></span>
-                                    <span>Partial</span>
-                                </button>
-                                <button type="button" wire:click="$set('status', 'paid')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm {{ $status === 'paid' ? 'bg-zinc-100 dark:bg-zinc-800' : '' }} text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                                    <span>Paid</span>
-                                </button>
-                                <button type="button" wire:click="$set('status', 'overdue')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm {{ $status === 'overdue' ? 'bg-zinc-100 dark:bg-zinc-800' : '' }} text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <span class="h-2 w-2 rounded-full bg-red-500"></span>
-                                    <span>Overdue</span>
-                                </button>
-                            </flux:menu>
-                        </flux:dropdown>
-                    </div>
+                    <x-ui.searchbox-dropdown placeholder="Search invoices...">
+                        <div class="flex flex-col gap-4 p-3 md:flex-row">
+                            <div class="flex-1 md:pr-3">
+                                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="funnel" class="size-3.5" />
+                                    <span>Filters</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <button type="button" wire:click="$set('status', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span>All Status</span>
+                                        @if(empty($status))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                    <button type="button" wire:click="$set('status', 'draft')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-zinc-500"></span>
+                                            <span>Draft</span>
+                                        </div>
+                                        @if($status === 'draft')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                    <button type="button" wire:click="$set('status', 'sent')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                                            <span>Sent</span>
+                                        </div>
+                                        @if($status === 'sent')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                    <button type="button" wire:click="$set('status', 'partial')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                            <span>Partial</span>
+                                        </div>
+                                        @if($status === 'partial')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                    <button type="button" wire:click="$set('status', 'paid')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                            <span>Paid</span>
+                                        </div>
+                                        @if($status === 'paid')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                    <button type="button" wire:click="$set('status', 'overdue')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                                            <span>Overdue</span>
+                                        </div>
+                                        @if($status === 'overdue')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </x-ui.searchbox-dropdown>
                 @endif
             </div>
 
-            {{-- Right Group: View Toggle --}}
-            <div class="flex items-center gap-2">
-                <div class="flex items-center rounded-lg border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800">
-                    <button 
-                        wire:click="setView('list')"
-                        class="rounded-md p-1.5 transition-colors {{ $view === 'list' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }}"
-                    >
-                        <flux:icon name="list-bullet" class="size-4" />
-                    </button>
-                    <button 
-                        wire:click="setView('grid')"
-                        class="rounded-md p-1.5 transition-colors {{ $view === 'grid' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }}"
-                    >
-                        <flux:icon name="squares-2x2" class="size-4" />
-                    </button>
+            {{-- Right Group: Pagination Info + View Toggle --}}
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                        {{ $invoices->firstItem() ?? 0 }}-{{ $invoices->lastItem() ?? 0 }}/{{ $invoices->total() }}
+                    </span>
+                    <div class="flex items-center gap-0.5">
+                        <button 
+                            type="button"
+                            wire:click="goToPreviousPage"
+                            @disabled($invoices->onFirstPage())
+                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        >
+                            <flux:icon name="chevron-left" class="size-4" />
+                        </button>
+                        <button 
+                            type="button"
+                            wire:click="goToNextPage"
+                            @disabled(!$invoices->hasMorePages())
+                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        >
+                            <flux:icon name="chevron-right" class="size-4" />
+                        </button>
+                    </div>
                 </div>
+
+                <x-ui.view-toggle :view="$view" :views="['list', 'grid']" />
             </div>
         </div>
-    </x-slot:header>
+    </div>
 
     {{-- Content --}}
-    <div class="-mx-4 sm:-mx-6 lg:-mx-8">
+    <div>
         @if($view === 'list')
             {{-- Table View --}}
-            <div class="overflow-hidden">
+            <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
                 <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
                     <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
                         <tr>
@@ -340,9 +360,9 @@
             </div>
         @else
             {{-- Grid View --}}
-            <div class="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:p-6 lg:p-8">
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 @forelse($invoices as $invoice)
-                    <a href="{{ route('invoicing.invoices.edit', $invoice->id) }}" wire:navigate class="group rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+                    <a href="{{ route('invoicing.invoices.edit', $invoice->id) }}" wire:navigate class="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $invoice->invoice_number }}</p>
@@ -358,31 +378,23 @@
                                     default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
                                 };
                             @endphp
-                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
                                 {{ ucfirst($invoice->status) }}
                             </span>
                         </div>
-                        <div class="mt-4 flex items-end justify-between">
+                        <div class="mt-4 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
                             <div class="text-xs text-zinc-400 dark:text-zinc-500">
                                 Due: {{ $invoice->due_date?->format('M d, Y') ?? '-' }}
                             </div>
-                            <p class="text-lg font-medium text-zinc-900 dark:text-zinc-100">
-                                Rp {{ number_format($invoice->total, 0, ',', '.') }}
-                            </p>
+                            <p class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($invoice->total, 0, ',', '.') }}</p>
                         </div>
                     </a>
                 @empty
-                    <div class="col-span-full py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                        No invoices found
+                    <div class="col-span-full rounded-2xl border border-dashed border-zinc-200 p-10 text-center dark:border-zinc-800">
+                        <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">No invoices to display</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Adjust your filters or create a new invoice.</p>
                     </div>
                 @endforelse
-            </div>
-        @endif
-
-        {{-- Pagination --}}
-        @if($invoices->hasPages())
-            <div class="border-t border-zinc-200 px-4 py-3 dark:border-zinc-800 sm:px-6 lg:px-8">
-                {{ $invoices->links() }}
             </div>
         @endif
     </div>

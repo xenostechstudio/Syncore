@@ -200,23 +200,56 @@ class Form extends Component
         ])->toArray();
 
         // Build activity log
-        $this->activityLog = [
-            [
-                'type' => 'created',
-                'message' => 'Order created',
-                'user' => $order->user->name ?? 'System',
-                'date' => $order->created_at->format('M d, Y H:i'),
-            ],
-        ];
+        // Note: The Blade already renders a static "Sales Order created" row.
+        // We only include additional events here to avoid duplicates.
+        $events = [];
 
         if ($order->updated_at->gt($order->created_at)) {
-            $this->activityLog[] = [
+            $events[] = [
                 'type' => 'updated',
                 'message' => 'Order updated',
                 'user' => $order->user->name ?? 'System',
                 'date' => $order->updated_at->format('M d, Y H:i'),
+                '_sort' => $order->updated_at->timestamp,
             ];
         }
+
+        $invoices = Invoice::query()
+            ->where('sales_order_id', $order->id)
+            ->orderBy('created_at')
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            $events[] = [
+                'type' => 'invoice_created',
+                'message' => 'Invoice ' . ($invoice->invoice_number ?: ('#' . $invoice->id)) . ' created',
+                'user' => $order->user->name ?? 'System',
+                'date' => $invoice->created_at?->format('M d, Y H:i') ?? now()->format('M d, Y H:i'),
+                '_sort' => $invoice->created_at?->timestamp ?? now()->timestamp,
+            ];
+        }
+
+        $deliveries = DeliveryOrder::query()
+            ->with('user')
+            ->where('sales_order_id', $order->id)
+            ->orderBy('created_at')
+            ->get();
+
+        foreach ($deliveries as $delivery) {
+            $events[] = [
+                'type' => 'delivery_created',
+                'message' => 'Delivery Order ' . ($delivery->delivery_number ?: ('#' . $delivery->id)) . ' created',
+                'user' => $delivery->user->name ?? ($order->user->name ?? 'System'),
+                'date' => $delivery->created_at?->format('M d, Y H:i') ?? now()->format('M d, Y H:i'),
+                '_sort' => $delivery->created_at?->timestamp ?? now()->timestamp,
+            ];
+        }
+
+        usort($events, fn (array $a, array $b) => ($a['_sort'] ?? 0) <=> ($b['_sort'] ?? 0));
+        $this->activityLog = array_map(function (array $event) {
+            unset($event['_sort']);
+            return $event;
+        }, $events);
     }
 
     public function addItem(): void

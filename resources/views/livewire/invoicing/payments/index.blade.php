@@ -1,30 +1,49 @@
 <div>
-    <x-slot:header>
-        <div class="flex items-center justify-between gap-4">
+    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <div class="flex w-full items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Payments</span>
             </div>
 
-            {{-- Search --}}
             <div class="flex flex-1 items-center justify-center">
-                <div class="relative w-full max-w-md">
-                    <input 
-                        type="text" 
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Search payments..."
-                        class="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-                    />
-                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                </div>
+                <x-ui.searchbox-dropdown placeholder="Search payments...">
+                    <div class="p-3 text-sm text-zinc-600 dark:text-zinc-400">
+                        Search by reference or invoice number
+                    </div>
+                </x-ui.searchbox-dropdown>
             </div>
 
-            <div></div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                        {{ $payments->firstItem() ?? 0 }}-{{ $payments->lastItem() ?? 0 }}/{{ $payments->total() }}
+                    </span>
+                    <div class="flex items-center gap-0.5">
+                        <button
+                            type="button"
+                            wire:click="goToPreviousPage"
+                            @disabled($payments->onFirstPage())
+                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        >
+                            <flux:icon name="chevron-left" class="size-4" />
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="goToNextPage"
+                            @disabled(!$payments->hasMorePages())
+                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        >
+                            <flux:icon name="chevron-right" class="size-4" />
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-    </x-slot:header>
+    </div>
 
     {{-- Content --}}
-    <div class="-mx-4 sm:-mx-6 lg:-mx-8">
-        <div class="overflow-hidden">
+    <div>
+        <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
             <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
                 <thead class="bg-zinc-50 dark:bg-zinc-900">
                     <tr>
@@ -78,12 +97,5 @@
                 @endif
             </table>
         </div>
-
-        {{-- Pagination --}}
-        @if($payments->hasPages())
-            <div class="border-t border-zinc-200 px-4 py-3 dark:border-zinc-800 sm:px-6 lg:px-8">
-                {{ $payments->links() }}
-            </div>
-        @endif
     </div>
 </div>

@@ -11,7 +11,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
-#[Title('Transfers')]
+#[Title('Internal Transfer')]
 class Index extends Component
 {
     use WithPagination;

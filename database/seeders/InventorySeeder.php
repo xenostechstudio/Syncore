@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Inventory\InventoryStock;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
+use App\Models\Sales\Tax;
 use Illuminate\Database\Seeder;
 
 class InventorySeeder extends Seeder
@@ -13,6 +15,20 @@ class InventorySeeder extends Seeder
      */
     public function run(): void
     {
+        $ppn11 = Tax::firstOrCreate(
+            ['code' => 'PPN11'],
+            [
+                'name' => 'PPN 11%',
+                'code' => 'PPN11',
+                'rate' => 11.0,
+                'type' => 'percentage',
+                'scope' => 'sales',
+                'is_active' => true,
+                'include_in_price' => false,
+                'description' => 'Pajak Pertambahan Nilai 11% sesuai peraturan Indonesia.',
+            ],
+        );
+
         Warehouse::create([
             'name' => 'Main Warehouse',
             'location' => 'Jakarta, Indonesia',
@@ -25,7 +41,24 @@ class InventorySeeder extends Seeder
             'contact_info' => '+62 31 555 0200',
         ]);
 
-        Product::create([
+        $warehouses = Warehouse::orderBy('id')->get();
+        $mainWarehouseId = $warehouses->first()?->id;
+        $eastWarehouseId = $warehouses->skip(1)->first()?->id;
+        $defaultWarehouseId = $mainWarehouseId;
+
+        $seedStock = function (Product $product, int $warehouseId, int $qty): void {
+            InventoryStock::query()->updateOrCreate(
+                [
+                    'warehouse_id' => $warehouseId,
+                    'product_id' => $product->id,
+                ],
+                [
+                    'quantity' => $qty,
+                ]
+            );
+        };
+
+        $product = Product::create([
             'name' => 'Apple MacBook Pro 16-inch (M3 Max, 14‑core CPU, 30‑core GPU, 36GB, 1TB) - Space Black',
             'sku' => 'APPLE-MBP16-M3MAX-36-1TB-SB',
             'description' => 'Apple MacBook Pro 16-inch with M3 Max, 36GB unified memory, 1TB SSD (Space Black).',
@@ -33,9 +66,15 @@ class InventorySeeder extends Seeder
             'cost_price' => 56000000.00,
             'selling_price' => 61499000.00,
             'status' => 'in_stock',
+            'sales_tax_id' => $ppn11->id,
+            'warehouse_id' => $defaultWarehouseId,
         ]);
 
-        Product::create([
+        if ($defaultWarehouseId) {
+            $seedStock($product, $defaultWarehouseId, 25);
+        }
+
+        $product = Product::create([
             'name' => 'Dell XPS 15 9530 (Core i7-13700H, 16GB, 512GB SSD, RTX 4050 6GB, 15.6" OLED 3.5K Touch)',
             'sku' => 'DELL-XPS15-9530-I7-16-512-RTX4050',
             'description' => 'Dell XPS 15 9530 with Intel Core i7-13700H, 16GB RAM, 512GB SSD, NVIDIA RTX 4050 6GB, 15.6" OLED 3.5K touchscreen.',
@@ -43,9 +82,16 @@ class InventorySeeder extends Seeder
             'cost_price' => 35999000.00,
             'selling_price' => 39999000.00,
             'status' => 'in_stock',
+            'sales_tax_id' => $ppn11->id,
+            'warehouse_id' => $eastWarehouseId ?: $defaultWarehouseId,
         ]);
 
-        Product::create([
+        $warehouseId = $eastWarehouseId ?: $defaultWarehouseId;
+        if ($warehouseId) {
+            $seedStock($product, $warehouseId, 10);
+        }
+
+        $product = Product::create([
             'name' => 'LG UltraFine 5K 27" IPS (27MD5KA-B) - Thunderbolt 3',
             'sku' => 'LG-27MD5KA-B-5K',
             'description' => 'LG UltraFine 5K 27-inch IPS monitor (27MD5KA-B) with Thunderbolt 3 and USB-C connectivity.',
@@ -53,9 +99,15 @@ class InventorySeeder extends Seeder
             'cost_price' => 26999000.00,
             'selling_price' => 29999000.00,
             'status' => 'low_stock',
+            'sales_tax_id' => $ppn11->id,
+            'warehouse_id' => $defaultWarehouseId,
         ]);
 
-        Product::create([
+        if ($defaultWarehouseId) {
+            $seedStock($product, $defaultWarehouseId, 5);
+        }
+
+        $product = Product::create([
             'name' => 'Keychron K2 Pro QMK/VIA 75% Wireless Mechanical Keyboard (RGB, Aluminum Frame)',
             'sku' => 'KEYCHRON-K2PRO-RGB-ALU',
             'description' => 'Keychron K2 Pro QMK/VIA 75% compact wireless mechanical keyboard with RGB backlight and aluminum frame.',
@@ -63,7 +115,13 @@ class InventorySeeder extends Seeder
             'cost_price' => 1250000.00,
             'selling_price' => 1520000.00,
             'status' => 'out_of_stock',
+            'sales_tax_id' => $ppn11->id,
+            'warehouse_id' => $defaultWarehouseId,
         ]);
+
+        if ($defaultWarehouseId) {
+            $seedStock($product, $defaultWarehouseId, 0);
+        }
 
         // Additional items for scroll testing
         $items = [
@@ -85,7 +143,18 @@ class InventorySeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            Product::create($item);
+            $warehouseId = ($item['quantity'] ?? 0) % 2 === 0
+                ? ($defaultWarehouseId ?: $warehouses->first()?->id)
+                : ($eastWarehouseId ?: $defaultWarehouseId ?: $warehouses->first()?->id);
+
+            $product = Product::create($item + [
+                'sales_tax_id' => $ppn11->id,
+                'warehouse_id' => $warehouseId,
+            ]);
+
+            if ($warehouseId) {
+                $seedStock($product, $warehouseId, (int) ($item['quantity'] ?? 0));
+            }
         }
     }
 }

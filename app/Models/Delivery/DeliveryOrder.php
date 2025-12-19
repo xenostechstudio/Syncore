@@ -2,6 +2,7 @@
 
 namespace App\Models\Delivery;
 
+use App\Enums\DeliveryOrderState;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\SalesOrder;
 use App\Models\User;
@@ -32,6 +33,17 @@ class DeliveryOrder extends Model
         'actual_delivery_date' => 'date',
     ];
 
+    public function getStateAttribute(): DeliveryOrderState
+    {
+        return DeliveryOrderState::tryFrom($this->status) ?? DeliveryOrderState::PENDING;
+    }
+
+    public function transitionTo(DeliveryOrderState $state): bool
+    {
+        $this->status = $state->value;
+        return $this->save();
+    }
+
     public function salesOrder(): BelongsTo
     {
         return $this->belongsTo(SalesOrder::class);
@@ -50,6 +62,11 @@ class DeliveryOrder extends Model
     public function items(): HasMany
     {
         return $this->hasMany(DeliveryOrderItem::class);
+    }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(DeliveryReturn::class);
     }
 
     public static function generateDeliveryNumber(): string

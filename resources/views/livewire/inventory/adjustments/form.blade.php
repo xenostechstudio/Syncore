@@ -3,14 +3,21 @@
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
             <div class="flex items-center gap-3">
-                <a href="{{ route('inventory.adjustments.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                @php
+                    $isIn = request()->routeIs('inventory.warehouse-in.*');
+                    $isOut = request()->routeIs('inventory.warehouse-out.*');
+                    $indexRoute = $isIn ? 'inventory.warehouse-in.index' : ($isOut ? 'inventory.warehouse-out.index' : 'inventory.adjustments.index');
+                    $subtitle = $isIn ? 'Inbound' : ($isOut ? 'Outbound' : 'Stock Adjustment');
+                    $newLabel = $isIn ? 'New Inbound' : ($isOut ? 'New Outbound' : 'New Stock Adjustment');
+                @endphp
+                <a href="{{ route($indexRoute) }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                     <flux:icon name="arrow-left" class="size-5" />
                 </a>
                 <div class="flex flex-col">
-                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Adjustment</span>
+                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ $subtitle }}</span>
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            {{ $editing && $adjustment ? $adjustment->adjustment_number : 'New Adjustment' }}
+                            {{ $editing && $adjustment ? $adjustment->adjustment_number : $newLabel }}
                         </span>
                         <flux:dropdown position="bottom" align="start">
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
@@ -39,6 +46,9 @@
         @if(session('success'))
             <x-ui.alert type="success" :duration="5000">{{ session('success') }}</x-ui.alert>
         @endif
+        @if(session('error'))
+            <x-ui.alert type="error" :duration="10000">{{ session('error') }}</x-ui.alert>
+        @endif
         @if($errors->any())
             <x-ui.alert type="error" :duration="10000">
                 <span class="font-medium">Please fix the following errors:</span>
@@ -61,6 +71,12 @@
                         <flux:icon name="document-check" class="size-4" />
                         Save
                     </button>
+                    @if($adjustmentId && !in_array($status, ['completed', 'cancelled']))
+                        <button type="button" wire:click="validateAndPost" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700">
+                            <flux:icon name="check" class="size-4" />
+                            Validate
+                        </button>
+                    @endif
                     <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
                         <flux:icon name="printer" class="size-4" />
                         Print
@@ -135,7 +151,7 @@
                 <div class="p-5">
                     {{-- Title inside card --}}
                     <h1 class="mb-5 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-                        {{ $editing && $adjustment ? $adjustment->adjustment_number : 'New' }}
+                        {{ $editing && $adjustment ? $adjustment->adjustment_number : $newLabel }}
                     </h1>
                     
                     <div class="grid gap-6 sm:grid-cols-2">
@@ -179,9 +195,15 @@
                                 <label class="w-28 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Type</label>
                                 <div class="relative flex-1">
                                     <select wire:model="adjustment_type" class="w-full rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-sm text-zinc-900 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700">
-                                        <option value="count">Inventory Count</option>
-                                        <option value="increase">Increase</option>
-                                        <option value="decrease">Decrease</option>
+                                        @if($isIn)
+                                            <option value="increase">Inbound</option>
+                                        @elseif($isOut)
+                                            <option value="decrease">Outbound</option>
+                                        @else
+                                            <option value="count">Inventory Count</option>
+                                            <option value="increase">Increase</option>
+                                            <option value="decrease">Decrease</option>
+                                        @endif
                                     </select>
                                 </div>
                             </div>
@@ -290,11 +312,11 @@
                                         {{-- Difference --}}
                                         <td class="px-3 py-2">
                                             @php
-                                                $diff = ($item['counted_quantity'] ?? 0) - ($item['system_quantity'] ?? 0);
+                                                $diff = $item['difference'] ?? 0;
                                                 $diffClass = $diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : ($diff < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400');
                                             @endphp
                                             <div class="text-right text-sm font-medium {{ $diffClass }}">
-                                                @if($diff > 0)+@endif{{ $diff }}
+                                                {{ $diff > 0 ? '+' : '' }}{{ $diff }}
                                             </div>
                                         </td>
 

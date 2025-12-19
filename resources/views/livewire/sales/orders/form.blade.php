@@ -822,12 +822,12 @@
                             <thead>
                                 <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
                                     <th class="w-10 px-2 py-2.5"></th>
-                                    <th x-show="isColumnVisible('product')" class="w-48 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Product</th>
+                                    <th x-show="isColumnVisible('product')" class="w-[32rem] px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Product</th>
                                     <th x-show="isColumnVisible('description')" class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Description</th>
                                     <th x-show="isColumnVisible('discount')" class="w-20 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Disc %</th>
-                                    <th x-show="isColumnVisible('qty')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
-                                    <th x-show="isColumnVisible('unit_price')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Unit Price</th>
-                                    <th x-show="isColumnVisible('taxes')" class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 whitespace-nowrap dark:text-zinc-400">Taxes</th>
+                                    <th x-show="isColumnVisible('qty')" class="w-16 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
+                                    <th x-show="isColumnVisible('unit_price')" class="w-32 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Unit Price</th>
+                                    <th x-show="isColumnVisible('taxes')" class="w-28 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 whitespace-nowrap dark:text-zinc-400">Taxes</th>
                                     <th x-show="isColumnVisible('subtotal')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Subtotal</th>
                                     <th x-show="isColumnVisible('subtotal_after_tax')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 whitespace-nowrap dark:text-zinc-400">After Tax</th>
                                     <th class="w-10 pl-2 pr-2 py-2.5 text-right">
@@ -906,116 +906,116 @@
                                             </div>
                                         </td>
 
-                                        {{-- Product Selection (Searchable) --}}
-                                        <td x-show="isColumnVisible('product')" class="w-48 px-3 py-2 overflow-visible">
-                                            <div x-data="{ open: false, search: '' }" class="relative">
-                                                @if($item['product_id'])
-                                                    <button 
-                                                        type="button"
-                                                        @click="open = true; $nextTick(() => $refs.productSearch{{ $index }}.focus())"
-                                                        class="flex w-full items-center gap-2 text-left"
-                                                    >
-                                                        <div>
-                                                            <p class="text-sm text-zinc-900 dark:text-zinc-100">{{ $item['name'] }}</p>
-                                                            <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ $item['sku'] }}</p>
-                                                        </div>
-                                                    </button>
-                                                @else
-                                                    <button 
-                                                        type="button"
-                                                        @click="open = true; $nextTick(() => $refs.productSearch{{ $index }}.focus())"
-                                                        class="text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                                                    >
-                                                        Select a product...
-                                                    </button>
-                                                @endif
-
-                                                {{-- Product Dropdown --}}
-                                                <div 
-                                                    x-show="open" 
-                                                    @click.outside="open = false; search = ''"
-                                                    x-transition
-                                                    class="absolute left-0 top-full z-[200] mt-1 w-80 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
-                                                    style="position: fixed; transform: translateY(0);"
-                                                    x-init="$watch('open', value => {
-                                                        if (value) {
-                                                            const rect = $el.previousElementSibling?.getBoundingClientRect() || $el.parentElement.getBoundingClientRect();
-                                                            $el.style.position = 'fixed';
-                                                            $el.style.top = (rect.bottom + 4) + 'px';
-                                                            $el.style.left = rect.left + 'px';
-                                                        }
-                                                    })"
-                                                >
-                                                    <div class="border-b border-zinc-100 p-2 dark:border-zinc-800">
-                                                        <input 
-                                                            type="text"
-                                                            x-ref="productSearch{{ $index }}"
-                                                            x-model="search"
-                                                            placeholder="Search products..."
-                                                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                                            @keydown.escape="open = false; search = ''"
-                                                        />
-                                                    </div>
-                                                    <div class="max-h-48 overflow-auto py-1">
-                                                        @foreach($products as $invItem)
+                                                {{-- Product Selection (Searchable) --}}
+                                                <td x-show="isColumnVisible('product')" class="w-[32rem] px-3 py-2 overflow-visible">
+                                                    <div x-data="{ open: false, search: '' }" class="relative">
+                                                        @if($item['product_id'])
                                                             <button 
                                                                 type="button"
-                                                                x-show="'{{ strtolower($invItem->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($invItem->sku ?? '') }}'.includes(search.toLowerCase()) || search === ''"
-                                                                wire:click="selectItem({{ $index }}, {{ $invItem->id }})"
-                                                                @click="open = false; search = ''"
-                                                                class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                                                @click="open = true; $nextTick(() => $refs.productSearch{{ $index }}.focus())"
+                                                                class="flex w-full items-center gap-2 text-left"
                                                             >
-                                                                <div class="flex-1">
-                                                                    <p class="text-zinc-900 dark:text-zinc-100">{{ $invItem->name }}</p>
-                                                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $invItem->sku }} · Rp {{ number_format($invItem->selling_price, 0, ',', '.') }}</p>
+                                                                <div>
+                                                                    <p class="text-sm text-zinc-900 dark:text-zinc-100">{{ $item['name'] }}</p>
+                                                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ $item['sku'] }}</p>
                                                                 </div>
-                                                                <span class="text-xs text-zinc-400">{{ $invItem->quantity }} in stock</span>
                                                             </button>
-                                                        @endforeach
+                                                        @else
+                                                            <button 
+                                                                type="button"
+                                                                @click="open = true; $nextTick(() => $refs.productSearch{{ $index }}.focus())"
+                                                                class="text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                                                            >
+                                                                Select a product...
+                                                            </button>
+                                                        @endif
+
+                                                        {{-- Product Dropdown --}}
+                                                        <div 
+                                                            x-show="open" 
+                                                            @click.outside="open = false; search = ''"
+                                                            x-transition
+                                                            class="absolute left-0 top-full z-[200] mt-1 w-80 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
+                                                            style="position: fixed; transform: translateY(0);"
+                                                            x-init="$watch('open', value => {
+                                                                if (value) {
+                                                                    const rect = $el.previousElementSibling?.getBoundingClientRect() || $el.parentElement.getBoundingClientRect();
+                                                                    $el.style.position = 'fixed';
+                                                                    $el.style.top = (rect.bottom + 4) + 'px';
+                                                                    $el.style.left = rect.left + 'px';
+                                                                }
+                                                            })"
+                                                        >
+                                                            <div class="border-b border-zinc-100 p-2 dark:border-zinc-800">
+                                                                <input 
+                                                                    type="text"
+                                                                    x-ref="productSearch{{ $index }}"
+                                                                    x-model="search"
+                                                                    placeholder="Search products..."
+                                                                    class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                                                    @keydown.escape="open = false; search = ''"
+                                                                />
+                                                            </div>
+                                                            <div class="max-h-48 overflow-auto py-1">
+                                                                @foreach($products as $invItem)
+                                                                    <button 
+                                                                        type="button"
+                                                                        x-show="'{{ strtolower($invItem->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($invItem->sku ?? '') }}'.includes(search.toLowerCase()) || search === ''"
+                                                                        wire:click="selectItem({{ $index }}, {{ $invItem->id }})"
+                                                                        @click="open = false; search = ''"
+                                                                        class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                                                                    >
+                                                                        <div class="flex-1">
+                                                                            <p class="text-zinc-900 dark:text-zinc-100">{{ $invItem->name }}</p>
+                                                                            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $invItem->sku }} · Rp {{ number_format($invItem->selling_price, 0, ',', '.') }}</p>
+                                                                        </div>
+                                                                        <span class="text-xs text-zinc-400">{{ $invItem->quantity }} in stock</span>
+                                                                    </button>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </td>
+                                                </td>
 
-                                        {{-- Description --}}
-                                        <td x-show="isColumnVisible('description')" class="px-3 py-2">
-                                            <input 
-                                                type="text"
-                                                wire:model.live="items.{{ $index }}.description"
-                                                placeholder="Add description..."
-                                                class="w-full bg-transparent text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
-                                            />
-                                        </td>
+                                                {{-- Description --}}
+                                                <td x-show="isColumnVisible('description')" class="px-3 py-2">
+                                                    <input 
+                                                        type="text"
+                                                        wire:model.live="items.{{ $index }}.description"
+                                                        placeholder="Add description..."
+                                                        class="w-full bg-transparent text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
+                                                    />
+                                                </td>
 
-                                        {{-- Discount --}}
-                                        <td x-show="isColumnVisible('discount')" class="px-3 py-2">
-                                            <input 
-                                                type="text"
-                                                wire:model.live="items.{{ $index }}.discount"
-                                                class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
-                                            />
-                                        </td>
+                                                {{-- Discount --}}
+                                                <td x-show="isColumnVisible('discount')" class="px-3 py-2">
+                                                    <input 
+                                                        type="text"
+                                                        wire:model.live="items.{{ $index }}.discount"
+                                                        class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
+                                                    />
+                                                </td>
 
-                                        {{-- Quantity --}}
-                                        <td x-show="isColumnVisible('qty')" class="px-3 py-2">
-                                            <input 
-                                                type="text"
-                                                wire:model.live="items.{{ $index }}.quantity"
-                                                class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
-                                            />
-                                        </td>
+                                                {{-- Quantity --}}
+                                                <td x-show="isColumnVisible('qty')" class="w-16 px-3 py-2">
+                                                    <input 
+                                                        type="text"
+                                                        wire:model.live="items.{{ $index }}.quantity"
+                                                        class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
+                                                    />
+                                                </td>
 
-                                        {{-- Unit Price --}}
-                                        <td x-show="isColumnVisible('unit_price')" class="px-3 py-2">
-                                            <input 
-                                                type="text"
-                                                wire:model.live="items.{{ $index }}.unit_price"
-                                                class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
-                                            />
-                                        </td>
+                                                {{-- Unit Price --}}
+                                                <td x-show="isColumnVisible('unit_price')" class="w-32 px-3 py-2">
+                                                    <input 
+                                                        type="text"
+                                                        wire:model.live="items.{{ $index }}.unit_price"
+                                                        class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
+                                                    />
+                                                </td>
 
                                         {{-- Taxes --}}
-                                        <td x-show="isColumnVisible('taxes')" class="px-3 py-2" x-data="{ open: false }">
+                                        <td x-show="isColumnVisible('taxes')" class="w-28 px-3 py-2" x-data="{ open: false }">
                                             <div class="relative">
                                                 @php
                                                     $selectedTax = isset($item['tax_id']) ? $taxes->firstWhere('id', $item['tax_id']) : null;
