@@ -37,10 +37,10 @@
                             <flux:icon name="arrow-down-tray" class="size-4" />
                             <span>Import products</span>
                         </button>
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <a href="{{ route('export.products') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
                             <span>Export all</span>
-                        </button>
+                        </a>
                     </flux:menu>
                 </flux:dropdown>
             </div>
@@ -48,7 +48,7 @@
             {{-- Center: Search with single horizontal dropdown (Filters / Sort / Group) --}}
             <div class="flex flex-1 items-center justify-center">
                 {{-- Wrapper for searchbox + dropdown to center dropdown on searchbox --}}
-                <x-ui.searchbox-dropdown placeholder="Search products...">
+                <x-ui.searchbox-dropdown placeholder="Search products..." widthClass="w-[520px]" width="520px" align="center">
                     <div class="flex flex-col gap-4 p-3 md:flex-row">
                         {{-- Filters column --}}
                         <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">

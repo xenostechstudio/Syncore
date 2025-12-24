@@ -3,15 +3,19 @@
 namespace App\Livewire\Invoicing\Invoices;
 
 use App\Models\Invoicing\Invoice;
+use App\Models\Invoicing\InvoiceItem;
 use App\Models\Invoicing\Payment;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
+use App\Models\Sales\SalesOrderItem;
 use App\Services\XenditService;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Invoicing'])]
 #[Title('Invoice')]
@@ -40,6 +44,22 @@ class Form extends Component
     public string $paymentDate = '';
     public string $paymentMethod = 'bank_transfer';
     public string $paymentReference = '';
+    public bool $showShareModal = false;
+    public ?string $shareLink = null;
+
+    public function getActivities(): \Illuminate\Support\Collection
+    {
+        if (!$this->invoiceId) {
+            return collect();
+        }
+
+        return Activity::where('subject_type', Invoice::class)
+            ->where('subject_id', $this->invoiceId)
+            ->with('causer')
+            ->latest()
+            ->take(20)
+            ->get();
+    }
 
     public function mount(?int $id = null): void
     {
@@ -57,7 +77,7 @@ class Form extends Component
 
     protected function loadInvoice(): void
     {
-        $invoice = Invoice::with(['customer', 'salesOrder', 'items.product', 'payments'])
+        $invoice = Invoice::with(['customer', 'salesOrder', 'items.product', 'items.tax', 'payments'])
             ->findOrFail($this->invoiceId);
 
         $this->customer_id = $invoice->customer_id;
@@ -120,6 +140,42 @@ class Form extends Component
             session()->flash('success', 'Invoice deleted successfully.');
             $this->redirect(route('invoicing.invoices.index'), navigate: true);
         }
+    }
+
+    public function cancel(): void
+    {
+        if (!$this->invoiceId) {
+            return;
+        }
+
+        $invoice = Invoice::with('items')->findOrFail($this->invoiceId);
+
+        if (in_array($invoice->status, ['paid', 'cancelled'], true)) {
+            session()->flash('error', 'This invoice cannot be cancelled.');
+            return;
+        }
+
+        DB::transaction(function () use ($invoice) {
+            // Decrement quantity_invoiced on sales order items
+            if ($invoice->sales_order_id) {
+                foreach ($invoice->items as $invoiceItem) {
+                    if ($invoiceItem->product_id) {
+                        SalesOrderItem::query()
+                            ->where('sales_order_id', $invoice->sales_order_id)
+                            ->where('product_id', $invoiceItem->product_id)
+                            ->decrement('quantity_invoiced', $invoiceItem->quantity);
+                    }
+                }
+            }
+
+            $invoice->update([
+                'status' => 'cancelled',
+                'xendit_status' => $invoice->xendit_status ?? 'cancelled',
+            ]);
+        });
+
+        $this->status = 'cancelled';
+        session()->flash('success', 'Invoice cancelled successfully.');
     }
 
     public function openPaymentModal(): void
@@ -245,13 +301,44 @@ class Form extends Component
         return app(XenditService::class)->isConfigured();
     }
 
+    public function openShareModal(): void
+    {
+        if (!$this->invoiceId) {
+            session()->flash('error', 'Please save the invoice first.');
+            return;
+        }
+
+        $invoice = Invoice::findOrFail($this->invoiceId);
+        $invoice->ensureShareToken();
+
+        $this->shareLink = URL::signedRoute('public.invoices.show', [
+            'token' => $invoice->share_token,
+        ]);
+
+        $this->showShareModal = true;
+    }
+
+    public function regenerateShareLink(): void
+    {
+        if (!$this->invoiceId) {
+            return;
+        }
+
+        $invoice = Invoice::findOrFail($this->invoiceId);
+        $invoice->ensureShareToken(forceRefresh: true);
+
+        $this->shareLink = URL::signedRoute('public.invoices.show', [
+            'token' => $invoice->share_token,
+        ]);
+    }
+
     public function render()
     {
         $customers = Customer::orderBy('name')->get();
         $salesOrders = SalesOrder::with('customer')->orderByDesc('order_date')->limit(50)->get();
 
         $invoice = $this->invoiceId
-            ? Invoice::with(['customer', 'items.product', 'payments', 'salesOrder'])->find($this->invoiceId)
+            ? Invoice::with(['customer', 'items.product', 'items.tax', 'payments', 'salesOrder'])->find($this->invoiceId)
             : null;
 
         $paidAmount = $invoice ? $invoice->payments->sum('amount') : 0;
@@ -263,6 +350,7 @@ class Form extends Component
             'invoice' => $invoice,
             'paidAmount' => $paidAmount,
             'remainingAmount' => $remainingAmount,
+            'activities' => $this->getActivities(),
         ]);
     }
 }

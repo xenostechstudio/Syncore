@@ -34,25 +34,52 @@
                             <flux:icon name="arrow-down-tray" class="size-4" />
                             <span>Import records</span>
                         </button>
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <a href="{{ route('export.warehouses') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
                             <span>Export All</span>
-                        </button>
+                        </a>
                     </flux:menu>
                 </flux:dropdown>
             </div>
 
             {{-- Center Group: Search --}}
             <div class="flex flex-1 items-center justify-center">
-                <div class="relative w-full max-w-md">
-                    <input 
-                        type="text" 
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Search warehouses..."
-                        class="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-                    />
-                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                </div>
+                @if($view === 'grid')
+                    <x-ui.searchbox-dropdown wireModel="search" placeholder="Search warehouses...">
+                        <div class="flex flex-col gap-4 p-3 md:flex-row">
+                            <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:pb-0 dark:border-zinc-800">
+                                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="adjustments-horizontal" class="size-3.5" />
+                                    <span>Results per page</span>
+                                </div>
+                                <div class="space-y-1">
+                                    @foreach([15, 25, 50, 100] as $size)
+                                        <button 
+                                            type="button" 
+                                            wire:click="$set('perPage', {{ $size }})" 
+                                            class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                                        >
+                                            <span>{{ $size }} per page</span>
+                                            @if($perPage === $size)
+                                                <flux:icon name="check" class="size-3.5 text-violet-500" />
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </x-ui.searchbox-dropdown>
+                @else
+                    <div class="relative w-full max-w-md">
+                        <input 
+                            type="text" 
+                            wire:model.live.debounce.300ms="search"
+                            placeholder="Search warehouses..."
+                            class="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                        />
+                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                    </div>
+                @endif
             </div>
 
             {{-- Right Group: View Toggle --}}
@@ -75,21 +102,11 @@
         </div>
     </x-slot:header>
 
-    {{-- Stats Bar --}}
-    <div class="-mx-4 border-b border-zinc-200 bg-zinc-50 px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:border-zinc-800 dark:bg-zinc-900/50">
-        <div class="flex flex-wrap items-center gap-6 text-sm">
-            <div class="flex items-center gap-2">
-                <span class="text-zinc-500 dark:text-zinc-400">Total:</span>
-                <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $warehouses->total() }}</span>
-            </div>
-        </div>
-    </div>
-
     {{-- Content --}}
-    <div class="-mx-4 sm:-mx-6 lg:-mx-8">
+    <div class="-mx-4 -mt-6 sm:-mx-6 lg:-mx-8">
         @if($view === 'list')
             {{-- Table View --}}
-            <div class="overflow-hidden">
+            <div class="overflow-hidden bg-white dark:bg-zinc-950">
                 <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
                     <thead class="bg-zinc-50 dark:bg-zinc-900">
                         <tr>
@@ -131,6 +148,16 @@
                             </tr>
                         @endforelse
                     </tbody>
+                    <tfoot class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+                        <tr>
+                            <td colspan="3" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                Total Warehouses
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                                {{ $warehouses->total() }}
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         @else

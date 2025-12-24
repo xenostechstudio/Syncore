@@ -4,6 +4,8 @@ namespace App\Livewire\Sales\Orders;
 
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Sales\SalesOrder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -30,6 +32,12 @@ class Index extends Component
     #[Url]
     public string $view = 'list';
 
+    #[Url]
+    public bool $myQuotations = true;
+
+    #[Url]
+    public bool $showStats = true;
+
     public array $selected = [];
     public bool $selectAll = false;
 
@@ -40,6 +48,55 @@ class Index extends Component
     {
         $routeName = request()->route()->getName();
         $this->mode = $routeName === 'sales.orders.all' ? 'orders' : 'quotations';
+
+        $this->myQuotations = $this->mode === 'quotations';
+    }
+
+    public function toggleStats(): void
+    {
+        $this->showStats = !$this->showStats;
+    }
+
+    private function getStatistics(): array
+    {
+        $baseQuery = SalesOrder::query()
+            ->when(
+                $this->mode === 'quotations' && $this->myQuotations,
+                fn ($q) => $q->where('user_id', Auth::id())
+            );
+
+        // Get counts and totals by status
+        $stats = (clone $baseQuery)
+            ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+
+        // Calculate totals
+        $quotations = ($stats->get('draft')?->count ?? 0) + ($stats->get('confirmed')?->count ?? 0);
+        $quotationsTotal = ($stats->get('draft')?->total ?? 0) + ($stats->get('confirmed')?->total ?? 0);
+        
+        $salesOrders = $stats->get('processing')?->count ?? 0;
+        $salesOrdersTotal = $stats->get('processing')?->total ?? 0;
+
+        $toInvoice = (clone $baseQuery)
+            ->where('status', 'processing')
+            ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_invoiced'))
+            ->count();
+
+        $toDeliver = (clone $baseQuery)
+            ->where('status', 'processing')
+            ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_delivered'))
+            ->count();
+
+        return [
+            'quotations' => $quotations,
+            'quotations_total' => $quotationsTotal,
+            'sales_orders' => $salesOrders,
+            'sales_orders_total' => $salesOrdersTotal,
+            'to_invoice' => $toInvoice,
+            'to_deliver' => $toDeliver,
+        ];
     }
 
     // Column visibility
@@ -50,6 +107,8 @@ class Index extends Component
         'date' => true,
         'total' => true,
         'status' => true,
+        'invoicing' => false,
+        'delivery' => false,
     ];
 
     public function toggleColumn(string $column): void
@@ -113,6 +172,8 @@ class Index extends Component
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'sort', 'groupBy']);
+
+        $this->myQuotations = $this->mode === 'quotations';
         $this->resetPage();
     }
 
@@ -120,6 +181,10 @@ class Index extends Component
     {
         return SalesOrder::query()
             ->with(['customer', 'user'])
+            ->when(
+                $this->mode === 'quotations' && $this->myQuotations,
+                fn ($q) => $q->where('user_id', Auth::id())
+            )
             ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
                 ->where('order_number', 'like', "%{$this->search}%")
                 ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%"))
@@ -134,10 +199,13 @@ class Index extends Component
 
     public function render()
     {
-        $orders = $this->getOrdersQuery()->paginate(12, ['*'], 'page', $this->page);
+        $orders = $this->getOrdersQuery()
+            ->with(['items', 'invoices', 'deliveryOrders'])
+            ->paginate(12, ['*'], 'page', $this->page);
 
         return view('livewire.sales.orders.index', [
             'orders' => $orders,
+            'statistics' => $this->showStats ? $this->getStatistics() : null,
         ]);
     }
 }

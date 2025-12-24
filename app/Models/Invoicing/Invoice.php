@@ -8,10 +8,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Invoice extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'invoice_number',
@@ -24,6 +27,8 @@ class Invoice extends Model
         'xendit_invoice_url',
         'xendit_external_id',
         'xendit_status',
+        'share_token',
+        'share_token_expires_at',
         'subtotal',
         'tax',
         'discount',
@@ -43,6 +48,7 @@ class Invoice extends Model
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'share_token_expires_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -87,5 +93,41 @@ class Invoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function ensureShareToken(bool $forceRefresh = false): self
+    {
+        if (
+            $forceRefresh
+            || blank($this->share_token)
+            || ($this->share_token_expires_at && $this->share_token_expires_at->isPast())
+        ) {
+            $this->share_token = Str::random(48);
+            $this->share_token_expires_at = now()->addDays(30);
+            $this->save();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Activity log options
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'invoice_number', 'customer_id', 'sales_order_id', 'invoice_date', 'due_date',
+                'status', 'subtotal', 'tax', 'discount', 'total', 'notes', 'terms',
+                'paid_amount', 'paid_date',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => __('activity.invoice_created'),
+                'updated' => __('activity.invoice_updated'),
+                'deleted' => __('activity.invoice_deleted'),
+                default => __('activity.invoice_event', ['event' => $eventName]),
+            });
     }
 }

@@ -34,10 +34,10 @@
                             <flux:icon name="arrow-down-tray" class="size-4" />
                             <span>Import records</span>
                         </button>
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <a href="{{ route('export.invoices') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
                             <span>Export All</span>
-                        </button>
+                        </a>
                     </flux:menu>
                 </flux:dropdown>
             </div>
@@ -159,6 +159,16 @@
                     </div>
                 </div>
 
+                {{-- Stats Toggle --}}
+                <button 
+                    type="button"
+                    wire:click="toggleStats"
+                    class="flex h-8 w-8 items-center justify-center rounded-md transition-colors {{ $showStats ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100' : 'text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300' }}"
+                    title="{{ $showStats ? 'Hide statistics' : 'Show statistics' }}"
+                >
+                    <flux:icon name="chart-bar" class="size-4" />
+                </button>
+
                 <x-ui.view-toggle :view="$view" :views="['list', 'grid']" />
             </div>
         </div>
@@ -166,6 +176,64 @@
 
     {{-- Content --}}
     <div>
+        {{-- Statistics Cards --}}
+        @if($showStats && $statistics && !$invoices->isEmpty())
+            <div class="-mx-4 -mt-6 mb-6 border-b border-zinc-200 bg-white px-4 py-4 sm:-mx-6 lg:-mx-8 lg:px-8 dark:border-zinc-800 dark:bg-zinc-950">
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="flex items-center gap-2">
+                            <flux:icon name="document-text" class="size-4 text-zinc-400 dark:text-zinc-500" />
+                            <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Total Invoices</p>
+                        </div>
+                        <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($statistics['total']) }}</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Rp {{ number_format($statistics['total_amount'], 0, ',', '.') }}</p>
+                    </div>
+                    <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="flex items-center gap-2">
+                            <flux:icon name="clock" class="size-4 text-blue-500 dark:text-blue-400" />
+                            <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Awaiting Payment</p>
+                        </div>
+                        <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($statistics['sent'] + $statistics['partial']) }}</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $statistics['sent'] }} sent, {{ $statistics['partial'] }} partial</p>
+                    </div>
+                    <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="flex items-center gap-2">
+                            <flux:icon name="check-circle" class="size-4 text-emerald-500 dark:text-emerald-400" />
+                            <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Paid</p>
+                        </div>
+                        <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($statistics['paid']) }}</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Rp {{ number_format($statistics['paid_amount'], 0, ',', '.') }}</p>
+                    </div>
+                    <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="flex items-center gap-2">
+                            <flux:icon name="exclamation-circle" class="size-4 text-red-500 dark:text-red-400" />
+                            <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Overdue</p>
+                        </div>
+                        <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($statistics['overdue']) }}</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Rp {{ number_format($statistics['overdue_amount'], 0, ',', '.') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($invoices->isEmpty())
+            {{-- Empty State --}}
+            <div class="-mx-4 -mt-6 -mb-6 flex min-h-[70vh] items-center justify-center bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
+                <div class="-mt-16 flex flex-col items-center gap-4 text-center">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                        <flux:icon name="document-text" class="size-8 text-zinc-400" />
+                    </div>
+                    <div>
+                        <p class="text-base font-medium text-zinc-900 dark:text-zinc-100">No invoices found</p>
+                        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Get started by creating a new invoice</p>
+                    </div>
+                    <a href="{{ route('invoicing.invoices.create') }}" wire:navigate class="mt-2 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                        <flux:icon name="plus" class="size-4" />
+                        New Invoice
+                    </a>
+                </div>
+            </div>
+        @else
         @if($view === 'list')
             {{-- Table View --}}
             <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
@@ -290,69 +358,22 @@
                                 @endif
                                 <td class="py-4 pr-4 sm:pr-6 lg:pr-8"></td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="px-4 py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                                    <div class="flex flex-col items-center gap-3">
-                                        <svg class="size-12 text-zinc-300 dark:text-zinc-600" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                                        </svg>
-                                        <p>No invoices found</p>
-                                        <a href="{{ route('invoicing.invoices.create') }}" wire:navigate class="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-100">
-                                            Create your first invoice
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                     @if($invoices->count() > 0)
                         @php
-                            $totalColspan = 1 + ($visibleColumns['invoice_number'] ? 1 : 0) + ($visibleColumns['customer'] ? 1 : 0) + ($visibleColumns['invoice_date'] ? 1 : 0) + ($visibleColumns['due_date'] ? 1 : 0) + ($visibleColumns['total'] ? 1 : 0) + ($visibleColumns['status'] ? 1 : 0) + 1;
+                            $visibleCount = 1 + ($visibleColumns['invoice_number'] ? 1 : 0) + ($visibleColumns['customer'] ? 1 : 0) + ($visibleColumns['invoice_date'] ? 1 : 0) + ($visibleColumns['due_date'] ? 1 : 0);
+                            $afterTotalCount = 1 + ($visibleColumns['status'] ? 1 : 0);
                         @endphp
-                        <tfoot class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+                        <tfoot class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950">
                             <tr>
-                                <td colspan="{{ $totalColspan }}" class="py-3 pl-4 pr-4 sm:pl-6 lg:pl-8">
-                                    <div class="flex flex-wrap items-center justify-between gap-4 text-sm">
-                                        {{-- Left: Stats --}}
-                                        <div class="flex flex-wrap items-center gap-4">
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="text-zinc-500 dark:text-zinc-400">Total:</span>
-                                                <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $stats['total'] ?? 0 }}</span>
-                                            </div>
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="h-2 w-2 rounded-full bg-zinc-400"></span>
-                                                <span class="text-zinc-500 dark:text-zinc-400">Draft:</span>
-                                                <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $stats['draft'] ?? 0 }}</span>
-                                            </div>
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-                                                <span class="text-zinc-500 dark:text-zinc-400">Sent:</span>
-                                                <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $stats['sent'] ?? 0 }}</span>
-                                            </div>
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="h-2 w-2 rounded-full bg-amber-500"></span>
-                                                <span class="text-zinc-500 dark:text-zinc-400">Partial:</span>
-                                                <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $stats['partial'] ?? 0 }}</span>
-                                            </div>
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                                                <span class="text-zinc-500 dark:text-zinc-400">Paid:</span>
-                                                <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $stats['paid'] ?? 0 }}</span>
-                                            </div>
-                                            <div class="flex items-center gap-1.5">
-                                                <span class="h-2 w-2 rounded-full bg-red-500"></span>
-                                                <span class="text-zinc-500 dark:text-zinc-400">Overdue:</span>
-                                                <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $stats['overdue'] ?? 0 }}</span>
-                                            </div>
-                                        </div>
-                                        {{-- Right: Total Amount --}}
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total Amount:</span>
-                                            <span class="text-lg font-bold text-emerald-600 dark:text-emerald-400">Rp {{ number_format($stats['totalAmount'] ?? 0, 0, ',', '.') }}</span>
-                                        </div>
-                                    </div>
-                                </td>
+                                <td colspan="{{ $visibleCount }}" class="py-3 pl-4 pr-4 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 sm:pl-6 lg:pl-8 dark:text-zinc-400">Total</td>
+                                @if($visibleColumns['total'])
+                                    <td class="px-4 py-3 text-right text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                                        Rp {{ number_format($invoices->sum('total'), 0, ',', '.') }}
+                                    </td>
+                                @endif
+                                <td colspan="{{ $afterTotalCount }}"></td>
                             </tr>
                         </tfoot>
                     @endif
@@ -361,7 +382,7 @@
         @else
             {{-- Grid View --}}
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                @forelse($invoices as $invoice)
+                @foreach($invoices as $invoice)
                     <a href="{{ route('invoicing.invoices.edit', $invoice->id) }}" wire:navigate class="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
                         <div class="flex items-start justify-between">
                             <div>
@@ -389,13 +410,9 @@
                             <p class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($invoice->total, 0, ',', '.') }}</p>
                         </div>
                     </a>
-                @empty
-                    <div class="col-span-full rounded-2xl border border-dashed border-zinc-200 p-10 text-center dark:border-zinc-800">
-                        <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">No invoices to display</p>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Adjust your filters or create a new invoice.</p>
-                    </div>
-                @endforelse
+                @endforeach
             </div>
+        @endif
         @endif
     </div>
 </div>

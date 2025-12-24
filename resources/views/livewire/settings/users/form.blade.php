@@ -1,6 +1,16 @@
 <div
-    x-data="{ showSendMessage: false, showLogNote: false, showScheduleActivity: false, activeTab: 'access', showChangePasswordModal: @js($errors->has('password') || $errors->has('password_confirmation') || $errors->has('current_password')), showCancelModal: false }"
+    x-data="{ 
+        showSendMessage: false, 
+        showLogNote: false, 
+        showScheduleActivity: false, 
+        activeTab: 'access', 
+        showChangePasswordModal: @js($errors->has('password') || $errors->has('password_confirmation') || $errors->has('current_password')), 
+        showCancelModal: false,
+        showTwoFactorModal: false,
+        twoFactorCode: ''
+    }"
     x-on:open-change-password-modal.window="activeTab = 'security'; showChangePasswordModal = true"
+    x-on:show-two-factor-qr-modal.window="showTwoFactorModal = true"
 >
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
@@ -192,53 +202,53 @@
                         <div class="flex items-start gap-6">
                             {{-- Profile Image Placeholder --}}
                             <div class="relative flex-shrink-0">
-                                <div class="flex h-28 w-28 items-center justify-center overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                <div class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
                                     @if($userId && $name)
-                                        <span class="text-4xl font-medium text-zinc-400 dark:text-zinc-500">
+                                        <span class="text-3xl font-medium text-zinc-400 dark:text-zinc-500">
                                             {{ strtoupper(substr($name, 0, 2)) }}
                                         </span>
                                     @else
-                                        <flux:icon name="user" class="size-12 text-zinc-300 dark:text-zinc-600" />
+                                        <flux:icon name="user" class="size-10 text-zinc-300 dark:text-zinc-600" />
                                     @endif
                                 </div>
-                                <button type="button" class="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-zinc-100 text-zinc-500 transition-colors hover:bg-zinc-200 dark:border-zinc-900 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600" title="Change photo">
-                                    <flux:icon name="camera" class="size-4" />
+                                <button type="button" class="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-zinc-100 text-zinc-500 transition-colors hover:bg-zinc-200 dark:border-zinc-900 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600" title="Change photo">
+                                    <flux:icon name="camera" class="size-3.5" />
                                 </button>
                             </div>
 
                             {{-- Name, Email, Phone --}}
-                            <div class="flex-1 space-y-3">
+                            <div class="flex-1 space-y-1">
                                 {{-- Full Name (Big Input) --}}
                                 <div>
                                     <input 
                                         type="text"
                                         wire:model="name"
                                         placeholder="Full Name"
-                                        class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-3xl font-bold text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-200 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-700 dark:focus:border-zinc-700"
+                                        class="w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-2xl font-bold text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-200 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-700 dark:focus:border-zinc-700"
                                     />
-                                    @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                                    @error('name') <p class="mt-0.5 text-xs text-red-500">{{ $message }}</p> @enderror
                                 </div>
 
                                 {{-- Email --}}
-                                <div class="flex items-center gap-3">
-                                    <flux:icon name="envelope" class="size-5 flex-shrink-0 text-zinc-400" />
+                                <div class="flex items-center gap-2 pl-2">
+                                    <flux:icon name="envelope" class="size-4 flex-shrink-0 text-zinc-400" />
                                     <input 
                                         type="email"
                                         wire:model="email"
                                         placeholder="Email address for login"
-                                        class="flex-1 border-0 border-b border-transparent bg-transparent px-0 py-1 text-sm text-zinc-700 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-300 dark:placeholder-zinc-500 dark:hover:border-zinc-700"
+                                        class="flex-1 border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-sm text-zinc-700 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-300 dark:placeholder-zinc-500 dark:hover:border-zinc-700"
                                     />
                                 </div>
                                 @error('email') <p class="ml-8 text-xs text-red-500">{{ $message }}</p> @enderror
 
                                 {{-- Phone --}}
-                                <div class="flex items-center gap-3">
-                                    <flux:icon name="phone" class="size-5 flex-shrink-0 text-zinc-400" />
+                                <div class="flex items-center gap-2 pl-2">
+                                    <flux:icon name="phone" class="size-4 flex-shrink-0 text-zinc-400" />
                                     <input 
                                         type="tel"
                                         wire:model="phone"
                                         placeholder="Phone number"
-                                        class="flex-1 border-0 border-b border-transparent bg-transparent px-0 py-1 text-sm text-zinc-700 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-300 dark:placeholder-zinc-500 dark:hover:border-zinc-700"
+                                        class="flex-1 border-0 border-b border-transparent bg-transparent px-0 py-0.5 text-sm text-zinc-700 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-300 dark:placeholder-zinc-500 dark:hover:border-zinc-700"
                                     />
                                 </div>
                                 @error('phone') <p class="ml-8 text-xs text-red-500">{{ $message }}</p> @enderror
@@ -295,82 +305,77 @@
                     {{-- Tab Content: Access Rights --}}
                     <div x-show="activeTab === 'access'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                         <div class="px-5 pb-5">
-                            <div class="grid gap-8 lg:grid-cols-2">
-                                {{-- User Type --}}
+                            <div class="space-y-8">
+                                {{-- Role Assignment --}}
                                 <div class="space-y-4">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">User Type</h3>
-                                    <div class="space-y-3">
-                                        <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 p-3 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800/50">
-                                            <input type="radio" wire:model="user_type" value="internal" class="text-zinc-900 focus:ring-zinc-500 dark:bg-zinc-700" />
-                                            <div>
-                                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Internal User</p>
-                                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Full access to internal applications</p>
-                                            </div>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 p-3 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800/50">
-                                            <input type="radio" wire:model="user_type" value="portal" class="text-zinc-900 focus:ring-zinc-500 dark:bg-zinc-700" />
-                                            <div>
-                                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Portal User</p>
-                                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Limited access to portal features</p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
+                                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+                                        <div class="lg:w-72">
+                                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Role</h3>
+                                            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Assign a role to define what this user can access.</p>
+                                        </div>
 
-                                {{-- Permissions --}}
-                                <div class="space-y-4">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Permissions</h3>
-                                    <div class="space-y-3">
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-zinc-700 dark:text-zinc-300">Sales</label>
-                                            <select wire:model="permissions.sales" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                                <option value="">No Access</option>
-                                                <option value="user">User</option>
-                                                <option value="manager">Manager</option>
-                                                <option value="admin">Administrator</option>
-                                            </select>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-zinc-700 dark:text-zinc-300">Purchase</label>
-                                            <select wire:model="permissions.purchase" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                                <option value="">No Access</option>
-                                                <option value="user">User</option>
-                                                <option value="manager">Manager</option>
-                                                <option value="admin">Administrator</option>
-                                            </select>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-zinc-700 dark:text-zinc-300">Inventory</label>
-                                            <select wire:model="permissions.inventory" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                                <option value="">No Access</option>
-                                                <option value="user">User</option>
-                                                <option value="manager">Manager</option>
-                                                <option value="admin">Administrator</option>
-                                            </select>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm text-zinc-700 dark:text-zinc-300">Accounting</label>
-                                            <select wire:model="permissions.accounting" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                                <option value="">No Access</option>
-                                                <option value="user">User</option>
-                                                <option value="manager">Manager</option>
-                                                <option value="admin">Administrator</option>
-                                            </select>
+                                        <div class="flex-1 space-y-3">
+                                            @if($availableRoles->isEmpty())
+                                                <div class="rounded-lg border border-dashed border-zinc-300 px-4 py-3 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                                                    No roles available. <a href="{{ route('settings.roles.create') }}" wire:navigate class="text-blue-600 hover:underline dark:text-blue-400">Create a role</a> first.
+                                                </div>
+                                            @else
+                                                <select 
+                                                    wire:model.live="selectedRole"
+                                                    class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                                >
+                                                    <option value="">No role assigned</option>
+                                                    @foreach($availableRoles as $role)
+                                                        <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                                                    @endforeach
+                                                </select>
+
+                                                {{-- Role Description --}}
+                                                @if($selectedRole)
+                                                    @php
+                                                        $currentRole = $availableRoles->firstWhere('name', $selectedRole);
+                                                        $permissionCount = $currentRole?->permissions->count() ?? 0;
+                                                    @endphp
+                                                    <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+                                                        <div class="flex items-center gap-2">
+                                                            <flux:icon name="shield-check" class="size-4 text-zinc-500 dark:text-zinc-400" />
+                                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ ucfirst($selectedRole) }}</span>
+                                                        </div>
+                                                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                                            This role has {{ $permissionCount }} permission{{ $permissionCount !== 1 ? 's' : '' }} assigned.
+                                                            <a href="{{ route('settings.roles.edit', $currentRole?->id) }}" wire:navigate class="text-blue-600 hover:underline dark:text-blue-400">View role details →</a>
+                                                        </p>
+                                                    </div>
+                                                @else
+                                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                                        Users without a role will have limited access. <a href="{{ route('settings.roles.index') }}" wire:navigate class="text-blue-600 hover:underline dark:text-blue-400">Manage roles</a>
+                                                    </p>
+                                                @endif
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
 
                                 {{-- Status --}}
                                 <div class="space-y-4">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</h3>
-                                    <label class="flex cursor-pointer items-center gap-3">
-                                        <input 
-                                            type="checkbox"
-                                            wire:model="is_active"
-                                            class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700"
-                                        />
-                                        <span class="text-sm text-zinc-700 dark:text-zinc-300">Active User</span>
-                                    </label>
+                                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+                                        <div class="lg:w-72">
+                                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Status</h3>
+                                            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Control whether this user can log in.</p>
+                                        </div>
+
+                                        <div class="flex-1">
+                                            <label class="flex cursor-pointer items-center gap-3">
+                                                <input 
+                                                    type="checkbox"
+                                                    wire:model="is_active"
+                                                    class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700"
+                                                />
+                                                <span class="text-sm text-zinc-700 dark:text-zinc-300">Active User</span>
+                                            </label>
+                                            <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">Inactive users cannot log in to the system.</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -437,58 +442,111 @@
                     {{-- Tab Content: Calendar --}}
                     <div x-show="activeTab === 'calendar'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                         <div class="px-5 pb-5">
-                            <div class="grid gap-8 lg:grid-cols-2">
-                                {{-- Working Hours --}}
+                            <div class="space-y-8">
+                                {{-- Working Schedule --}}
                                 <div class="space-y-4">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Working Hours</h3>
-                                    <div class="space-y-3">
-                                        <div class="flex items-center gap-4">
-                                            <label class="w-24 text-sm text-zinc-600 dark:text-zinc-400">Start Time</label>
-                                            <input type="time" wire:model="working_hours.start" class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+                                        <div class="lg:w-72">
+                                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Working Schedule</h3>
+                                            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Set your regular working hours and days.</p>
                                         </div>
-                                        <div class="flex items-center gap-4">
-                                            <label class="w-24 text-sm text-zinc-600 dark:text-zinc-400">End Time</label>
-                                            <input type="time" wire:model="working_hours.end" class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {{-- Working Days --}}
-                                <div class="space-y-4">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Working Days</h3>
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $day)
-                                            <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" wire:model="working_days" value="{{ strtolower($day) }}" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span class="text-sm text-zinc-700 dark:text-zinc-300">{{ $day }}</span>
-                                            </label>
-                                        @endforeach
+                                        <div class="flex-1 space-y-4">
+                                            {{-- Working Hours --}}
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex-1">
+                                                    <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Start Time</label>
+                                                    <input type="time" wire:model="working_hours_start" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                                </div>
+                                                <div class="flex items-center pt-6">
+                                                    <span class="text-zinc-400">—</span>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">End Time</label>
+                                                    <input type="time" wire:model="working_hours_end" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                                </div>
+                                            </div>
+
+                                            {{-- Working Days --}}
+                                            <div>
+                                                <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Working Days</label>
+                                                <div class="flex flex-wrap gap-1.5">
+                                                    @foreach(['Mon' => 'mon', 'Tue' => 'tue', 'Wed' => 'wed', 'Thu' => 'thu', 'Fri' => 'fri', 'Sat' => 'sat', 'Sun' => 'sun'] as $label => $value)
+                                                        <button
+                                                            type="button"
+                                                            wire:click="toggleWorkingDay('{{ $value }}')"
+                                                            class="flex h-9 w-12 items-center justify-center rounded-lg border text-xs font-medium transition-all {{ in_array($value, $working_days) ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800' }}"
+                                                        >
+                                                            {{ $label }}
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {{-- Out of Office --}}
-                                <div class="space-y-4 lg:col-span-2">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Out of Office</h3>
-                                    <div class="space-y-3">
-                                        <div class="flex items-center gap-4">
-                                            <label class="w-24 text-sm text-zinc-600 dark:text-zinc-400">Date</label>
-                                            <input
-                                                type="date"
-                                                wire:model="out_of_office_date"
-                                                placeholder="None planned"
-                                                class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                            />
-                                            <span class="text-sm text-zinc-500 dark:text-zinc-400">None planned</span>
+                                <div class="space-y-4">
+                                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+                                        <div class="lg:w-72">
+                                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Out of Office</h3>
+                                            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Set your availability and auto-reply message.</p>
                                         </div>
 
-                                        <div class="space-y-2">
-                                            <label class="text-sm text-zinc-600 dark:text-zinc-400">Your out of office message</label>
-                                            <textarea
-                                                wire:model="out_of_office_message"
-                                                rows="3"
-                                                placeholder="Your out of office message"
-                                                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                            ></textarea>
+                                        <div class="flex-1 space-y-4">
+                                            <div class="grid gap-4 sm:grid-cols-2">
+                                                <div>
+                                                    <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Start Date</label>
+                                                    <input
+                                                        type="date"
+                                                        wire:model="out_of_office_start"
+                                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">End Date</label>
+                                                    <input
+                                                        type="date"
+                                                        wire:model="out_of_office_end"
+                                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Auto-reply Message</label>
+                                                <textarea
+                                                    wire:model="out_of_office_message"
+                                                    rows="3"
+                                                    placeholder="I'm currently out of office and will respond when I return..."
+                                                    class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                                ></textarea>
+                                            </div>
+
+                                            @if($out_of_office_start || $out_of_office_end || $out_of_office_message)
+                                                <div class="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 dark:bg-amber-900/20">
+                                                    <div class="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+                                                        <flux:icon name="calendar-days" class="size-4" />
+                                                        <span>
+                                                            @if($out_of_office_start && $out_of_office_end)
+                                                                Out of office from {{ \Carbon\Carbon::parse($out_of_office_start)->format('M d') }} to {{ \Carbon\Carbon::parse($out_of_office_end)->format('M d, Y') }}
+                                                            @elseif($out_of_office_start)
+                                                                Out of office starting {{ \Carbon\Carbon::parse($out_of_office_start)->format('M d, Y') }}
+                                                            @else
+                                                                Out of office message set
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                    <button 
+                                                        type="button"
+                                                        wire:click="resetOutOfOffice"
+                                                        class="text-xs font-medium text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300"
+                                                    >
+                                                        Reset
+                                                    </button>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -530,10 +588,46 @@
                                         </div>
 
                                         <div class="flex-1">
-                                            <button type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                                                <flux:icon name="shield-check" class="size-3.5" />
-                                                Enable 2FA
-                                            </button>
+                                            @if($twoFactorEnabled)
+                                                <div class="space-y-4">
+                                                    <div class="flex items-center gap-3 rounded-lg bg-emerald-50 px-4 py-3 dark:bg-emerald-900/20">
+                                                        <flux:icon name="shield-check" class="size-5 text-emerald-600 dark:text-emerald-400" />
+                                                        <div>
+                                                            <p class="text-sm font-medium text-emerald-700 dark:text-emerald-400">Two-factor authentication is enabled</p>
+                                                            <p class="text-xs text-emerald-600 dark:text-emerald-500">Your account is protected with an authenticator app.</p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="flex items-center gap-2">
+                                                        <button 
+                                                            type="button" 
+                                                            wire:click="showRecoveryCodes"
+                                                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                                                        >
+                                                            <flux:icon name="key" class="size-3.5" />
+                                                            View Recovery Codes
+                                                        </button>
+                                                        <button 
+                                                            type="button" 
+                                                            wire:click="disableTwoFactor"
+                                                            wire:confirm="Are you sure you want to disable two-factor authentication? This will make your account less secure."
+                                                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        >
+                                                            <flux:icon name="shield-exclamation" class="size-3.5" />
+                                                            Disable 2FA
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <button 
+                                                    type="button" 
+                                                    wire:click="enableTwoFactor"
+                                                    class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                                                >
+                                                    <flux:icon name="shield-check" class="size-3.5" />
+                                                    Enable 2FA
+                                                </button>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -547,40 +641,54 @@
                                         </div>
 
                                         <div class="flex-1">
-                                            <div class="mt-3 space-y-3">
-                                                {{-- Current Device --}}
-                                                <div class="flex items-center gap-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-                                                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                                                        <flux:icon name="computer-desktop" class="size-5 text-emerald-600 dark:text-emerald-400" />
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center gap-2">
-                                                            <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Current Device</p>
-                                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Active</span>
+                                            <div class="space-y-3">
+                                                @forelse($sessions as $session)
+                                                    <div class="flex items-center gap-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                                                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full {{ $session['is_current'] ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-zinc-100 dark:bg-zinc-800' }}">
+                                                            @if($session['is_mobile'])
+                                                                <flux:icon name="device-phone-mobile" class="size-5 {{ $session['is_current'] ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400' }}" />
+                                                            @else
+                                                                <flux:icon name="computer-desktop" class="size-5 {{ $session['is_current'] ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400' }}" />
+                                                            @endif
                                                         </div>
-                                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Chrome on macOS • Last active: Now</p>
+                                                        <div class="flex-1 min-w-0">
+                                                            <div class="flex items-center gap-2">
+                                                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ $session['device'] }}</p>
+                                                                @if($session['is_current'])
+                                                                    <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">This device</span>
+                                                                @endif
+                                                            </div>
+                                                            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $session['browser'] }} • {{ $session['ip'] }} • {{ $session['last_active'] }}</p>
+                                                        </div>
+                                                        @if(!$session['is_current'])
+                                                            <button 
+                                                                type="button" 
+                                                                wire:click="revokeSession('{{ $session['id'] }}')"
+                                                                wire:confirm="Are you sure you want to log out this device?"
+                                                                class="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                                                            >
+                                                                Revoke
+                                                            </button>
+                                                        @endif
                                                     </div>
-                                                </div>
+                                                @empty
+                                                    <div class="rounded-lg border border-zinc-200 p-4 text-center dark:border-zinc-700">
+                                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">No active sessions found</p>
+                                                    </div>
+                                                @endforelse
 
-                                                {{-- Other Device Example --}}
-                                                <div class="flex items-center gap-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-                                                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                                                        <flux:icon name="device-phone-mobile" class="size-5 text-zinc-500 dark:text-zinc-400" />
+                                                @if(count($sessions) > 1)
+                                                    <div class="pt-1">
+                                                        <button 
+                                                            type="button" 
+                                                            wire:click="revokeAllSessions"
+                                                            wire:confirm="Are you sure you want to log out all other devices? You will remain logged in on this device."
+                                                            class="inline-flex items-center rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        >
+                                                            Log out all other devices
+                                                        </button>
                                                     </div>
-                                                    <div class="flex-1">
-                                                        <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">iPhone 14 Pro</p>
-                                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Safari on iOS • Last active: 2 hours ago</p>
-                                                    </div>
-                                                    <button type="button" class="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
-                                                        Revoke
-                                                    </button>
-                                                </div>
-
-                                                <div class="pt-1">
-                                                    <button type="button" class="inline-flex items-center rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
-                                                        Log out all
-                                                    </button>
-                                                </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -676,37 +784,62 @@
                 @if($userId)
                     <div class="flex items-center gap-3 py-2">
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Today</span>
+                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                            @if($activities->isNotEmpty() && $activities->first()->created_at->isToday())
+                                {{ __('activity.today') }}
+                            @else
+                                {{ __('activity.activity') }}
+                            @endif
+                        </span>
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                     </div>
 
                     <div class="space-y-4">
-                        @if(isset($activityLog) && count($activityLog) > 0)
-                            @foreach($activityLog as $activity)
-                                <div class="flex gap-3">
-                                    <div class="relative flex-shrink-0">
-                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                                            {{ strtoupper(substr($activity['user'] ?? 'U', 0, 2)) }}
-                                        </div>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $activity['user'] }}</span>
-                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $activity['time'] }}</span>
-                                        </div>
-                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $activity['message'] }}</p>
-                                    </div>
+                        @forelse($activities as $activity)
+                            <div class="flex items-center gap-3">
+                                <div class="flex-shrink-0">
+                                    <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
                                 </div>
-                            @endforeach
-                        @endif
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.user-name :user="$activity->causer" />
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                            {{ $activity->created_at->diffForHumans() }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                        @if($activity->properties->has('old') && $activity->event === 'updated')
+                                            @php
+                                                $changes = collect($activity->properties->get('attributes', []))
+                                                    ->filter(fn($val, $key) => isset($activity->properties->get('old', [])[$key]) && $activity->properties->get('old')[$key] !== $val)
+                                                    ->keys()
+                                                    ->map(fn($key) => '<span class="font-medium text-zinc-900 dark:text-zinc-100">' . str_replace('_', ' ', $key) . '</span>')
+                                                    ->implode(', ');
+                                            @endphp
+                                            @if($changes)
+                                                {!! __('activity.user_updated') !!} {!! $changes !!}
+                                            @else
+                                                {{ $activity->description }}
+                                            @endif
+                                        @else
+                                            {{ $activity->description }}
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-4 text-center">
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('activity.no_activity') }}</p>
+                            </div>
+                        @endforelse
                     </div>
                 @else
                     <div class="py-8 text-center">
                         <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
                             <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
                         </div>
-                        <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
-                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once the user is saved</p>
+                        <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">{{ __('activity.no_activity') }}</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('activity.activity_will_appear') }}</p>
                     </div>
                 @endif
             </div>
@@ -724,10 +857,10 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
     >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showChangePasswordModal = false"></div>
+        <div class="absolute inset-0 bg-black/50" @click="showChangePasswordModal = false"></div>
 
         <div 
-            class="relative z-10 w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900"
+            class="relative z-10 w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900"
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 scale-95"
             x-transition:enter-end="opacity-100 scale-100"
@@ -736,42 +869,120 @@
             x-transition:leave-end="opacity-0 scale-95"
             @click.outside="showChangePasswordModal = false"
         >
-            <div class="px-6 pb-4 pt-6">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Change Password</h3>
-                        <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Set a new password for this user.</p>
-                    </div>
+            <div class="px-5 pb-4 pt-5">
+                <div class="flex items-center justify-between gap-4">
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ $userId ? 'Change Password' : 'Set Password' }}</h3>
                     <button type="button" @click="showChangePasswordModal = false" class="rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                         <flux:icon name="x-mark" class="size-5" />
                     </button>
                 </div>
 
-                <div class="mt-6 space-y-4">
-                    @if($userId)
-                        <div>
-                            <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Current Password</label>
-                            <input type="password" wire:model="current_password" placeholder="Enter current password" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                        </div>
-                    @endif
-
+                <div class="mt-4 space-y-3">
                     <div>
-                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">{{ $userId ? 'New Password' : 'Password' }}</label>
+                        <label class="mb-1 block text-sm text-zinc-600 dark:text-zinc-400">{{ $userId ? 'New Password' : 'Password' }}</label>
                         <input type="password" wire:model="password" placeholder="Minimum 8 characters" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                         @error('password') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
-                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Confirm Password</label>
+                        <label class="mb-1 block text-sm text-zinc-600 dark:text-zinc-400">Confirm Password</label>
                         <input type="password" wire:model="password_confirmation" placeholder="Confirm password" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                        @error('password_confirmation') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div class="flex items-center justify-end gap-2 border-t border-zinc-100 bg-zinc-50 px-5 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <button 
                     type="button"
+                    @click="showChangePasswordModal = false; $wire.set('password', ''); $wire.set('password_confirmation', '')"
+                    class="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                >
+                    Cancel
+                </button>
+
+                <button 
+                    type="button"
+                    wire:click="save"
                     @click="showChangePasswordModal = false"
+                    class="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                    {{ $userId ? 'Update Password' : 'Create User' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Two-Factor Authentication Setup Modal --}}
+    <div 
+        x-show="showTwoFactorModal" 
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div class="absolute inset-0 bg-black/50" @click="showTwoFactorModal = false; $wire.cancelTwoFactorSetup()"></div>
+
+        <div 
+            class="relative z-10 w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+        >
+            <div class="p-6">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                        <flux:icon name="shield-check" class="size-5 text-zinc-600 dark:text-zinc-400" />
+                    </div>
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Set Up Two-Factor Authentication</h3>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Secure your account with 2FA</p>
+                    </div>
+                </div>
+
+                <div class="mt-5 space-y-4">
+                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                        Scan the QR code with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code to confirm.
+                    </p>
+
+                    {{-- QR Code --}}
+                    @if($this->getTwoFactorQrCodeUrl())
+                        <div class="flex flex-col items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+                            <div class="rounded-lg bg-white p-3">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($this->getTwoFactorQrCodeUrl()) }}" alt="QR Code" class="h-[180px] w-[180px]" />
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Or enter this code manually:</p>
+                                <p class="mt-1 select-all font-mono text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $this->getTwoFactorSecret() }}</p>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Verification Code Input --}}
+                    <div>
+                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Verification Code</label>
+                        <input 
+                            type="text" 
+                            x-model="twoFactorCode"
+                            placeholder="Enter 6-digit code"
+                            maxlength="6"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-center font-mono text-lg tracking-widest text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <button 
+                    type="button"
+                    @click="showTwoFactorModal = false; twoFactorCode = ''; $wire.cancelTwoFactorSetup()"
                     class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
                     Cancel
@@ -779,10 +990,10 @@
 
                 <button 
                     type="button"
-                    @click="showChangePasswordModal = false"
+                    @click="$wire.confirmTwoFactor(twoFactorCode).then(() => { if ($wire.twoFactorEnabled) { showTwoFactorModal = false; twoFactorCode = ''; } })"
                     class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
-                    Done
+                    Verify & Enable
                 </button>
             </div>
         </div>

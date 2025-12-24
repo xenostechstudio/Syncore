@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Delivery person
             $table->date('delivery_date');
             $table->date('actual_delivery_date')->nullable();
-            $table->enum('status', ['pending', 'picked', 'in_transit', 'delivered', 'failed', 'returned'])->default('pending');
+            $table->enum('status', ['pending', 'picked', 'in_transit', 'delivered', 'failed', 'returned', 'cancelled'])->default('pending');
             $table->text('shipping_address');
             $table->string('recipient_name')->nullable();
             $table->string('recipient_phone')->nullable();

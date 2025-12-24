@@ -31,6 +31,7 @@ class DeliveryOrder extends Model
     protected $casts = [
         'delivery_date' => 'date',
         'actual_delivery_date' => 'date',
+        'status' => DeliveryOrderState::class,
     ];
 
     public function getStateAttribute(): DeliveryOrderState

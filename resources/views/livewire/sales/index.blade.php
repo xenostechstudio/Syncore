@@ -1,145 +1,239 @@
-<div class="flex flex-col gap-6">
-    <x-slot:header>
-        <div class="flex items-center">
-            <h1 class="text-base font-light text-zinc-600 dark:text-zinc-400">Overview</h1>
-        </div>
-    </x-slot:header>
-
-    {{-- Stats Grid --}}
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {{-- Total Orders --}}
-        <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Total Orders</span>
-                <svg class="size-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-                </svg>
+<div class="space-y-6">
+    {{-- Header --}}
+    <div class="sticky top-14 z-40 -mx-4 -mt-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <div class="flex w-full items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="{{ route('sales.orders.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                    New Order
+                </a>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Sales Overview</span>
             </div>
-            <p class="mt-2 text-2xl font-light text-zinc-900 dark:text-zinc-100">{{ number_format($totalOrders) }}</p>
-            <p class="mt-1 text-xs font-light text-zinc-400 dark:text-zinc-500">{{ $ordersThisMonth }} this month</p>
-        </div>
 
-        {{-- Total Revenue --}}
-        <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Total Revenue</span>
-                <svg class="size-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                <flux:icon name="calendar" class="size-4" />
+                <span>{{ now()->format('F Y') }}</span>
             </div>
-            <p class="mt-2 text-2xl font-light text-zinc-900 dark:text-zinc-100">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</p>
-            <p class="mt-1 text-xs font-light text-emerald-600 dark:text-emerald-400">Rp {{ number_format($revenueThisMonth, 0, ',', '.') }} this month</p>
-        </div>
-
-        {{-- Pending Orders --}}
-        <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Pending Orders</span>
-                <svg class="size-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </div>
-            <p class="mt-2 text-2xl font-light text-zinc-900 dark:text-zinc-100">{{ number_format($pendingOrders) }}</p>
-            <p class="mt-1 text-xs font-light text-amber-600 dark:text-amber-400">Needs attention</p>
-        </div>
-
-        {{-- Customers --}}
-        <div class="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Customers</span>
-                <svg class="size-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                </svg>
-            </div>
-            <p class="mt-2 text-2xl font-light text-zinc-900 dark:text-zinc-100">{{ number_format($totalCustomers) }}</p>
-            <p class="mt-1 text-xs font-light text-zinc-400 dark:text-zinc-500">Active customers</p>
         </div>
     </div>
 
-    {{-- Status Breakdown --}}
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-6">
-        @php
-            $statuses = [
-                'draft' => ['label' => 'Draft', 'color' => 'zinc'],
-                'confirmed' => ['label' => 'Confirmed', 'color' => 'blue'],
-                'processing' => ['label' => 'Processing', 'color' => 'amber'],
-                'shipped' => ['label' => 'Shipped', 'color' => 'violet'],
-                'delivered' => ['label' => 'Delivered', 'color' => 'emerald'],
-                'cancelled' => ['label' => 'Cancelled', 'color' => 'red'],
-            ];
-        @endphp
-        @foreach($statuses as $key => $status)
+    {{-- Overview Stats --}}
+    <div class="-mx-4 -mt-6 border-b border-zinc-200 bg-white px-4 py-4 sm:-mx-6 lg:-mx-8 lg:px-8 dark:border-zinc-800 dark:bg-zinc-950">
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="flex items-center gap-2">
-                    <span class="h-2 w-2 rounded-full bg-{{ $status['color'] }}-500"></span>
-                    <span class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ $status['label'] }}</span>
+                    <flux:icon name="document-text" class="size-4 text-zinc-400 dark:text-zinc-500" />
+                    <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Quotations</p>
                 </div>
-                <p class="mt-1 text-lg font-light text-zinc-900 dark:text-zinc-100">{{ $ordersByStatus[$key] ?? 0 }}</p>
+                <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($quotations) }}</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">Pending confirmation</p>
             </div>
-        @endforeach
+            <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="flex items-center gap-2">
+                    <flux:icon name="shopping-cart" class="size-4 text-amber-500 dark:text-amber-400" />
+                    <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Sales Orders</p>
+                </div>
+                <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($salesOrders) }}</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">In progress</p>
+            </div>
+            <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="flex items-center gap-2">
+                    <flux:icon name="banknotes" class="size-4 text-blue-500 dark:text-blue-400" />
+                    <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">To Invoice</p>
+                </div>
+                <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($toInvoice) }}</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">Orders pending invoice</p>
+            </div>
+            <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="flex items-center gap-2">
+                    <flux:icon name="truck" class="size-4 text-violet-500 dark:text-violet-400" />
+                    <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">To Deliver</p>
+                </div>
+                <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($toDeliver) }}</p>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">Orders pending delivery</p>
+            </div>
+        </div>
     </div>
 
-    {{-- Recent Orders Table --}}
-    <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-            <thead class="bg-zinc-50 dark:bg-zinc-950">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Order Number</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Customer</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Date</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
-                @forelse($recentOrders as $order)
-                    <tr class="group transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            {{ $order->order_number }}
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
-                            {{ $order->customer->name }}
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
-                            {{ $order->created_at->format('M d, Y') }}
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            Rp {{ number_format($order->total, 0, ',', '.') }}
-                        </td>
-                        <td class="whitespace-nowrap px-6 py-4 text-right">
-                             @php
-                                $statusConfig = match($order->status) {
-                                    'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                    'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400'],
-                                    'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400'],
-                                    'shipped' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400'],
-                                    'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                                    'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
-                                    default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                };
-                            @endphp
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                {{ ucfirst($order->status) }}
-                            </span>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
+    {{-- Two Column Layout --}}
+    <div class="grid gap-6 lg:grid-cols-12">
+        {{-- Left Column: Stats & Quick Actions --}}
+        <div class="space-y-6 lg:col-span-4">
+            {{-- Revenue Card --}}
+            <div class="rounded-2xl border border-zinc-200 bg-gradient-to-b from-white to-zinc-50 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950">
+                <div class="border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
+                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Revenue</h2>
+                </div>
+                <div class="p-5">
+                    <p class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</p>
+                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Total revenue (delivered orders)</p>
+                    <div class="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 dark:bg-emerald-900/20">
+                        <flux:icon name="arrow-trending-up" class="size-4 text-emerald-600 dark:text-emerald-400" />
+                        <span class="text-sm font-medium text-emerald-700 dark:text-emerald-400">Rp {{ number_format($revenueThisMonth, 0, ',', '.') }}</span>
+                        <span class="text-xs text-emerald-600 dark:text-emerald-400">this month</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- System Stats Card --}}
+            <div class="rounded-2xl border border-zinc-200 bg-gradient-to-b from-white to-zinc-50 dark:border-zinc-800 dark:from-zinc-900 dark:to-zinc-950">
+                <div class="border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
+                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Statistics</h2>
+                </div>
+                <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    <div class="flex items-center justify-between px-5 py-3 text-sm">
+                        <span class="text-zinc-500 dark:text-zinc-400">Total Orders</span>
+                        <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ number_format($totalOrders) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between px-5 py-3 text-sm">
+                        <span class="text-zinc-500 dark:text-zinc-400">Orders This Month</span>
+                        <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ number_format($ordersThisMonth) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between px-5 py-3 text-sm">
+                        <span class="text-zinc-500 dark:text-zinc-400">Total Customers</span>
+                        <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ number_format($totalCustomers) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between px-5 py-3 text-sm">
+                        <span class="text-zinc-500 dark:text-zinc-400">Overdue Invoices</span>
+                        <span class="font-medium {{ $overdueInvoices > 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-900 dark:text-zinc-100' }}">{{ number_format($overdueInvoices) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between px-5 py-3 text-sm">
+                        <span class="text-zinc-500 dark:text-zinc-400">Awaiting Payment</span>
+                        <span class="font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($awaitingPayment, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Quick Actions Card --}}
+            <div class="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
+                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Quick Actions</h2>
+                </div>
+                <div class="p-3">
+                    <div class="space-y-1">
+                        <a href="{{ route('sales.orders.index') }}" wire:navigate class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <flux:icon name="document-text" class="size-4" />
+                            My Quotations
+                        </a>
+                        <a href="{{ route('sales.orders.all') }}" wire:navigate class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <flux:icon name="shopping-cart" class="size-4" />
+                            Sales Orders
+                        </a>
+                        <a href="{{ route('sales.invoices.pending') }}" wire:navigate class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <flux:icon name="banknotes" class="size-4" />
+                            Orders to Invoice
+                        </a>
+                        <a href="{{ route('sales.customers.index') }}" wire:navigate class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <flux:icon name="users" class="size-4" />
+                            Customers
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Right Column: Tables --}}
+        <div class="space-y-6 lg:col-span-8">
+            {{-- Status Breakdown --}}
+            <div class="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
+                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Orders by Status</h2>
+                </div>
+                <div class="grid grid-cols-3 gap-4 p-5 sm:grid-cols-6">
+                    @php
+                        $statuses = [
+                            'draft' => ['label' => 'Quotation', 'color' => 'zinc', 'icon' => 'document'],
+                            'confirmed' => ['label' => 'Sent', 'color' => 'blue', 'icon' => 'paper-airplane'],
+                            'processing' => ['label' => 'Sales Order', 'color' => 'amber', 'icon' => 'shopping-cart'],
+                            'shipped' => ['label' => 'Shipped', 'color' => 'violet', 'icon' => 'truck'],
+                            'delivered' => ['label' => 'Done', 'color' => 'emerald', 'icon' => 'check-circle'],
+                            'cancelled' => ['label' => 'Cancelled', 'color' => 'red', 'icon' => 'x-circle'],
+                        ];
+                    @endphp
+                    @foreach($statuses as $key => $status)
+                        <div class="text-center">
+                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-{{ $status['color'] }}-50 dark:bg-{{ $status['color'] }}-900/20">
+                                <flux:icon name="{{ $status['icon'] }}" class="size-5 text-{{ $status['color'] }}-600 dark:text-{{ $status['color'] }}-400" />
+                            </div>
+                            <p class="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-100">{{ $ordersByStatus->get($key)?->count ?? 0 }}</p>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $status['label'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Recent Orders --}}
+            <div class="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
+                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Recent Orders</h2>
+                    <a href="{{ route('sales.orders.index') }}" wire:navigate class="text-xs text-zinc-500 transition-colors hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300">
+                        View all →
+                    </a>
+                </div>
+                <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @forelse($recentOrders as $order)
+                        <a href="{{ route('sales.orders.edit', $order->id) }}" wire:navigate class="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $order->order_number }}</p>
+                                    @php
+                                        $statusConfig = match($order->status) {
+                                            'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
+                                            'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400'],
+                                            'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400'],
+                                            'shipped' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400'],
+                                            'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
+                                            'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
+                                            default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                                        {{ ucfirst($order->status) }}
+                                    </span>
+                                </div>
+                                <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">{{ $order->customer->name }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total, 0, ',', '.') }}</p>
+                                <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ $order->created_at->diffForHumans() }}</p>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="px-5 py-8 text-center text-sm text-zinc-400">
                             No orders found
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-            <tfoot class="bg-zinc-50 dark:bg-zinc-950">
-                <tr>
-                    <td colspan="3" class="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total</td>
-                    <td class="px-6 py-3 text-right text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                        Rp {{ number_format($recentOrders->sum('total'), 0, ',', '.') }}
-                    </td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Top Customers --}}
+            <div class="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
+                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Top Customers</h2>
+                    <a href="{{ route('sales.customers.index') }}" wire:navigate class="text-xs text-zinc-500 transition-colors hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300">
+                        View all →
+                    </a>
+                </div>
+                <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    @forelse($topCustomers as $customer)
+                        <div class="flex items-center gap-4 px-5 py-3">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-sm font-normal text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                {{ strtoupper(substr($customer->name, 0, 2)) }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $customer->name }}</p>
+                                <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">{{ $customer->sales_orders_count }} orders</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($customer->sales_orders_sum_total ?? 0, 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="px-5 py-8 text-center text-sm text-zinc-400">
+                            No customers found
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
     </div>
 </div>

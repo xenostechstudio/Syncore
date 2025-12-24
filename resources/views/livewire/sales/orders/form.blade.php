@@ -56,18 +56,19 @@
                             <flux:icon name="truck" class="size-4" />
                             <span>{{ $delivery->delivery_number }}</span>
                             @php
-                                $deliveryStatusConfig = match($delivery->status) {
+                                $deliveryStatusConfig = match($delivery->status->value) {
                                     'pending' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
                                     'picked' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
                                     'in_transit' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
                                     'delivered' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
                                     'failed' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
                                     'returned' => ['bg' => 'bg-amber-200 dark:bg-amber-800', 'text' => 'text-amber-700 dark:text-amber-300'],
+                                    'cancelled' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
                                     default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
                                 };
                             @endphp
                             <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $deliveryStatusConfig['bg'] }} {{ $deliveryStatusConfig['text'] }}">
-                                {{ ucfirst(str_replace('_', ' ', $delivery->status)) }}
+                                {{ ucfirst(str_replace('_', ' ', $delivery->status->value)) }}
                             </span>
                         </a>
                     @endforeach
@@ -172,8 +173,8 @@
                             Save
                         </button>
                     @elseif($status === \App\Enums\SalesOrderState::SALES_ORDER->value)
-                        {{-- Sales Order: Show Create Invoice button (primary) only if no invoices exist --}}
-                        @if($invoices->count() === 0)
+                        {{-- Sales Order: Show Create Invoice button if there are items to invoice --}}
+                        @if($order && $order->hasQuantityToInvoice())
                             <button 
                                 type="button"
                                 wire:click="openInvoiceModal"
@@ -181,9 +182,12 @@
                             >
                                 <flux:icon name="document-text" class="size-4" />
                                 Create Invoice
+                                @if($order->total_quantity_to_invoice < $order->items->sum('quantity'))
+                                    <span class="ml-1 rounded bg-white/20 px-1.5 py-0.5 text-xs">{{ $order->total_quantity_to_invoice }} left</span>
+                                @endif
                             </button>
                         @endif
-                        @if($deliveries->count() === 0)
+                        @if($order && $order->canCreateDeliveryOrder())
                             <button 
                                 type="button"
                                 wire:click="openDeliveryModal"
@@ -191,6 +195,9 @@
                             >
                                 <flux:icon name="truck" class="size-4" />
                                 Create Delivery
+                                @if($order->total_quantity_to_deliver < $order->items->sum('quantity'))
+                                    <span class="ml-1 rounded bg-white/20 px-1.5 py-0.5 text-xs">{{ $order->total_quantity_to_deliver }} left</span>
+                                @endif
                             </button>
                         @endif
                         <button 
@@ -202,13 +209,24 @@
                             Save
                         </button>
                     @endif
-                    <button 
-                        type="button"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        <flux:icon name="envelope" class="size-4" />
-                        Send
-                    </button>
+                    @if($orderId)
+                        <button 
+                            type="button"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                        >
+                            <flux:icon name="envelope" class="size-4" />
+                            Send
+                        </button>
+                    @else
+                        <button 
+                            type="button"
+                            disabled
+                            class="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-600"
+                        >
+                            <flux:icon name="envelope" class="size-4" />
+                            Send
+                        </button>
+                    @endif
                     @if($orderId)
                         <a 
                             href="{{ route('sales.orders.print', $orderId) }}"
@@ -628,6 +646,25 @@
                         {{-- Customer Selection (Searchable) --}}
                         <div>
                             <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Customer <span class="text-red-500">*</span></label>
+                            @if($order && $order->isLocked())
+                                {{-- Locked Customer Display --}}
+                                <div class="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-left text-sm dark:border-zinc-700 dark:bg-zinc-800/50">
+                                    @if($selectedCustomer)
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-xs font-normal text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+                                                {{ strtoupper(substr($selectedCustomer->name, 0, 2)) }}
+                                            </div>
+                                            <div>
+                                                <p class="font-normal text-zinc-900 dark:text-zinc-100">{{ $selectedCustomer->name }}</p>
+                                                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $selectedCustomer->email }}</p>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-zinc-400">No customer selected</span>
+                                    @endif
+                                    <flux:icon name="lock-closed" class="size-4 text-zinc-400" />
+                                </div>
+                            @else
                             <div class="relative" x-data="{ open: false, search: '' }">
                                 <button 
                                     type="button"
@@ -688,6 +725,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
                             @error('customer_id') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                         </div>
 
@@ -791,6 +829,14 @@
                     >
                         Other Info
                     </button>
+                    
+                    {{-- Locked Indicator --}}
+                    @if($order && $order->isLocked())
+                        <div class="ml-auto mr-4 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1.5 text-sm text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                            <flux:icon name="lock-closed" class="size-4" />
+                            <span>Order locked - has active invoices or deliveries</span>
+                        </div>
+                    @endif
                 </div>
                 
                 {{-- Tab Content: Order Items --}}
@@ -935,14 +981,15 @@
                                                             x-show="open" 
                                                             @click.outside="open = false; search = ''"
                                                             x-transition
-                                                            class="absolute left-0 top-full z-[200] mt-1 w-80 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
-                                                            style="position: fixed; transform: translateY(0);"
+                                                            class="absolute left-0 top-full z-[200] mt-1 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
                                                             x-init="$watch('open', value => {
                                                                 if (value) {
-                                                                    const rect = $el.previousElementSibling?.getBoundingClientRect() || $el.parentElement.getBoundingClientRect();
+                                                                    const cell = $el.closest('td');
+                                                                    const rect = cell.getBoundingClientRect();
                                                                     $el.style.position = 'fixed';
                                                                     $el.style.top = (rect.bottom + 4) + 'px';
                                                                     $el.style.left = rect.left + 'px';
+                                                                    $el.style.width = rect.width + 'px';
                                                                 }
                                                             })"
                                                         >
@@ -1088,7 +1135,7 @@
 
                                         {{-- Remove --}}
                                         <td class="pl-2 pr-2 py-2 text-right">
-                                            @if(count($items) > 1)
+                                            @if(count($items) > 1 && (!$order || !$order->isLocked()))
                                                 <button 
                                                     type="button"
                                                     wire:click="removeItem({{ $index }})"
@@ -1113,14 +1160,21 @@
                     {{-- Add Line Button + Items Error --}}
                     <div class="border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
                         <div class="flex items-center justify-between">
-                            <button 
-                                type="button"
-                                wire:click="addItem"
-                                class="inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                            >
-                                <flux:icon name="plus" class="size-4" />
-                                Add a line
-                            </button>
+                            @if($order && $order->isLocked())
+                                <span class="inline-flex cursor-not-allowed items-center gap-1.5 text-sm text-zinc-300 dark:text-zinc-600">
+                                    <flux:icon name="lock-closed" class="size-4" />
+                                    Items locked
+                                </span>
+                            @else
+                                <button 
+                                    type="button"
+                                    wire:click="addItem"
+                                    class="inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                >
+                                    <flux:icon name="plus" class="size-4" />
+                                    Add a line
+                                </button>
+                            @endif
                             @error('items') <p class="text-sm text-red-500">{{ $message }}</p> @enderror
                         </div>
                     </div>
@@ -1482,72 +1536,68 @@
 
             {{-- Activity Timeline --}}
             @if($orderId)
-                {{-- Today's Date Separator --}}
+                {{-- Date Separator --}}
                 <div class="flex items-center gap-3 py-2">
                     <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                    <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Today</span>
+                    <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        @if($activities->isNotEmpty() && $activities->first()->created_at->isToday())
+                            {{ __('activity.today') }}
+                        @else
+                            {{ __('activity.activity') }}
+                        @endif
+                    </span>
                     <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                 </div>
 
                 {{-- Activity Items --}}
                 <div class="space-y-4">
-                    {{-- Order Created --}}
-                    <div class="flex gap-3">
-                        <div class="relative flex-shrink-0">
-                            {{-- User Avatar --}}
-                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
-                            </div>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ auth()->user()->name ?? 'User' }}</span>
-                                <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $createdAt ?? now()->format('H:i') }}</span>
-                            </div>
-                            <p class="text-sm text-zinc-600 dark:text-zinc-400">Sales Order created</p>
-                        </div>
-                    </div>
-
-                    @if(isset($activityLog) && count($activityLog) > 0)
-                        @foreach($activityLog as $activity)
-                            <div class="flex gap-3">
-                                <div class="relative flex-shrink-0">
-                                    {{-- User Avatar --}}
-                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                                        {{ strtoupper(substr($activity['user'] ?? 'U', 0, 2)) }}
-                                    </div>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $activity['user'] }}</span>
-                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $activity['time'] ?? $activity['date'] }}</span>
-                                    </div>
-                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $activity['message'] }}</p>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
-
-                    {{-- Status Changes (if status is not draft) --}}
-                    @if($status !== 'draft')
-                        <div class="flex gap-3">
-                            <div class="relative flex-shrink-0">
-                                {{-- User Avatar --}}
-                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
-                                </div>
+                    @forelse($activities as $activity)
+                        <div class="flex items-center gap-3">
+                            <div class="flex-shrink-0">
+                                <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ auth()->user()->name ?? 'User' }}</span>
-                                    <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $updatedAt ?? now()->format('H:i') }}</span>
+                                    <x-ui.user-name :user="$activity->causer" />
+                                    <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                        {{ $activity->created_at->diffForHumans() }}
+                                    </span>
                                 </div>
                                 <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                    Status changed to <span class="font-medium">{{ ucfirst($status) }}</span>
+                                    @if($activity->properties->has('old') && $activity->event === 'updated')
+                                        @php
+                                            $changes = collect($activity->properties->get('attributes', []))
+                                                ->filter(fn($val, $key) => isset($activity->properties->get('old', [])[$key]) && $activity->properties->get('old')[$key] !== $val)
+                                                ->keys()
+                                                ->map(fn($key) => '<span class="font-medium text-zinc-900 dark:text-zinc-100">' . str_replace('_', ' ', $key) . '</span>')
+                                                ->implode(', ');
+                                        @endphp
+                                        @if($changes)
+                                            {!! __('activity.sales_order_updated') !!} {!! $changes !!}
+                                        @else
+                                            {{ $activity->description }}
+                                        @endif
+                                    @else
+                                        {{ $activity->description }}
+                                    @endif
                                 </p>
                             </div>
                         </div>
-                    @endif
+                    @empty
+                        {{-- Order Created (fallback when no activities yet) --}}
+                        <div class="flex items-center gap-3">
+                            <div class="flex-shrink-0">
+                                <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <x-ui.user-name :user="auth()->user()" />
+                                    <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $createdAt ?? now()->format('H:i') }}</span>
+                                </div>
+                                <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('activity.sales_order_created') }}</p>
+                            </div>
+                        </div>
+                    @endforelse
                 </div>
             @else
                 {{-- Empty State for New Order --}}
@@ -1555,8 +1605,8 @@
                     <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
                         <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
                     </div>
-                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
-                    <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once the order is saved</p>
+                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">{{ __('activity.no_activity') }}</p>
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('activity.activity_will_appear') }}</p>
                 </div>
             @endif
         </div>

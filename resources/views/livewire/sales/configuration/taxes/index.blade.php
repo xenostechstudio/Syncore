@@ -38,60 +38,48 @@
                         </button>
                     </div>
                 @else
-                    {{-- Search Input with Arrow Down Dropdown --}}
-                    <flux:dropdown position="bottom" align="center" class="w-[400px]">
-                        <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                            <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search taxes..." class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" />
-                            <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
-                                <flux:icon name="chevron-down" class="size-4" />
-                            </button>
-                        </div>
-
-                        {{-- Dropdown Content --}}
-                        <flux:menu class="w-[400px]">
-                            <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
-                                {{-- Filters Section --}}
-                                <div class="flex-1 p-3">
-                                    <div class="mb-2 flex items-center gap-1.5">
-                                        <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                                        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Filters</span>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Active Only</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Sales Tax</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Purchase Tax</span>
-                                        </label>
-                                    </div>
+                    <x-ui.searchbox-dropdown placeholder="Search taxes..." widthClass="w-[520px]" width="520px">
+                        <div class="flex flex-col gap-4 p-3 md:flex-row">
+                            {{-- Filters Section --}}
+                            <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                                <div class="mb-2 flex items-center gap-1.5">
+                                    <flux:icon name="funnel" class="size-4 text-zinc-400" />
+                                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Filters</span>
                                 </div>
-                                {{-- Sort Section --}}
-                                <div class="flex-1 p-3">
-                                    <div class="mb-2 flex items-center gap-1.5">
-                                        <flux:icon name="arrows-up-down" class="size-4 text-zinc-400" />
-                                        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sort By</span>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <input type="radio" name="sort" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" checked />
-                                            <span>Name</span>
-                                        </label>
-                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                            <input type="radio" name="sort" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Rate</span>
-                                        </label>
-                                    </div>
+                                <div class="space-y-1">
+                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                        <span>Active Only</span>
+                                    </label>
+                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                        <span>Sales Tax</span>
+                                    </label>
+                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                        <span>Purchase Tax</span>
+                                    </label>
                                 </div>
                             </div>
-                        </flux:menu>
-                    </flux:dropdown>
+                            {{-- Sort Section --}}
+                            <div class="flex-1 md:px-3">
+                                <div class="mb-2 flex items-center gap-1.5">
+                                    <flux:icon name="arrows-up-down" class="size-4 text-zinc-400" />
+                                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sort By</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <input type="radio" name="sort" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" checked />
+                                        <span>Name</span>
+                                    </label>
+                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <input type="radio" name="sort" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                        <span>Rate</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </x-ui.searchbox-dropdown>
                 @endif
             </div>
 

@@ -10,9 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class SalesOrder extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'order_number',
         'customer_id',
@@ -20,6 +23,7 @@ class SalesOrder extends Model
         'order_date',
         'expected_delivery_date',
         'status',
+        'payment_terms',
         'subtotal',
         'tax',
         'discount',
@@ -100,6 +104,109 @@ class SalesOrder extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    /**
+     * Check if there are items remaining to be invoiced
+     */
+    public function hasQuantityToInvoice(): bool
+    {
+        return $this->items->contains(fn($item) => $item->quantity_to_invoice > 0);
+    }
+
+    /**
+     * Check if there are items remaining to be delivered
+     */
+    public function hasQuantityToDeliver(): bool
+    {
+        return $this->items->contains(fn($item) => $item->quantity_to_deliver > 0);
+    }
+
+    /**
+     * Check if there's an active (non-cancelled, non-delivered) delivery order
+     */
+    public function hasActiveDeliveryOrder(): bool
+    {
+        return $this->deliveryOrders()
+            ->whereNotIn('status', ['cancelled', 'delivered'])
+            ->exists();
+    }
+
+    /**
+     * Check if a new delivery order can be created
+     * - No active (pending/picked/in_transit) DO exists
+     * - There are items remaining to deliver
+     */
+    public function canCreateDeliveryOrder(): bool
+    {
+        if ($this->hasActiveDeliveryOrder()) {
+            return false;
+        }
+        return $this->hasQuantityToDeliver();
+    }
+
+    /**
+     * Check if all items are fully invoiced
+     */
+    public function isFullyInvoiced(): bool
+    {
+        return $this->items->every(fn($item) => $item->isFullyInvoiced());
+    }
+
+    /**
+     * Check if all items are fully delivered
+     */
+    public function isFullyDelivered(): bool
+    {
+        return $this->items->every(fn($item) => $item->isFullyDelivered());
+    }
+
+    /**
+     * Get total quantity to invoice across all items
+     */
+    public function getTotalQuantityToInvoiceAttribute(): int
+    {
+        return $this->items->sum(fn($item) => $item->quantity_to_invoice);
+    }
+
+    /**
+     * Get total quantity to deliver across all items
+     */
+    public function getTotalQuantityToDeliverAttribute(): int
+    {
+        return $this->items->sum(fn($item) => $item->quantity_to_deliver);
+    }
+
+    /**
+     * Check if the order is locked (has active invoices or delivery orders)
+     * A locked order cannot have its items modified
+     */
+    public function isLocked(): bool
+    {
+        // Check for non-cancelled invoices
+        $hasActiveInvoices = $this->invoices()
+            ->where('status', '!=', 'cancelled')
+            ->exists();
+
+        // Check for non-cancelled delivery orders
+        $hasActiveDeliveries = $this->deliveryOrders()
+            ->where('status', '!=', 'cancelled')
+            ->exists();
+
+        return $hasActiveInvoices || $hasActiveDeliveries;
+    }
+
+    /**
+     * Check if order items can be edited
+     */
+    public function canEditItems(): bool
+    {
+        // Cannot edit if terminal state or locked
+        if ($this->state->isTerminal()) {
+            return false;
+        }
+
+        return !$this->isLocked();
+    }
+
     public static function generateOrderNumber(): string
     {
         $prefix = 'SO';
@@ -114,5 +221,26 @@ class SalesOrder extends Model
         }
 
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Activity log options
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'order_number', 'customer_id', 'order_date', 'expected_delivery_date',
+                'status', 'payment_terms', 'subtotal', 'tax', 'discount', 'total',
+                'notes', 'terms', 'shipping_address',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => __('activity.sales_order_created'),
+                'updated' => __('activity.sales_order_updated'),
+                'deleted' => __('activity.sales_order_deleted'),
+                default => __('activity.sales_order_event', ['event' => $eventName]),
+            });
     }
 }

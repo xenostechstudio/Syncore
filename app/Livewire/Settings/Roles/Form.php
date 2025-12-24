@@ -22,49 +22,36 @@ class Form extends Component
     public array $activityLog = [];
     public string $noteDraft = '';
 
-    public array $moduleCards = [
-        [
-            'permission' => 'access.sales',
+    public array $moduleGroups = [
+        'supply_chain' => [
+            'label' => 'Supply Chain',
+            'modules' => [
+                ['key' => 'purchase', 'label' => 'Purchase'],
+                ['key' => 'inventory', 'label' => 'Inventory'],
+                ['key' => 'delivery', 'label' => 'Delivery'],
+            ],
+        ],
+        'sales' => [
             'label' => 'Sales',
-            'description' => 'Quotations, orders, customers, and teams',
-            'icon' => 'shopping-bag',
-            'color' => 'violet',
+            'modules' => [
+                ['key' => 'sales', 'label' => 'Sales Order'],
+                ['key' => 'invoicing', 'label' => 'Invoicing'],
+            ],
         ],
-        [
-            'permission' => 'access.inventory',
-            'label' => 'Inventory',
-            'description' => 'Transfers, adjustments, products, warehouses',
-            'icon' => 'cube',
-            'color' => 'blue',
+        'other' => [
+            'label' => 'Other',
+            'modules' => [
+                ['key' => 'settings', 'label' => 'General Setup'],
+            ],
         ],
-        [
-            'permission' => 'access.purchase',
-            'label' => 'Purchase',
-            'description' => 'Suppliers, RFQs, purchase orders',
-            'icon' => 'banknotes',
-            'color' => 'amber',
-        ],
-        [
-            'permission' => 'access.delivery',
-            'label' => 'Delivery',
-            'description' => 'Delivery orders and routes',
-            'icon' => 'truck',
-            'color' => 'cyan',
-        ],
-        [
-            'permission' => 'access.invoicing',
-            'label' => 'Invoicing',
-            'description' => 'Invoices, payments, billing automation',
-            'icon' => 'receipt-percent',
-            'color' => 'emerald',
-        ],
-        [
-            'permission' => 'access.settings',
-            'label' => 'General Setup',
-            'description' => 'Company profile, users, roles & localization',
-            'icon' => 'cog-6-tooth',
-            'color' => 'zinc',
-        ],
+    ];
+
+    public array $moduleAccessLevels = [];
+
+    public array $accessLevelOptions = [
+        '' => 'No Access',
+        'view' => 'View Only',
+        'full' => 'Full Access',
     ];
 
     public function mount(?int $id = null): void
@@ -75,6 +62,13 @@ class Form extends Component
             return;
         }
 
+        // Initialize module access levels
+        foreach ($this->moduleGroups as $group) {
+            foreach ($group['modules'] as $module) {
+                $this->moduleAccessLevels[$module['key']] = '';
+            }
+        }
+
         $role = null;
 
         if ($id) {
@@ -83,6 +77,20 @@ class Form extends Component
             $this->roleName = $role->name;
             $this->roleGuard = $role->guard_name;
             $this->selectedPermissions = $role->permissions->pluck('name')->toArray();
+
+            // Determine access levels from permissions
+            foreach ($this->moduleGroups as $group) {
+                foreach ($group['modules'] as $module) {
+                    $key = $module['key'];
+                    if (in_array("{$key}.full", $this->selectedPermissions, true)) {
+                        $this->moduleAccessLevels[$key] = 'full';
+                    } elseif (in_array("{$key}.view", $this->selectedPermissions, true)) {
+                        $this->moduleAccessLevels[$key] = 'view';
+                    } else {
+                        $this->moduleAccessLevels[$key] = '';
+                    }
+                }
+            }
         }
 
         $this->setActivityLog($role);
@@ -111,8 +119,45 @@ class Form extends Component
         $role->name = $this->roleName;
         $role->guard_name = $this->roleGuard;
         $role->save();
-        $role->syncPermissions($this->selectedPermissions);
 
+        // Build permissions from module access levels
+        $permissionsToSync = [];
+        
+        foreach ($this->moduleAccessLevels as $module => $level) {
+            if ($level !== '') {
+                // Add module access permission
+                $permissionsToSync[] = "access.{$module}";
+                
+                // Add level-based permissions (full includes view)
+                $permissionsToSync[] = "{$module}.view";
+                if ($level === 'full') {
+                    $permissionsToSync[] = "{$module}.full";
+                }
+            }
+        }
+
+        // Get all module keys for filtering
+        $moduleKeys = [];
+        foreach ($this->moduleGroups as $group) {
+            foreach ($group['modules'] as $module) {
+                $moduleKeys[] = $module['key'];
+            }
+        }
+
+        // Merge with other selected permissions (from fine-grained tab)
+        $otherPermissions = array_filter($this->selectedPermissions, function ($perm) use ($moduleKeys) {
+            foreach ($moduleKeys as $key) {
+                if (str_starts_with($perm, "access.{$key}") || str_starts_with($perm, "{$key}.")) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        $allPermissions = array_unique(array_merge($permissionsToSync, $otherPermissions));
+        $role->syncPermissions($allPermissions);
+        
+        $this->selectedPermissions = $allPermissions;
         $this->roleId = $role->id;
         $this->setActivityLog($role);
 
@@ -164,14 +209,27 @@ class Form extends Component
         $this->noteDraft = '';
     }
 
+    public function setModuleAccessLevel(string $module, string $level): void
+    {
+        $this->moduleAccessLevels[$module] = $level;
+    }
+
     public function selectAllModuleAccess(): void
     {
-        $modulePermissions = collect($this->moduleCards)->pluck('permission')->toArray();
-        $this->selectedPermissions = array_values(array_unique(array_merge($this->selectedPermissions, $modulePermissions)));
+        foreach ($this->moduleGroups as $group) {
+            foreach ($group['modules'] as $module) {
+                $this->moduleAccessLevels[$module['key']] = 'full';
+            }
+        }
     }
 
     public function deselectAll(): void
     {
+        foreach ($this->moduleGroups as $group) {
+            foreach ($group['modules'] as $module) {
+                $this->moduleAccessLevels[$module['key']] = '';
+            }
+        }
         $this->selectedPermissions = [];
     }
 
@@ -187,17 +245,31 @@ class Form extends Component
     public function render()
     {
         $permissions = $this->getPermissions();
-        $modulePermissionNames = collect($this->moduleCards)->pluck('permission');
+        
+        // Get all module keys for filtering
+        $moduleKeys = [];
+        foreach ($this->moduleGroups as $group) {
+            foreach ($group['modules'] as $module) {
+                $moduleKeys[] = $module['key'];
+            }
+        }
 
         $otherPermissionGroups = $permissions
-            ->reject(fn ($permission) => $modulePermissionNames->contains($permission->name))
+            ->reject(function ($permission) use ($moduleKeys) {
+                foreach ($moduleKeys as $key) {
+                    if (str_starts_with($permission->name, "access.{$key}") || 
+                        str_starts_with($permission->name, "{$key}.")) {
+                        return true;
+                    }
+                }
+                return false;
+            })
             ->groupBy(function ($permission) {
                 $parts = explode('.', $permission->name);
                 return $parts[0] ?? 'general';
             });
 
         return view('livewire.settings.roles.form', [
-            'modulePermissionNames' => $modulePermissionNames,
             'otherPermissionGroups' => $otherPermissionGroups,
             'totalPermissions' => $permissions->count(),
         ]);

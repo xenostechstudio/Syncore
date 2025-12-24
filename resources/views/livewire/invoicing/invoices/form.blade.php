@@ -3,7 +3,8 @@
     showSendMessage: false,
     showLogNote: false,
     showScheduleActivity: false,
-    showCancelModal: false
+    showCancelModal: false,
+    showShareModal: $wire.entangle('showShareModal')
 }">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
@@ -124,6 +125,12 @@
                         <flux:icon name="printer" class="size-4" />
                         Print
                     </button>
+                    @if($invoiceId)
+                        <button type="button" wire:click="openShareModal" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                            <flux:icon name="paper-airplane" class="size-4" />
+                            Send
+                        </button>
+                    @endif
                     @if($invoiceId && $status !== 'cancelled')
                         <button type="button" @click="showCancelModal = true" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
                             <flux:icon name="x-mark" class="size-4" />
@@ -184,6 +191,110 @@
                 </button>
             </div>
         </div>
+
+        <div 
+            x-show="showShareModal" 
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showShareModal = false"></div>
+
+            <div 
+                class="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900 dark:ring-white/10"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                @click.outside="showShareModal = false"
+            >
+                <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
+                    <div>
+                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Send Invoice</h3>
+                        <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Share the public link with your customer.</p>
+                    </div>
+
+                    <button 
+                        type="button"
+                        @click="showShareModal = false"
+                        class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        aria-label="Close"
+                    >
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+
+                <div class="px-6 py-5">
+                    <div class="space-y-4">
+                        @if($shareLink)
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Public link</label>
+                                <div class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+                                    <input type="text" readonly value="{{ $shareLink }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                    <button type="button" x-data x-on:click="navigator.clipboard.writeText('{{ $shareLink }}')" class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:w-auto dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
+                                        <flux:icon name="clipboard" class="size-4" />
+                                        Copy
+                                    </button>
+                                </div>
+                                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Link expires {{ optional(optional($invoice)->share_token_expires_at)->diffForHumans() ?? 'in 30 days' }}.</p>
+                            </div>
+                        @else
+                            <div class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                                <flux:icon name="exclamation-triangle" class="size-5 flex-shrink-0 text-amber-500 dark:text-amber-400" />
+                                <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Please generate a link to share this invoice.</p>
+                            </div>
+                        @endif
+
+                        <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
+                            Your customer can view invoice details and choose payment method.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+                    <button 
+                        type="button"
+                        wire:click="regenerateShareLink"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                        Regenerate Link
+                    </button>
+
+                    <button 
+                        type="button"
+                        @click="showShareModal = false"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                        Close
+                    </button>
+
+                    @if($shareLink)
+                        <button 
+                            type="button"
+                            onclick="window.open('{{ $shareLink }}', '_blank')"
+                            class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        >
+                            View as Customer
+                        </button>
+                    @else
+                        <button 
+                            type="button"
+                            disabled
+                            class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white opacity-50"
+                        >
+                            View as Customer
+                        </button>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Main Content --}}
@@ -194,10 +305,12 @@
                 <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                     {{-- Invoice Info Section --}}
                     <div class="p-5">
-                        {{-- Title inside card --}}
-                        <h1 class="mb-5 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-                            {{ $invoiceId ? ($invoice_number ?? 'Invoice #' . $invoiceId) : 'New' }}
-                        </h1>
+                        {{-- Invoice Number --}}
+                        <div class="mb-5">
+                            <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                                {{ $invoiceId ? ($invoice_number ?? 'Invoice #' . $invoiceId) : 'New Invoice' }}
+                            </h1>
+                        </div>
                         
                         <div class="grid gap-6 sm:grid-cols-2">
                             {{-- Customer Selection --}}
@@ -340,17 +453,62 @@
                     {{-- Tab Content: Invoice Lines --}}
                     <div x-show="activeTab === 'lines'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                         {{-- Invoice Items Table --}}
-                        <div class="overflow-x-auto">
+                        <div 
+                            class="relative overflow-x-auto lg:overflow-visible"
+                            x-data="{
+                                showColumnMenu: false,
+                                columns: {
+                                    description: { label: 'Description', visible: true, required: false },
+                                    tax: { label: 'Tax', visible: true, required: false },
+                                    discount: { label: 'Discount', visible: true, required: false },
+                                },
+                                isColumnVisible(key) {
+                                    const col = this.columns[key];
+                                    return col?.visible !== false || col?.required === true;
+                                }
+                            }"
+                        >
                             <table class="w-full">
                                 <thead>
                                     <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
                                         <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Product</th>
-                                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Description</th>
+                                        <th x-show="isColumnVisible('description')" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Description</th>
                                         <th class="w-24 px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
                                         <th class="w-32 px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Unit Price</th>
-                                        <th class="w-28 px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Tax</th>
-                                        <th class="w-24 px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Discount</th>
+                                        <th x-show="isColumnVisible('tax')" class="w-28 px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Tax</th>
+                                        <th x-show="isColumnVisible('discount')" class="w-24 px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Discount</th>
                                         <th class="w-32 px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Subtotal</th>
+                                        <th class="w-10 pl-2 pr-2 py-3 text-right align-middle">
+                                            <div class="relative inline-flex items-center justify-end">
+                                                <button 
+                                                    type="button"
+                                                    @click="showColumnMenu = !showColumnMenu"
+                                                    class="flex items-center justify-center rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                                                    title="Show/Hide Columns"
+                                                >
+                                                    <flux:icon name="adjustments-horizontal" class="size-4" />
+                                                </button>
+                                                <div 
+                                                    x-show="showColumnMenu" 
+                                                    @click.outside="showColumnMenu = false"
+                                                    x-transition
+                                                    x-cloak
+                                                    class="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+                                                >
+                                                    <template x-for="(config, key) in columns" :key="key">
+                                                        <label class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                x-model="columns[key].visible"
+                                                                :disabled="config.required === true"
+                                                                class="rounded border-zinc-300 text-violet-600 focus:ring-violet-500 disabled:opacity-50"
+                                                            />
+                                                            <span x-text="config.label" :class="config.required === true ? 'text-zinc-400' : ''"></span>
+                                                        </label>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -360,7 +518,7 @@
                                                 <td class="px-4 py-3">
                                                     <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $item->product->name ?? '-' }}</span>
                                                 </td>
-                                                <td class="px-4 py-3">
+                                                <td x-show="isColumnVisible('description')" class="px-4 py-3">
                                                     <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $item->description ?? '-' }}</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
@@ -369,27 +527,33 @@
                                                 <td class="px-4 py-3 text-right">
                                                     <span class="text-sm text-zinc-900 dark:text-zinc-100">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</span>
                                                 </td>
-                                                {{-- Tax Type (placeholder until per-line taxes are implemented) --}}
-                                                <td class="px-4 py-3 text-left">
+                                                <td x-show="isColumnVisible('tax')" class="px-4 py-3 text-left">
+                                                    @php
+                                                        $itemTax = $item->tax;
+                                                        $taxLabel = '-';
+                                                        if ($itemTax) {
+                                                            $rateLabel = $itemTax->type === 'percentage'
+                                                                ? number_format((float) $itemTax->rate, 2) . '%'
+                                                                : 'Rp ' . number_format((float) $itemTax->rate, 0, ',', '.');
+                                                            $taxLabel = ($itemTax->name ?? 'Tax') . ' (' . $rateLabel . ')';
+                                                        }
+                                                    @endphp
                                                     <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                                        @if(property_exists($item, 'tax_label'))
-                                                            {{ $item->tax_label ?? '-' }}
-                                                        @else
-                                                            -
-                                                        @endif
+                                                        {{ $taxLabel }}
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3 text-right">
+                                                <td x-show="isColumnVisible('discount')" class="px-4 py-3 text-right">
                                                     <span class="text-sm text-zinc-600 dark:text-zinc-400">Rp {{ number_format($item->discount ?? 0, 0, ',', '.') }}</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
                                                     <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($item->total, 0, ',', '.') }}</span>
                                                 </td>
+                                                <td class="px-2 py-3 text-right"></td>
                                             </tr>
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="7" class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                                            <td colspan="8" class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
                                                 No invoice lines yet.
                                             </td>
                                         </tr>
@@ -619,30 +783,76 @@
 
                 {{-- Activity Timeline --}}
                 @if($invoiceId)
-                    {{-- Today's Date Separator --}}
+                    {{-- Date Separator --}}
                     <div class="mb-4 flex items-center gap-3">
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Today</span>
+                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                            @if($activities->isNotEmpty() && $activities->first()->created_at->isToday())
+                                {{ __('activity.today') }}
+                            @else
+                                {{ __('activity.activity') }}
+                            @endif
+                        </span>
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                     </div>
 
-                    {{-- Sample Activity Items --}}
+                    {{-- Activity Items --}}
                     <div class="space-y-4">
-                        <div class="flex gap-3">
-                            <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
-                                <flux:icon name="document-text" class="size-4" />
+                        @forelse($activities as $activity)
+                            <div class="flex items-center gap-3">
+                                <div class="flex-shrink-0">
+                                    <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.user-name :user="$activity->causer" />
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                            {{ $activity->created_at->diffForHumans() }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                        @if($activity->properties->has('old') && $activity->event === 'updated')
+                                            @php
+                                                $changes = collect($activity->properties->get('attributes', []))
+                                                    ->filter(fn($val, $key) => isset($activity->properties->get('old', [])[$key]) && $activity->properties->get('old')[$key] !== $val)
+                                                    ->keys()
+                                                    ->map(fn($key) => '<span class="font-medium text-zinc-900 dark:text-zinc-100">' . str_replace('_', ' ', $key) . '</span>')
+                                                    ->implode(', ');
+                                            @endphp
+                                            @if($changes)
+                                                {!! __('activity.invoice_updated') !!} {!! $changes !!}
+                                            @else
+                                                {{ $activity->description }}
+                                            @endif
+                                        @else
+                                            {{ $activity->description }}
+                                        @endif
+                                    </p>
+                                </div>
                             </div>
-                            <div class="flex-1">
-                                <p class="text-sm text-zinc-900 dark:text-zinc-100">
-                                    <span class="font-medium">Invoice Created</span>
-                                </p>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ now()->format('M d, Y H:i') }}</p>
+                        @empty
+                            {{-- Fallback when no activities yet --}}
+                            <div class="flex items-center gap-3">
+                                <div class="flex-shrink-0">
+                                    <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.user-name :user="auth()->user()" />
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ now()->diffForHumans() }}</span>
+                                    </div>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('activity.invoice_created') }}</p>
+                                </div>
                             </div>
-                        </div>
+                        @endforelse
                     </div>
                 @else
-                    <div class="text-center text-sm text-zinc-500 dark:text-zinc-400">
-                        <p>Activity will appear here after saving.</p>
+                    <div class="py-8 text-center">
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                            <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
+                        </div>
+                        <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">{{ __('activity.no_activity') }}</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('activity.activity_will_appear') }}</p>
                     </div>
                 @endif
             </div>
@@ -696,7 +906,7 @@
                 </button>
                 <button 
                     type="button"
-                    wire:click="$set('status', 'cancelled')"
+                    wire:click="cancel"
                     @click="showCancelModal = false"
                     class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                 >

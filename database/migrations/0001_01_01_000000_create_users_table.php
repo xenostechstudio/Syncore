@@ -19,6 +19,20 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            
+            // Calendar / Working Schedule
+            $table->time('working_hours_start')->nullable()->default('09:00');
+            $table->time('working_hours_end')->nullable()->default('17:00');
+            $table->json('working_days')->nullable();
+            $table->date('out_of_office_start')->nullable();
+            $table->date('out_of_office_end')->nullable();
+            $table->text('out_of_office_message')->nullable();
+            
+            // Localization
+            $table->string('language', 10)->nullable()->default('id');
+            $table->string('timezone', 50)->nullable()->default('Asia/Jakarta');
+            $table->text('signature')->nullable();
+            
             $table->timestamps();
         });
 

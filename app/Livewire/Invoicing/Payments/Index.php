@@ -4,6 +4,7 @@ namespace App\Livewire\Invoicing\Payments;
 
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Invoicing\Payment;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -21,6 +22,14 @@ class Index extends Component
     #[Url]
     public string $view = 'list';
 
+    #[Url]
+    public bool $showStats = true;
+
+    public function toggleStats(): void
+    {
+        $this->showStats = !$this->showStats;
+    }
+
     public function setView(string $view): void
     {
         if (! in_array($view, ['list'], true)) {
@@ -33,6 +42,33 @@ class Index extends Component
     public function updatingSearch(): void
     {
         $this->resetPage();
+    }
+
+    private function getStatistics(): array
+    {
+        $stats = Payment::query()
+            ->select(
+                DB::raw('COUNT(*) as total_count'),
+                DB::raw('SUM(amount) as total_amount'),
+                DB::raw('COUNT(DISTINCT invoice_id) as invoices_count')
+            )
+            ->first();
+
+        $methodStats = Payment::query()
+            ->select('payment_method', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
+            ->groupBy('payment_method')
+            ->get()
+            ->keyBy('payment_method');
+
+        return [
+            'total_count' => $stats->total_count ?? 0,
+            'total_amount' => $stats->total_amount ?? 0,
+            'invoices_count' => $stats->invoices_count ?? 0,
+            'bank_transfer' => $methodStats->get('bank_transfer')?->count ?? 0,
+            'bank_transfer_amount' => $methodStats->get('bank_transfer')?->total ?? 0,
+            'cash' => $methodStats->get('cash')?->count ?? 0,
+            'cash_amount' => $methodStats->get('cash')?->total ?? 0,
+        ];
     }
 
     public function render()
@@ -50,6 +86,7 @@ class Index extends Component
 
         return view('livewire.invoicing.payments.index', [
             'payments' => $payments,
+            'statistics' => $this->showStats ? $this->getStatistics() : null,
         ]);
     }
 }

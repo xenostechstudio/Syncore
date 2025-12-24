@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sales\Orders;
 
+use App\Enums\DeliveryOrderState;
 use App\Enums\SalesOrderState;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Delivery\DeliveryOrderItem;
@@ -19,6 +20,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Sales Order')]
@@ -65,6 +67,20 @@ class Form extends Component
 
     // History/Activity Log
     public array $activityLog = [];
+
+    public function getActivities(): \Illuminate\Support\Collection
+    {
+        if (!$this->orderId) {
+            return collect();
+        }
+
+        return Activity::where('subject_type', SalesOrder::class)
+            ->where('subject_id', $this->orderId)
+            ->with('causer')
+            ->latest()
+            ->take(20)
+            ->get();
+    }
 
     public function mount(?int $id = null): void
     {
@@ -123,6 +139,16 @@ class Form extends Component
             return;
         }
 
+        // Check if there's already an active (non-cancelled) delivery order
+        $hasActiveDelivery = DeliveryOrder::where('sales_order_id', $this->orderId)
+            ->where('status', '!=', DeliveryOrderState::CANCELLED->value)
+            ->exists();
+
+        if ($hasActiveDelivery) {
+            session()->flash('error', 'An active delivery order already exists for this sales order.');
+            return;
+        }
+
         $this->validate([
             'deliveryWarehouseId' => 'required|integer',
             'deliveryDate' => 'required|date',
@@ -152,11 +178,17 @@ class Form extends Component
                 'courier' => $this->deliveryCourier ?: null,
             ]);
 
+            // Create DO items for all SO items that haven't been fully delivered yet
             foreach ($order->items as $item) {
+                $qtyToDeliver = $item->quantity_to_deliver;
+                if ($qtyToDeliver <= 0) {
+                    continue;
+                }
+
                 DeliveryOrderItem::create([
                     'delivery_order_id' => $delivery->id,
                     'sales_order_item_id' => $item->id,
-                    'quantity_to_deliver' => (int) $item->quantity,
+                    'quantity_to_deliver' => $qtyToDeliver,
                     'quantity_delivered' => 0,
                 ]);
             }
@@ -180,6 +212,7 @@ class Form extends Component
         $this->order_date = $order->order_date->format('Y-m-d');
         $this->expected_delivery_date = $order->expected_delivery_date?->format('Y-m-d') ?? '';
         $this->status = $order->status;
+        $this->payment_terms = $order->payment_terms ?? '';
         $this->notes = $order->notes ?? '';
         $this->terms = $order->terms ?? '';
         $this->shipping_address = $order->shipping_address ?? '';
@@ -199,57 +232,7 @@ class Form extends Component
             'total' => $item->total,
         ])->toArray();
 
-        // Build activity log
-        // Note: The Blade already renders a static "Sales Order created" row.
-        // We only include additional events here to avoid duplicates.
-        $events = [];
-
-        if ($order->updated_at->gt($order->created_at)) {
-            $events[] = [
-                'type' => 'updated',
-                'message' => 'Order updated',
-                'user' => $order->user->name ?? 'System',
-                'date' => $order->updated_at->format('M d, Y H:i'),
-                '_sort' => $order->updated_at->timestamp,
-            ];
-        }
-
-        $invoices = Invoice::query()
-            ->where('sales_order_id', $order->id)
-            ->orderBy('created_at')
-            ->get();
-
-        foreach ($invoices as $invoice) {
-            $events[] = [
-                'type' => 'invoice_created',
-                'message' => 'Invoice ' . ($invoice->invoice_number ?: ('#' . $invoice->id)) . ' created',
-                'user' => $order->user->name ?? 'System',
-                'date' => $invoice->created_at?->format('M d, Y H:i') ?? now()->format('M d, Y H:i'),
-                '_sort' => $invoice->created_at?->timestamp ?? now()->timestamp,
-            ];
-        }
-
-        $deliveries = DeliveryOrder::query()
-            ->with('user')
-            ->where('sales_order_id', $order->id)
-            ->orderBy('created_at')
-            ->get();
-
-        foreach ($deliveries as $delivery) {
-            $events[] = [
-                'type' => 'delivery_created',
-                'message' => 'Delivery Order ' . ($delivery->delivery_number ?: ('#' . $delivery->id)) . ' created',
-                'user' => $delivery->user->name ?? ($order->user->name ?? 'System'),
-                'date' => $delivery->created_at?->format('M d, Y H:i') ?? now()->format('M d, Y H:i'),
-                '_sort' => $delivery->created_at?->timestamp ?? now()->timestamp,
-            ];
-        }
-
-        usort($events, fn (array $a, array $b) => ($a['_sort'] ?? 0) <=> ($b['_sort'] ?? 0));
-        $this->activityLog = array_map(function (array $event) {
-            unset($event['_sort']);
-            return $event;
-        }, $events);
+        // Activity log is now handled by Spatie Activity Log via getActivities()
     }
 
     public function addItem(): void
@@ -456,6 +439,12 @@ class Form extends Component
             return;
         }
 
+        // Check if there are items to invoice
+        if (!$order->hasQuantityToInvoice()) {
+            session()->flash('error', 'All items have already been invoiced.');
+            return;
+        }
+
         DB::beginTransaction();
         try {
             $invoiceTotal = 0;
@@ -496,21 +485,30 @@ class Form extends Component
                     : null,
             ]);
 
-            // Create invoice items
+            // Create invoice items and update quantity_invoiced
             if ($this->invoiceType === 'regular') {
                 foreach ($order->items as $orderItem) {
+                    $qtyToInvoice = $orderItem->quantity_to_invoice;
+                    if ($qtyToInvoice <= 0) {
+                        continue;
+                    }
+
                     InvoiceItem::create([
                         'invoice_id' => $invoice->id,
                         'product_id' => $orderItem->product_id,
+                        'tax_id' => $orderItem->tax_id,
                         'description' => $orderItem->product->name ?? '',
-                        'quantity' => $orderItem->quantity,
+                        'quantity' => $qtyToInvoice,
                         'unit_price' => $orderItem->unit_price,
                         'discount' => $orderItem->discount,
-                        'total' => $orderItem->total,
+                        'total' => $qtyToInvoice * $orderItem->unit_price - $orderItem->discount,
                     ]);
+
+                    // Update quantity_invoiced on sales order item
+                    $orderItem->increment('quantity_invoiced', $qtyToInvoice);
                 }
             } else {
-                // For down payments, create a single line item
+                // For down payments, create a single line item (no quantity tracking)
                 InvoiceItem::create([
                     'invoice_id' => $invoice->id,
                     'product_id' => null,
@@ -546,6 +544,7 @@ class Form extends Component
             'order_date' => $this->order_date,
             'expected_delivery_date' => $this->expected_delivery_date ?: null,
             'status' => $this->status,
+            'payment_terms' => $this->payment_terms ?: null,
             'notes' => $this->notes,
             'terms' => $this->terms,
             'shipping_address' => $this->shipping_address,
@@ -558,24 +557,42 @@ class Form extends Component
         if ($this->orderId) {
             $order = SalesOrder::findOrFail($this->orderId);
             $order->update($orderData);
-            $order->items()->delete();
+            
+            // Only update items if order is not locked (has no active invoices/deliveries)
+            if (!$order->isLocked()) {
+                $order->items()->delete();
+                
+                foreach ($this->items as $item) {
+                    if ($item['product_id']) {
+                        SalesOrderItem::create([
+                            'sales_order_id' => $order->id,
+                            'product_id' => $item['product_id'],
+                            'tax_id' => $item['tax_id'] ?? null,
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['unit_price'],
+                            'discount' => $item['discount'],
+                            'total' => $item['total'],
+                        ]);
+                    }
+                }
+            }
         } else {
             $orderData['order_number'] = SalesOrder::generateOrderNumber();
             $order = SalesOrder::create($orderData);
             $this->orderId = $order->id;
-        }
 
-        foreach ($this->items as $item) {
-            if ($item['product_id']) {
-                SalesOrderItem::create([
-                    'sales_order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'tax_id' => $item['tax_id'] ?? null,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'discount' => $item['discount'],
-                    'total' => $item['total'],
-                ]);
+            foreach ($this->items as $item) {
+                if ($item['product_id']) {
+                    SalesOrderItem::create([
+                        'sales_order_id' => $order->id,
+                        'product_id' => $item['product_id'],
+                        'tax_id' => $item['tax_id'] ?? null,
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'discount' => $item['discount'],
+                        'total' => $item['total'],
+                    ]);
+                }
             }
         }
 
@@ -622,12 +639,21 @@ class Form extends Component
 
         // Get invoices linked to this sales order
         $invoices = $this->orderId 
-            ? Invoice::where('sales_order_id', $this->orderId)->get() 
+            ? Invoice::where('sales_order_id', $this->orderId)
+                ->where('status', '!=', 'cancelled')
+                ->get() 
             : collect();
 
         $deliveries = $this->orderId
-            ? DeliveryOrder::where('sales_order_id', $this->orderId)->get()
+            ? DeliveryOrder::where('sales_order_id', $this->orderId)
+                ->where('status', '!=', DeliveryOrderState::CANCELLED->value)
+                ->get()
             : collect();
+
+        // Get the sales order with items for quantity tracking
+        $order = $this->orderId
+            ? SalesOrder::with('items')->find($this->orderId)
+            : null;
 
         return view('livewire.sales.orders.form', [
             'customers' => $customers,
@@ -637,6 +663,8 @@ class Form extends Component
             'warehouses' => $warehouses,
             'invoices' => $invoices,
             'deliveries' => $deliveries,
+            'order' => $order,
+            'activities' => $this->getActivities(),
         ]);
     }
 }

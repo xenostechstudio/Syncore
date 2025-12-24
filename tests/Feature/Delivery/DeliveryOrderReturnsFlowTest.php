@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\DeliveryOrderState;
 use App\Livewire\Delivery\Orders\Form as DeliveryOrderForm;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Delivery\DeliveryOrderItem;
@@ -153,16 +154,16 @@ it('advances through pending -> picked -> in_transit -> delivered and posts WH/O
     /** @var DeliveryOrder $delivery */
     $delivery = $data['deliveryOrder'];
 
-    expect($delivery->refresh()->status)->toBe('pending');
+    expect($delivery->refresh()->status)->toBe(DeliveryOrderState::PENDING);
 
     advanceDeliveryOrderStatus($delivery, $user, 1);
-    expect($delivery->refresh()->status)->toBe('picked');
+    expect($delivery->refresh()->status)->toBe(DeliveryOrderState::PICKED);
 
     advanceDeliveryOrderStatus($delivery, $user, 1);
-    expect($delivery->refresh()->status)->toBe('in_transit');
+    expect($delivery->refresh()->status)->toBe(DeliveryOrderState::IN_TRANSIT);
 
     advanceDeliveryOrderStatus($delivery, $user, 1);
-    expect($delivery->refresh()->status)->toBe('delivered');
+    expect($delivery->refresh()->status)->toBe(DeliveryOrderState::DELIVERED);
 
     $stock = InventoryStock::query()
         ->where('warehouse_id', $delivery->warehouse_id)
@@ -193,7 +194,7 @@ it('blocks delivering when warehouse stock is insufficient', function () {
     /** @var DeliveryOrder $delivery */
     $delivery = $data['deliveryOrder'];
 
-    $delivery->update(['status' => 'in_transit']);
+    expect($delivery->refresh()->status)->toBe(DeliveryOrderState::PENDING);
 
     Livewire::actingAs($user)
         ->test(DeliveryOrderForm::class, ['id' => $delivery->id])
@@ -201,7 +202,7 @@ it('blocks delivering when warehouse stock is insufficient', function () {
         ->assertSet('status_modal_can_confirm', false)
         ->call('confirmStatusTransition');
 
-    expect($delivery->refresh()->status)->toBe('in_transit');
+    expect($delivery->refresh()->status)->toBe(DeliveryOrderState::PENDING);
 
     expect(InventoryAdjustment::query()->where('source_delivery_order_id', $delivery->id)->count())
         ->toBe(0);
@@ -223,7 +224,7 @@ it('creates a return and receiving it is idempotent (WH/IN posted once)', functi
     $warehouse = $data['warehouse'];
 
     advanceDeliveryOrderStatus($delivery, $user, 3);
-    expect($delivery->refresh()->status)->toBe('delivered');
+    expect($delivery->refresh()->status)->toBe(DeliveryOrderState::DELIVERED);
 
     $before = (int) InventoryStock::query()
         ->where('warehouse_id', $warehouse->id)

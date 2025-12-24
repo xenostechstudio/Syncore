@@ -110,84 +110,85 @@
                         </flux:dropdown>
                     </div>
                 @else
-                    {{-- Search Input with Arrow Down Dropdown --}}
-                    <flux:dropdown position="bottom" align="center" class="w-[480px]">
-                        <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                            <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                            <input 
-                                type="text" 
-                                wire:model.live.debounce.300ms="search"
-                                placeholder="Search..." 
-                                class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
-                            />
-                            <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
-                                <flux:icon name="chevron-down" class="size-4" />
-                            </button>
-                        </div>
-
-                        {{-- Horizontal Dropdown Content --}}
-                        <flux:menu class="w-[480px]">
-                                <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
-                                    {{-- Filters Section --}}
-                                    <div class="flex-1 p-3">
-                                        <div class="mb-2 flex items-center justify-between">
-                                            <div class="flex items-center gap-1.5">
-                                                <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Filters</span>
-                                            </div>
-                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">+ Add Custom</button>
-                                        </div>
-                                        <div class="space-y-1">
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" wire:model.live="filterActive" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Active Teams</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" wire:model.live="filterInactive" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Inactive Teams</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>My Teams</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Has Target</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    {{-- Group By Section --}}
-                                    <div class="flex-1 p-3">
-                                        <div class="mb-2 flex items-center justify-between">
-                                            <div class="flex items-center gap-1.5">
-                                                <flux:icon name="rectangle-group" class="size-4 text-zinc-400" />
-                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Group By</span>
-                                            </div>
-                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">+ Add Custom</button>
-                                        </div>
-                                        <div class="space-y-1">
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Leader</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Status</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Target Range</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Members Count</span>
-                                            </label>
-                                        </div>
-                                    </div>
+                    <x-ui.searchbox-dropdown placeholder="Search..." widthClass="w-[520px]" width="520px">
+                        <div class="flex flex-col gap-4 p-3 md:flex-row">
+                            {{-- Filters Section --}}
+                            <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="funnel" class="size-3.5" />
+                                    <span>Filters</span>
                                 </div>
-                            </flux:menu>
-                    </flux:dropdown>
+                                <div class="space-y-1">
+                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" wire:model.live="filterActive" class="sr-only" />
+                                            <span>Active Teams</span>
+                                        </div>
+                                        @if(!empty($filterActive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </label>
+                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" wire:model.live="filterInactive" class="sr-only" />
+                                            <span>Inactive Teams</span>
+                                        </div>
+                                        @if(!empty($filterInactive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </label>
+                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" wire:model.live="filterMine" class="sr-only" />
+                                            <span>My Teams</span>
+                                        </div>
+                                        @if(!empty($filterMine))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </label>
+                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" wire:model.live="filterHasTarget" class="sr-only" />
+                                            <span>Has Target</span>
+                                        </div>
+                                        @if(!empty($filterHasTarget))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </label>
+                                </div>
+                            </div>
+
+                            {{-- Group By Section --}}
+                            <div class="flex-1 md:px-3">
+                                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="rectangle-group" class="size-3.5" />
+                                    <span>Group By</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <input type="radio" name="groupBy" value="leader" wire:model.live="groupBy" class="sr-only" />
+                                            <span>Leader</span>
+                                        </div>
+                                        @if(($groupBy ?? '') === 'leader')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </label>
+                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <input type="radio" name="groupBy" value="status" wire:model.live="groupBy" class="sr-only" />
+                                            <span>Status</span>
+                                        </div>
+                                        @if(($groupBy ?? '') === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </label>
+                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <input type="radio" name="groupBy" value="target_range" wire:model.live="groupBy" class="sr-only" />
+                                            <span>Target Range</span>
+                                        </div>
+                                        @if(($groupBy ?? '') === 'target_range')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </label>
+                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <div class="flex items-center gap-2">
+                                            <input type="radio" name="groupBy" value="members" wire:model.live="groupBy" class="sr-only" />
+                                            <span>Members Count</span>
+                                        </div>
+                                        @if(($groupBy ?? '') === 'members')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </x-ui.searchbox-dropdown>
                 @endif
             </div>
 

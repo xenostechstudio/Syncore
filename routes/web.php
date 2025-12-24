@@ -50,6 +50,7 @@ use App\Livewire\Settings\Roles\Form as SettingsRolesForm;
 use App\Livewire\Settings\Localization\Index as SettingsLocalizationIndex;
 use App\Livewire\Settings\Company\Index as SettingsCompanyIndex;
 use App\Livewire\Settings\PaymentGateway\Index as SettingsPaymentGatewayIndex;
+use App\Livewire\Public\Invoices\Show as PublicInvoiceShow;
 
 use App\Livewire\Purchase\Rfq\Index as PurchaseRfqIndex;
 use App\Livewire\Purchase\Rfq\Form as PurchaseRfqForm;
@@ -77,6 +78,10 @@ Route::view('/', 'home')
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::get('/public/invoices/{token}', PublicInvoiceShow::class)
+    ->middleware('signed')
+    ->name('public.invoices.show');
 
 Route::middleware(['auth', 'verified', 'permission:access.inventory'])->prefix('inventory')->name('inventory.')->group(function () {
     Route::get('/', InventoryIndex::class)->name('index');
@@ -230,6 +235,20 @@ Route::middleware(['auth', 'verified', 'permission:access.settings'])->prefix('s
     
     // Payment Gateway
     Route::get('/payment-gateway', SettingsPaymentGatewayIndex::class)->name('payment-gateway.index');
+});
+
+// Export Routes
+Route::middleware(['auth', 'verified'])->prefix('export')->name('export.')->group(function () {
+    Route::get('/sales-orders', [\App\Http\Controllers\ExportController::class, 'salesOrders'])->name('sales-orders');
+    Route::get('/invoices', [\App\Http\Controllers\ExportController::class, 'invoices'])->name('invoices');
+    Route::get('/delivery-orders', [\App\Http\Controllers\ExportController::class, 'deliveryOrders'])->name('delivery-orders');
+    Route::get('/customers', [\App\Http\Controllers\ExportController::class, 'customers'])->name('customers');
+    Route::get('/products', [\App\Http\Controllers\ExportController::class, 'products'])->name('products');
+    Route::get('/purchase-orders', [\App\Http\Controllers\ExportController::class, 'purchaseOrders'])->name('purchase-orders');
+    Route::get('/suppliers', [\App\Http\Controllers\ExportController::class, 'suppliers'])->name('suppliers');
+    Route::get('/warehouses', [\App\Http\Controllers\ExportController::class, 'warehouses'])->name('warehouses');
+    Route::get('/categories', [\App\Http\Controllers\ExportController::class, 'categories'])->name('categories');
+    Route::get('/users', [\App\Http\Controllers\ExportController::class, 'users'])->name('users');
 });
 
 Route::middleware(['auth'])->group(function () {

@@ -70,7 +70,7 @@
                     {{-- Filters / Sort / Group dropdown --}}
                     @if(isset($filters))
                         <flux:dropdown position="bottom" align="center">
-                            <button class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 bg-white/80 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 dark:hover:text-zinc-200">
+                            <button class="absolute inset-y-0 right-0 flex w-10 items-center justify-center border-l border-zinc-200 bg-white/80 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 dark:hover:text-zinc-200">
                                 <flux:icon name="chevron-down" class="size-4" />
                             </button>
 

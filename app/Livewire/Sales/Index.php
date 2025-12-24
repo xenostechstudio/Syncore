@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sales;
 
+use App\Models\Invoicing\Invoice;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use Illuminate\Support\Facades\DB;
@@ -15,23 +16,41 @@ class Index extends Component
 {
     public function render()
     {
-        // Stats
+        // Main Stats
         $totalOrders = SalesOrder::count();
         $totalCustomers = Customer::count();
         $totalRevenue = SalesOrder::where('status', 'delivered')->sum('total');
-        $pendingOrders = SalesOrder::whereIn('status', ['draft', 'confirmed', 'processing'])->count();
         
-        // This month
-        $ordersThisMonth = SalesOrder::whereMonth('created_at', now()->month)->count();
+        // This month stats
+        $ordersThisMonth = SalesOrder::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
         $revenueThisMonth = SalesOrder::where('status', 'delivered')
             ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->sum('total');
         
+        // Quotations & Sales Orders
+        $quotations = SalesOrder::whereIn('status', ['draft', 'confirmed'])->count();
+        $salesOrders = SalesOrder::where('status', 'processing')->count();
+        
+        // To Invoice & To Deliver
+        $toInvoice = SalesOrder::where('status', 'processing')
+            ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_invoiced'))
+            ->count();
+        $toDeliver = SalesOrder::where('status', 'processing')
+            ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_delivered'))
+            ->count();
+
+        // Invoice stats
+        $overdueInvoices = Invoice::where('status', 'overdue')->count();
+        $awaitingPayment = Invoice::whereIn('status', ['sent', 'partial'])->sum('total');
+
         // Status breakdown
-        $ordersByStatus = SalesOrder::select('status', DB::raw('count(*) as count'))
+        $ordersByStatus = SalesOrder::select('status', DB::raw('count(*) as count'), DB::raw('SUM(total) as total'))
             ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
+            ->get()
+            ->keyBy('status');
 
         // Recent orders
         $recentOrders = SalesOrder::with('customer')
@@ -39,15 +58,28 @@ class Index extends Component
             ->take(5)
             ->get();
 
+        // Top customers
+        $topCustomers = Customer::withCount('salesOrders')
+            ->withSum('salesOrders', 'total')
+            ->orderByDesc('sales_orders_sum_total')
+            ->take(5)
+            ->get();
+
         return view('livewire.sales.index', [
             'totalOrders' => $totalOrders,
             'totalCustomers' => $totalCustomers,
             'totalRevenue' => $totalRevenue,
-            'pendingOrders' => $pendingOrders,
             'ordersThisMonth' => $ordersThisMonth,
             'revenueThisMonth' => $revenueThisMonth,
+            'quotations' => $quotations,
+            'salesOrders' => $salesOrders,
+            'toInvoice' => $toInvoice,
+            'toDeliver' => $toDeliver,
+            'overdueInvoices' => $overdueInvoices,
+            'awaitingPayment' => $awaitingPayment,
             'ordersByStatus' => $ordersByStatus,
             'recentOrders' => $recentOrders,
+            'topCustomers' => $topCustomers,
         ]);
     }
 }

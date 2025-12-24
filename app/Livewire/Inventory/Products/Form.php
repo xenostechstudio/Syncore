@@ -3,6 +3,8 @@
 namespace App\Livewire\Inventory\Products;
 
 use App\Models\Inventory\Category;
+use App\Models\Inventory\InventoryAdjustment;
+use App\Models\Inventory\InventoryAdjustmentItem;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductPricelistRule;
 use App\Models\Inventory\InventoryStock;
@@ -38,6 +40,9 @@ class Form extends Component
     // Inventory/Logistics
     public int $quantity = 0;
     public ?int $warehouse_id = null;
+    public int $forecast_in = 0;
+    public int $forecast_out = 0;
+    public int $forecast_available = 0;
     public ?int $responsible_id = null;
     public ?float $weight = null;
     public ?float $volume = null;
@@ -50,6 +55,7 @@ class Form extends Component
 
     // Pricelist Rules Modal
     public bool $showPriceModal = false;
+    public bool $showForecastModal = false;
     public ?int $editingRuleId = null;
     public string $rule_price_type = 'fixed';
     public ?float $rule_fixed_price = null;
@@ -58,6 +64,9 @@ class Form extends Component
     public ?string $rule_date_start = null;
     public ?string $rule_date_end = null;
     public ?int $rule_pricelist_id = null;
+
+    public array $forecast_wh_in = [];
+    public array $forecast_wh_out = [];
 
     public function mount(?int $id = null): void
     {
@@ -85,7 +94,88 @@ class Form extends Component
             $this->receipt_note = $this->product->receipt_note;
             $this->delivery_note = $this->product->delivery_note;
             $this->internal_notes = $this->product->internal_notes;
+
+            $this->loadForecast();
+
+            if (request()->boolean('forecast')) {
+                $this->openForecastModal();
+            }
         }
+    }
+
+    private function loadForecast(): void
+    {
+        if (! $this->productId) {
+            return;
+        }
+
+        $this->forecast_in = (int) InventoryAdjustmentItem::query()
+            ->where('product_id', $this->productId)
+            ->whereHas('adjustment', function ($q) {
+                $q->where('adjustment_type', 'increase')
+                    ->whereNull('posted_at')
+                    ->whereNotIn('status', ['completed', 'cancelled']);
+            })
+            ->sum('counted_quantity');
+
+        $this->forecast_out = (int) InventoryAdjustmentItem::query()
+            ->where('product_id', $this->productId)
+            ->whereHas('adjustment', function ($q) {
+                $q->where('adjustment_type', 'decrease')
+                    ->whereNull('posted_at')
+                    ->whereNotIn('status', ['completed', 'cancelled']);
+            })
+            ->sum('counted_quantity');
+
+        $onHand = (int) ($this->product?->quantity ?? 0);
+        $this->forecast_available = $onHand + $this->forecast_in - $this->forecast_out;
+    }
+
+    public function openForecastModal(): void
+    {
+        if (! $this->productId) {
+            return;
+        }
+
+        $this->forecast_wh_in = $this->loadForecastAdjustments('increase');
+        $this->forecast_wh_out = $this->loadForecastAdjustments('decrease');
+        $this->showForecastModal = true;
+    }
+
+    public function closeForecastModal(): void
+    {
+        $this->showForecastModal = false;
+    }
+
+    private function loadForecastAdjustments(string $adjustmentType): array
+    {
+        if (! $this->productId) {
+            return [];
+        }
+
+        return InventoryAdjustment::query()
+            ->with([
+                'warehouse',
+                'items' => fn ($q) => $q->where('product_id', $this->productId),
+            ])
+            ->where('adjustment_type', $adjustmentType)
+            ->whereHas('items', fn ($q) => $q->where('product_id', $this->productId))
+            ->whereNull('posted_at')
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->orderByDesc('adjustment_date')
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get()
+            ->map(fn ($adj) => [
+                'id' => (int) $adj->id,
+                'adjustment_number' => (string) ($adj->adjustment_number ?? ''),
+                'warehouse' => (string) ($adj->warehouse?->name ?? ''),
+                'date' => $adj->adjustment_date?->format('Y-m-d'),
+                'status' => (string) ($adj->status ?? ''),
+                'posted_at' => $adj->posted_at?->format('Y-m-d H:i'),
+                'qty' => (int) $adj->items->sum('counted_quantity'),
+            ])
+            ->toArray();
     }
 
     public function generateSku(): void
@@ -107,8 +197,6 @@ class Form extends Component
             'category_id' => 'nullable|exists:product_categories,id',
             'cost_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
-            'quantity' => 'required|integer|min:0',
-            'warehouse_id' => 'nullable|exists:warehouses,id',
             'responsible_id' => 'nullable|exists:users,id',
             'weight' => 'nullable|numeric|min:0',
             'volume' => 'nullable|numeric|min:0',
@@ -119,14 +207,10 @@ class Form extends Component
             'is_favorite' => 'boolean',
         ]);
 
-        // Auto-set status based on quantity
-        if ($validated['quantity'] === 0) {
-            $validated['status'] = 'out_of_stock';
-        } elseif ($validated['quantity'] < 10) {
-            $validated['status'] = 'low_stock';
-        } else {
-            $validated['status'] = 'in_stock';
-        }
+        $currentQty = (int) ($this->product?->quantity ?? 0);
+        $validated['status'] = $currentQty === 0
+            ? 'out_of_stock'
+            : ($currentQty < 10 ? 'low_stock' : 'in_stock');
 
         // Generate SKU if empty
         if (empty($validated['sku'])) {
@@ -140,34 +224,12 @@ class Form extends Component
             $product = $this->product->refresh();
             session()->flash('success', 'Product updated successfully.');
         } else {
+            $validated['quantity'] = 0;
             $product = Product::create($validated);
             session()->flash('success', 'Product created successfully.');
         }
 
-        if (! empty($validated['warehouse_id'])) {
-            InventoryStock::query()->updateOrCreate(
-                [
-                    'warehouse_id' => $validated['warehouse_id'],
-                    'product_id' => $product->id,
-                ],
-                [
-                    'quantity' => (int) ($validated['quantity'] ?? 0),
-                ]
-            );
-
-            $totalQty = (int) InventoryStock::query()
-                ->where('product_id', $product->id)
-                ->sum('quantity');
-
-            $status = $totalQty === 0
-                ? 'out_of_stock'
-                : ($totalQty < 10 ? 'low_stock' : 'in_stock');
-
-            $product->update([
-                'quantity' => $totalQty,
-                'status' => $status,
-            ]);
-        }
+        $this->quantity = (int) ($product->quantity ?? 0);
 
         $this->redirect(route('inventory.products.index'), navigate: true);
     }

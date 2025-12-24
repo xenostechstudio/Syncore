@@ -7,6 +7,7 @@
     purchaseToggle: false,
     showCancelModal: false,
     showPriceModal: @entangle('showPriceModal'),
+    showForecastModal: $wire.entangle('showForecastModal'),
 }">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
@@ -50,6 +51,37 @@
                         </flux:dropdown>
                     </div>
                 </div>
+            </div>
+
+            @php
+                $stockOnHand = (int) ($product?->quantity ?? 0);
+            @endphp
+            <div class="flex items-center gap-2">
+                <div class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-300">
+                    <flux:icon name="cube" class="size-4" />
+                    <span>Stock On Hand</span>
+                    <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+                        {{ $stockOnHand }}
+                    </span>
+                </div>
+
+                @if($editing && $product)
+                    <a href="{{ route('inventory.products.edit', $product->id) }}?forecast=1" wire:navigate class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-900/50">
+                        <flux:icon name="arrows-up-down" class="size-4" />
+                        <span>Forecast</span>
+                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-200 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-300">In {{ (int) ($forecast_in ?? 0) }}</span>
+                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-red-200 text-red-700 dark:bg-red-800 dark:text-red-300">Out {{ (int) ($forecast_out ?? 0) }}</span>
+                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">Avail {{ (int) ($forecast_available ?? 0) }}</span>
+                    </a>
+                @else
+                    <div class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-300">
+                        <flux:icon name="arrows-up-down" class="size-4" />
+                        <span>Forecast</span>
+                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-200 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-300">In {{ (int) ($forecast_in ?? 0) }}</span>
+                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-red-200 text-red-700 dark:bg-red-800 dark:text-red-300">Out {{ (int) ($forecast_out ?? 0) }}</span>
+                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">Avail {{ (int) ($forecast_available ?? 0) }}</span>
+                    </div>
+                @endif
             </div>
         </div>
     </x-slot:header>
@@ -443,42 +475,44 @@
                                 </div>
 
                                 {{-- Operations Section --}}
-                                <div>
-                                    <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Operations</h3>
-                                    <div class="space-y-2">
-                                        {{-- Warehouse --}}
-                                        <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Warehouse</label>
-                                            <div class="flex-1 relative">
-                                                <select
-                                                    wire:model="warehouse_id"
-                                                    class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                                >
-                                                    <option value="">Select warehouse...</option>
-                                                    @foreach($warehouses as $warehouse)
-                                                        <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                @if(false)
+                                    <div>
+                                        <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Operations</h3>
+                                        <div class="space-y-2">
+                                            {{-- Warehouse --}}
+                                            <div class="flex items-center gap-3">
+                                                <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Warehouse</label>
+                                                <div class="flex-1 relative">
+                                                    <select
+                                                        wire:model="warehouse_id"
+                                                        class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                    >
+                                                        <option value="">Select warehouse...</option>
+                                                        @foreach($warehouses as $warehouse)
+                                                            <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {{-- Quantity --}}
-                                        <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">On Hand</label>
-                                            <div class="flex-1 flex items-center gap-2">
-                                                <input 
-                                                    type="number"
-                                                    min="0"
-                                                    wire:model="quantity"
-                                                    placeholder="0"
-                                                    class="w-24 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none sm:w-32 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
-                                                />
-                                                <span class="shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-400">units</span>
+                                            {{-- Quantity --}}
+                                            <div class="flex items-center gap-3">
+                                                <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">On Hand</label>
+                                                <div class="flex-1 flex items-center gap-2">
+                                                    <input 
+                                                        type="number"
+                                                        min="0"
+                                                        wire:model="quantity"
+                                                        placeholder="0"
+                                                        class="w-24 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none sm:w-32 dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                    />
+                                                    <span class="shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-400">units</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
                             </div>
 
                             {{-- Description for Receipts --}}
@@ -933,6 +967,121 @@
                     class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
                     Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div
+        x-show="showForecastModal"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showForecastModal = false"></div>
+
+        <div
+            class="relative z-10 w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900"
+            @click.outside="showForecastModal = false"
+        >
+            <div class="flex items-center justify-between border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+                <div>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Forecast</h3>
+                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Unposted WH/IN and WH/OUT related to this product.</p>
+                </div>
+                <button type="button" @click="showForecastModal = false" class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                    <flux:icon name="x-mark" class="size-5" />
+                </button>
+            </div>
+
+            <div class="px-6 py-5">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div>
+                        <div class="mb-3 flex items-center justify-between">
+                            <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">WH/IN</h4>
+                            <a href="{{ route('inventory.warehouse-in.index') }}" wire:navigate class="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300">View all</a>
+                        </div>
+                        <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                                        <th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">WH/IN</th>
+                                        <th class="w-28 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
+                                        <th class="w-28 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+                                    @forelse($forecast_wh_in as $row)
+                                        <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
+                                            <td class="px-3 py-2.5">
+                                                <a href="{{ route('inventory.warehouse-in.edit', $row['id']) }}" wire:navigate class="text-sm font-medium text-zinc-900 hover:text-violet-700 dark:text-zinc-100 dark:hover:text-violet-300">
+                                                    {{ $row['adjustment_number'] }}
+                                                </a>
+                                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $row['warehouse'] }} · {{ $row['date'] }}</div>
+                                            </td>
+                                            <td class="px-3 py-2.5 text-right text-sm font-medium text-emerald-700 dark:text-emerald-300">{{ (int) ($row['qty'] ?? 0) }}</td>
+                                            <td class="px-3 py-2.5">
+                                                <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{{ ucfirst(str_replace('_', ' ', $row['status'] ?? '')) }}</span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="px-3 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">No WH/IN found</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="mb-3 flex items-center justify-between">
+                            <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">WH/OUT</h4>
+                            <a href="{{ route('inventory.warehouse-out.index') }}" wire:navigate class="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300">View all</a>
+                        </div>
+                        <div class="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                                        <th class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">WH/OUT</th>
+                                        <th class="w-28 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
+                                        <th class="w-28 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+                                    @forelse($forecast_wh_out as $row)
+                                        <tr class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
+                                            <td class="px-3 py-2.5">
+                                                <a href="{{ route('inventory.warehouse-out.edit', $row['id']) }}" wire:navigate class="text-sm font-medium text-zinc-900 hover:text-violet-700 dark:text-zinc-100 dark:hover:text-violet-300">
+                                                    {{ $row['adjustment_number'] }}
+                                                </a>
+                                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $row['warehouse'] }} · {{ $row['date'] }}</div>
+                                            </td>
+                                            <td class="px-3 py-2.5 text-right text-sm font-medium text-red-700 dark:text-red-300">{{ (int) ($row['qty'] ?? 0) }}</td>
+                                            <td class="px-3 py-2.5">
+                                                <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">{{ ucfirst(str_replace('_', ' ', $row['status'] ?? '')) }}</span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="px-3 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">No WH/OUT found</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <button type="button" wire:click="closeForecastModal" class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                    Close
                 </button>
             </div>
         </div>

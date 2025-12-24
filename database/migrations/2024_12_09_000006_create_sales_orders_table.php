@@ -16,6 +16,7 @@ return new class extends Migration
             $table->date('order_date');
             $table->date('expected_delivery_date')->nullable();
             $table->enum('status', ['draft', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'])->default('draft');
+            $table->string('payment_terms')->nullable();
             $table->decimal('subtotal', 15, 2)->default(0);
             $table->decimal('tax', 15, 2)->default(0);
             $table->decimal('discount', 15, 2)->default(0);
@@ -32,6 +33,8 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->foreignId('tax_id')->nullable()->constrained('taxes')->nullOnDelete();
             $table->integer('quantity');
+            $table->integer('quantity_invoiced')->default(0);
+            $table->integer('quantity_delivered')->default(0);
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('total', 15, 2);

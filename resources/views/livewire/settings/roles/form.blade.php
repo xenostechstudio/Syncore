@@ -180,46 +180,78 @@
 
                     {{-- Module Access Tab --}}
                     <div x-show="activeTab === 'modules'" x-cloak>
-                        <div class="mb-3 flex items-center justify-between">
+                        <div class="mb-4 flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Module Access</p>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Grant entry to major modules</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Set access level for each module</p>
                             </div>
                             <div class="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
-                                <button type="button" wire:click="selectAllModuleAccess" class="hover:underline">Select all</button>
+                                <button type="button" wire:click="selectAllModuleAccess" class="hover:underline">Grant full access</button>
                                 <span class="text-zinc-300 dark:text-zinc-600">|</span>
-                                <button type="button" wire:click="deselectAll" class="hover:underline">Clear</button>
+                                <button type="button" wire:click="deselectAll" class="hover:underline">Clear all</button>
                             </div>
                         </div>
 
-                        <div class="grid gap-3">
-                            @foreach($moduleCards as $card)
-                                @php
-                                    $isActive = in_array($card['permission'], $selectedPermissions, true);
-                                @endphp
-                                <button
-                                    type="button"
-                                    wire:click="togglePermission('{{ $card['permission'] }}')"
-                                    class="group flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition {{ $isActive ? 'border-'.$card['color'].'-500 bg-'.$card['color'].'-50 dark:border-'.$card['color'].'-400/60 dark:bg-'.$card['color'].'-950/40' : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700' }}"
-                                >
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-{{ $card['color'] }}-100 text-{{ $card['color'] }}-600 dark:bg-{{ $card['color'] }}-900/30 dark:text-{{ $card['color'] }}-300">
-                                            <flux:icon name="{{ $card['icon'] }}" class="size-5" />
-                                        </div>
+                        <div class="grid gap-6 lg:grid-cols-2">
+                            {{-- Left Column --}}
+                            <div class="space-y-6">
+                                @foreach(['supply_chain'] as $groupKey)
+                                    @if(isset($moduleGroups[$groupKey]))
+                                        @php $group = $moduleGroups[$groupKey]; @endphp
                                         <div>
-                                            <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ $card['label'] }}</p>
-                                            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $card['description'] }}</p>
+                                            <h4 class="mb-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ $group['label'] }}</h4>
+                                            <div class="space-y-2">
+                                                @foreach($group['modules'] as $module)
+                                                    @php $currentLevel = $moduleAccessLevels[$module['key']] ?? ''; @endphp
+                                                    <div class="flex items-center justify-between rounded-lg border border-zinc-200 px-4 py-2.5 dark:border-zinc-700">
+                                                        <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ $module['label'] }}</span>
+                                                        <select 
+                                                            wire:model.live="moduleAccessLevels.{{ $module['key'] }}"
+                                                            class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 {{ $currentLevel !== '' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-400' }}"
+                                                        >
+                                                            @foreach($accessLevelOptions as $value => $label)
+                                                                <option value="{{ $value }}">{{ $label }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                @endforeach
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="flex h-6 w-6 items-center justify-center rounded-full border {{ $isActive ? 'border-'.$card['color'].'-500 bg-white text-'.$card['color'].'-600 dark:border-'.$card['color'].'-400 dark:text-'.$card['color'].'-300' : 'border-zinc-300 text-transparent dark:border-zinc-600' }}">
-                                        <flux:icon name="check" class="size-4" />
-                                    </div>
-                                </button>
-                            @endforeach
+                                    @endif
+                                @endforeach
+                            </div>
+
+                            {{-- Right Column --}}
+                            <div class="space-y-6">
+                                @foreach(['sales', 'other'] as $groupKey)
+                                    @if(isset($moduleGroups[$groupKey]))
+                                        @php $group = $moduleGroups[$groupKey]; @endphp
+                                        <div>
+                                            <h4 class="mb-2 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ $group['label'] }}</h4>
+                                            <div class="space-y-2">
+                                                @foreach($group['modules'] as $module)
+                                                    @php $currentLevel = $moduleAccessLevels[$module['key']] ?? ''; @endphp
+                                                    <div class="flex items-center justify-between rounded-lg border border-zinc-200 px-4 py-2.5 dark:border-zinc-700">
+                                                        <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ $module['label'] }}</span>
+                                                        <select 
+                                                            wire:model.live="moduleAccessLevels.{{ $module['key'] }}"
+                                                            class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 {{ $currentLevel !== '' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-400' }}"
+                                                        >
+                                                            @foreach($accessLevelOptions as $value => $label)
+                                                                <option value="{{ $value }}">{{ $label }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Module Access Tab --}}
+                    {{-- Permissions Tab --}}
                     <div x-show="activeTab === 'permissions'" x-cloak>
                         <div class="mb-3 flex items-center justify-between">
                             <div>

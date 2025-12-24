@@ -13,6 +13,7 @@ use App\Models\Inventory\InventoryStock;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\SalesOrder;
+use App\Models\Sales\SalesOrderItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,9 @@ class Form extends Component
 
     public bool $showReturnModal = false;
     public bool $showStatusModal = false;
+    public bool $showForecastModal = false;
+    public ?int $forecast_product_id = null;
+    public array $forecast_data = [];
     public ?string $pending_status = null;
     public string $status_modal_title = '';
     public string $status_modal_message = '';
@@ -58,6 +62,7 @@ class Form extends Component
 
     public function mount(?int $id = null): void
     {
+        $this->status = DeliveryOrderState::PENDING->value;
         $this->delivery_date = now()->format('Y-m-d');
         $this->user_id = Auth::id();
         $this->return_date = now()->format('Y-m-d');
@@ -79,6 +84,39 @@ class Form extends Component
                 }
             }
         }
+    }
+
+    public function cancel(): void
+    {
+        if (! $this->deliveryId) {
+            return;
+        }
+
+        $delivery = DeliveryOrder::with('items')->findOrFail($this->deliveryId);
+
+        if ($delivery->status->isTerminal() || $delivery->status === DeliveryOrderState::CANCELLED) {
+            session()->flash('error', 'This delivery order cannot be cancelled.');
+            return;
+        }
+
+        DB::transaction(function () use ($delivery) {
+            // Only decrement quantity_delivered if DO was already delivered
+            if ($delivery->status === DeliveryOrderState::DELIVERED) {
+                foreach ($delivery->items as $deliveryItem) {
+                    if ($deliveryItem->sales_order_item_id) {
+                        SalesOrderItem::query()
+                            ->where('id', $deliveryItem->sales_order_item_id)
+                            ->decrement('quantity_delivered', $deliveryItem->quantity_delivered);
+                    }
+                }
+            }
+
+            $delivery->update(['status' => DeliveryOrderState::CANCELLED]);
+        });
+
+        $this->status = DeliveryOrderState::CANCELLED->value;
+
+        session()->flash('success', 'Delivery order cancelled successfully.');
     }
 
     public function openReturnModal(): void
@@ -135,7 +173,15 @@ class Form extends Component
         $delivery = DeliveryOrder::with(['warehouse', 'salesOrder.customer', 'items.salesOrderItem.product'])
             ->findOrFail($this->deliveryId);
 
-        $currentState = DeliveryOrderState::tryFrom((string) $delivery->status) ?? DeliveryOrderState::PENDING;
+        $warehouseIdForCheck = $this->warehouse_id ?: $delivery->warehouse_id;
+        $warehouseNameForCheck = (string) ($delivery->warehouse?->name ?? '-');
+        if ($warehouseIdForCheck && $warehouseIdForCheck !== $delivery->warehouse_id) {
+            $warehouseNameForCheck = (string) (Warehouse::query()->whereKey($warehouseIdForCheck)->value('name') ?? $warehouseNameForCheck);
+        }
+
+        $currentState = $delivery->status instanceof DeliveryOrderState 
+            ? $delivery->status 
+            : (DeliveryOrderState::tryFrom((string) $delivery->status) ?? DeliveryOrderState::PENDING);
         $nextState = $currentState->next();
         if (! $nextState) {
             return;
@@ -147,7 +193,7 @@ class Form extends Component
         $this->status_modal_summary = [
             'delivery_number' => (string) ($delivery->delivery_number ?? '-'),
             'customer_name' => (string) ($delivery->salesOrder?->customer?->name ?? '-'),
-            'warehouse_name' => (string) ($delivery->warehouse?->name ?? '-'),
+            'warehouse_name' => $warehouseNameForCheck,
             'courier' => (string) ($delivery->courier ?? ''),
             'tracking_number' => (string) ($delivery->tracking_number ?? ''),
             'next_status' => $nextState->label(),
@@ -158,8 +204,19 @@ class Form extends Component
 
         $this->status_modal_lines = [];
 
-        if ($nextState === DeliveryOrderState::DELIVERED) {
-            $this->status_modal_message = 'This will mark the delivery as Delivered and post a stock out from ' . ($delivery->warehouse?->name ?? 'the selected warehouse') . '.';
+        if ($nextState === DeliveryOrderState::PICKED) {
+            $outboundAdjustment = InventoryAdjustment::query()
+                ->where('source_delivery_order_id', $delivery->id)
+                ->where('adjustment_type', 'decrease')
+                ->first();
+
+            if ($outboundAdjustment?->isPosted()) {
+                $this->status_modal_message = 'This will mark the delivery as Picked. Warehouse stock out (WH/OUT) has already been posted.';
+                $this->showStatusModal = true;
+                return;
+            }
+
+            $this->status_modal_message = 'This will mark the delivery as Picked and post a stock out from ' . ($warehouseNameForCheck ?: 'the selected warehouse') . '.';
 
             $productIds = $delivery->items
                 ->map(fn($line) => $line->salesOrderItem?->product?->id)
@@ -169,7 +226,7 @@ class Form extends Component
                 ->all();
 
             $stocks = InventoryStock::query()
-                ->where('warehouse_id', $delivery->warehouse_id)
+                ->where('warehouse_id', $warehouseIdForCheck)
                 ->whereIn('product_id', $productIds)
                 ->get()
                 ->keyBy('product_id');
@@ -198,6 +255,10 @@ class Form extends Component
             }
         }
 
+        if ($nextState === DeliveryOrderState::DELIVERED) {
+            $this->status_modal_message = 'This will mark the delivery as Delivered.';
+        }
+
         $this->showStatusModal = true;
     }
 
@@ -213,6 +274,155 @@ class Form extends Component
         $this->status_modal_can_confirm = true;
     }
 
+    public function openForecastModal(int $productId): void
+    {
+        if (! $this->deliveryId) {
+            return;
+        }
+
+        $delivery = DeliveryOrder::with(['warehouse', 'items.salesOrderItem.product'])->findOrFail($this->deliveryId);
+
+        $warehouseId = $this->warehouse_id ?: $delivery->warehouse_id;
+        if (! $warehouseId) {
+            session()->flash('error', 'Please select a warehouse first.');
+            return;
+        }
+
+        $product = Product::query()->find($productId);
+        if (! $product) {
+            return;
+        }
+
+        $warehouseName = (string) ($delivery->warehouse?->name ?? '-');
+        if ($warehouseId !== $delivery->warehouse_id) {
+            $warehouseName = (string) (Warehouse::query()->whereKey($warehouseId)->value('name') ?? $warehouseName);
+        }
+
+        $onHand = (int) (InventoryStock::query()
+            ->where('warehouse_id', $warehouseId)
+            ->where('product_id', $productId)
+            ->value('quantity') ?? 0);
+
+        $forecastIn = (int) (DB::table('inventory_adjustment_items as iai')
+            ->join('inventory_adjustments as ia', 'ia.id', '=', 'iai.inventory_adjustment_id')
+            ->where('ia.warehouse_id', $warehouseId)
+            ->whereNull('ia.posted_at')
+            ->where('ia.adjustment_type', 'increase')
+            ->whereNotIn('ia.status', ['cancelled'])
+            ->where('iai.product_id', $productId)
+            ->selectRaw('COALESCE(SUM(iai.counted_quantity), 0) as qty')
+            ->value('qty') ?? 0);
+
+        $thisDoQty = (int) $delivery->items
+            ->filter(fn($line) => (int) ($line->salesOrderItem?->product?->id ?? 0) === $productId)
+            ->sum(fn($line) => (int) ($line->quantity_to_deliver ?? 0));
+
+        $forecastOut = (int) (DB::table('delivery_order_items as doi')
+            ->join('delivery_orders as do', 'do.id', '=', 'doi.delivery_order_id')
+            ->join('sales_order_items as soi', 'soi.id', '=', 'doi.sales_order_item_id')
+            ->where('do.warehouse_id', $warehouseId)
+            ->whereNotIn('do.status', ['delivered', 'returned'])
+            ->whereNotExists(function ($q) {
+                $q->selectRaw('1')
+                    ->from('inventory_adjustments as ia2')
+                    ->whereColumn('ia2.source_delivery_order_id', 'do.id')
+                    ->whereNotNull('ia2.posted_at');
+            })
+            ->where('soi.product_id', $productId)
+            ->selectRaw('COALESCE(SUM(doi.quantity_to_deliver), 0) as qty')
+            ->value('qty') ?? 0);
+
+        $reservations = DB::table('delivery_order_items as doi')
+            ->join('delivery_orders as do', 'do.id', '=', 'doi.delivery_order_id')
+            ->join('sales_order_items as soi', 'soi.id', '=', 'doi.sales_order_item_id')
+            ->leftJoin('inventory_adjustments as ia', function ($join) {
+                $join->on('ia.source_delivery_order_id', '=', 'do.id')
+                    ->where('ia.adjustment_type', '=', 'decrease');
+            })
+            ->where('do.warehouse_id', $warehouseId)
+            ->whereNotIn('do.status', ['delivered', 'returned'])
+            ->where('soi.product_id', $productId)
+            ->selectRaw('do.id as delivery_order_id, do.delivery_number, do.status, COALESCE(SUM(doi.quantity_to_deliver), 0) as qty, MAX(CASE WHEN ia.posted_at IS NULL THEN 0 ELSE 1 END) as has_posted_whout')
+            ->groupBy('do.id', 'do.delivery_number', 'do.status')
+            ->orderByDesc('do.id')
+            ->limit(10)
+            ->get()
+            ->map(fn($row) => [
+                'delivery_order_id' => (int) $row->delivery_order_id,
+                'delivery_number' => (string) ($row->delivery_number ?? ''),
+                'status' => (string) ($row->status ?? ''),
+                'qty' => (int) ($row->qty ?? 0),
+                'has_posted_whout' => (bool) ($row->has_posted_whout ?? false),
+            ])
+            ->all();
+
+        $outboundAdjustment = InventoryAdjustment::query()
+            ->where('source_delivery_order_id', $delivery->id)
+            ->where('adjustment_type', 'decrease')
+            ->first();
+
+        $outboundItemQty = null;
+        if ($outboundAdjustment) {
+            $outboundItemQty = (int) (InventoryAdjustmentItem::query()
+                ->where('inventory_adjustment_id', $outboundAdjustment->id)
+                ->where('product_id', $productId)
+                ->value('counted_quantity') ?? 0);
+        }
+
+        $whOutHistory = DB::table('inventory_adjustment_items as iai')
+            ->join('inventory_adjustments as ia', 'ia.id', '=', 'iai.inventory_adjustment_id')
+            ->where('ia.warehouse_id', $warehouseId)
+            ->where('ia.adjustment_type', 'decrease')
+            ->whereNotIn('ia.status', ['cancelled'])
+            ->where('iai.product_id', $productId)
+            ->selectRaw('ia.id, ia.adjustment_number, ia.status, ia.posted_at, ia.reason, COALESCE(SUM(iai.counted_quantity), 0) as qty')
+            ->groupBy('ia.id', 'ia.adjustment_number', 'ia.status', 'ia.posted_at', 'ia.reason')
+            ->orderByDesc('ia.id')
+            ->limit(15)
+            ->get()
+            ->map(fn($row) => [
+                'id' => (int) $row->id,
+                'adjustment_number' => (string) ($row->adjustment_number ?? ''),
+                'status' => (string) ($row->status ?? ''),
+                'posted_at' => $row->posted_at ? (string) $row->posted_at : null,
+                'reason' => (string) ($row->reason ?? ''),
+                'qty' => (int) ($row->qty ?? 0),
+            ])
+            ->all();
+
+        $this->forecast_product_id = $productId;
+        $this->forecast_data = [
+            'warehouse_id' => (int) $warehouseId,
+            'warehouse_name' => $warehouseName,
+            'product_id' => (int) $productId,
+            'product_name' => (string) ($product->name ?? '-'),
+            'sku' => (string) ($product->sku ?? ''),
+            'on_hand' => $onHand,
+            'forecast_in' => $forecastIn,
+            'forecast_out' => $forecastOut,
+            'available' => $onHand + $forecastIn - $forecastOut,
+            'this_do_qty' => $thisDoQty,
+            'reservations' => $reservations,
+            'wh_out_history' => $whOutHistory,
+            'outbound_adjustment' => $outboundAdjustment ? [
+                'id' => (int) $outboundAdjustment->id,
+                'adjustment_number' => (string) ($outboundAdjustment->adjustment_number ?? ''),
+                'status' => (string) ($outboundAdjustment->status ?? ''),
+                'posted_at' => $outboundAdjustment->posted_at?->format('Y-m-d H:i:s'),
+                'item_qty' => $outboundItemQty,
+            ] : null,
+        ];
+
+        $this->showForecastModal = true;
+    }
+
+    public function closeForecastModal(): void
+    {
+        $this->showForecastModal = false;
+        $this->forecast_product_id = null;
+        $this->forecast_data = [];
+    }
+
     public function confirmStatusTransition(): void
     {
         if (! $this->deliveryId) {
@@ -220,11 +430,15 @@ class Form extends Component
         }
 
         $delivery = DeliveryOrder::with(['warehouse', 'items.salesOrderItem.product'])->findOrFail($this->deliveryId);
-        $currentState = DeliveryOrderState::tryFrom((string) $delivery->status) ?? DeliveryOrderState::PENDING;
+        $currentState = $delivery->status instanceof DeliveryOrderState 
+            ? $delivery->status 
+            : (DeliveryOrderState::tryFrom((string) $delivery->status) ?? DeliveryOrderState::PENDING);
         $nextState = $currentState->next();
         if (! $nextState) {
             return;
         }
+
+        $warehouseIdForCheck = $this->warehouse_id ?: $delivery->warehouse_id;
 
         if ($this->pending_status !== $nextState->value) {
             session()->flash('error', 'Status changed. Please try again.');
@@ -233,50 +447,75 @@ class Form extends Component
             return;
         }
 
-        if ($nextState === DeliveryOrderState::DELIVERED) {
-            $productIds = $delivery->items
-                ->map(fn($line) => $line->salesOrderItem?->product?->id)
-                ->filter()
-                ->unique()
-                ->values()
-                ->all();
+        if ($nextState === DeliveryOrderState::PICKED) {
+            $outboundAdjustment = InventoryAdjustment::query()
+                ->where('source_delivery_order_id', $delivery->id)
+                ->where('adjustment_type', 'decrease')
+                ->first();
 
-            $stocks = InventoryStock::query()
-                ->where('warehouse_id', $delivery->warehouse_id)
-                ->whereIn('product_id', $productIds)
-                ->get()
-                ->keyBy('product_id');
-
-            foreach ($delivery->items as $line) {
-                $product = $line->salesOrderItem?->product;
-                if (! $product) {
-                    continue;
-                }
-                $required = (int) ($line->quantity_to_deliver ?? 0);
-                $available = (int) (($stocks->get($product->id)?->quantity) ?? 0);
-                if ($required > $available) {
-                    session()->flash('error', 'Insufficient stock for ' . $product->name);
+            if (! ($outboundAdjustment?->isPosted())) {
+                if (! $warehouseIdForCheck) {
+                    session()->flash('error', 'Please select a warehouse before marking as Picked.');
                     $this->closeStatusTransitionModal();
                     return;
+                }
+
+                $productIds = $delivery->items
+                    ->map(fn($line) => $line->salesOrderItem?->product?->id)
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $stocks = InventoryStock::query()
+                    ->where('warehouse_id', $warehouseIdForCheck)
+                    ->whereIn('product_id', $productIds)
+                    ->get()
+                    ->keyBy('product_id');
+
+                foreach ($delivery->items as $line) {
+                    $product = $line->salesOrderItem?->product;
+                    if (! $product) {
+                        continue;
+                    }
+                    $required = (int) ($line->quantity_to_deliver ?? 0);
+                    $available = (int) (($stocks->get($product->id)?->quantity) ?? 0);
+                    if ($required > $available) {
+                        session()->flash('error', 'Insufficient stock for ' . $product->name);
+                        $this->closeStatusTransitionModal();
+                        return;
+                    }
                 }
             }
         }
 
         $this->status = $nextState->value;
-        $postWarehouseOut = $nextState === DeliveryOrderState::DELIVERED;
-        if ($postWarehouseOut) {
+        $postWarehouseOut = $nextState === DeliveryOrderState::PICKED;
+        $markDelivered = $nextState === DeliveryOrderState::DELIVERED;
+        if ($markDelivered) {
             $this->actual_delivery_date = $this->actual_delivery_date ?: now()->format('Y-m-d');
         }
 
         try {
             $delivery = $this->persist(postWarehouseOut: $postWarehouseOut);
 
-            if ($postWarehouseOut) {
+            if ($markDelivered) {
+                // Update quantity_delivered on DO items
                 DeliveryOrderItem::query()
                     ->where('delivery_order_id', $delivery->id)
                     ->update([
                         'quantity_delivered' => DB::raw('quantity_to_deliver'),
                     ]);
+
+                // Update quantity_delivered on Sales Order items
+                $delivery->load('items');
+                foreach ($delivery->items as $doItem) {
+                    if ($doItem->sales_order_item_id) {
+                        SalesOrderItem::query()
+                            ->where('id', $doItem->sales_order_item_id)
+                            ->increment('quantity_delivered', $doItem->quantity_to_deliver);
+                    }
+                }
             }
 
             $this->closeStatusTransitionModal();
@@ -478,7 +717,7 @@ class Form extends Component
         $this->user_id = $delivery->user_id;
         $this->delivery_date = $delivery->delivery_date?->format('Y-m-d') ?? now()->format('Y-m-d');
         $this->actual_delivery_date = $delivery->actual_delivery_date?->format('Y-m-d');
-        $this->status = $delivery->status;
+        $this->status = $delivery->status->value;
         $this->shipping_address = $delivery->shipping_address ?? '';
         $this->recipient_name = $delivery->recipient_name ?? '';
         $this->recipient_phone = $delivery->recipient_phone ?? '';

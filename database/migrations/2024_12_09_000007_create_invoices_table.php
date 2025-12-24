@@ -16,6 +16,12 @@ return new class extends Migration
             $table->date('invoice_date');
             $table->date('due_date')->nullable();
             $table->enum('status', ['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])->default('draft');
+            $table->string('xendit_invoice_id')->nullable();
+            $table->string('xendit_invoice_url')->nullable();
+            $table->string('xendit_external_id')->nullable();
+            $table->string('xendit_status')->nullable();
+            $table->string('share_token', 64)->nullable()->unique();
+            $table->timestamp('share_token_expires_at')->nullable();
             $table->decimal('subtotal', 15, 2)->default(0);
             $table->decimal('tax', 15, 2)->default(0);
             $table->decimal('discount', 15, 2)->default(0);
@@ -31,6 +37,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
             $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
+            $table->foreignId('tax_id')->nullable()->constrained('taxes')->nullOnDelete();
             $table->string('description')->nullable();
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 15, 2)->default(0);

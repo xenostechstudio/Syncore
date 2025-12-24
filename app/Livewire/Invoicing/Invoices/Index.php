@@ -4,6 +4,7 @@ namespace App\Livewire\Invoicing\Invoices;
 
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Invoicing\Invoice;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -23,6 +24,9 @@ class Index extends Component
     
     #[Url]
     public string $view = 'list';
+
+    #[Url]
+    public bool $showStats = true;
     
     public array $selected = [];
     public bool $selectAll = false;
@@ -35,6 +39,11 @@ class Index extends Component
         'total' => true,
         'status' => true,
     ];
+
+    public function toggleStats(): void
+    {
+        $this->showStats = !$this->showStats;
+    }
 
     public function setView(string $view): void
     {
@@ -117,24 +126,35 @@ class Index extends Component
             ->latest();
     }
 
+    private function getStatistics(): array
+    {
+        $stats = Invoice::query()
+            ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+
+        return [
+            'total' => $stats->sum('count'),
+            'total_amount' => $stats->sum('total'),
+            'draft' => $stats->get('draft')?->count ?? 0,
+            'sent' => $stats->get('sent')?->count ?? 0,
+            'partial' => $stats->get('partial')?->count ?? 0,
+            'paid' => $stats->get('paid')?->count ?? 0,
+            'paid_amount' => $stats->get('paid')?->total ?? 0,
+            'overdue' => $stats->get('overdue')?->count ?? 0,
+            'overdue_amount' => $stats->get('overdue')?->total ?? 0,
+        ];
+    }
+
     public function render()
     {
         $invoices = $this->getInvoicesQuery()->paginate(15, ['*'], 'page', $this->page);
         $this->totalPages = $invoices->lastPage();
 
-        $stats = [
-            'total' => Invoice::count(),
-            'draft' => Invoice::where('status', 'draft')->count(),
-            'sent' => Invoice::where('status', 'sent')->count(),
-            'paid' => Invoice::where('status', 'paid')->count(),
-            'overdue' => Invoice::where('status', 'overdue')->count(),
-            'totalAmount' => Invoice::sum('total'),
-            'paidAmount' => Invoice::where('status', 'paid')->sum('total'),
-        ];
-
         return view('livewire.invoicing.invoices.index', [
             'invoices' => $invoices,
-            'stats' => $stats,
+            'statistics' => $this->showStats ? $this->getStatistics() : null,
         ]);
     }
 }

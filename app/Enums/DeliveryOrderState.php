@@ -10,6 +10,7 @@ enum DeliveryOrderState: string
     case DELIVERED = 'delivered';
     case FAILED = 'failed';
     case RETURNED = 'returned';
+    case CANCELLED = 'cancelled';
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum DeliveryOrderState: string
             self::DELIVERED => 'Delivered',
             self::FAILED => 'Failed',
             self::RETURNED => 'Returned',
+            self::CANCELLED => 'Cancelled',
         };
     }
 
@@ -50,7 +52,7 @@ enum DeliveryOrderState: string
 
     public function isTerminal(): bool
     {
-        return in_array($this, [self::DELIVERED, self::FAILED, self::RETURNED], true);
+        return in_array($this, [self::DELIVERED, self::FAILED, self::RETURNED, self::CANCELLED], true);
     }
 
     public static function values(): array
