@@ -198,6 +198,15 @@ class ModuleNavigation
                     'icon' => 'chart-pie',
                     'pattern' => 'invoicing.reports*',
                 ],
+                [
+                    'label' => 'Configuration',
+                    'route' => 'invoicing.configuration.payment-gateway.index',
+                    'icon' => 'cog-6-tooth',
+                    'pattern' => 'invoicing.configuration*',
+                    'children' => [
+                        ['label' => 'Payment Gateway', 'route' => 'invoicing.configuration.payment-gateway.index', 'pattern' => 'invoicing.configuration.payment-gateway*'],
+                    ],
+                ],
             ],
             'Purchase' => [
                 [
@@ -264,6 +273,18 @@ class ModuleNavigation
                     'route' => 'settings.company.index',
                     'icon' => 'building-office',
                     'pattern' => 'settings.company*',
+                ],
+                [
+                    'label' => 'Email',
+                    'route' => 'settings.email.index',
+                    'icon' => 'envelope',
+                    'pattern' => 'settings.email*',
+                ],
+                [
+                    'label' => 'Audit Trail',
+                    'route' => 'settings.audit-trail.index',
+                    'icon' => 'clipboard-document-list',
+                    'pattern' => 'settings.audit-trail*',
                 ],
             ],
         ];

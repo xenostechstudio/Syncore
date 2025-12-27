@@ -133,31 +133,29 @@
 
         {{-- Right Column: Tables --}}
         <div class="space-y-6 lg:col-span-8">
-            {{-- Status Breakdown --}}
+            {{-- Monthly Performance --}}
             <div class="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="flex items-center justify-between border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
-                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Orders by Status</h2>
+                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Monthly Performance</h2>
+                    <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ now()->format('F Y') }}</span>
                 </div>
-                <div class="grid grid-cols-3 gap-4 p-5 sm:grid-cols-6">
-                    @php
-                        $statuses = [
-                            'draft' => ['label' => 'Quotation', 'color' => 'zinc', 'icon' => 'document'],
-                            'confirmed' => ['label' => 'Sent', 'color' => 'blue', 'icon' => 'paper-airplane'],
-                            'processing' => ['label' => 'Sales Order', 'color' => 'amber', 'icon' => 'shopping-cart'],
-                            'shipped' => ['label' => 'Shipped', 'color' => 'violet', 'icon' => 'truck'],
-                            'delivered' => ['label' => 'Done', 'color' => 'emerald', 'icon' => 'check-circle'],
-                            'cancelled' => ['label' => 'Cancelled', 'color' => 'red', 'icon' => 'x-circle'],
-                        ];
-                    @endphp
-                    @foreach($statuses as $key => $status)
-                        <div class="text-center">
-                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-{{ $status['color'] }}-50 dark:bg-{{ $status['color'] }}-900/20">
-                                <flux:icon name="{{ $status['icon'] }}" class="size-5 text-{{ $status['color'] }}-600 dark:text-{{ $status['color'] }}-400" />
-                            </div>
-                            <p class="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-100">{{ $ordersByStatus->get($key)?->count ?? 0 }}</p>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $status['label'] }}</p>
-                        </div>
-                    @endforeach
+                <div class="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
+                    <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                        <p class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">New Orders</p>
+                        <p class="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ number_format($ordersThisMonth) }}</p>
+                    </div>
+                    <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                        <p class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Revenue</p>
+                        <p class="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">Rp {{ number_format($revenueThisMonth / 1000000, 1) }}M</p>
+                    </div>
+                    <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                        <p class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Avg Order Value</p>
+                        <p class="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Rp {{ $ordersThisMonth > 0 ? number_format($revenueThisMonth / $ordersThisMonth / 1000, 0) . 'K' : '0' }}</p>
+                    </div>
+                    <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                        <p class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Conversion Rate</p>
+                        <p class="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{{ $quotations > 0 ? number_format(($salesOrders / ($quotations + $salesOrders)) * 100, 0) : 0 }}%</p>
+                    </div>
                 </div>
             </div>
 

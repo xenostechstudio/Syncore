@@ -49,7 +49,6 @@ use App\Livewire\Settings\Roles\Index as SettingsRolesIndex;
 use App\Livewire\Settings\Roles\Form as SettingsRolesForm;
 use App\Livewire\Settings\Localization\Index as SettingsLocalizationIndex;
 use App\Livewire\Settings\Company\Index as SettingsCompanyIndex;
-use App\Livewire\Settings\PaymentGateway\Index as SettingsPaymentGatewayIndex;
 use App\Livewire\Public\Invoices\Show as PublicInvoiceShow;
 
 use App\Livewire\Purchase\Rfq\Index as PurchaseRfqIndex;
@@ -191,7 +190,10 @@ Route::middleware(['auth', 'verified', 'permission:access.invoicing'])->prefix('
     Route::get('/payments', PaymentsIndex::class)->name('payments.index');
     
     // Reports
-    Route::view('/reports', 'livewire.invoicing.reports')->name('reports');
+    Route::get('/reports', \App\Livewire\Invoicing\Reports\Index::class)->name('reports');
+    
+    // Configuration - Payment Gateway
+    Route::get('/configuration/payment-gateway', \App\Livewire\Invoicing\Configuration\PaymentGateway\Index::class)->name('configuration.payment-gateway.index');
 });
 
 Route::middleware(['auth', 'verified', 'permission:access.purchase'])->prefix('purchase')->name('purchase.')->group(function () {
@@ -217,6 +219,11 @@ Route::middleware(['auth', 'verified', 'permission:access.purchase'])->prefix('p
 Route::middleware(['auth', 'verified', 'permission:access.settings'])->prefix('setup')->name('settings.')->group(function () {
     Route::get('/', SettingsIndex::class)->name('index');
     
+    // Module Configuration
+    Route::get('/modules/sales-order', \App\Livewire\Settings\Modules\SalesOrder::class)->name('modules.sales-order');
+    Route::get('/modules/purchase-order', \App\Livewire\Settings\Modules\PurchaseOrder::class)->name('modules.purchase-order');
+    Route::get('/modules/invoice', \App\Livewire\Settings\Modules\Invoice::class)->name('modules.invoice');
+    
     // Users
     Route::get('/users', SettingsUsersIndex::class)->name('users.index');
     Route::get('/users/create', SettingsUsersForm::class)->name('users.create');
@@ -233,8 +240,11 @@ Route::middleware(['auth', 'verified', 'permission:access.settings'])->prefix('s
     // Company
     Route::get('/company', SettingsCompanyIndex::class)->name('company.index');
     
-    // Payment Gateway
-    Route::get('/payment-gateway', SettingsPaymentGatewayIndex::class)->name('payment-gateway.index');
+    // Email Configuration
+    Route::get('/email', \App\Livewire\Settings\Email\Index::class)->name('email.index');
+    
+    // Audit Trail
+    Route::get('/audit-trail', \App\Livewire\Settings\AuditTrail\Index::class)->name('audit-trail.index');
 });
 
 // Export Routes
@@ -251,21 +261,10 @@ Route::middleware(['auth', 'verified'])->prefix('export')->name('export.')->grou
     Route::get('/users', [\App\Http\Controllers\ExportController::class, 'users'])->name('users');
 });
 
-Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
-
-    Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
-    Volt::route('settings/password', 'settings.password')->name('user-password.edit');
-    Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
-
-    Volt::route('settings/two-factor', 'settings.two-factor')
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                [],
-            ),
-        )
-        ->name('two-factor.show');
+// PDF Routes
+Route::middleware(['auth', 'verified'])->prefix('pdf')->name('pdf.')->group(function () {
+    Route::get('/invoice/{invoice}', [\App\Http\Controllers\PdfController::class, 'invoice'])->name('invoice');
+    Route::get('/sales-order/{salesOrder}', [\App\Http\Controllers\PdfController::class, 'salesOrder'])->name('sales-order');
+    Route::get('/delivery-order/{deliveryOrder}', [\App\Http\Controllers\PdfController::class, 'deliveryOrder'])->name('delivery-order');
 });
+

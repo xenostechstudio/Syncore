@@ -338,7 +338,7 @@
                                 @endif
                                 @if($visibleColumns['total'])
                                     <td class="px-4 py-4 text-right">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($customer->orders_sum_total ?? 0, 0, ',', '.') }}</span>
+                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($customer->sales_orders_sum_total ?? 0, 0, ',', '.') }}</span>
                                     </td>
                                 @endif
                                 @if($visibleColumns['status'])
@@ -401,7 +401,7 @@
                                 </div>
                                 <div class="mt-4 flex items-center justify-between text-sm">
                                     <span class="text-zinc-500 dark:text-zinc-400">{{ $customer->orders_count }} orders</span>
-                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($customer->orders_sum_total ?? 0, 0, ',', '.') }}</span>
+                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($customer->sales_orders_sum_total ?? 0, 0, ',', '.') }}</span>
                                 </div>
                             </a>
                         </div>

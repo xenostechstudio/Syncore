@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Settings\PaymentGateway;
+namespace App\Livewire\Invoicing\Configuration\PaymentGateway;
 
 use App\Services\XenditService;
 use Illuminate\Support\Facades\Artisan;
@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.module', ['module' => 'Settings'])]
+#[Layout('components.layouts.module', ['module' => 'Invoicing'])]
 #[Title('Payment Gateway')]
 class Index extends Component
 {
@@ -205,6 +205,6 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.settings.payment-gateway.index');
+        return view('livewire.invoicing.configuration.payment-gateway.index');
     }
 }

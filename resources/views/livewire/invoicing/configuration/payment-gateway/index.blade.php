@@ -3,7 +3,7 @@
     <div class="sticky top-14 z-40 -mx-4 -mt-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
         <div class="flex w-full items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <a href="{{ route('settings.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                <a href="{{ route('invoicing.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                     <flux:icon name="arrow-left" class="size-5" />
                 </a>
                 <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Payment Gateway</span>

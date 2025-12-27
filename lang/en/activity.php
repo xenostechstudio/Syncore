@@ -28,8 +28,38 @@ return [
     'invoice_cancelled' => 'Invoice cancelled',
     'payment_recorded' => 'Payment recorded',
     
-    // Delivery activities
+    // Customer activities
+    'customer_created' => 'Customer created',
+    'customer_updated' => 'Customer updated',
+    'customer_deleted' => 'Customer deleted',
+    'customer_event' => 'Customer :event',
+    
+    // Product activities
+    'product_created' => 'Product created',
+    'product_updated' => 'Product updated',
+    'product_deleted' => 'Product deleted',
+    'product_event' => 'Product :event',
+    
+    // Delivery Order activities
     'delivery_created' => 'Delivery Order created',
+    'delivery_order_created' => 'Delivery Order created',
+    'delivery_order_updated' => 'Delivery Order updated',
+    'delivery_order_deleted' => 'Delivery Order deleted',
+    'delivery_order_event' => 'Delivery Order :event',
+    'delivery_order_shipped' => 'Delivery Order shipped',
+    'delivery_order_delivered' => 'Delivery Order delivered',
+    
+    // Purchase Order activities
+    'purchase_order_created' => 'Purchase Order created',
+    'purchase_order_updated' => 'Purchase Order updated',
+    'purchase_order_deleted' => 'Purchase Order deleted',
+    'purchase_order_event' => 'Purchase Order :event',
+    
+    // Supplier activities
+    'supplier_created' => 'Supplier created',
+    'supplier_updated' => 'Supplier updated',
+    'supplier_deleted' => 'Supplier deleted',
+    'supplier_event' => 'Supplier :event',
     
     // General
     'changed' => 'Changed',

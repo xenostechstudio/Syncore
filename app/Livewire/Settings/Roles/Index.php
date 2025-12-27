@@ -8,7 +8,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.module', ['module' => 'Settings'])]
+#[Layout('components.layouts.settings')]
 #[Title('Roles & Permissions')]
 class Index extends Component
 {

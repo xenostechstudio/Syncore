@@ -229,13 +229,13 @@
                     @endif
                     @if($orderId)
                         <a 
-                            href="{{ route('sales.orders.print', $orderId) }}"
+                            href="{{ route('pdf.sales-order', $orderId) }}"
                             target="_blank"
                             rel="noopener"
                             class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
-                            <flux:icon name="printer" class="size-4" />
-                            Print
+                            <flux:icon name="arrow-down-tray" class="size-4" />
+                            Download PDF
                         </a>
                     @else
                         <button 
@@ -243,8 +243,8 @@
                             disabled
                             class="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-600"
                         >
-                            <flux:icon name="printer" class="size-4" />
-                            Print
+                            <flux:icon name="arrow-down-tray" class="size-4" />
+                            Download PDF
                         </button>
                     @endif
                     @if($orderId && $status !== 'cancelled')

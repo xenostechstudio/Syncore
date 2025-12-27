@@ -3,6 +3,7 @@
 namespace App\Livewire\Inventory\Warehouses;
 
 use App\Models\Inventory\Warehouse;
+use App\Models\Inventory\InventoryTransfer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -21,7 +22,7 @@ class Index extends Component
     #[Url]
     public int $perPage = 15;
 
-    public string $view = 'list';
+    public string $view = 'grid';
 
     public function setView(string $view): void
     {
@@ -49,11 +50,20 @@ class Index extends Component
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('location', 'like', "%{$this->search}%"))
             ->withCount('products')
+            ->withCount(['transfers as transfers_out_count' => function ($query) {
+                $query->where('source_warehouse_id', '!=', null);
+            }])
             ->latest()
             ->paginate($this->perPage);
 
+        // Get total IN/OUT counts
+        $totalTransfersIn = InventoryTransfer::whereNotNull('destination_warehouse_id')->count();
+        $totalTransfersOut = InventoryTransfer::whereNotNull('source_warehouse_id')->count();
+
         return view('livewire.inventory.warehouses.index', [
             'warehouses' => $warehouses,
+            'totalTransfersIn' => $totalTransfersIn,
+            'totalTransfersOut' => $totalTransfersOut,
         ]);
     }
 }

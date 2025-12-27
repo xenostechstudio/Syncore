@@ -44,60 +44,46 @@
 
             {{-- Center Group: Search --}}
             <div class="flex flex-1 items-center justify-center">
-                @if($view === 'grid')
-                    <x-ui.searchbox-dropdown wireModel="search" placeholder="Search warehouses...">
-                        <div class="flex flex-col gap-4 p-3 md:flex-row">
-                            <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:pb-0 dark:border-zinc-800">
-                                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                    <flux:icon name="adjustments-horizontal" class="size-3.5" />
-                                    <span>Results per page</span>
-                                </div>
-                                <div class="space-y-1">
-                                    @foreach([15, 25, 50, 100] as $size)
-                                        <button 
-                                            type="button" 
-                                            wire:click="$set('perPage', {{ $size }})" 
-                                            class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                                        >
-                                            <span>{{ $size }} per page</span>
-                                            @if($perPage === $size)
-                                                <flux:icon name="check" class="size-3.5 text-violet-500" />
-                                            @endif
-                                        </button>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </x-ui.searchbox-dropdown>
-                @else
-                    <div class="relative w-full max-w-md">
-                        <input 
-                            type="text" 
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Search warehouses..."
-                            class="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-                        />
-                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                    </div>
-                @endif
+                <div class="relative flex h-9 w-[480px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
+                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                    <input 
+                        type="text" 
+                        wire:model.live.debounce.300ms="search"
+                        placeholder="Search warehouses..." 
+                        class="h-full w-full border-0 bg-transparent pl-9 pr-4 text-sm outline-none focus:ring-0" 
+                    />
+                </div>
             </div>
 
-            {{-- Right Group: View Toggle --}}
-            <div class="flex items-center gap-2">
-                <div class="flex items-center rounded-lg border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800">
-                    <button 
-                        wire:click="setView('list')"
-                        class="rounded-md p-1.5 transition-colors {{ $view === 'list' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }}"
-                    >
-                        <flux:icon name="list-bullet" class="size-4" />
-                    </button>
-                    <button 
-                        wire:click="setView('grid')"
-                        class="rounded-md p-1.5 transition-colors {{ $view === 'grid' ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }}"
-                    >
-                        <flux:icon name="squares-2x2" class="size-4" />
-                    </button>
+            {{-- Right Group: Pagination & View Toggle --}}
+            <div class="flex items-center gap-4">
+                {{-- Pagination Info --}}
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                        {{ $warehouses->firstItem() ?? 0 }}-{{ $warehouses->lastItem() ?? 0 }}/{{ $warehouses->total() }}
+                    </span>
+                    <div class="flex items-center gap-0.5">
+                        <button 
+                            type="button"
+                            wire:click="previousPage"
+                            @disabled($warehouses->onFirstPage())
+                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        >
+                            <flux:icon name="chevron-left" class="size-4" />
+                        </button>
+                        <button 
+                            type="button"
+                            wire:click="nextPage"
+                            @disabled(!$warehouses->hasMorePages())
+                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                        >
+                            <flux:icon name="chevron-right" class="size-4" />
+                        </button>
+                    </div>
                 </div>
+
+                {{-- View Toggle --}}
+                <x-ui.view-toggle :view="$view" />
             </div>
         </div>
     </x-slot:header>
@@ -108,88 +94,106 @@
             {{-- Table View --}}
             <div class="overflow-hidden bg-white dark:bg-zinc-950">
                 <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-                    <thead class="bg-zinc-50 dark:bg-zinc-900">
+                    <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
                         <tr>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Name</th>
+                            <th scope="col" class="py-3 pl-4 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 sm:pl-6 lg:pl-8 dark:text-zinc-400">Name</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Location</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Contact</th>
-                            <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Products</th>
+                            <th scope="col" class="py-3 pl-4 pr-4 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 sm:pr-6 lg:pr-8 dark:text-zinc-400">Products</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
                         @forelse($warehouses as $warehouse)
-                            <tr class="group transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900">
-                                <td class="whitespace-nowrap px-4 py-3">
-                                    <a href="{{ route('inventory.warehouses.edit', $warehouse->id) }}" wire:navigate class="font-medium text-zinc-900 hover:text-zinc-600 dark:text-zinc-100 dark:hover:text-zinc-300">
-                                        {{ $warehouse->name }}
-                                    </a>
+                            <tr 
+                                onclick="window.location.href='{{ route('inventory.warehouses.edit', $warehouse->id) }}'"
+                                class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                            >
+                                <td class="whitespace-nowrap py-4 pl-4 pr-4 sm:pl-6 lg:pl-8">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                            <flux:icon name="building-storefront" class="size-5 text-zinc-500 dark:text-zinc-400" />
+                                        </div>
+                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $warehouse->name }}</span>
+                                    </div>
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                                <td class="whitespace-nowrap px-4 py-4 text-sm text-zinc-500 dark:text-zinc-400">
                                     {{ $warehouse->location ?? '-' }}
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                                <td class="whitespace-nowrap px-4 py-4 text-sm text-zinc-500 dark:text-zinc-400">
                                     {{ $warehouse->contact_info ?? '-' }}
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                    {{ $warehouse->products_count ?? 0 }}
+                                <td class="whitespace-nowrap py-4 pl-4 pr-4 text-right sm:pr-6 lg:pr-8">
+                                    <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                        {{ $warehouse->products_count ?? 0 }}
+                                    </span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-4 py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                                <td colspan="4" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center gap-3">
-                                        <flux:icon name="building-storefront" class="size-12 text-zinc-300 dark:text-zinc-600" />
-                                        <p>No warehouses found</p>
-                                        <a href="{{ route('inventory.warehouses.create') }}" wire:navigate class="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-100">
-                                            Create your first warehouse
-                                        </a>
+                                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                            <flux:icon name="building-storefront" class="size-6 text-zinc-400" />
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No warehouses found</p>
+                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Create your first warehouse to get started</p>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
-                    <tfoot class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
-                        <tr>
-                            <td colspan="3" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                                Total Warehouses
-                            </td>
-                            <td class="px-4 py-3 text-right text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                                {{ $warehouses->total() }}
-                            </td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
         @else
             {{-- Grid View --}}
             <div class="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:p-6 lg:p-8">
                 @forelse($warehouses as $warehouse)
-                    <a href="{{ route('inventory.warehouses.edit', $warehouse->id) }}" wire:navigate class="group rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $warehouse->name }}</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $warehouse->location ?? '-' }}</p>
-                            </div>
-                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                                {{ $warehouse->products_count ?? 0 }} products
+                    <a href="{{ route('inventory.warehouses.edit', $warehouse->id) }}" wire:navigate class="group relative block rounded-xl border border-zinc-200 bg-white p-5 transition-all hover:border-zinc-300 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+                        {{-- Header with Name & Status --}}
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="text-base font-semibold text-zinc-900 group-hover:text-zinc-700 dark:text-zinc-100 dark:group-hover:text-zinc-300">
+                                {{ $warehouse->name }}
+                            </h3>
+                            <span class="inline-flex shrink-0 items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
+                                Active
                             </span>
                         </div>
-                        <div class="mt-4 text-xs text-zinc-400 dark:text-zinc-500">
-                            {{ $warehouse->contact_info ?? 'No contact info' }}
+
+                        {{-- Location --}}
+                        <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                            {{ $warehouse->location ?? 'No location specified' }}
+                        </p>
+
+                        {{-- Footer Stats --}}
+                        <div class="mt-4 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $warehouse->products_count ?? 0 }}</span>
+                                <span class="text-xs text-zinc-500 dark:text-zinc-400">products</span>
+                            </div>
+                            @if($warehouse->contact_info)
+                                <span class="text-xs text-zinc-400 dark:text-zinc-500 truncate max-w-[120px]">{{ $warehouse->contact_info }}</span>
+                            @endif
                         </div>
                     </a>
                 @empty
-                    <div class="col-span-full py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                        No warehouses found
+                    <div class="col-span-full py-12 text-center">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                <flux:icon name="building-storefront" class="size-6 text-zinc-400" />
+                            </div>
+                            <div>
+                                <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No warehouses found</p>
+                                <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Create your first warehouse to get started</p>
+                            </div>
+                            <a href="{{ route('inventory.warehouses.create') }}" wire:navigate class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                                <flux:icon name="plus" class="size-4" />
+                                New Warehouse
+                            </a>
+                        </div>
                     </div>
                 @endforelse
-            </div>
-        @endif
-
-        {{-- Pagination --}}
-        @if($warehouses->hasPages())
-            <div class="border-t border-zinc-200 px-4 py-3 dark:border-zinc-800 sm:px-6 lg:px-8">
-                {{ $warehouses->links() }}
             </div>
         @endif
     </div>

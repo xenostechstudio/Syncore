@@ -10,7 +10,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.module', ['module' => 'Settings'])]
+#[Layout('components.layouts.settings')]
 #[Title('Role')]
 class Form extends Component
 {

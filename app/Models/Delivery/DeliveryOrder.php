@@ -9,9 +9,13 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class DeliveryOrder extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'delivery_number',
         'sales_order_id',
@@ -78,5 +82,23 @@ class DeliveryOrder extends Model
         $sequence = $lastOrder ? (int) substr($lastOrder->delivery_number, -4) + 1 : 1;
         
         return $prefix . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'delivery_number', 'sales_order_id', 'warehouse_id', 'delivery_date',
+                'actual_delivery_date', 'status', 'shipping_address', 'recipient_name',
+                'recipient_phone', 'notes', 'tracking_number', 'courier',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => __('activity.delivery_order_created'),
+                'updated' => __('activity.delivery_order_updated'),
+                'deleted' => __('activity.delivery_order_deleted'),
+                default => __('activity.delivery_order_event', ['event' => $eventName]),
+            });
     }
 }

@@ -1,17 +1,4 @@
-<div
-    x-data="{ 
-        showSendMessage: false, 
-        showLogNote: false, 
-        showScheduleActivity: false, 
-        activeTab: 'access', 
-        showChangePasswordModal: @js($errors->has('password') || $errors->has('password_confirmation') || $errors->has('current_password')), 
-        showCancelModal: false,
-        showTwoFactorModal: false,
-        twoFactorCode: ''
-    }"
-    x-on:open-change-password-modal.window="activeTab = 'security'; showChangePasswordModal = true"
-    x-on:show-two-factor-qr-modal.window="showTwoFactorModal = true"
->
+<div x-data="{ showSendMessage: false, showLogNote: false, showScheduleActivity: false, activeTab: 'access', showChangePasswordModal: false, showCancelModal: false, showTwoFactorModal: false, twoFactorCode: '' }" x-on:open-change-password-modal.window="activeTab = 'security'; showChangePasswordModal = true" x-on:show-two-factor-qr-modal.window="showTwoFactorModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">

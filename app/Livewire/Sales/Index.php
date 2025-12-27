@@ -5,7 +5,6 @@ namespace App\Livewire\Sales;
 use App\Models\Invoicing\Invoice;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -46,12 +45,6 @@ class Index extends Component
         $overdueInvoices = Invoice::where('status', 'overdue')->count();
         $awaitingPayment = Invoice::whereIn('status', ['sent', 'partial'])->sum('total');
 
-        // Status breakdown
-        $ordersByStatus = SalesOrder::select('status', DB::raw('count(*) as count'), DB::raw('SUM(total) as total'))
-            ->groupBy('status')
-            ->get()
-            ->keyBy('status');
-
         // Recent orders
         $recentOrders = SalesOrder::with('customer')
             ->latest()
@@ -77,7 +70,6 @@ class Index extends Component
             'toDeliver' => $toDeliver,
             'overdueInvoices' => $overdueInvoices,
             'awaitingPayment' => $awaitingPayment,
-            'ordersByStatus' => $ordersByStatus,
             'recentOrders' => $recentOrders,
             'topCustomers' => $topCustomers,
         ]);

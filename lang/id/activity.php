@@ -28,8 +28,38 @@ return [
     'invoice_cancelled' => 'Invoice dibatalkan',
     'payment_recorded' => 'Pembayaran dicatat',
     
-    // Delivery activities
+    // Customer activities
+    'customer_created' => 'Customer dibuat',
+    'customer_updated' => 'Customer diperbarui',
+    'customer_deleted' => 'Customer dihapus',
+    'customer_event' => 'Customer :event',
+    
+    // Product activities
+    'product_created' => 'Produk dibuat',
+    'product_updated' => 'Produk diperbarui',
+    'product_deleted' => 'Produk dihapus',
+    'product_event' => 'Produk :event',
+    
+    // Delivery Order activities
     'delivery_created' => 'Delivery Order dibuat',
+    'delivery_order_created' => 'Delivery Order dibuat',
+    'delivery_order_updated' => 'Delivery Order diperbarui',
+    'delivery_order_deleted' => 'Delivery Order dihapus',
+    'delivery_order_event' => 'Delivery Order :event',
+    'delivery_order_shipped' => 'Delivery Order dikirim',
+    'delivery_order_delivered' => 'Delivery Order terkirim',
+    
+    // Purchase Order activities
+    'purchase_order_created' => 'Purchase Order dibuat',
+    'purchase_order_updated' => 'Purchase Order diperbarui',
+    'purchase_order_deleted' => 'Purchase Order dihapus',
+    'purchase_order_event' => 'Purchase Order :event',
+    
+    // Supplier activities
+    'supplier_created' => 'Supplier dibuat',
+    'supplier_updated' => 'Supplier diperbarui',
+    'supplier_deleted' => 'Supplier dihapus',
+    'supplier_event' => 'Supplier :event',
     
     // General
     'changed' => 'Diubah',

@@ -1,4 +1,40 @@
 <div>
+    <x-slot:header>
+        <div class="flex items-center gap-3">
+            <button 
+                type="button"
+                wire:click="save"
+                wire:loading.attr="disabled"
+                class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+                <span wire:loading.remove wire:target="save">Save</span>
+                <span wire:loading wire:target="save">Saving...</span>
+            </button>
+            <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">Company Profile</h1>
+            <flux:dropdown position="bottom" align="start">
+                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                    <flux:icon name="cog-6-tooth" class="size-5" />
+                </button>
+
+                <flux:menu class="w-48">
+                    <button type="button" wire:click="removeLogo" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <flux:icon name="photo" class="size-4" />
+                        <span>Remove logo</span>
+                    </button>
+                    <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <flux:icon name="arrow-up-tray" class="size-4" />
+                        <span>Export profile</span>
+                    </button>
+                </flux:menu>
+            </flux:dropdown>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                Last updated {{ optional(\App\Models\Settings\CompanyProfile::first())->updated_at?->diffForHumans() ?? 'recently' }}
+            </span>
+        </div>
+    </x-slot:header>
+
     {{-- Flash Messages --}}
     <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
         @if(session('success'))
@@ -23,53 +59,6 @@
                 </ul>
             </x-ui.alert>
         @endif
-    </div>
-
-    {{-- Header & Actions --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left group (button, title, gear) --}}
-            <div class="flex items-center gap-3">
-                <button 
-                    type="button"
-                    wire:click="save"
-                    wire:loading.attr="disabled"
-                    class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                >
-                    <span wire:loading.remove wire:target="save">Save Changes</span>
-                    <span wire:loading wire:target="save">Saving...</span>
-                </button>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Company Profile</span>
-                
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-
-                    <flux:menu class="w-48">
-                        <button type="button" wire:click="removeLogo" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="photo" class="size-4" />
-                            <span>Remove logo</span>
-                        </button>
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export profile</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Center group placeholder --}}
-            <div class="flex flex-1 items-center justify-center">
-                {{-- Reserved for filters/search if needed --}}
-            </div>
-
-            {{-- Right group: metadata --}}
-            <div class="flex items-center gap-3 text-xs text-zinc-400 dark:text-zinc-500">
-                <flux:icon name="clock" class="size-4" />
-                <span>Last updated {{ optional(\App\Models\Settings\CompanyProfile::first())->updated_at?->diffForHumans() ?? 'recently' }}</span>
-            </div>
-        </div>
     </div>
 
     {{-- Overview --}}

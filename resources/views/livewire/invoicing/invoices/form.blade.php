@@ -41,10 +41,12 @@
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="printer" class="size-4" />
-                                    <span>Print</span>
-                                </button>
+                                @if($invoiceId)
+                                <a href="{{ route('pdf.invoice', $invoiceId) }}" target="_blank" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="arrow-down-tray" class="size-4" />
+                                    <span>Download PDF</span>
+                                </a>
+                                @endif
                                 <flux:menu.separator />
                                 <button type="button" wire:click="delete" wire:confirm="Are you sure?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
@@ -121,10 +123,12 @@
                         <flux:icon name="document-check" class="size-4" />
                         Save
                     </button>
-                    <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                        <flux:icon name="printer" class="size-4" />
-                        Print
-                    </button>
+                    @if($invoiceId)
+                        <a href="{{ route('pdf.invoice', $invoiceId) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                            <flux:icon name="arrow-down-tray" class="size-4" />
+                            Download PDF
+                        </a>
+                    @endif
                     @if($invoiceId)
                         <button type="button" wire:click="openShareModal" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
                             <flux:icon name="paper-airplane" class="size-4" />

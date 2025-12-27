@@ -1,4 +1,38 @@
 <div x-data="{ activeTab: 'modules', showSendMessage: false, showLogNote: false, showScheduleActivity: false }" x-cloak>
+    <x-slot:header>
+        <div class="flex items-center gap-3">
+            <button 
+                type="button"
+                wire:click="save"
+                wire:loading.attr="disabled"
+                class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+                <span wire:loading.remove wire:target="save">Save</span>
+                <span wire:loading wire:target="save">Saving...</span>
+            </button>
+            <a href="{{ route('settings.roles.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                <flux:icon name="arrow-left" class="size-5" />
+            </a>
+            <div class="flex flex-col">
+                <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Role</span>
+                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $roleId ? ucfirst($roleName) : 'New Role' }}</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            @if($roleId)
+                <button 
+                    type="button"
+                    wire:click="delete"
+                    wire:confirm="Delete this role? This action cannot be undone."
+                    class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/30 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                    <flux:icon name="trash" class="size-4" />
+                    Delete
+                </button>
+            @endif
+        </div>
+    </x-slot:header>
+
     {{-- Flash Messages --}}
     <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
         @if(session('success'))
@@ -14,94 +48,8 @@
         @endif
     </div>
 
-    {{-- Header --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <a href="{{ route('settings.roles.index') }}" wire:navigate class="inline-flex items-center justify-center rounded-md p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                    <flux:icon name="arrow-left" class="size-5" />
-                </a>
-                <div>
-                    <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ $roleId ? 'Edit Role' : 'Create Role' }}</p>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $roleId ? 'Update role name & module permissions' : 'Assign access before inviting team members' }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Action Bar (like Product form) --}}
-    <div class="-mx-4 -mt-6 bg-zinc-50 px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:bg-zinc-900/50">
-        <div class="grid grid-cols-12 items-center gap-6">
-            {{-- Left: Actions --}}
-            <div class="col-span-9 flex items-center justify-between">
-                <div class="flex flex-wrap items-center gap-2">
-                    <button 
-                        type="button"
-                        wire:click="save"
-                        wire:loading.attr="disabled"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                    >
-                        <flux:icon name="document-check" class="size-4" />
-                        <span wire:loading.remove wire:target="save">Save</span>
-                        <span wire:loading wire:target="save">Saving...</span>
-                    </button>
-
-                    <a 
-                        href="{{ route('settings.roles.index') }}"
-                        wire:navigate
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        <flux:icon name="x-mark" class="size-4" />
-                        Cancel
-                    </a>
-
-                    @if($roleId)
-                        <button 
-                            type="button"
-                            wire:click="delete"
-                            wire:confirm="Delete this role? This action cannot be undone."
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/30 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                        >
-                            <flux:icon name="trash" class="size-4" />
-                            Delete
-                        </button>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Right: Chatter Icons --}}
-            <div class="col-span-3 flex items-center justify-end gap-1">
-                <button 
-                    @click="showSendMessage = !showSendMessage; showLogNote = false; showScheduleActivity = false" 
-                    :class="showSendMessage ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Send message"
-                >
-                    <flux:icon name="chat-bubble-left" class="size-5" />
-                </button>
-                <button 
-                    @click="showLogNote = !showLogNote; showSendMessage = false; showScheduleActivity = false" 
-                    :class="showLogNote ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Log note"
-                >
-                    <flux:icon name="pencil-square" class="size-5" />
-                </button>
-                <button 
-                    @click="showScheduleActivity = !showScheduleActivity; showSendMessage = false; showLogNote = false" 
-                    :class="showScheduleActivity ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Schedule activity"
-                >
-                    <flux:icon name="clock" class="size-5" />
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Main Content (like Product form) --}}
-    <div class="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div class="grid gap-6 lg:grid-cols-12">
+    {{-- Main Content --}}
+    <div class="grid gap-6 lg:grid-cols-12">
             {{-- Left Column: Main Form --}}
             <div class="lg:col-span-9">
             <div class="overflow-visible rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
@@ -405,5 +353,4 @@
             </div>
             </div>
         </div>
-    </div>
 </div>
