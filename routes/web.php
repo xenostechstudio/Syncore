@@ -82,6 +82,10 @@ Route::get('/public/invoices/{token}', PublicInvoiceShow::class)
     ->middleware('signed')
     ->name('public.invoices.show');
 
+Route::get('/public/sales-orders/{token}', \App\Livewire\Public\SalesOrders\Show::class)
+    ->middleware('signed')
+    ->name('public.sales-orders.show');
+
 Route::middleware(['auth', 'verified', 'permission:access.inventory'])->prefix('inventory')->name('inventory.')->group(function () {
     Route::get('/', InventoryIndex::class)->name('index');
     
@@ -266,5 +270,86 @@ Route::middleware(['auth', 'verified'])->prefix('pdf')->name('pdf.')->group(func
     Route::get('/invoice/{invoice}', [\App\Http\Controllers\PdfController::class, 'invoice'])->name('invoice');
     Route::get('/sales-order/{salesOrder}', [\App\Http\Controllers\PdfController::class, 'salesOrder'])->name('sales-order');
     Route::get('/delivery-order/{deliveryOrder}', [\App\Http\Controllers\PdfController::class, 'deliveryOrder'])->name('delivery-order');
+});
+
+// Accounting Module
+Route::middleware(['auth', 'verified', 'permission:access.accounting'])->prefix('accounting')->name('accounting.')->group(function () {
+    Route::get('/', \App\Livewire\Accounting\Index::class)->name('index');
+    
+    // Chart of Accounts
+    Route::get('/accounts', \App\Livewire\Accounting\Accounts\Index::class)->name('accounts.index');
+    Route::get('/accounts/create', \App\Livewire\Accounting\Accounts\Form::class)->name('accounts.create');
+    Route::get('/accounts/{id}/edit', \App\Livewire\Accounting\Accounts\Form::class)->name('accounts.edit');
+    
+    // Journal Entries
+    Route::get('/journal-entries', \App\Livewire\Accounting\JournalEntries\Index::class)->name('journal-entries.index');
+    Route::get('/journal-entries/create', \App\Livewire\Accounting\JournalEntries\Form::class)->name('journal-entries.create');
+    Route::get('/journal-entries/{id}/edit', \App\Livewire\Accounting\JournalEntries\Form::class)->name('journal-entries.edit');
+});
+
+// CRM Module
+Route::middleware(['auth', 'verified', 'permission:access.crm'])->prefix('crm')->name('crm.')->group(function () {
+    Route::get('/', \App\Livewire\CRM\Index::class)->name('index');
+    
+    // Leads
+    Route::get('/leads', \App\Livewire\CRM\Leads\Index::class)->name('leads.index');
+    Route::get('/leads/create', \App\Livewire\CRM\Leads\Form::class)->name('leads.create');
+    Route::get('/leads/{id}/edit', \App\Livewire\CRM\Leads\Form::class)->name('leads.edit');
+    
+    // Opportunities
+    Route::get('/opportunities', \App\Livewire\CRM\Opportunities\Index::class)->name('opportunities.index');
+    Route::get('/opportunities/create', \App\Livewire\CRM\Opportunities\Form::class)->name('opportunities.create');
+    Route::get('/opportunities/{id}/edit', \App\Livewire\CRM\Opportunities\Form::class)->name('opportunities.edit');
+    
+    // Activities
+    Route::get('/activities', \App\Livewire\CRM\Activities\Index::class)->name('activities.index');
+});
+
+// Reports Module
+Route::middleware(['auth', 'verified', 'permission:access.reports'])->prefix('reports')->name('reports.')->group(function () {
+    Route::get('/', \App\Livewire\Reports\Index::class)->name('index');
+    Route::get('/sales', \App\Livewire\Reports\Sales\Index::class)->name('sales');
+    Route::get('/inventory', \App\Livewire\Reports\Inventory\Index::class)->name('inventory');
+    Route::get('/financial', \App\Livewire\Reports\Financial\Index::class)->name('financial');
+});
+
+// HR Module
+Route::middleware(['auth', 'verified', 'permission:access.hr'])->prefix('hr')->name('hr.')->group(function () {
+    Route::get('/', \App\Livewire\HR\Index::class)->name('index');
+    
+    // Departments
+    Route::get('/departments', \App\Livewire\HR\Departments\Index::class)->name('departments.index');
+    Route::get('/departments/create', \App\Livewire\HR\Departments\Form::class)->name('departments.create');
+    Route::get('/departments/{id}/edit', \App\Livewire\HR\Departments\Form::class)->name('departments.edit');
+    
+    // Positions
+    Route::get('/positions', \App\Livewire\HR\Positions\Index::class)->name('positions.index');
+    Route::get('/positions/create', \App\Livewire\HR\Positions\Form::class)->name('positions.create');
+    Route::get('/positions/{id}/edit', \App\Livewire\HR\Positions\Form::class)->name('positions.edit');
+    
+    // Employees
+    Route::get('/employees', \App\Livewire\HR\Employees\Index::class)->name('employees.index');
+    Route::get('/employees/create', \App\Livewire\HR\Employees\Form::class)->name('employees.create');
+    Route::get('/employees/{id}/edit', \App\Livewire\HR\Employees\Form::class)->name('employees.edit');
+    
+    // Leave Types
+    Route::get('/leave/types', \App\Livewire\HR\Leave\Types\Index::class)->name('leave.types.index');
+    Route::get('/leave/types/create', \App\Livewire\HR\Leave\Types\Form::class)->name('leave.types.create');
+    Route::get('/leave/types/{id}/edit', \App\Livewire\HR\Leave\Types\Form::class)->name('leave.types.edit');
+    
+    // Leave Requests
+    Route::get('/leave/requests', \App\Livewire\HR\Leave\Requests\Index::class)->name('leave.requests.index');
+    Route::get('/leave/requests/create', \App\Livewire\HR\Leave\Requests\Form::class)->name('leave.requests.create');
+    Route::get('/leave/requests/{id}/edit', \App\Livewire\HR\Leave\Requests\Form::class)->name('leave.requests.edit');
+    
+    // Payroll
+    Route::get('/payroll', \App\Livewire\HR\Payroll\Index::class)->name('payroll.index');
+    Route::get('/payroll/create', \App\Livewire\HR\Payroll\Form::class)->name('payroll.create');
+    Route::get('/payroll/{id}/edit', \App\Livewire\HR\Payroll\Form::class)->name('payroll.edit');
+    
+    // Salary Components
+    Route::get('/payroll/components', \App\Livewire\HR\Payroll\Components\Index::class)->name('payroll.components.index');
+    Route::get('/payroll/components/create', \App\Livewire\HR\Payroll\Components\Form::class)->name('payroll.components.create');
+    Route::get('/payroll/components/{id}/edit', \App\Livewire\HR\Payroll\Components\Form::class)->name('payroll.components.edit');
 });
 

@@ -22,13 +22,22 @@ class Show extends Component
     public ?string $paymentLink = null;
     public ?string $statusMessage = null;
     public bool $statusIsError = false;
+    public bool $paymentSuccess = false;
+    public bool $paymentFailed = false;
 
     public function mount(string $token): void
     {
         $this->token = $token;
         $this->paymentMethods = config('xendit.invoice.payment_methods', []);
 
-        $invoice = Invoice::with(['customer', 'items.product', 'salesOrder.user'])
+        // Check for payment status query param
+        if (request()->has('payment')) {
+            $paymentStatus = request()->get('payment');
+            $this->paymentSuccess = $paymentStatus === 'success';
+            $this->paymentFailed = $paymentStatus === 'failed';
+        }
+
+        $invoice = Invoice::with(['customer', 'items.product', 'salesOrder.user', 'payments'])
             ->where('share_token', $token)
             ->first();
 
@@ -87,6 +96,7 @@ class Show extends Component
     {
         return view('livewire.public.invoices.show', [
             'company' => CompanyProfile::getProfile(),
+            'payments' => $this->invoice?->payments()->orderByDesc('payment_date')->get() ?? collect(),
         ]);
     }
 }

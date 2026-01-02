@@ -18,6 +18,10 @@ class ModulePermissionSeeder extends Seeder
             'access.invoicing' => 'Access Invoicing module',
             'access.purchase' => 'Access Purchase module',
             'access.settings' => 'Access Settings module',
+            'access.accounting' => 'Access Accounting module',
+            'access.crm' => 'Access CRM module',
+            'access.hr' => 'Access HR module',
+            'access.reports' => 'Access Reports module',
         ];
 
         foreach ($permissions as $name => $description) {

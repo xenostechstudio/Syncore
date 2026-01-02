@@ -140,6 +140,28 @@ class InventorySeeder extends Seeder
             ['name' => 'Apple MagSafe Charger (1 m)', 'sku' => 'APPLE-MAGSAFE-1M', 'description' => 'Apple MagSafe Charger (1 m).', 'quantity' => 0, 'cost_price' => 800000.00, 'selling_price' => 969000.00, 'status' => 'out_of_stock'],
             ['name' => 'Apple 240W USB‑C Charge Cable (2 m)', 'sku' => 'APPLE-USBC-240W-2M', 'description' => 'Apple 240W USB‑C Charge Cable (2 m).', 'quantity' => 200, 'cost_price' => 450000.00, 'selling_price' => 549000.00, 'status' => 'in_stock'],
             ['name' => 'Apple Thunderbolt 4 (USB‑C) Pro Cable (1 m)', 'sku' => 'APPLE-TB4-PRO-1M', 'description' => 'Apple Thunderbolt 4 (USB‑C) Pro Cable (1 m).', 'quantity' => 12, 'cost_price' => 1250000.00, 'selling_price' => 1499000.00, 'status' => 'in_stock'],
+            
+            // Low-cost items (under 100,000 Rupiah)
+            ['name' => 'Ballpoint Pen - Blue (Pack of 12)', 'sku' => 'OFC-PEN-BLUE-12', 'description' => 'Standard ballpoint pen, blue ink, pack of 12.', 'quantity' => 500, 'cost_price' => 15000.00, 'selling_price' => 24000.00, 'status' => 'in_stock'],
+            ['name' => 'A4 Copy Paper 70gsm (500 sheets)', 'sku' => 'OFC-PAPER-A4-500', 'description' => 'A4 copy paper 70gsm, 500 sheets per ream.', 'quantity' => 200, 'cost_price' => 35000.00, 'selling_price' => 48000.00, 'status' => 'in_stock'],
+            ['name' => 'Sticky Notes 3x3 inch - Yellow (100 sheets)', 'sku' => 'OFC-STICKY-3X3-YLW', 'description' => 'Yellow sticky notes 3x3 inch, 100 sheets.', 'quantity' => 300, 'cost_price' => 8000.00, 'selling_price' => 12000.00, 'status' => 'in_stock'],
+            ['name' => 'Binder Clips 32mm (Box of 12)', 'sku' => 'OFC-BINDER-32MM-12', 'description' => 'Metal binder clips 32mm, box of 12.', 'quantity' => 150, 'cost_price' => 12000.00, 'selling_price' => 18000.00, 'status' => 'in_stock'],
+            ['name' => 'Correction Tape 5mm x 8m', 'sku' => 'OFC-CORRTAPE-5X8', 'description' => 'Correction tape 5mm width, 8 meters length.', 'quantity' => 100, 'cost_price' => 6000.00, 'selling_price' => 9500.00, 'status' => 'in_stock'],
+            ['name' => 'Highlighter Pen - Assorted Colors (Pack of 6)', 'sku' => 'OFC-HIGHLIGHT-6PK', 'description' => 'Highlighter pen set, 6 assorted colors.', 'quantity' => 80, 'cost_price' => 18000.00, 'selling_price' => 28000.00, 'status' => 'in_stock'],
+            ['name' => 'Stapler Mini + Staples Set', 'sku' => 'OFC-STAPLER-MINI', 'description' => 'Mini stapler with 1000 staples included.', 'quantity' => 60, 'cost_price' => 15000.00, 'selling_price' => 25000.00, 'status' => 'in_stock'],
+            ['name' => 'Paper Clips 28mm (Box of 100)', 'sku' => 'OFC-PAPERCLIP-100', 'description' => 'Metal paper clips 28mm, box of 100.', 'quantity' => 400, 'cost_price' => 5000.00, 'selling_price' => 8000.00, 'status' => 'in_stock'],
+            ['name' => 'Rubber Band 100g Pack', 'sku' => 'OFC-RUBBER-100G', 'description' => 'Assorted rubber bands, 100g pack.', 'quantity' => 250, 'cost_price' => 8000.00, 'selling_price' => 12000.00, 'status' => 'in_stock'],
+            ['name' => 'Pencil 2B (Pack of 12)', 'sku' => 'OFC-PENCIL-2B-12', 'description' => '2B pencils, pack of 12.', 'quantity' => 180, 'cost_price' => 12000.00, 'selling_price' => 18000.00, 'status' => 'in_stock'],
+            ['name' => 'Eraser - White (Pack of 3)', 'sku' => 'OFC-ERASER-WHT-3', 'description' => 'White eraser, pack of 3.', 'quantity' => 200, 'cost_price' => 6000.00, 'selling_price' => 9000.00, 'status' => 'in_stock'],
+            ['name' => 'Scissors 7 inch - Stainless Steel', 'sku' => 'OFC-SCISSORS-7IN', 'description' => 'Stainless steel scissors, 7 inch.', 'quantity' => 50, 'cost_price' => 18000.00, 'selling_price' => 28000.00, 'status' => 'in_stock'],
+            ['name' => 'Glue Stick 21g', 'sku' => 'OFC-GLUE-21G', 'description' => 'Glue stick 21g, non-toxic.', 'quantity' => 120, 'cost_price' => 7000.00, 'selling_price' => 12000.00, 'status' => 'in_stock'],
+            ['name' => 'Ruler 30cm - Plastic', 'sku' => 'OFC-RULER-30CM', 'description' => 'Plastic ruler 30cm with metric markings.', 'quantity' => 90, 'cost_price' => 4000.00, 'selling_price' => 7000.00, 'status' => 'in_stock'],
+            ['name' => 'Envelope White A4 (Pack of 50)', 'sku' => 'OFC-ENV-A4-50', 'description' => 'White envelope A4 size, pack of 50.', 'quantity' => 70, 'cost_price' => 25000.00, 'selling_price' => 38000.00, 'status' => 'in_stock'],
+            ['name' => 'Folder Clear L-Shape A4 (Pack of 10)', 'sku' => 'OFC-FOLDER-L-10', 'description' => 'Clear L-shape folder A4, pack of 10.', 'quantity' => 100, 'cost_price' => 15000.00, 'selling_price' => 22000.00, 'status' => 'in_stock'],
+            ['name' => 'Notebook A5 Ruled 80 pages', 'sku' => 'OFC-NOTEBOOK-A5-80', 'description' => 'A5 ruled notebook, 80 pages.', 'quantity' => 150, 'cost_price' => 8000.00, 'selling_price' => 15000.00, 'status' => 'in_stock'],
+            ['name' => 'Whiteboard Marker - Black', 'sku' => 'OFC-WBMARKER-BLK', 'description' => 'Whiteboard marker, black ink.', 'quantity' => 200, 'cost_price' => 6000.00, 'selling_price' => 10000.00, 'status' => 'in_stock'],
+            ['name' => 'USB Flash Drive 8GB', 'sku' => 'TECH-USB-8GB', 'description' => 'USB 2.0 flash drive, 8GB capacity.', 'quantity' => 50, 'cost_price' => 25000.00, 'selling_price' => 35000.00, 'status' => 'in_stock'],
+            ['name' => 'Mouse Pad Basic - Black', 'sku' => 'TECH-MOUSEPAD-BLK', 'description' => 'Basic mouse pad, black, 22x18cm.', 'quantity' => 80, 'cost_price' => 12000.00, 'selling_price' => 20000.00, 'status' => 'in_stock'],
         ];
 
         foreach ($items as $item) {

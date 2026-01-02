@@ -28,6 +28,9 @@ class DatabaseSeeder extends Seeder
             SalesSeeder::class,
             DeliverySeeder::class,
             SupplierSeeder::class,
+            AccountingSeeder::class,
+            CRMSeeder::class,
+            HRSeeder::class,
         ]);
     }
 }

@@ -104,6 +104,70 @@
             </a>
         @endcan
 
+        {{-- Accounting --}}
+        @can('access.accounting')
+            <a href="{{ route('accounting.index') }}" wire:navigate class="group relative flex items-center gap-4 rounded-2xl border border-white/40 bg-white/40 p-5 backdrop-blur-md transition-all hover:border-white/60 hover:bg-white/60 hover:shadow-lg hover:shadow-indigo-500/10 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">
+                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
+                    <svg class="size-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Accounting</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Financial Management</p>
+                </div>
+                <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
+            </a>
+        @endcan
+
+        {{-- CRM --}}
+        @can('access.crm')
+            <a href="{{ route('crm.index') }}" wire:navigate class="group relative flex items-center gap-4 rounded-2xl border border-white/40 bg-white/40 p-5 backdrop-blur-md transition-all hover:border-white/60 hover:bg-white/60 hover:shadow-lg hover:shadow-pink-500/10 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">
+                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30">
+                    <svg class="size-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">CRM</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Leads & Opportunities</p>
+                </div>
+                <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
+            </a>
+        @endcan
+
+        {{-- HR --}}
+        @can('access.hr')
+            <a href="{{ route('hr.index') }}" wire:navigate class="group relative flex items-center gap-4 rounded-2xl border border-white/40 bg-white/40 p-5 backdrop-blur-md transition-all hover:border-white/60 hover:bg-white/60 hover:shadow-lg hover:shadow-teal-500/10 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">
+                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/30">
+                    <svg class="size-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-9 3.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5S8.5 11.38 8.5 10 9.62 7.5 11 7.5zM6 16.5v-.75c0-1.5 3-2.25 5-2.25s5 .75 5 2.25v.75H6zm12-4h-2v-2h2v2zm0-4h-2V7h2v1.5z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">HR</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Employees & Leave</p>
+                </div>
+                <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
+            </a>
+        @endcan
+
+        {{-- Reports --}}
+        @can('access.reports')
+            <a href="{{ route('reports.index') }}" wire:navigate class="group relative flex items-center gap-4 rounded-2xl border border-white/40 bg-white/40 p-5 backdrop-blur-md transition-all hover:border-white/60 hover:bg-white/60 hover:shadow-lg hover:shadow-teal-500/10 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">
+                <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 shadow-lg shadow-teal-500/30">
+                    <svg class="size-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Reports</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Analytics & Insights</p>
+                </div>
+                <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
+            </a>
+        @endcan
+
         {{-- Settings --}}
         @can('access.settings')
             <a href="{{ route('settings.index') }}" wire:navigate class="group relative flex items-center gap-4 rounded-2xl border border-white/40 bg-white/40 p-5 backdrop-blur-md transition-all hover:border-white/60 hover:bg-white/60 hover:shadow-lg hover:shadow-zinc-500/10 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">

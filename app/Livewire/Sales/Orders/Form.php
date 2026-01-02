@@ -16,6 +16,7 @@ use App\Models\Sales\SalesOrderItem;
 use App\Models\Sales\Tax;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL as UrlFacade;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -67,6 +68,18 @@ class Form extends Component
 
     // History/Activity Log
     public array $activityLog = [];
+
+    // Preview Link
+    public ?string $previewLink = null;
+
+    // Email Modal
+    public bool $showEmailModal = false;
+    public array $emailRecipients = [];
+    public string $emailRecipientInput = '';
+    public string $emailRecipientError = '';
+    public string $emailSubject = '';
+    public string $emailBody = '';
+    public bool $emailAttachPdf = true;
 
     public function getActivities(): \Illuminate\Support\Collection
     {
@@ -608,6 +621,181 @@ class Form extends Component
             
             session()->flash('success', 'Order cancelled successfully.');
             $this->redirect(route('sales.orders.index'), navigate: true);
+        }
+    }
+
+    public function generatePreviewLink(): void
+    {
+        if (! $this->orderId) {
+            session()->flash('error', 'Please save the order first.');
+            return;
+        }
+
+        $order = SalesOrder::findOrFail($this->orderId);
+        $order->ensureShareToken();
+
+        $this->previewLink = UrlFacade::signedRoute('public.sales-orders.show', [
+            'token' => $order->share_token,
+        ]);
+    }
+
+    public function refreshPreviewLink(): void
+    {
+        if (! $this->orderId) {
+            return;
+        }
+
+        $order = SalesOrder::findOrFail($this->orderId);
+        $order->ensureShareToken(forceRefresh: true);
+
+        $this->previewLink = UrlFacade::signedRoute('public.sales-orders.show', [
+            'token' => $order->share_token,
+        ]);
+    }
+
+    public function openEmailModal(): void
+    {
+        if (! $this->orderId) {
+            session()->flash('error', 'Please save the order first.');
+            return;
+        }
+
+        $order = SalesOrder::with(['customer', 'user'])->findOrFail($this->orderId);
+        $order->ensureShareToken();
+
+        // Pre-fill email fields
+        $this->emailRecipients = [];
+        $this->emailRecipientInput = '';
+        $this->emailRecipientError = '';
+        
+        if ($order->customer->email) {
+            $this->emailRecipients[] = $order->customer->email;
+        }
+        
+        $isQuotation = in_array($order->status, ['draft', 'confirmed']);
+        $documentType = $isQuotation ? 'Quotation' : 'Sales Order';
+        
+        $this->emailSubject = "{$documentType} {$order->order_number} from " . config('app.name');
+        
+        // Generate preview link for the email body
+        $previewUrl = UrlFacade::signedRoute('public.sales-orders.show', [
+            'token' => $order->share_token,
+        ]);
+        
+        $salesperson = $order->user;
+        $salespersonName = $salesperson?->name ?? 'Our Team';
+        
+        $this->emailBody = $this->getDefaultEmailBody($order, $documentType, $previewUrl, $salespersonName);
+        $this->emailAttachPdf = true;
+        $this->showEmailModal = true;
+    }
+
+    public function addEmailRecipient(): void
+    {
+        $email = trim($this->emailRecipientInput);
+        $this->emailRecipientError = '';
+        
+        if (empty($email)) {
+            return;
+        }
+        
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->emailRecipientError = 'Please enter a valid email address.';
+            return;
+        }
+        
+        if (in_array($email, $this->emailRecipients)) {
+            $this->emailRecipientError = 'This email is already added.';
+            return;
+        }
+        
+        $this->emailRecipients[] = $email;
+        $this->emailRecipientInput = '';
+    }
+
+    public function removeEmailRecipient(int $index): void
+    {
+        if (isset($this->emailRecipients[$index])) {
+            unset($this->emailRecipients[$index]);
+            $this->emailRecipients = array_values($this->emailRecipients);
+        }
+    }
+
+    private function getDefaultEmailBody(SalesOrder $order, string $documentType, string $previewUrl, string $salespersonName): string
+    {
+        $customerName = $order->customer->name ?? 'Valued Customer';
+        $total = 'Rp ' . number_format($order->total, 0, ',', '.');
+        
+        return "Dear {$customerName},
+
+Please find attached your {$documentType} {$order->order_number} amounting to {$total}.
+
+You can view and confirm this {$documentType} online by clicking the link below:
+{$previewUrl}
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+{$salespersonName}";
+    }
+
+    public function sendEmail(): void
+    {
+        if (! $this->orderId) {
+            session()->flash('error', 'Order not found.');
+            return;
+        }
+
+        if (empty($this->emailRecipients)) {
+            $this->emailRecipientError = 'Please add at least one recipient.';
+            return;
+        }
+
+        $this->validate([
+            'emailSubject' => 'required|string|max:255',
+            'emailBody' => 'required|string',
+        ], [
+            'emailSubject.required' => 'Please enter email subject.',
+            'emailBody.required' => 'Please enter email body.',
+        ]);
+
+        try {
+            $order = SalesOrder::with(['customer', 'items.product'])->findOrFail($this->orderId);
+            
+            // Send the email
+            \Illuminate\Support\Facades\Mail::send([], [], function ($message) use ($order) {
+                $message->to($this->emailRecipients)
+                    ->subject($this->emailSubject)
+                    ->html(nl2br(e($this->emailBody)));
+                
+                if ($this->emailAttachPdf) {
+                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-order', [
+                        'salesOrder' => $order,
+                    ]);
+                    $isQuotation = in_array($order->status, ['draft', 'confirmed']);
+                    $documentType = $isQuotation ? 'Quotation' : 'Sales Order';
+                    $message->attachData(
+                        $pdf->output(),
+                        "{$documentType} - {$order->order_number}.pdf",
+                        ['mime' => 'application/pdf']
+                    );
+                }
+            });
+
+            // Update status to quotation_sent if it was draft
+            if ($order->status === 'draft') {
+                $order->update(['status' => 'confirmed']);
+            }
+
+            $this->showEmailModal = false;
+            $recipientCount = count($this->emailRecipients);
+            session()->flash('success', "Email sent successfully to {$recipientCount} recipient(s).");
+            
+            // Reload order to reflect status change
+            $this->loadOrder();
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to send email: ' . $e->getMessage());
         }
     }
 

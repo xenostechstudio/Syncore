@@ -8,6 +8,7 @@ use App\Models\Sales\SalesOrder;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Sales Overview')]
@@ -29,21 +30,63 @@ class Index extends Component
             ->whereYear('created_at', now()->year)
             ->sum('total');
         
+        // Last month stats for comparison
+        $ordersLastMonth = SalesOrder::whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->count();
+        $revenueLastMonth = SalesOrder::where('status', 'delivered')
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->sum('total');
+        
         // Quotations & Sales Orders
-        $quotations = SalesOrder::whereIn('status', ['draft', 'confirmed'])->count();
-        $salesOrders = SalesOrder::where('status', 'processing')->count();
+        $quotations = SalesOrder::whereIn('status', ['draft', 'confirmed', 'quotation'])->count();
+        $salesOrders = SalesOrder::where('status', 'sales_order')->count();
         
         // To Invoice & To Deliver
-        $toInvoice = SalesOrder::where('status', 'processing')
+        $toInvoice = SalesOrder::where('status', 'sales_order')
             ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_invoiced'))
             ->count();
-        $toDeliver = SalesOrder::where('status', 'processing')
+        $toDeliver = SalesOrder::where('status', 'sales_order')
             ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_delivered'))
             ->count();
+
+        // Additional stats
+        $cancelledOrders = SalesOrder::where('status', 'cancelled')->count();
+        $completedOrders = SalesOrder::where('status', 'delivered')->count();
 
         // Invoice stats
         $overdueInvoices = Invoice::where('status', 'overdue')->count();
         $awaitingPayment = Invoice::whereIn('status', ['sent', 'partial'])->sum('total');
+        $paidInvoices = Invoice::where('status', 'paid')->count();
+        $draftInvoices = Invoice::where('status', 'draft')->count();
+        $sentInvoices = Invoice::where('status', 'sent')->count();
+        $partialInvoices = Invoice::where('status', 'partial')->count();
+
+        // Average order value
+        $avgOrderValue = $totalOrders > 0 ? $totalRevenue / max($completedOrders, 1) : 0;
+        $avgOrderValueThisMonth = $ordersThisMonth > 0 ? $revenueThisMonth / $ordersThisMonth : 0;
+
+        // Monthly revenue data for chart (last 6 months)
+        $monthlyRevenue = SalesOrder::where('status', 'delivered')
+            ->where('created_at', '>=', now()->subMonths(6)->startOfMonth())
+            ->select(
+                DB::raw("EXTRACT(YEAR FROM created_at) as year"),
+                DB::raw("EXTRACT(MONTH FROM created_at) as month"),
+                DB::raw('SUM(total) as revenue'),
+                DB::raw('COUNT(*) as orders')
+            )
+            ->groupBy(DB::raw("EXTRACT(YEAR FROM created_at)"), DB::raw("EXTRACT(MONTH FROM created_at)"))
+            ->orderBy(DB::raw("EXTRACT(YEAR FROM created_at)"))
+            ->orderBy(DB::raw("EXTRACT(MONTH FROM created_at)"))
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'month' => date('M', mktime(0, 0, 0, (int) $item->month, 1)),
+                    'revenue' => $item->revenue,
+                    'orders' => $item->orders,
+                ];
+            });
 
         // Recent orders
         $recentOrders = SalesOrder::with('customer')
@@ -58,20 +101,37 @@ class Index extends Component
             ->take(5)
             ->get();
 
+        // New customers this month
+        $newCustomersThisMonth = Customer::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
         return view('livewire.sales.index', [
             'totalOrders' => $totalOrders,
             'totalCustomers' => $totalCustomers,
             'totalRevenue' => $totalRevenue,
             'ordersThisMonth' => $ordersThisMonth,
             'revenueThisMonth' => $revenueThisMonth,
+            'ordersLastMonth' => $ordersLastMonth,
+            'revenueLastMonth' => $revenueLastMonth,
             'quotations' => $quotations,
             'salesOrders' => $salesOrders,
             'toInvoice' => $toInvoice,
             'toDeliver' => $toDeliver,
+            'cancelledOrders' => $cancelledOrders,
+            'completedOrders' => $completedOrders,
             'overdueInvoices' => $overdueInvoices,
             'awaitingPayment' => $awaitingPayment,
+            'paidInvoices' => $paidInvoices,
+            'draftInvoices' => $draftInvoices,
+            'sentInvoices' => $sentInvoices,
+            'partialInvoices' => $partialInvoices,
+            'avgOrderValue' => $avgOrderValue,
+            'avgOrderValueThisMonth' => $avgOrderValueThisMonth,
+            'monthlyRevenue' => $monthlyRevenue,
             'recentOrders' => $recentOrders,
             'topCustomers' => $topCustomers,
+            'newCustomersThisMonth' => $newCustomersThisMonth,
         ]);
     }
 }

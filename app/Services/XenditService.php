@@ -40,6 +40,9 @@ class XenditService
             ];
         }
 
+        // Ensure share token exists for redirect URL
+        $invoice->ensureShareToken();
+
         $customer = $invoice->customer;
         $externalId = 'INV-' . $invoice->id . '-' . time();
 
@@ -50,8 +53,8 @@ class XenditService
             'description' => "Payment for Invoice #{$invoice->invoice_number}",
             'invoice_duration' => config('xendit.invoice.invoice_duration', 86400),
             'currency' => config('xendit.invoice.currency', 'IDR'),
-            'success_redirect_url' => config('xendit.success_redirect_url') . '/' . $invoice->id . '/edit?payment=success',
-            'failure_redirect_url' => config('xendit.failure_redirect_url') . '/' . $invoice->id . '/edit?payment=failed',
+            'success_redirect_url' => route('public.invoices.show', $invoice->share_token),
+            'failure_redirect_url' => route('public.invoices.show', $invoice->share_token) . '?payment=failed',
             'payment_methods' => config('xendit.invoice.payment_methods', []),
             'customer' => [
                 'given_names' => $customer->name ?? 'Customer',
@@ -254,12 +257,14 @@ class XenditService
         $paidBefore = (float) $invoice->payments()->sum('amount');
 
         // Create payment record
+        $paymentMethodDisplay = $this->formatPaymentMethod($paymentMethod, $paymentChannel);
+        
         Payment::create([
             'payment_number' => $paymentNumber,
             'invoice_id' => $invoice->id,
             'amount' => $paidAmount,
             'payment_date' => now(),
-            'payment_method' => 'xendit_' . strtolower($paymentMethod),
+            'payment_method' => $paymentMethodDisplay,
             'reference' => 'XENDIT-' . ($payload['id'] ?? $payload['external_id']),
             'notes' => "Paid via Xendit ({$paymentChannel})",
             'status' => 'completed',
@@ -304,5 +309,81 @@ class XenditService
         }
 
         return hash_equals($webhookToken, $callbackToken);
+    }
+
+    /**
+     * Format payment method for display
+     */
+    protected function formatPaymentMethod(string $method, string $channel): string
+    {
+        $method = strtoupper($method);
+        $channel = strtoupper($channel);
+
+        // Bank Transfer - show bank name
+        if ($method === 'BANK_TRANSFER' || $method === 'VIRTUAL_ACCOUNT') {
+            $bankNames = [
+                'BCA' => 'BCA Virtual Account',
+                'BNI' => 'BNI Virtual Account',
+                'BRI' => 'BRI Virtual Account',
+                'MANDIRI' => 'Mandiri Virtual Account',
+                'PERMATA' => 'Permata Virtual Account',
+                'CIMB' => 'CIMB Virtual Account',
+                'SAHABAT_SAMPOERNA' => 'Sahabat Sampoerna VA',
+                'BJB' => 'BJB Virtual Account',
+                'BSI' => 'BSI Virtual Account',
+            ];
+            return $bankNames[$channel] ?? "Bank Transfer ({$channel})";
+        }
+
+        // E-Wallet - show wallet name
+        if ($method === 'EWALLET') {
+            $walletNames = [
+                'OVO' => 'OVO',
+                'DANA' => 'DANA',
+                'SHOPEEPAY' => 'ShopeePay',
+                'LINKAJA' => 'LinkAja',
+                'ASTRAPAY' => 'AstraPay',
+                'JENIUSPAY' => 'Jenius Pay',
+            ];
+            return $walletNames[$channel] ?? "E-Wallet ({$channel})";
+        }
+
+        // Credit/Debit Card
+        if ($method === 'CREDIT_CARD' || $method === 'DEBIT_CARD') {
+            return 'Credit/Debit Card';
+        }
+
+        // QR Code
+        if ($method === 'QR_CODE' || $channel === 'QRIS') {
+            return 'QRIS';
+        }
+
+        // Retail Outlet
+        if ($method === 'RETAIL_OUTLET') {
+            $outletNames = [
+                'ALFAMART' => 'Alfamart',
+                'INDOMARET' => 'Indomaret',
+            ];
+            return $outletNames[$channel] ?? "Retail ({$channel})";
+        }
+
+        // Paylater
+        if ($method === 'PAYLATER') {
+            $paylaterNames = [
+                'KREDIVO' => 'Kredivo',
+                'AKULAKU' => 'Akulaku',
+                'UANGME' => 'UangMe',
+                'ATOME' => 'Atome',
+            ];
+            return $paylaterNames[$channel] ?? "PayLater ({$channel})";
+        }
+
+        // Direct Debit
+        if ($method === 'DIRECT_DEBIT') {
+            return "Direct Debit ({$channel})";
+        }
+
+        // Fallback
+        return $channel ?: $method;
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -31,6 +32,8 @@ class SalesOrder extends Model
         'notes',
         'terms',
         'shipping_address',
+        'share_token',
+        'share_token_expires_at',
     ];
 
     protected $casts = [
@@ -40,6 +43,7 @@ class SalesOrder extends Model
         'tax' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
+        'share_token_expires_at' => 'datetime',
     ];
 
     public function getStateAttribute(): SalesOrderState
@@ -221,6 +225,22 @@ class SalesOrder extends Model
         }
 
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Ensure a share token exists for public preview
+     */
+    public function ensureShareToken(bool $forceRefresh = false): void
+    {
+        if (
+            $forceRefresh
+            || blank($this->share_token)
+            || ($this->share_token_expires_at && $this->share_token_expires_at->isPast())
+        ) {
+            $this->share_token = Str::random(48);
+            $this->share_token_expires_at = now()->addDays(30);
+            $this->save();
+        }
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Livewire\Sales\Invoices;
 
 use App\Enums\SalesOrderState;
 use App\Models\Sales\SalesOrder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -34,6 +35,9 @@ class OrdersToInvoice extends Component
     #[Url]
     public bool $showStats = false;
 
+    #[Url]
+    public bool $myInvoice = true;
+
     public array $selected = [];
     public bool $selectAll = false;
 
@@ -51,6 +55,9 @@ class OrdersToInvoice extends Component
 
     // For compatibility with shared view (not really used for label here)
     public string $mode = 'orders';
+
+    // Flag to identify this is the Orders to Invoice page
+    public bool $isOrdersToInvoicePage = true;
 
     public function toggleStats(): void
     {
@@ -125,6 +132,7 @@ class OrdersToInvoice extends Component
         return SalesOrder::query()
             ->with(['customer', 'user'])
             ->where('status', SalesOrderState::SALES_ORDER->value)
+            ->when($this->myInvoice, fn ($q) => $q->where('user_id', Auth::id()))
             ->when($this->search, fn ($q) => $q->where(fn ($qq) => $qq
                 ->where('order_number', 'like', "%{$this->search}%")
                 ->orWhereHas('customer', fn ($q) => $q->where('name', 'like', "%{$this->search}%"))

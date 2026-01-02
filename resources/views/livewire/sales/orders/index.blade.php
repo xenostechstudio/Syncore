@@ -27,7 +27,7 @@
     </div>
 
     @php
-        $isOrdersToInvoicePage = request()->routeIs('sales.invoices.pending');
+        $isOrdersToInvoicePage = $isOrdersToInvoicePage ?? request()->routeIs('sales.invoices.pending');
     @endphp
 
     {{-- Header Bar (inside Livewire root div so wire:click works) --}}
@@ -149,6 +149,21 @@
                                         </button>
                                     </span>
                                 </div>
+                            @elseif($isOrdersToInvoicePage && ($myInvoice ?? false))
+                                <div class="flex items-center">
+                                    <span class="inline-flex h-6 items-center gap-1.5 rounded-md bg-zinc-900 px-2 text-[10px] font-semibold text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900">
+                                        <flux:icon name="user" class="size-3 text-white/70 dark:text-zinc-700" />
+                                        <span>My Invoice</span>
+                                        <button
+                                            type="button"
+                                            onclick="event.stopPropagation()"
+                                            wire:click="$set('myInvoice', false)"
+                                            class="-mr-0.5 inline-flex h-4 w-4 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                        >
+                                            <flux:icon name="x-mark" class="size-3" />
+                                        </button>
+                                    </span>
+                                </div>
                             @endif
                         </x-slot:badge>
                         <div class="flex flex-col gap-4 p-3 md:flex-row">
@@ -167,6 +182,16 @@
                                             <button type="button" wire:click="$set('myQuotations', false)" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <span>All Quotations</span>
                                                 @if(! $myQuotations)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <div class="my-2 border-t border-zinc-100 dark:border-zinc-700"></div>
+                                        @elseif($isOrdersToInvoicePage)
+                                            <button type="button" wire:click="$set('myInvoice', true)" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>My Invoice</span>
+                                                @if($myInvoice ?? false)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('myInvoice', false)" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>All Invoice</span>
+                                                @if(! ($myInvoice ?? false))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                             </button>
                                             <div class="my-2 border-t border-zinc-100 dark:border-zinc-700"></div>
                                         @endif
@@ -307,14 +332,16 @@
                 </div>
 
                 {{-- Stats Toggle --}}
-                <button 
-                    type="button"
-                    wire:click="toggleStats"
-                    class="flex h-8 w-8 items-center justify-center rounded-md transition-colors {{ $showStats ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100' : 'text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300' }}"
-                    title="{{ $showStats ? 'Hide statistics' : 'Show statistics' }}"
-                >
-                    <flux:icon name="chart-bar" class="size-4" />
-                </button>
+                <div class="flex h-9 items-center rounded-lg border border-zinc-200 p-0.5 dark:border-zinc-700">
+                    <button 
+                        type="button"
+                        wire:click="toggleStats"
+                        class="{{ $showStats ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }} rounded-md p-1.5 transition-colors"
+                        title="{{ $showStats ? 'Hide statistics' : 'Show statistics' }}"
+                    >
+                        <flux:icon name="chart-bar" class="size-[18px]" />
+                    </button>
+                </div>
 
                 {{-- View Toggle --}}
                 <x-ui.view-toggle :view="$view" :views="['list', 'grid', 'kanban']" />
@@ -601,76 +628,31 @@
                 </table>
             </div>
         @elseif($view === 'grid')
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @foreach($orders as $order)
                     @php
                         $statusConfig = match($order->status) {
                             'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Quotation'],
-                            'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Quotation Sent'],
-                            'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Sales Order'],
+                            'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Sent'],
+                            'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Order'],
                             'shipped' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400', 'label' => 'Shipped'],
                             'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Done'],
                             'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
                             default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($order->status)],
                         };
-                        $totalQty = $order->items->sum('quantity');
-                        $invoicedQty = $order->items->sum('quantity_invoiced');
-                        $deliveredQty = $order->items->sum('quantity_delivered');
-                        $invoicePercent = $totalQty > 0 ? round(($invoicedQty / $totalQty) * 100) : 0;
-                        $deliveryPercent = $totalQty > 0 ? round(($deliveredQty / $totalQty) * 100) : 0;
                     @endphp
-                    <a 
-                        href="{{ route('sales.orders.edit', $order->id) }}"
-                        wire:navigate
-                        class="group rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
-                    >
-                        <div class="flex items-center justify-between gap-3">
-                            <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{{ $order->order_number }}</p>
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
+                    <a href="{{ route('sales.orders.edit', $order->id) }}" wire:navigate class="group rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ $order->order_number }}</span>
+                            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
                                 {{ $statusConfig['label'] }}
                             </span>
                         </div>
-                        <div class="mt-3">
-                            <p class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ $order->customer->name }}</p>
-                        </div>
-
-                        <div class="mt-3 flex flex-wrap gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                            <div class="flex items-center gap-1">
-                                <flux:icon name="calendar" class="size-4" />
-                                <span>{{ $order->created_at?->format('d M Y H:i') }}</span>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <flux:icon name="user" class="size-4" />
-                                <span>{{ $order->user->name ?? 'Unassigned' }}</span>
-                            </div>
-                        </div>
-
-                        {{-- Progress Indicators --}}
-                        @if($order->status === 'processing')
-                            <div class="mt-4 space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-                                <div class="flex items-center gap-2">
-                                    <flux:icon name="banknotes" class="size-3.5 text-blue-500" />
-                                    <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
-                                        <div class="h-full rounded-full transition-all {{ $invoicePercent >= 100 ? 'bg-emerald-500' : 'bg-blue-500' }}" style="width: {{ $invoicePercent }}%"></div>
-                                    </div>
-                                    <span class="text-[10px] font-medium {{ $invoicePercent >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400' }}">{{ $invoicePercent }}%</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <flux:icon name="truck" class="size-3.5 text-violet-500" />
-                                    <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
-                                        <div class="h-full rounded-full transition-all {{ $deliveryPercent >= 100 ? 'bg-emerald-500' : 'bg-violet-500' }}" style="width: {{ $deliveryPercent }}%"></div>
-                                    </div>
-                                    <span class="text-[10px] font-medium {{ $deliveryPercent >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400' }}">{{ $deliveryPercent }}%</span>
-                                </div>
-                            </div>
-                        @endif
-
-                        <div class="mt-4 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                            <p class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total, 0, ',', '.') }}</p>
-                            <div class="flex items-center gap-2 text-xs text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300">
-                                View details
-                                <flux:icon name="arrow-up-right" class="size-4" />
-                            </div>
+                        <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ $order->customer->name }}</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $order->created_at?->format('d M Y') }}</p>
+                        <div class="mt-3 flex items-center justify-between border-t border-zinc-100 pt-3 dark:border-zinc-800">
+                            <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total / 1000000, 1) }}M</span>
+                            <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $order->user->name ?? '-' }}</span>
                         </div>
                     </a>
                 @endforeach

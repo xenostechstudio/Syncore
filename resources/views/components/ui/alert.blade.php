@@ -1,10 +1,14 @@
 @props([
-    'type' => 'info',
+    'type' => null,
+    'alertType' => null,
     'dismissible' => true,
     'duration' => 5000,
 ])
 
 @php
+    // Support both 'type' and 'alertType' props for backward compatibility
+    $alertTypeValue = $alertType ?? $type ?? 'info';
+    
     $typeConfig = [
         'success' => [
             'bg' => 'bg-emerald-50 dark:bg-emerald-900/20',
@@ -39,7 +43,7 @@
             'progressBg' => 'bg-blue-500',
         ],
     ];
-    $config = $typeConfig[$type] ?? $typeConfig['info'];
+    $config = $typeConfig[$alertTypeValue] ?? $typeConfig['info'];
 @endphp
 
 <div 

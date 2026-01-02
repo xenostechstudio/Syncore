@@ -48,6 +48,30 @@ class ModuleNavigation
                 'description' => 'Invoice and payment management',
                 'color' => 'emerald',
             ],
+            'Accounting' => [
+                'name' => 'Accounting',
+                'icon' => 'calculator',
+                'description' => 'Financial management',
+                'color' => 'indigo',
+            ],
+            'CRM' => [
+                'name' => 'CRM',
+                'icon' => 'users',
+                'description' => 'Customer relationship management',
+                'color' => 'pink',
+            ],
+            'HR' => [
+                'name' => 'HR',
+                'icon' => 'identification',
+                'description' => 'Human resource management',
+                'color' => 'teal',
+            ],
+            'Reports' => [
+                'name' => 'Reports',
+                'icon' => 'chart-bar',
+                'description' => 'Business analytics & reports',
+                'color' => 'cyan',
+            ],
             'Settings' => [
                 'name' => 'General Setup',
                 'icon' => 'cog-6-tooth',
@@ -123,12 +147,11 @@ class ModuleNavigation
                 ],
                 [
                     'label' => 'Invoice',
-                    'route' => 'sales.orders.index',
+                    'route' => 'sales.invoices.pending',
                     'icon' => 'document-text',
                     'pattern' => 'sales.invoices*',
                     'children' => [
                         ['label' => 'Orders to Invoice', 'route' => 'sales.invoices.pending', 'pattern' => 'sales.invoices.pending'],
-                        ['label' => 'Orders to Upsell', 'route' => 'sales.orders.index', 'pattern' => 'sales.invoices.upsell'],
                     ],
                 ],
                 [
@@ -285,6 +308,127 @@ class ModuleNavigation
                     'route' => 'settings.audit-trail.index',
                     'icon' => 'clipboard-document-list',
                     'pattern' => 'settings.audit-trail*',
+                ],
+            ],
+            'Accounting' => [
+                [
+                    'label' => 'Overview',
+                    'route' => 'accounting.index',
+                    'icon' => 'chart-bar-square',
+                    'pattern' => 'accounting.index',
+                ],
+                [
+                    'label' => 'Chart of Accounts',
+                    'route' => 'accounting.accounts.index',
+                    'icon' => 'list-bullet',
+                    'pattern' => 'accounting.accounts*',
+                ],
+                [
+                    'label' => 'Journal Entries',
+                    'route' => 'accounting.journal-entries.index',
+                    'icon' => 'document-text',
+                    'pattern' => 'accounting.journal-entries*',
+                ],
+                [
+                    'label' => 'Reports',
+                    'route' => 'accounting.index',
+                    'icon' => 'chart-pie',
+                    'pattern' => 'accounting.reports*',
+                    'children' => [
+                        ['label' => 'General Ledger', 'route' => 'accounting.index', 'pattern' => 'accounting.reports.ledger'],
+                        ['label' => 'Trial Balance', 'route' => 'accounting.index', 'pattern' => 'accounting.reports.trial-balance'],
+                    ],
+                ],
+            ],
+            'CRM' => [
+                [
+                    'label' => 'Overview',
+                    'route' => 'crm.index',
+                    'icon' => 'chart-bar-square',
+                    'pattern' => 'crm.index',
+                ],
+                [
+                    'label' => 'Leads',
+                    'route' => 'crm.leads.index',
+                    'icon' => 'user-plus',
+                    'pattern' => 'crm.leads*',
+                ],
+                [
+                    'label' => 'Opportunities',
+                    'route' => 'crm.opportunities.index',
+                    'icon' => 'currency-dollar',
+                    'pattern' => 'crm.opportunities*',
+                ],
+                [
+                    'label' => 'Activities',
+                    'route' => 'crm.activities.index',
+                    'icon' => 'calendar',
+                    'pattern' => 'crm.activities*',
+                ],
+            ],
+            'HR' => [
+                [
+                    'label' => 'Overview',
+                    'route' => 'hr.index',
+                    'icon' => 'chart-bar-square',
+                    'pattern' => 'hr.index',
+                ],
+                [
+                    'label' => 'Resource',
+                    'route' => 'hr.employees.index',
+                    'icon' => 'users',
+                    'pattern' => 'hr.employees*|hr.departments*|hr.positions*',
+                    'children' => [
+                        ['label' => 'Employees', 'route' => 'hr.employees.index', 'pattern' => 'hr.employees*'],
+                        ['label' => 'Departments', 'route' => 'hr.departments.index', 'pattern' => 'hr.departments*'],
+                        ['label' => 'Positions', 'route' => 'hr.positions.index', 'pattern' => 'hr.positions*'],
+                    ],
+                ],
+                [
+                    'label' => 'Leave',
+                    'route' => 'hr.leave.requests.index',
+                    'icon' => 'calendar-days',
+                    'pattern' => 'hr.leave*',
+                    'children' => [
+                        ['label' => 'Leave Requests', 'route' => 'hr.leave.requests.index', 'pattern' => 'hr.leave.requests*'],
+                        ['label' => 'Leave Types', 'route' => 'hr.leave.types.index', 'pattern' => 'hr.leave.types*'],
+                    ],
+                ],
+                [
+                    'label' => 'Payroll',
+                    'route' => 'hr.payroll.index',
+                    'icon' => 'banknotes',
+                    'pattern' => 'hr.payroll*',
+                    'children' => [
+                        ['label' => 'Payroll Runs', 'route' => 'hr.payroll.index', 'pattern' => 'hr.payroll.index|hr.payroll.create|hr.payroll.edit'],
+                        ['label' => 'Salary Components', 'route' => 'hr.payroll.components.index', 'pattern' => 'hr.payroll.components*'],
+                    ],
+                ],
+            ],
+            'Reports' => [
+                [
+                    'label' => 'Overview',
+                    'route' => 'reports.index',
+                    'icon' => 'chart-bar-square',
+                    'pattern' => 'reports.index',
+                ],
+                [
+                    'label' => 'Sales Reports',
+                    'route' => 'reports.sales',
+                    'icon' => 'shopping-cart',
+                    'pattern' => 'reports.sales*',
+                ],
+                [
+                    'label' => 'Inventory Reports',
+                    'route' => 'reports.inventory',
+                    'icon' => 'archive-box',
+                    'pattern' => 'reports.inventory*',
+                ],
+                [
+                    'label' => 'Financial Reports',
+                    'route' => 'reports.financial',
+                    'icon' => 'banknotes',
+                    'pattern' => 'reports.financial*',
                 ],
             ],
         ];

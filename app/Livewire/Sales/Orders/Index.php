@@ -36,7 +36,7 @@ class Index extends Component
     public bool $myQuotations = true;
 
     #[Url]
-    public bool $showStats = true;
+    public bool $showStats = false;
 
     public array $selected = [];
     public bool $selectAll = false;
