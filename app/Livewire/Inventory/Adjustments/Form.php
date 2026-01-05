@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Inventory\Adjustments;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\InventoryAdjustmentItem;
 use App\Models\Inventory\InventoryStock;
@@ -12,11 +13,13 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Stock Adjustment')]
 class Form extends Component
 {
+    use WithNotes;
     public ?int $adjustmentId = null;
     public ?InventoryAdjustment $adjustment = null;
     public bool $editing = false;
@@ -30,6 +33,48 @@ class Form extends Component
 
     public array $items = [];
     public string $productSearch = '';
+
+    protected function getNotableModel()
+    {
+        return $this->adjustmentId ? InventoryAdjustment::find($this->adjustmentId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->adjustmentId) {
+            return collect();
+        }
+
+        $adjustment = InventoryAdjustment::find($this->adjustmentId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', InventoryAdjustment::class)
+            ->where('subject_id', $this->adjustmentId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $adjustment->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public function mount(?int $id = null): void
     {

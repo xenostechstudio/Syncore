@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->integer('sequence')->default(0);
             $table->string('color')->default('zinc');
-            $table->decimal('probability', 5, 2)->default(0); // Win probability %
+            $table->decimal('probability', 5, 2)->default(0);
             $table->boolean('is_won')->default(false);
             $table->boolean('is_lost')->default(false);
             $table->boolean('is_active')->default(true);
@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('job_title')->nullable();
             $table->string('website')->nullable();
             $table->text('address')->nullable();
-            $table->string('source')->nullable(); // website, referral, cold_call, etc.
+            $table->string('source')->nullable();
             $table->enum('status', ['new', 'contacted', 'qualified', 'converted', 'lost'])->default('new');
             $table->text('notes')->nullable();
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
@@ -65,7 +65,7 @@ return new class extends Migration
             $table->enum('type', ['call', 'meeting', 'email', 'task', 'note']);
             $table->string('subject');
             $table->text('description')->nullable();
-            $table->morphs('activitable'); // lead_id, opportunity_id, customer_id
+            $table->morphs('activitable');
             $table->datetime('scheduled_at')->nullable();
             $table->datetime('completed_at')->nullable();
             $table->integer('duration_minutes')->nullable();

@@ -2,16 +2,20 @@
 
 namespace App\Livewire\Purchase\Rfq;
 
+use App\Livewire\Concerns\WithNotes;
+use App\Models\Purchase\PurchaseRfq;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Purchase'])]
 #[Title('RFQ')]
 class Form extends Component
 {
+    use WithNotes;
     public ?int $rfqId = null;
     public string $reference = '';
     public ?int $supplier_id = null;
@@ -28,7 +32,48 @@ class Form extends Component
 
     public ?string $createdAt = null;
     public ?string $updatedAt = null;
-    public array $activityLog = [];
+
+    protected function getNotableModel()
+    {
+        return $this->rfqId ? PurchaseRfq::find($this->rfqId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->rfqId) {
+            return collect();
+        }
+
+        $rfq = PurchaseRfq::find($this->rfqId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', PurchaseRfq::class)
+            ->where('subject_id', $this->rfqId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $rfq->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public function mount(?int $id = null): void
     {
@@ -49,24 +94,6 @@ class Form extends Component
 
                 $this->createdAt = \Carbon\Carbon::parse($rfq->created_at)->format('M d, Y \a\t H:i');
                 $this->updatedAt = \Carbon\Carbon::parse($rfq->updated_at)->format('M d, Y \a\t H:i');
-
-                $this->activityLog = [
-                    [
-                        'type' => 'created',
-                        'message' => 'RFQ created',
-                        'user' => Auth::user()?->name ?? 'System',
-                        'time' => $this->createdAt,
-                    ],
-                ];
-
-                if ($rfq->updated_at > $rfq->created_at) {
-                    $this->activityLog[] = [
-                        'type' => 'updated',
-                        'message' => 'RFQ updated',
-                        'user' => Auth::user()?->name ?? 'System',
-                        'time' => $this->updatedAt,
-                    ];
-                }
             }
         } else {
             $this->order_date = now()->format('Y-m-d');

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('balance', 15, 2)->default(0);
             $table->boolean('is_active')->default(true);
-            $table->boolean('is_system')->default(false); // System accounts can't be deleted
+            $table->boolean('is_system')->default(false);
             $table->timestamps();
         });
 
@@ -37,8 +37,8 @@ return new class extends Migration
             $table->id();
             $table->string('entry_number')->unique();
             $table->date('entry_date');
-            $table->string('reference')->nullable(); // e.g., INV-001, PAY-001
-            $table->string('reference_type')->nullable(); // invoice, payment, manual
+            $table->string('reference')->nullable();
+            $table->string('reference_type')->nullable();
             $table->foreignId('reference_id')->nullable();
             $table->text('description')->nullable();
             $table->decimal('total_debit', 15, 2)->default(0);

@@ -3,15 +3,20 @@
 namespace App\Models\Inventory;
 
 use App\Models\User;
+use App\Traits\HasNotes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\InventoryStock;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class InventoryAdjustment extends Model
 {
+    use LogsActivity, HasNotes;
+
     protected $fillable = [
         'adjustment_number',
         'warehouse_id',
@@ -160,5 +165,22 @@ class InventoryAdjustment extends Model
             $this->posted_at = now();
             $this->save();
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'adjustment_number', 'warehouse_id', 'adjustment_date',
+                'adjustment_type', 'status', 'reason', 'notes',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'Adjustment created',
+                'updated' => 'Adjustment updated',
+                'deleted' => 'Adjustment deleted',
+                default => "Adjustment {$eventName}",
+            });
     }
 }

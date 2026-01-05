@@ -2,16 +2,20 @@
 
 namespace App\Livewire\CRM\Leads;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\CRM\Lead;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Lead')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $leadId = null;
     public ?Lead $lead = null;
 
@@ -26,6 +30,52 @@ class Form extends Component
     public string $leadStatus = 'new';
     public string $notes = '';
     public ?int $assignedTo = null;
+
+    // Timestamps
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+
+    protected function getNotableModel()
+    {
+        return $this->leadId ? Lead::find($this->leadId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->leadId) {
+            return collect();
+        }
+
+        $lead = Lead::find($this->leadId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', Lead::class)
+            ->where('subject_id', $this->leadId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $lead->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     protected function rules(): array
     {
@@ -61,6 +111,8 @@ class Form extends Component
             $this->leadStatus = $this->lead->status;
             $this->notes = $this->lead->notes ?? '';
             $this->assignedTo = $this->lead->assigned_to;
+            $this->createdAt = $this->lead->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $this->lead->updated_at->format('M d, Y \a\t H:i');
         }
     }
 
@@ -86,11 +138,10 @@ class Form extends Component
             $this->lead->update($data);
             session()->flash('success', 'Lead updated successfully.');
         } else {
-            Lead::create($data);
+            $lead = Lead::create($data);
             session()->flash('success', 'Lead created successfully.');
+            $this->redirect(route('crm.leads.edit', $lead->id), navigate: true);
         }
-
-        $this->redirect(route('crm.leads.index'), navigate: true);
     }
 
     public function convertToCustomer(): void
@@ -101,7 +152,6 @@ class Form extends Component
 
         if ($customer) {
             session()->flash('success', "Lead converted to customer: {$customer->name}");
-            $this->redirect(route('crm.leads.index'), navigate: true);
         } else {
             session()->flash('error', 'Failed to convert lead.');
         }
@@ -121,6 +171,7 @@ class Form extends Component
         return view('livewire.crm.leads.form', [
             'users' => User::orderBy('name')->get(),
             'sources' => Lead::getSources(),
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

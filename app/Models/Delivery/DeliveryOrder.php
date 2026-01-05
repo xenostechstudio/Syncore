@@ -6,6 +6,7 @@ use App\Enums\DeliveryOrderState;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\SalesOrder;
 use App\Models\User;
+use App\Traits\HasNotes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class DeliveryOrder extends Model
 {
-    use LogsActivity;
+    use LogsActivity, HasNotes;
 
     protected $fillable = [
         'delivery_number',

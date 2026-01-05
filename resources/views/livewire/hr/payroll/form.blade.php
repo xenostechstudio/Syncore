@@ -59,51 +59,87 @@
                             <flux:icon name="calculator" class="size-4" />
                             Generate
                         </button>
-                        <button type="button" @click="showApproveModal = true" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
+                        <button type="button" @click="showApproveModal = true" class="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
                             <flux:icon name="check" class="size-4" />
                             Approve
                         </button>
                     @endif
-                    @if($periodId && in_array($status, ['approved', 'paid']))
+                    @if($periodId && $status === 'approved')
+                        <button type="button" wire:click="startProcessing" class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600">
+                            <flux:icon name="play" class="size-4" />
+                            Start Processing
+                        </button>
+                        <button type="button" wire:click="resetToDraft" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                            <flux:icon name="arrow-uturn-left" class="size-4" />
+                            Back to Draft
+                        </button>
+                    @endif
+                    @if($periodId && $status === 'processing')
+                        <button type="button" wire:click="markAsPaid" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600">
+                            <flux:icon name="banknotes" class="size-4" />
+                            Mark as Paid
+                        </button>
+                    @endif
+                    @if($periodId && $status === 'paid')
                         <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                             <flux:icon name="printer" class="size-4" />
                             Print
                         </button>
                     @endif
+                    @if($periodId && $status === 'cancelled')
+                        <button type="button" wire:click="resetToDraft" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                            <flux:icon name="arrow-uturn-left" class="size-4" />
+                            Reopen
+                        </button>
+                    @endif
+                    @if($periodId && !in_array($status, ['paid', 'cancelled']))
+                        <button type="button" wire:click="cancel" wire:confirm="Cancel this payroll run?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-700 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
+                            <flux:icon name="x-mark" class="size-4" />
+                            Cancel
+                        </button>
+                    @endif
                     <a href="{{ route('hr.payroll.index') }}" wire:navigate class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                        <flux:icon name="x-mark" class="size-4" />
-                        Cancel
+                        <flux:icon name="arrow-left" class="size-4" />
+                        Back
                     </a>
                 </div>
 
-                {{-- Status Stepper --}}
+                {{-- Status Stepper: Draft → Approved → Processing → Paid --}}
                 @php
                     $steps = [
-                        ['key' => 'draft', 'label' => 'Draft'],
-                        ['key' => 'processing', 'label' => 'Processing'],
-                        ['key' => 'approved', 'label' => 'Approved'],
-                        ['key' => 'paid', 'label' => 'Paid'],
+                        ['key' => 'draft', 'label' => 'Draft', 'icon' => 'pencil'],
+                        ['key' => 'approved', 'label' => 'Approved', 'icon' => 'check'],
+                        ['key' => 'processing', 'label' => 'Processing', 'icon' => 'cog-6-tooth'],
+                        ['key' => 'paid', 'label' => 'Paid', 'icon' => 'banknotes'],
                     ];
-                    $currentIndex = collect($steps)->search(fn($s) => $s['key'] === $status);
+                    $isCancelled = $status === 'cancelled';
+                    $currentIndex = $isCancelled ? -1 : collect($steps)->search(fn($s) => $s['key'] === $status);
                     if ($currentIndex === false) $currentIndex = 0;
                 @endphp
                 <div class="hidden items-center lg:flex">
-                    @foreach($steps as $index => $step)
-                        @php
-                            $isActive = $index === $currentIndex;
-                            $isCompleted = $index < $currentIndex;
-                            $isPending = $index > $currentIndex;
-                            $isFirst = $index === 0;
-                        @endphp
-                        <div class="relative flex items-center {{ !$isFirst ? '-ml-2' : '' }}" style="z-index: {{ count($steps) - $index }};">
-                            <div class="relative flex h-[38px] items-center px-4 {{ $isActive ? 'bg-violet-600 text-white' : '' }} {{ $isCompleted ? 'bg-emerald-500 text-white' : '' }} {{ $isPending ? 'bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400' : '' }}" style="clip-path: polygon({{ $isFirst ? '0 0' : '10px 0' }}, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, {{ $isFirst ? '0 100%' : '10px 100%' }}, {{ $isFirst ? '0 50%' : '0 100%, 10px 50%, 0 0' }});">
-                                <span class="flex items-center gap-1 text-sm font-medium whitespace-nowrap">
-                                    @if($isCompleted)<flux:icon name="check" class="size-4" />@endif
-                                    {{ $step['label'] }}
-                                </span>
-                            </div>
+                    @if($isCancelled)
+                        <div class="flex h-[38px] items-center rounded-lg bg-red-100 px-4 text-sm font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                            <flux:icon name="x-circle" class="mr-1.5 size-4" />
+                            Cancelled
                         </div>
-                    @endforeach
+                    @else
+                        @foreach($steps as $index => $step)
+                            @php
+                                $isActive = $index === $currentIndex;
+                                $isCompleted = $index < $currentIndex;
+                                $isPending = $index > $currentIndex;
+                                $isFirst = $index === 0;
+                            @endphp
+                            <div class="relative flex items-center {{ !$isFirst ? '-ml-2' : '' }}" style="z-index: {{ count($steps) - $index }};">
+                                <div class="relative flex h-[38px] items-center px-4 {{ $isActive ? 'bg-violet-600 text-white' : '' }} {{ $isCompleted ? 'bg-emerald-500 text-white' : '' }} {{ $isPending ? 'bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400' : '' }}" style="clip-path: polygon({{ $isFirst ? '0 0' : '10px 0' }}, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, {{ $isFirst ? '0 100%' : '10px 100%' }}, {{ $isFirst ? '0 50%' : '0 100%, 10px 50%, 0 0' }});">
+                                    <span class="flex items-center gap-1 text-sm font-medium whitespace-nowrap">
+                                        @if($isCompleted)<flux:icon name="check" class="size-4" />@endif
+                                        {{ $step['label'] }}
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
                 </div>
             </div>
             <div class="col-span-3 flex items-center justify-end gap-1">
@@ -182,8 +218,41 @@
                 {{-- Payroll Items --}}
                 @if($periodId)
                     <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-                        <div class="border-b border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Employee Payslips ({{ $items->count() }})</h3>
+                        <div class="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Employee Payslips ({{ $totalItemsCount }})</h3>
+                            <div class="flex items-center gap-3">
+                                {{-- Pagination --}}
+                                @if($items instanceof \Illuminate\Pagination\LengthAwarePaginator && $items->hasPages())
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                                            {{ $items->firstItem() }}-{{ $items->lastItem() }}/{{ $items->total() }}
+                                        </span>
+                                        <div class="flex items-center gap-0.5">
+                                            <button type="button" wire:click="previousPage" @disabled($items->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                                <flux:icon name="chevron-left" class="size-4" />
+                                            </button>
+                                            <button type="button" wire:click="nextPage" @disabled(!$items->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                                <flux:icon name="chevron-right" class="size-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                                {{-- Search --}}
+                                <div class="relative">
+                                    <flux:icon name="magnifying-glass" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                    <input 
+                                        type="text" 
+                                        wire:model.live.debounce.300ms="payslipSearch" 
+                                        placeholder="Search employee..." 
+                                        class="w-48 rounded-lg border border-zinc-200 bg-white py-1.5 pl-9 pr-3 text-sm placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                    />
+                                    @if($payslipSearch)
+                                        <button type="button" wire:click="$set('payslipSearch', '')" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
+                                            <flux:icon name="x-mark" class="size-4" />
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -199,10 +268,13 @@
                                 </thead>
                                 <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
                                     @forelse($items as $item)
-                                        <tr>
+                                        <tr class="group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50" wire:click="$dispatch('navigate', { url: '{{ route('hr.payroll.item', ['periodId' => $periodId, 'itemId' => $item->id]) }}' })" onclick="Livewire.navigate('{{ route('hr.payroll.item', ['periodId' => $periodId, 'itemId' => $item->id]) }}')">
                                             <td class="whitespace-nowrap px-4 py-3">
-                                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $item->employee->name }}</span>
-                                                <span class="block text-xs text-zinc-500">{{ $item->employee->employee_code }}</span>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $item->employee->name }}</span>
+                                                    <flux:icon name="chevron-right" class="size-3.5 text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                                                </div>
+                                                <span class="block text-xs text-zinc-500">{{ $item->employee->email }}</span>
                                             </td>
                                             <td class="whitespace-nowrap px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
                                                 {{ $item->employee->department?->name ?? '-' }}
@@ -223,26 +295,30 @@
                                     @empty
                                         <tr>
                                             <td colspan="6" class="px-4 py-8 text-center text-sm text-zinc-400">
-                                                No payslips generated. Click "Generate" to create payslips.
+                                                @if($payslipSearch)
+                                                    No payslips found matching "{{ $payslipSearch }}"
+                                                @else
+                                                    No payslips generated. Click "Generate" to create payslips.
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
-                                @if($items->count() > 0)
+                                @if($totalItemsCount > 0)
                                     <tfoot class="bg-zinc-50 dark:bg-zinc-900/50">
                                         <tr>
-                                            <td colspan="2" class="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">Total</td>
+                                            <td colspan="2" class="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">Total (all {{ $totalItemsCount }} employees)</td>
                                             <td class="px-4 py-3 text-right text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                                Rp {{ number_format($items->sum('basic_salary'), 0, ',', '.') }}
+                                                Rp {{ number_format($totalBasicSalary, 0, ',', '.') }}
                                             </td>
                                             <td class="px-4 py-3 text-right text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                                                +Rp {{ number_format($items->sum('total_earnings'), 0, ',', '.') }}
+                                                +Rp {{ number_format($totalEarnings, 0, ',', '.') }}
                                             </td>
                                             <td class="px-4 py-3 text-right text-sm font-medium text-red-600 dark:text-red-400">
-                                                -Rp {{ number_format($items->sum('total_deductions'), 0, ',', '.') }}
+                                                -Rp {{ number_format($totalDeductions, 0, ',', '.') }}
                                             </td>
                                             <td class="px-4 py-3 text-right text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                                Rp {{ number_format($items->sum('net_salary'), 0, ',', '.') }}
+                                                Rp {{ number_format($totalNetSalary, 0, ',', '.') }}
                                             </td>
                                         </tr>
                                     </tfoot>

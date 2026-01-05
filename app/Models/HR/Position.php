@@ -2,6 +2,7 @@
 
 namespace App\Models\HR;
 
+use App\Traits\HasNotes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Position extends Model
 {
-    use LogsActivity;
+    use LogsActivity, HasNotes;
 
     protected $fillable = [
         'name',

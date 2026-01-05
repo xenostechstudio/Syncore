@@ -79,10 +79,8 @@
                     </span>
                 </div>
             </div>
-            <div class="col-span-3 flex items-center justify-end gap-1">
-                <button @click="showLogNote = !showLogNote" :class="showLogNote ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'" class="rounded-lg p-2 transition-colors" title="Log note">
-                    <flux:icon name="pencil-square" class="size-5" />
-                </button>
+            <div class="col-span-3">
+                <x-ui.chatter-buttons :showMessage="false" :showActivity="false" />
             </div>
         </div>
     </div>
@@ -850,32 +848,8 @@
 
             {{-- Right Column: Activity Timeline --}}
             <div class="lg:col-span-3">
-                {{-- Message/Note Input Panels (shown when icons clicked) --}}
-                <div x-show="showLogNote" x-collapse class="mb-4">
-                    <div class="flex gap-3">
-                        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
-                            <flux:icon name="pencil-square" class="size-4" />
-                        </div>
-                        <div class="flex-1">
-                            <textarea 
-                                wire:model="notes"
-                                rows="3"
-                                placeholder="Log an internal note..."
-                                class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-amber-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-                            ></textarea>
-                            <div class="mt-2 flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Attach file">
-                                        <flux:icon name="paper-clip" class="size-4" />
-                                    </button>
-                                </div>
-                                <button type="button" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700">
-                                    Log Note
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {{-- Chatter Forms --}}
+                <x-ui.chatter-forms :showMessage="false" :showActivity="false" />
 
                 {{-- Activity Timeline --}}
                 @if($employeeId)
@@ -883,7 +857,7 @@
                     <div class="flex items-center gap-3 py-2">
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                         <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                            @if($activities->isNotEmpty() && $activities->first()->created_at->isToday())
+                            @if($activities->isNotEmpty() && $activities->first()['created_at']->isToday())
                                 Today
                             @else
                                 Activity
@@ -894,40 +868,76 @@
 
                     {{-- Activity Items --}}
                     <div class="space-y-4">
-                        @forelse($activities as $activity)
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0">
-                                    <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <x-ui.user-name :user="$activity->causer" />
-                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                            {{ $activity->created_at->diffForHumans() }}
-                                        </span>
+                        @forelse($activities as $item)
+                            @if($item['type'] === 'note')
+                                {{-- Note Item --}}
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        <x-ui.user-avatar :user="$item['data']->user" size="md" :showPopup="true" />
                                     </div>
-                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                        @if($activity->properties->has('old') && $activity->event === 'updated')
-                                            @php
-                                                $changes = collect($activity->properties->get('attributes', []))
-                                                    ->filter(fn($val, $key) => isset($activity->properties->get('old', [])[$key]) && $activity->properties->get('old')[$key] !== $val)
-                                                    ->keys()
-                                                    ->map(fn($key) => '<span class="font-medium text-zinc-900 dark:text-zinc-100">' . str_replace('_', ' ', $key) . '</span>')
-                                                    ->implode(', ');
-                                            @endphp
-                                            @if($changes)
-                                                Updated {!! $changes !!}
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <x-ui.user-name :user="$item['data']->user" />
+                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                                {{ $item['created_at']->diffForHumans() }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-zinc-700 dark:bg-amber-900/20 dark:text-zinc-300">
+                                            <div class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mb-1">
+                                                <flux:icon name="pencil-square" class="size-3" />
+                                                <span>Internal Note</span>
+                                            </div>
+                                            {{ $item['data']->content }}
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                {{-- Activity Log Item --}}
+                                @php $activity = $item['data']; @endphp
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <x-ui.user-name :user="$activity->causer" />
+                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                                {{ $activity->created_at->diffForHumans() }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                            @if($activity->event === 'created')
+                                                Employee record created
+                                            @elseif($activity->properties->has('old') && $activity->event === 'updated')
+                                                @php
+                                                    $old = $activity->properties->get('old', []);
+                                                    $new = $activity->properties->get('attributes', []);
+                                                    $changes = collect($new)->filter(fn($val, $key) => isset($old[$key]) && $old[$key] !== $val);
+                                                @endphp
+                                                @if($changes->isNotEmpty())
+                                                    @foreach($changes as $key => $newVal)
+                                                        @php
+                                                            $oldVal = $old[$key] ?? '-';
+                                                            $label = ucfirst(str_replace('_', ' ', $key));
+                                                        @endphp
+                                                        <span class="block">
+                                                            Updated <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</span>:
+                                                            <span class="text-zinc-400 line-through">{{ is_string($oldVal) ? $oldVal : $oldVal }}</span>
+                                                            <flux:icon name="arrow-right" class="inline size-3 mx-1" />
+                                                            <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ is_string($newVal) ? $newVal : $newVal }}</span>
+                                                        </span>
+                                                    @endforeach
+                                                @else
+                                                    {{ $activity->description }}
+                                                @endif
                                             @else
                                                 {{ $activity->description }}
                                             @endif
-                                        @else
-                                            {{ $activity->description }}
-                                        @endif
-                                    </p>
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                         @empty
-                            {{-- Employee Created (fallback when no activities yet) --}}
                             <div class="flex items-start gap-3">
                                 <div class="flex-shrink-0">
                                     <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
@@ -935,7 +945,7 @@
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
                                         <x-ui.user-name :user="auth()->user()" />
-                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $employee?->created_at?->format('H:i') ?? now()->format('H:i') }}</span>
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $createdAt ?? now()->format('H:i') }}</span>
                                     </div>
                                     <p class="text-sm text-zinc-600 dark:text-zinc-400">Employee record created</p>
                                 </div>
@@ -944,14 +954,12 @@
                     </div>
                 @else
                     {{-- Empty State for New Employee --}}
-                    <div class="flex items-center gap-3 py-2">
-                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Activity</span>
-                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                    </div>
                     <div class="py-8 text-center">
-                        <flux:icon name="clock" class="mx-auto size-8 text-zinc-300 dark:text-zinc-600" />
-                        <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                            <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
+                        </div>
+                        <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once you save</p>
                     </div>
                 @endif
             </div>

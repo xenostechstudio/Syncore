@@ -4,6 +4,7 @@ namespace App\Models\Invoicing;
 
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
+use App\Traits\HasNotes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Invoice extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, HasNotes;
 
     protected $fillable = [
         'invoice_number',

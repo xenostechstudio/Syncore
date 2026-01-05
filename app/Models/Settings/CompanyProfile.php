@@ -9,15 +9,20 @@ class CompanyProfile extends Model
     protected $table = 'company_profile';
 
     protected $fillable = [
-        'company_name',
-        'company_email',
-        'company_phone',
-        'company_address',
-        'company_city',
-        'company_country',
-        'company_website',
+        'name',
+        'legal_name',
+        'email',
+        'phone',
+        'website',
+        'address',
+        'city',
+        'state',
+        'postal_code',
+        'country',
         'tax_id',
-        'logo_path',
+        'logo',
+        'currency',
+        'timezone',
     ];
 
     /**
@@ -27,7 +32,7 @@ class CompanyProfile extends Model
     {
         return self::firstOrCreate(
             ['id' => 1],
-            ['company_name' => 'Syncore']
+            ['name' => 'Syncore']
         );
     }
 
@@ -37,6 +42,6 @@ class CompanyProfile extends Model
     public static function getCompanyName(): string
     {
         $profile = self::first();
-        return $profile?->company_name ?: 'Syncore';
+        return $profile?->name ?: 'Syncore';
     }
 }

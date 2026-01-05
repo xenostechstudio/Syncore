@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings\Users;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -10,11 +11,13 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.settings')]
 #[Title('User')]
 class Form extends Component
 {
+    use WithNotes;
     public ?int $userId = null;
     public string $name = '';
     public string $email = '';
@@ -45,6 +48,48 @@ class Form extends Component
 
     public ?string $createdAt = null;
     public ?string $updatedAt = null;
+
+    protected function getNotableModel()
+    {
+        return $this->userId ? User::find($this->userId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->userId) {
+            return collect();
+        }
+
+        $user = User::find($this->userId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', User::class)
+            ->where('subject_id', $this->userId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $user->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public function mount(?int $id = null): void
     {
@@ -77,20 +122,6 @@ class Form extends Component
 
             $this->loadSessions();
         }
-    }
-
-    public function getActivities(): \Illuminate\Support\Collection
-    {
-        if (!$this->userId) {
-            return collect();
-        }
-
-        return \Spatie\Activitylog\Models\Activity::where('subject_type', User::class)
-            ->where('subject_id', $this->userId)
-            ->with('causer')
-            ->latest()
-            ->take(20)
-            ->get();
     }
 
     public function getAvailableRoles(): Collection
@@ -506,7 +537,6 @@ class Form extends Component
     {
         return view('livewire.settings.users.form', [
             'availableRoles' => $this->getAvailableRoles(),
-            'activities' => $this->getActivities(),
         ]);
     }
 }

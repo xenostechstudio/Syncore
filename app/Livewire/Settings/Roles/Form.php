@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings\Roles;
 
+use App\Livewire\Concerns\WithNotes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -9,11 +10,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.settings')]
 #[Title('Role')]
 class Form extends Component
 {
+    use WithNotes;
     #[Locked]
     public ?int $roleId = null;
     public string $roleName = '';

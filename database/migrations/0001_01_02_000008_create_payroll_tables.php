@@ -16,8 +16,8 @@ return new class extends Migration
             $table->enum('type', ['earning', 'deduction'])->default('earning');
             $table->enum('calculation_type', ['fixed', 'percentage'])->default('fixed');
             $table->decimal('default_amount', 15, 2)->default(0);
-            $table->decimal('percentage', 5, 2)->nullable(); // For percentage-based
-            $table->string('percentage_of')->nullable(); // e.g., 'basic_salary'
+            $table->decimal('percentage', 5, 2)->nullable();
+            $table->string('percentage_of')->nullable();
             $table->boolean('is_taxable')->default(true);
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
@@ -42,11 +42,11 @@ return new class extends Migration
         // Payroll Periods
         Schema::create('payroll_periods', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // e.g., "December 2025"
+            $table->string('name');
             $table->date('start_date');
             $table->date('end_date');
             $table->date('payment_date')->nullable();
-            $table->enum('status', ['draft', 'processing', 'approved', 'paid', 'cancelled'])->default('draft');
+            $table->enum('status', ['draft', 'approved', 'processing', 'paid', 'cancelled'])->default('draft');
             $table->decimal('total_gross', 15, 2)->default(0);
             $table->decimal('total_deductions', 15, 2)->default(0);
             $table->decimal('total_net', 15, 2)->default(0);
@@ -85,6 +85,7 @@ return new class extends Migration
             $table->foreignId('salary_component_id')->nullable()->constrained('salary_components')->nullOnDelete();
             $table->string('component_name');
             $table->enum('type', ['earning', 'deduction']);
+            $table->string('source', 20)->default('component');
             $table->decimal('amount', 15, 2)->default(0);
             $table->text('notes')->nullable();
             $table->timestamps();

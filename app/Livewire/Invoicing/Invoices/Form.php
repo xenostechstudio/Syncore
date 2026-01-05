@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Invoicing\Invoices;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\InvoiceItem;
 use App\Models\Invoicing\Payment;
@@ -21,6 +22,8 @@ use Spatie\Activitylog\Models\Activity;
 #[Title('Invoice')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $invoiceId = null;
 
     public ?int $customer_id = null;
@@ -36,6 +39,10 @@ class Form extends Component
     public float $total = 0;
 
     public ?string $invoice_number = null;
+
+    // Timestamps
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
     
     // Payment modal
     public bool $showPaymentModal = false;
@@ -47,18 +54,43 @@ class Form extends Component
     public bool $showShareModal = false;
     public ?string $shareLink = null;
 
-    public function getActivities(): \Illuminate\Support\Collection
+    protected function getNotableModel()
+    {
+        return $this->invoiceId ? Invoice::find($this->invoiceId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
     {
         if (!$this->invoiceId) {
             return collect();
         }
 
-        return Activity::where('subject_type', Invoice::class)
+        $invoice = Invoice::find($this->invoiceId);
+        
+        $activities = Activity::where('subject_type', Invoice::class)
             ->where('subject_id', $this->invoiceId)
             ->with('causer')
-            ->latest()
-            ->take(20)
-            ->get();
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        $notes = $invoice->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
     }
 
     public function mount(?int $id = null): void
@@ -92,6 +124,8 @@ class Form extends Component
         $this->discount = (float) $invoice->discount;
         $this->total = (float) $invoice->total;
         $this->invoice_number = $invoice->invoice_number;
+        $this->createdAt = $invoice->created_at->format('M d, Y \a\t H:i');
+        $this->updatedAt = $invoice->updated_at->format('M d, Y \a\t H:i');
     }
 
     public function save(): void
@@ -350,7 +384,7 @@ class Form extends Component
             'invoice' => $invoice,
             'paidAmount' => $paidAmount,
             'remainingAmount' => $remainingAmount,
-            'activities' => $this->getActivities(),
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

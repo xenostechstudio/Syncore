@@ -4,6 +4,7 @@ namespace App\Livewire\Sales\Orders;
 
 use App\Enums\DeliveryOrderState;
 use App\Enums\SalesOrderState;
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Delivery\DeliveryOrderItem;
 use App\Models\Inventory\Product;
@@ -27,6 +28,8 @@ use Spatie\Activitylog\Models\Activity;
 #[Title('Sales Order')]
 class Form extends Component
 {
+    use WithNotes;
+
     // Order Details
     public ?int $orderId = null;
     public ?int $customer_id = null;
@@ -80,6 +83,48 @@ class Form extends Component
     public string $emailSubject = '';
     public string $emailBody = '';
     public bool $emailAttachPdf = true;
+
+    protected function getNotableModel()
+    {
+        return $this->orderId ? SalesOrder::find($this->orderId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->orderId) {
+            return collect();
+        }
+
+        $order = SalesOrder::find($this->orderId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', SalesOrder::class)
+            ->where('subject_id', $this->orderId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $order->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public function getActivities(): \Illuminate\Support\Collection
     {
@@ -852,7 +897,7 @@ Best regards,
             'invoices' => $invoices,
             'deliveries' => $deliveries,
             'order' => $order,
-            'activities' => $this->getActivities(),
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

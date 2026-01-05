@@ -15,14 +15,19 @@ class Index extends Component
 {
     use WithFileUploads;
 
-    public string $company_name = '';
-    public string $company_email = '';
-    public string $company_phone = '';
-    public string $company_address = '';
-    public string $company_city = '';
-    public string $company_country = '';
-    public string $company_website = '';
+    public string $name = '';
+    public string $legal_name = '';
+    public string $email = '';
+    public string $phone = '';
+    public string $website = '';
+    public string $address = '';
+    public string $city = '';
+    public string $state = '';
+    public string $postal_code = '';
+    public string $country = '';
     public string $tax_id = '';
+    public string $currency = 'IDR';
+    public string $timezone = 'Asia/Jakarta';
     public $logo;
     public ?string $logo_path = null;
 
@@ -30,27 +35,35 @@ class Index extends Component
     {
         $profile = CompanyProfile::getProfile();
         
-        $this->company_name = $profile->company_name ?? 'Syncore';
-        $this->company_email = $profile->company_email ?? '';
-        $this->company_phone = $profile->company_phone ?? '';
-        $this->company_address = $profile->company_address ?? '';
-        $this->company_city = $profile->company_city ?? '';
-        $this->company_country = $profile->company_country ?? '';
-        $this->company_website = $profile->company_website ?? '';
+        $this->name = $profile->name ?? 'Syncore';
+        $this->legal_name = $profile->legal_name ?? '';
+        $this->email = $profile->email ?? '';
+        $this->phone = $profile->phone ?? '';
+        $this->website = $profile->website ?? '';
+        $this->address = $profile->address ?? '';
+        $this->city = $profile->city ?? '';
+        $this->state = $profile->state ?? '';
+        $this->postal_code = $profile->postal_code ?? '';
+        $this->country = $profile->country ?? '';
         $this->tax_id = $profile->tax_id ?? '';
-        $this->logo_path = $profile->logo_path;
+        $this->currency = $profile->currency ?? 'IDR';
+        $this->timezone = $profile->timezone ?? 'Asia/Jakarta';
+        $this->logo_path = $profile->logo;
     }
 
     public function save(): void
     {
         $this->validate([
-            'company_name' => 'required|string|max:255',
-            'company_email' => 'nullable|email|max:255',
-            'company_phone' => 'nullable|string|max:50',
-            'company_address' => 'nullable|string|max:500',
-            'company_city' => 'nullable|string|max:100',
-            'company_country' => 'nullable|string|max:100',
-            'company_website' => 'nullable|url|max:255',
+            'name' => 'required|string|max:255',
+            'legal_name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'website' => 'nullable|url|max:255',
+            'address' => 'nullable|string|max:500',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:100',
             'tax_id' => 'nullable|string|max:100',
             'logo' => 'nullable|image|max:2048',
         ]);
@@ -58,19 +71,24 @@ class Index extends Component
         $profile = CompanyProfile::getProfile();
 
         $data = [
-            'company_name' => $this->company_name,
-            'company_email' => $this->company_email,
-            'company_phone' => $this->company_phone,
-            'company_address' => $this->company_address,
-            'company_city' => $this->company_city,
-            'company_country' => $this->company_country,
-            'company_website' => $this->company_website,
+            'name' => $this->name,
+            'legal_name' => $this->legal_name,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'website' => $this->website,
+            'address' => $this->address,
+            'city' => $this->city,
+            'state' => $this->state,
+            'postal_code' => $this->postal_code,
+            'country' => $this->country,
             'tax_id' => $this->tax_id,
+            'currency' => $this->currency,
+            'timezone' => $this->timezone,
         ];
 
         if ($this->logo) {
             $path = $this->logo->store('company', 'public');
-            $data['logo_path'] = $path;
+            $data['logo'] = $path;
             $this->logo_path = $path;
         }
 
@@ -83,9 +101,9 @@ class Index extends Component
     {
         $profile = CompanyProfile::getProfile();
         
-        if ($profile->logo_path) {
-            Storage::disk('public')->delete($profile->logo_path);
-            $profile->update(['logo_path' => null]);
+        if ($profile->logo) {
+            Storage::disk('public')->delete($profile->logo);
+            $profile->update(['logo' => null]);
             $this->logo_path = null;
         }
     }

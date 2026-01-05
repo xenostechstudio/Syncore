@@ -346,6 +346,7 @@ Route::middleware(['auth', 'verified', 'permission:access.hr'])->prefix('hr')->n
     Route::get('/payroll', \App\Livewire\HR\Payroll\Index::class)->name('payroll.index');
     Route::get('/payroll/create', \App\Livewire\HR\Payroll\Form::class)->name('payroll.create');
     Route::get('/payroll/{id}/edit', \App\Livewire\HR\Payroll\Form::class)->name('payroll.edit');
+    Route::get('/payroll/{periodId}/item/{itemId}', \App\Livewire\HR\Payroll\ItemForm::class)->name('payroll.item');
     
     // Salary Components
     Route::get('/payroll/components', \App\Livewire\HR\Payroll\Components\Index::class)->name('payroll.components.index');

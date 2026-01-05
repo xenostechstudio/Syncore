@@ -54,6 +54,53 @@ class PayrollPeriod extends Model
         $this->save();
     }
 
+    public function isLocked(): bool
+    {
+        return in_array($this->status, ['processing', 'paid', 'cancelled']);
+    }
+
+    public function canBeEdited(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    public function canBeApproved(): bool
+    {
+        return $this->status === 'draft' && $this->items()->count() > 0;
+    }
+
+    public function canStartProcessing(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function canBeMarkedAsPaid(): bool
+    {
+        return $this->status === 'processing';
+    }
+
+    public function canBeCancelled(): bool
+    {
+        return !in_array($this->status, ['paid', 'cancelled']);
+    }
+
+    public function canBeResetToDraft(): bool
+    {
+        return in_array($this->status, ['approved', 'cancelled']);
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status) {
+            'draft' => 'zinc',
+            'approved' => 'blue',
+            'processing' => 'amber',
+            'paid' => 'emerald',
+            'cancelled' => 'red',
+            default => 'zinc',
+        };
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

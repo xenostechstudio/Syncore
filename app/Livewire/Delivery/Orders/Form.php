@@ -3,6 +3,7 @@
 namespace App\Livewire\Delivery\Orders;
 
 use App\Enums\DeliveryOrderState;
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Delivery\DeliveryOrderItem;
 use App\Models\Delivery\DeliveryReturn;
@@ -20,12 +21,58 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Delivery'])]
 #[Title('Delivery Order')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $deliveryId = null;
+
+    // Timestamps
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+
+    protected function getNotableModel()
+    {
+        return $this->deliveryId ? DeliveryOrder::find($this->deliveryId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->deliveryId) {
+            return collect();
+        }
+
+        $delivery = DeliveryOrder::find($this->deliveryId);
+        
+        $activities = Activity::where('subject_type', DeliveryOrder::class)
+            ->where('subject_id', $this->deliveryId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        $notes = $delivery->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public bool $showReturnModal = false;
     public bool $showStatusModal = false;
@@ -725,6 +772,8 @@ class Form extends Component
         $this->courier = $delivery->courier ?? '';
         $this->notes = $delivery->notes ?? '';
         $this->delivery_number = $delivery->delivery_number;
+        $this->createdAt = $delivery->created_at->format('M d, Y \a\t H:i');
+        $this->updatedAt = $delivery->updated_at->format('M d, Y \a\t H:i');
     }
 
     public function save(): void
@@ -899,6 +948,7 @@ class Form extends Component
             'delivery' => $delivery,
             'returns' => $returns,
             'outboundAdjustment' => $outboundAdjustment,
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

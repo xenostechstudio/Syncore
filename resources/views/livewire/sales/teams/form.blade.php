@@ -2,7 +2,8 @@
     activeTab: 'details',
     showSendMessage: false,
     showLogNote: false,
-    showScheduleActivity: false
+    showScheduleActivity: false,
+    showDeleteModal: false
 }">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
@@ -10,9 +11,34 @@
                 <a href="{{ route('sales.teams.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                     <flux:icon name="arrow-left" class="size-5" />
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    {{ $teamId ? $name : ($type === 'salesperson' ? 'New Salesperson' : 'New Sales Team') }}
-                </span>
+                <div class="flex flex-col">
+                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                        Sales Team
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            {{ $teamId ? $name : 'New Sales Team' }}
+                        </span>
+                        @if($teamId)
+                            <flux:dropdown position="bottom" align="start">
+                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                    <flux:icon name="cog-6-tooth" class="size-4" />
+                                </button>
+                                <flux:menu class="w-40">
+                                    <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="document-duplicate" class="size-4" />
+                                        <span>Duplicate</span>
+                                    </button>
+                                    <flux:menu.separator />
+                                    <button type="button" @click="showDeleteModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <flux:icon name="trash" class="size-4" />
+                                        <span>Delete</span>
+                                    </button>
+                                </flux:menu>
+                            </flux:dropdown>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </x-slot:header>
@@ -57,28 +83,17 @@
                         <flux:icon name="document-check" class="size-4" />
                         Save
                     </button>
-                    @if($teamId)
-                        <button 
-                            type="button"
-                            wire:click="delete"
-                            wire:confirm="Are you sure you want to delete this team?"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                        >
-                            <flux:icon name="trash" class="size-4" />
-                            Delete
-                        </button>
-                    @endif
                 </div>
 
-                {{-- Stepper (placeholder for consistency) --}}
+                {{-- Status Badge --}}
                 <div class="hidden items-center lg:flex">
                     @if($is_active)
-                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                            <flux:icon name="check-circle" class="mr-1 size-3" />
+                        <span class="inline-flex h-[38px] items-center rounded-lg bg-emerald-100 px-4 text-sm font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                            <flux:icon name="check-circle" class="mr-1.5 size-4" />
                             Active
                         </span>
                     @else
-                        <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                        <span class="inline-flex h-[38px] items-center rounded-lg bg-zinc-200 px-4 text-sm font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
                             Inactive
                         </span>
                     @endif
@@ -86,76 +101,96 @@
             </div>
 
             {{-- Right: Chatter Icons --}}
-            <div class="col-span-3 flex items-center justify-end gap-1">
+            <div class="col-span-3">
+                <x-ui.chatter-buttons :showMessage="false" />
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete Modal --}}
+    <div 
+        x-show="showDeleteModal" 
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div class="absolute inset-0 bg-black/50" @click="showDeleteModal = false"></div>
+        <div 
+            class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            @click.outside="showDeleteModal = false"
+        >
+            <div class="mb-4 flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                    <flux:icon name="trash" class="size-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Delete Sales Team</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">This action cannot be undone.</p>
+                </div>
+            </div>
+            <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+                Are you sure you want to delete this sales team? All associated data will be permanently removed.
+            </p>
+            <div class="flex justify-end gap-3">
                 <button 
-                    @click="showSendMessage = !showSendMessage; showLogNote = false; showScheduleActivity = false" 
-                    :class="showSendMessage ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Send message"
+                    type="button"
+                    @click="showDeleteModal = false"
+                    class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
-                    <flux:icon name="chat-bubble-left" class="size-5" />
+                    Cancel
                 </button>
                 <button 
-                    @click="showLogNote = !showLogNote; showSendMessage = false; showScheduleActivity = false" 
-                    :class="showLogNote ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Log note"
+                    type="button"
+                    wire:click="delete"
+                    @click="showDeleteModal = false"
+                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                 >
-                    <flux:icon name="pencil-square" class="size-5" />
-                </button>
-                <button 
-                    @click="showScheduleActivity = !showScheduleActivity; showSendMessage = false; showLogNote = false" 
-                    :class="showScheduleActivity ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Schedule activity"
-                >
-                    <flux:icon name="clock" class="size-5" />
+                    Delete
                 </button>
             </div>
         </div>
     </div>
 
     {{-- Main Content --}}
-    <div class="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    <div class="-mx-4 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div class="grid gap-6 lg:grid-cols-12">
             {{-- Left Column: Main Form --}}
             <div class="lg:col-span-9">
-                <div class="overflow-visible rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                     {{-- Header Section --}}
                     <div class="p-5">
-                        {{-- Title --}}
+                        {{-- Big Title --}}
                         <div class="mb-6">
-                            <h2 class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-                                {{ $teamId ? $name : ($type === 'salesperson' ? 'New Salesperson' : 'New Sales Team') }}
-                            </h2>
+                            <input 
+                                type="text"
+                                wire:model="name"
+                                placeholder="Sales Team Name"
+                                class="w-full border-0 bg-transparent p-0 text-2xl font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-100 dark:placeholder-zinc-500"
+                            />
                         </div>
 
                         {{-- Form Fields --}}
                         <div class="grid grid-cols-2 gap-x-8 gap-y-4">
                             {{-- Left Column --}}
                             <div class="space-y-4">
-                                {{-- Team Name --}}
-                                <div class="flex items-center gap-4">
-                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                        {{ $type === 'salesperson' ? 'Name' : 'Team Name' }} <span class="text-red-500">*</span>
-                                    </label>
-                                    <input 
-                                        type="text"
-                                        wire:model="name"
-                                        placeholder="Enter name..."
-                                        class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                    />
-                                </div>
-
                                 {{-- Leader --}}
-                                <div class="flex items-center gap-4" x-data="{ open: false }">
-                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                        {{ $type === 'salesperson' ? 'User' : 'Team Leader' }}
-                                    </label>
+                                <div class="flex items-center gap-4" x-data="{ open: false, search: '' }">
+                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Team Leader</label>
                                     <div class="relative flex-1">
                                         <button 
                                             type="button"
-                                            @click="open = !open"
+                                            @click="open = !open; $nextTick(() => $refs.searchInput?.focus())"
                                             class="flex w-full items-center justify-between rounded-lg border border-transparent bg-transparent px-3 py-2 text-left text-sm transition-colors hover:border-zinc-200 dark:hover:border-zinc-700"
                                         >
                                             @if($leader_id)
@@ -170,19 +205,35 @@
                                             x-show="open" 
                                             @click.outside="open = false"
                                             x-transition
-                                            class="absolute left-0 top-full z-50 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+                                            class="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
                                         >
-                                            <button type="button" wire:click="$set('leader_id', null)" @click="open = false" class="block w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800">None</button>
-                                            @foreach($users as $user)
-                                                <button type="button" wire:click="$set('leader_id', {{ $user->id }})" @click="open = false" class="block w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">{{ $user->name }}</button>
-                                            @endforeach
+                                            <div class="border-b border-zinc-100 p-2 dark:border-zinc-800">
+                                                <input 
+                                                    type="text" 
+                                                    x-model="search" 
+                                                    x-ref="searchInput"
+                                                    placeholder="Search..." 
+                                                    class="w-full rounded border-0 bg-zinc-50 px-3 py-1.5 text-sm focus:outline-none focus:ring-0 dark:bg-zinc-800"
+                                                />
+                                            </div>
+                                            <div class="max-h-48 overflow-auto py-1">
+                                                <button type="button" wire:click="$set('leader_id', null)" @click="open = false" class="block w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800">None</button>
+                                                @foreach($users as $user)
+                                                    <button 
+                                                        type="button" 
+                                                        wire:click="$set('leader_id', {{ $user->id }})" 
+                                                        @click="open = false" 
+                                                        x-show="!search || '{{ strtolower($user->name) }}'.includes(search.toLowerCase())"
+                                                        class="block w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                                                    >
+                                                        {{ $user->name }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {{-- Right Column --}}
-                            <div class="space-y-4">
                                 {{-- Target Amount --}}
                                 <div class="flex items-center gap-4">
                                     <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Target</label>
@@ -190,10 +241,13 @@
                                         type="number"
                                         wire:model="target_amount"
                                         placeholder="0"
-                                        class="flex-1 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700"
+                                        class="flex-1 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors [appearance:textfield] hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                     />
                                 </div>
+                            </div>
 
+                            {{-- Right Column --}}
+                            <div class="space-y-4">
                                 {{-- Status --}}
                                 <div class="flex items-center gap-4">
                                     <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Status</label>
@@ -227,6 +281,9 @@
                             class="px-5 py-3 text-sm font-medium transition-colors"
                         >
                             Members
+                            @if(count($member_ids) > 0)
+                                <span class="ml-1.5 rounded-full bg-zinc-200 px-2 py-0.5 text-xs dark:bg-zinc-700">{{ count($member_ids) }}</span>
+                            @endif
                         </button>
                     </div>
 
@@ -251,7 +308,7 @@
                             <div class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Team Members</div>
                             <div class="grid grid-cols-2 gap-2">
                                 @foreach($users as $user)
-                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 p-3 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800">
+                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 p-3 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800 {{ in_array($user->id, $member_ids) ? 'border-zinc-400 bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800' : '' }}">
                                         <input 
                                             type="checkbox"
                                             wire:model="member_ids"
@@ -275,42 +332,123 @@
                 </div>
             </div>
 
-            {{-- Right Column: Activity Log --}}
+            {{-- Right Column: Activity Timeline --}}
             <div class="lg:col-span-3">
-                <div class="sticky top-20 space-y-4">
-                    {{-- Activity Timeline --}}
-                    <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                        <h3 class="mb-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">Activity</h3>
-                        
-                        @if($teamId)
-                            {{-- Today separator --}}
-                            <div class="mb-4 flex items-center gap-2">
-                                <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Today</span>
-                                <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                            </div>
+                {{-- Chatter Forms --}}
+                <x-ui.chatter-forms :showMessage="false" />
 
-                            <div class="space-y-4">
-                                @foreach($activities as $activity)
-                                    <div class="flex gap-3">
-                                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                            {{ strtoupper(substr($activity['user']->name ?? 'U', 0, 2)) }}
+                {{-- Activity Timeline --}}
+                @if($teamId)
+                    {{-- Date Separator --}}
+                    <div class="flex items-center gap-3 py-2">
+                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
+                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                            @if($activities->isNotEmpty() && $activities->first()['created_at']->isToday())
+                                Today
+                            @else
+                                Activity
+                            @endif
+                        </span>
+                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
+                    </div>
+
+                    {{-- Activity Items --}}
+                    <div class="space-y-4">
+                        @forelse($activities as $item)
+                            @if($item['type'] === 'note')
+                                {{-- Note Item --}}
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        <x-ui.user-avatar :user="$item['data']->user" size="md" :showPopup="true" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <x-ui.user-name :user="$item['data']->user" />
+                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                                {{ $item['created_at']->diffForHumans() }}
+                                            </span>
                                         </div>
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $activity['user']->name ?? 'User' }}</span>
-                                                <span class="text-xs text-zinc-400">{{ $activity['created_at']->format('H:i') }}</span>
+                                        <div class="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-zinc-700 dark:bg-amber-900/20 dark:text-zinc-300">
+                                            <div class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mb-1">
+                                                <flux:icon name="pencil-square" class="size-3" />
+                                                <span>Internal Note</span>
                                             </div>
-                                            <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $activity['action'] }}</p>
+                                            {{ $item['data']->content }}
                                         </div>
                                     </div>
-                                @endforeach
+                                </div>
+                            @else
+                                {{-- Activity Log Item --}}
+                                @php $activity = $item['data']; @endphp
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <x-ui.user-name :user="$activity->causer" />
+                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                                {{ $activity->created_at->diffForHumans() }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                            @if($activity->event === 'created')
+                                                Sales team created
+                                            @elseif($activity->properties->has('old') && $activity->event === 'updated')
+                                                @php
+                                                    $old = $activity->properties->get('old', []);
+                                                    $new = $activity->properties->get('attributes', []);
+                                                    $changes = collect($new)->filter(fn($val, $key) => isset($old[$key]) && $old[$key] !== $val);
+                                                @endphp
+                                                @if($changes->isNotEmpty())
+                                                    @foreach($changes as $key => $newVal)
+                                                        @php
+                                                            $oldVal = $old[$key] ?? '-';
+                                                            $label = ucfirst(str_replace('_', ' ', $key));
+                                                        @endphp
+                                                        <span class="block">
+                                                            Updated <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</span>:
+                                                            <span class="text-zinc-400 line-through">{{ is_string($oldVal) ? $oldVal : $oldVal }}</span>
+                                                            <flux:icon name="arrow-right" class="inline size-3 mx-1" />
+                                                            <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ is_string($newVal) ? $newVal : $newVal }}</span>
+                                                        </span>
+                                                    @endforeach
+                                                @else
+                                                    {{ $activity->description }}
+                                                @endif
+                                            @else
+                                                {{ $activity->description }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
+                        @empty
+                            {{-- Team Created (fallback when no activities yet) --}}
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.user-name :user="auth()->user()" />
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $createdAt ?? now()->format('H:i') }}</span>
+                                    </div>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Sales team created</p>
+                                </div>
                             </div>
-                        @else
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">No activity yet. Save the team to start tracking.</p>
-                        @endif
+                        @endforelse
                     </div>
-                </div>
+                @else
+                    {{-- Empty State for New Team --}}
+                    <div class="py-8 text-center">
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                            <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
+                        </div>
+                        <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once you save</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

@@ -3,6 +3,7 @@
 namespace App\Models\HR;
 
 use App\Models\User;
+use App\Traits\HasNotes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +12,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Employee extends Model
 {
-    use LogsActivity;
+    use LogsActivity, HasNotes;
 
     protected $fillable = [
         'user_id',

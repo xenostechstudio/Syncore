@@ -3,13 +3,13 @@
         <div class="rounded-2xl border border-red-100 bg-white/90 p-8 text-center shadow-sm">
             <flux:icon name="exclamation-triangle" class="mx-auto mb-4 size-10 text-red-500" />
             <h1 class="text-2xl font-semibold text-red-700">Link Expired</h1>
-            <p class="mt-2 text-sm text-zinc-500">Please request a new quotation link from {{ $company->company_email ?? 'our team' }}.</p>
+            <p class="mt-2 text-sm text-zinc-500">Please request a new quotation link from {{ $company->email ?? 'our team' }}.</p>
         </div>
     @elseif(! $order)
         <div class="rounded-2xl border border-zinc-100 bg-white/90 p-8 text-center shadow-sm">
             <flux:icon name="question-mark-circle" class="mx-auto mb-4 size-10 text-zinc-400" />
             <h1 class="text-2xl font-semibold text-zinc-700">Order not found</h1>
-            <p class="mt-2 text-sm text-zinc-500">The link may be incorrect or revoked. Please contact {{ $company->company_email ?? 'support' }}.</p>
+            <p class="mt-2 text-sm text-zinc-500">The link may be incorrect or revoked. Please contact {{ $company->email ?? 'support' }}.</p>
         </div>
     @else
         <div class="grid gap-6 lg:grid-cols-4">
@@ -137,9 +137,9 @@
                     </div>
                     <div class="sm:text-right">
                         <p class="text-xs font-medium uppercase tracking-wider text-zinc-400">From</p>
-                        <p class="mt-2 text-sm font-semibold text-zinc-900">{{ $company->company_name }}</p>
-                        <p class="text-sm text-zinc-500">{{ $company->company_email }}</p>
-                        <p class="text-sm text-zinc-500">{{ $company->company_address }}</p>
+                        <p class="mt-2 text-sm font-semibold text-zinc-900">{{ $company->name }}</p>
+                        <p class="text-sm text-zinc-500">{{ $company->email }}</p>
+                        <p class="text-sm text-zinc-500">{{ $company->address }}</p>
                     </div>
                 </div>
 
@@ -239,7 +239,7 @@
         {{-- Need Help Section --}}
         <div class="rounded-xl border border-zinc-100 bg-white p-5 text-center shadow-sm">
             <p class="text-xs font-medium uppercase tracking-wider text-zinc-400">Need help?</p>
-            <p class="mt-2 text-sm text-zinc-500">Contact {{ $company->company_email }} or call {{ $company->company_phone ?? '-' }} for assistance.</p>
+            <p class="mt-2 text-sm text-zinc-500">Contact {{ $company->email }} or call {{ $company->phone ?? '-' }} for assistance.</p>
         </div>
     @endif
 </div>

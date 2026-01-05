@@ -66,22 +66,22 @@
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                 <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Registered Name</p>
-                <p class="mt-2 text-base font-medium text-zinc-900 dark:text-zinc-100">{{ $company_name ?: 'Syncore' }}</p>
+                <p class="mt-2 text-base font-medium text-zinc-900 dark:text-zinc-100">{{ $name ?: 'Syncore' }}</p>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Display name across all modules</p>
             </div>
             <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                 <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Primary Email</p>
-                <p class="mt-2 text-base font-medium text-zinc-900 dark:text-zinc-100">{{ $company_email ?: '—' }}</p>
+                <p class="mt-2 text-base font-medium text-zinc-900 dark:text-zinc-100">{{ $email ?: '—' }}</p>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Used for invoices & notifications</p>
             </div>
             <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                 <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Phone</p>
-                <p class="mt-2 text-base font-medium text-zinc-900 dark:text-zinc-100">{{ $company_phone ?: '—' }}</p>
+                <p class="mt-2 text-base font-medium text-zinc-900 dark:text-zinc-100">{{ $phone ?: '—' }}</p>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Customer-facing contact</p>
             </div>
             <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                 <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Website</p>
-                <p class="mt-2 text-base font-medium text-blue-600 dark:text-blue-400">{{ $company_website ?: '—' }}</p>
+                <p class="mt-2 text-base font-medium text-blue-600 dark:text-blue-400">{{ $website ?: '—' }}</p>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Shown on outgoing documents</p>
             </div>
         </div>
@@ -140,8 +140,8 @@
                     <div>
                         <dt class="text-xs uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Address</dt>
                         <dd class="mt-1">
-                            {{ $company_address ?: 'No address provided' }}<br>
-                            {{ $company_city }} {{ $company_country }}
+                            {{ $address ?: 'No address provided' }}<br>
+                            {{ $city }} {{ $country }}
                         </dd>
                     </div>
                     <div>
@@ -165,23 +165,23 @@
                 <div class="grid gap-5 px-6 py-5 md:grid-cols-2">
                     <div class="md:col-span-2">
                         <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">Registered Name <span class="text-red-500">*</span></label>
-                        <input type="text" wire:model="company_name" placeholder="Your legal business name" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
-                        @error('company_name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <input type="text" wire:model="name" placeholder="Your legal business name" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
+                        @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">Primary Email</label>
-                        <input type="email" wire:model="company_email" placeholder="company@example.com" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
-                        @error('company_email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <input type="email" wire:model="email" placeholder="company@example.com" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
+                        @error('email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">Phone</label>
-                        <input type="text" wire:model="company_phone" placeholder="+62 812 345 678" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
-                        @error('company_phone') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <input type="text" wire:model="phone" placeholder="+62 812 345 678" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
+                        @error('phone') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div class="md:col-span-2">
                         <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">Website</label>
-                        <input type="url" wire:model="company_website" placeholder="https://syncore.id" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
-                        @error('company_website') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <input type="url" wire:model="website" placeholder="https://syncore.id" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
+                        @error('website') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </section>
@@ -198,22 +198,22 @@
                     <div class="md:col-span-2">
                         <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">Street Address</label>
                         <textarea 
-                            wire:model="company_address"
+                            wire:model="address"
                             rows="2"
                             placeholder="Street, district, building"
                             class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500"
                         ></textarea>
-                        @error('company_address') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        @error('address') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">City</label>
-                        <input type="text" wire:model="company_city" placeholder="Jakarta" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
-                        @error('company_city') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <input type="text" wire:model="city" placeholder="Jakarta" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
+                        @error('city') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-200">Country</label>
-                        <input type="text" wire:model="company_country" placeholder="Indonesia" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
-                        @error('company_country') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <input type="text" wire:model="country" placeholder="Indonesia" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-zinc-500 dark:focus:ring-zinc-500">
+                        @error('country') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </section>

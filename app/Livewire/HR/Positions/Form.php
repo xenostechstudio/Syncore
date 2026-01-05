@@ -2,6 +2,7 @@
 
 namespace App\Livewire\HR\Positions;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\HR\Department;
 use App\Models\HR\Position;
 use Livewire\Attributes\Layout;
@@ -13,6 +14,7 @@ use Spatie\Activitylog\Models\Activity;
 #[Title('Position')]
 class Form extends Component
 {
+    use WithNotes;
     public ?int $positionId = null;
     public ?Position $position = null;
 
@@ -23,6 +25,48 @@ class Form extends Component
     public ?float $minSalary = null;
     public ?float $maxSalary = null;
     public bool $isActive = true;
+
+    protected function getNotableModel()
+    {
+        return $this->positionId ? Position::find($this->positionId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->positionId) {
+            return collect();
+        }
+
+        $position = Position::find($this->positionId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', Position::class)
+            ->where('subject_id', $this->positionId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $position->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     protected function rules(): array
     {
@@ -86,25 +130,10 @@ class Form extends Component
         $this->redirect(route('hr.positions.index'), navigate: true);
     }
 
-    public function getActivities()
-    {
-        if (!$this->positionId) {
-            return collect();
-        }
-
-        return Activity::where('subject_type', Position::class)
-            ->where('subject_id', $this->positionId)
-            ->with('causer')
-            ->latest()
-            ->limit(20)
-            ->get();
-    }
-
     public function render()
     {
         return view('livewire.hr.positions.form', [
             'departments' => Department::where('is_active', true)->orderBy('name')->get(),
-            'activities' => $this->getActivities(),
         ]);
     }
 }

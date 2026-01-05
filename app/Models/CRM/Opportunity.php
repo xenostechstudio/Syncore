@@ -5,12 +5,17 @@ namespace App\Models\CRM;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\User;
+use App\Traits\HasNotes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Opportunity extends Model
 {
+    use LogsActivity, HasNotes;
+
     protected $fillable = [
         'name',
         'customer_id',
@@ -107,5 +112,22 @@ class Opportunity extends Model
     public function isOpen(): bool
     {
         return !$this->isWon() && !$this->isLost();
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'name', 'lead_id', 'pipeline_id', 'expected_revenue',
+                'probability', 'expected_close_date', 'assigned_to',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'Opportunity created',
+                'updated' => 'Opportunity updated',
+                'deleted' => 'Opportunity deleted',
+                default => "Opportunity {$eventName}",
+            });
     }
 }

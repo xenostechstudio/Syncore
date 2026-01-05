@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Accounting\JournalEntries;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Accounting\JournalLine;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -13,6 +15,8 @@ use Livewire\Component;
 #[Title('Journal Entry')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $entryId = null;
     public ?JournalEntry $entry = null;
 
@@ -146,7 +150,45 @@ class Form extends Component
         $entry->recalculateTotals();
 
         session()->flash('success', $this->entryId ? 'Journal entry updated.' : 'Journal entry created.');
-        $this->redirect(route('accounting.journal-entries.index'), navigate: true);
+        
+        if (!$this->entryId) {
+            $this->redirect(route('accounting.journal-entries.edit', $entry->id), navigate: true);
+        }
+    }
+
+    protected function getNotableModel()
+    {
+        return $this->entry;
+    }
+
+    #[Computed]
+    public function activitiesAndNotes()
+    {
+        if (!$this->entry) {
+            return collect();
+        }
+
+        $activities = $this->entry->activities()
+            ->with('causer')
+            ->latest()
+            ->get()
+            ->map(fn ($activity) => [
+                'type' => 'activity',
+                'data' => $activity,
+                'created_at' => $activity->created_at,
+            ]);
+
+        $notes = $this->entry->notes()
+            ->with('user')
+            ->latest()
+            ->get()
+            ->map(fn ($note) => [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ]);
+
+        return $activities->concat($notes)->sortByDesc('created_at')->values();
     }
 
     public function render()
@@ -156,6 +198,9 @@ class Form extends Component
             'totalDebit' => $this->getTotalDebit(),
             'totalCredit' => $this->getTotalCredit(),
             'balanced' => $this->isBalanced(),
+            'activities' => $this->activitiesAndNotes,
+            'createdAt' => $this->entry?->created_at?->format('M d, Y H:i'),
+            'updatedAt' => $this->entry?->updated_at?->format('M d, Y H:i'),
         ]);
     }
 }

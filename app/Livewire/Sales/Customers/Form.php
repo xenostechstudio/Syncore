@@ -2,19 +2,22 @@
 
 namespace App\Livewire\Sales\Customers;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Sales\PaymentTerm;
 use App\Models\Sales\Pricelist;
 use App\Models\Sales\Customer;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Customer')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $customerId = null;
     
     // Customer fields
@@ -32,9 +35,52 @@ class Form extends Component
     public ?int $pricelist_id = null;
     public string $banks = '';
     public string $status = 'active';
-    
-    // Activity log
-    public array $activities = [];
+
+    // Timestamps
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+
+    protected function getNotableModel()
+    {
+        return $this->customerId ? Customer::find($this->customerId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->customerId) {
+            return collect();
+        }
+
+        $customer = Customer::find($this->customerId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', Customer::class)
+            ->where('subject_id', $this->customerId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $customer->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public function mount(?int $id = null): void
     {
@@ -56,15 +102,8 @@ class Form extends Component
             $this->pricelist_id = $customer->pricelist_id;
             $this->banks = $customer->banks ?? '';
             $this->status = $customer->status ?? 'active';
-            
-            // Load activities (mock for now)
-            $this->activities = [
-                [
-                    'user' => Auth::user(),
-                    'action' => 'Customer created',
-                    'created_at' => $customer->created_at,
-                ],
-            ];
+            $this->createdAt = $customer->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $customer->updated_at->format('M d, Y \a\t H:i');
         }
     }
 
@@ -144,6 +183,7 @@ class Form extends Component
             'salespeople' => $salespeople,
             'paymentTerms' => $paymentTerms,
             'pricelists' => $pricelists,
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

@@ -354,119 +354,78 @@
 
             {{-- Right Column: Activity Timeline --}}
             <div class="lg:col-span-3">
-                {{-- Message/Note Input Panels (shown when icons clicked) --}}
-                <div x-show="showSendMessage" x-collapse class="mb-4">
-                    <div class="flex gap-3">
-                        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                            <flux:icon name="chat-bubble-left" class="size-4" />
-                        </div>
-                        <div class="flex-1">
-                            <textarea 
-                                rows="3"
-                                placeholder="Send a message to followers..."
-                                class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-                            ></textarea>
-                            <div class="mt-2 flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Attach file">
-                                        <flux:icon name="paper-clip" class="size-4" />
-                                    </button>
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Mention">
-                                        <flux:icon name="at-symbol" class="size-4" />
-                                    </button>
-                                </div>
-                                <button type="button" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700">
-                                    Send
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="showLogNote" x-collapse class="mb-4">
-                    <div class="flex gap-3">
-                        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
-                            <flux:icon name="pencil-square" class="size-4" />
-                        </div>
-                        <div class="flex-1">
-                            <textarea 
-                                rows="3"
-                                placeholder="Log an internal note..."
-                                class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-amber-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-                            ></textarea>
-                            <div class="mt-2 flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Attach file">
-                                        <flux:icon name="paper-clip" class="size-4" />
-                                    </button>
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Mention">
-                                        <flux:icon name="at-symbol" class="size-4" />
-                                    </button>
-                                </div>
-                                <button type="button" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700">
-                                    Log Note
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="showScheduleActivity" x-collapse class="mb-4">
-                    <div class="flex gap-3">
-                        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
-                            <flux:icon name="clock" class="size-4" />
-                        </div>
-                        <div class="flex-1 space-y-3">
-                            <div>
-                                <label class="mb-1 block text-xs text-zinc-500 dark:text-zinc-400">Activity Type</label>
-                                <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                    <option value="">Select activity type...</option>
-                                    <option value="call">Call</option>
-                                    <option value="meeting">Meeting</option>
-                                    <option value="todo">To-Do</option>
-                                    <option value="email">Email</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-xs text-zinc-500 dark:text-zinc-400">Due Date</label>
-                                <input type="date" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-xs text-zinc-500 dark:text-zinc-400">Summary</label>
-                                <input type="text" placeholder="Activity summary..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-violet-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                            </div>
-                            <div class="flex justify-end">
-                                <button type="button" class="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-violet-700">
-                                    Schedule
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {{-- Chatter Forms --}}
+                <x-ui.chatter-forms />
 
                 {{-- Activity Timeline --}}
                 @if($editing && $warehouse)
                     <div class="flex items-center gap-3 py-2">
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Today</span>
+                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Activity</span>
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                     </div>
 
                     <div class="space-y-4">
-                        <div class="flex gap-3">
-                            <div class="relative flex-shrink-0">
-                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
+                        @if(isset($activities) && $activities->isNotEmpty())
+                            @foreach($activities as $item)
+                                @if($item['type'] === 'note')
+                                    {{-- Note Item --}}
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0">
+                                            <x-ui.user-avatar :user="$item['data']->user" size="md" :showPopup="true" />
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <x-ui.user-name :user="$item['data']->user" />
+                                                <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                                    {{ $item['created_at']->diffForHumans() }}
+                                                </span>
+                                            </div>
+                                            <div class="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-zinc-700 dark:bg-amber-900/20 dark:text-zinc-300">
+                                                <div class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mb-1">
+                                                    <flux:icon name="pencil-square" class="size-3" />
+                                                    <span>Internal Note</span>
+                                                </div>
+                                                {{ $item['data']->content }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- Activity Log Item --}}
+                                    @php $activity = $item['data']; @endphp
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-shrink-0">
+                                            <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <x-ui.user-name :user="$activity->causer" />
+                                                <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                                    {{ $activity->created_at->diffForHumans() }}
+                                                </span>
+                                            </div>
+                                            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                                {{ $activity->description }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        @else
+                            {{-- Fallback when no activities yet --}}
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.user-name :user="auth()->user()" />
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ now()->diffForHumans() }}</span>
+                                    </div>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Warehouse created</p>
                                 </div>
                             </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ auth()->user()->name ?? 'User' }}</span>
-                                    <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ optional($warehouse->created_at)->format('H:i') ?? now()->format('H:i') }}</span>
-                                </div>
-                                <p class="text-sm text-zinc-600 dark:text-zinc-400">Warehouse created</p>
-                            </div>
-                        </div>
+                        @endif
                     </div>
                 @else
                     {{-- Empty State for New Warehouse --}}
@@ -475,7 +434,7 @@
                             <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
                         </div>
                         <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
-                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once the warehouse is saved</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once you save</p>
                     </div>
                 @endif
             </div>

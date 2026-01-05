@@ -6,6 +6,7 @@ use App\Enums\SalesOrderState;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Invoicing\Invoice;
 use App\Models\User;
+use App\Traits\HasNotes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +17,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class SalesOrder extends Model
 {
-    use LogsActivity;
+    use LogsActivity, HasNotes;
     protected $fillable = [
         'order_number',
         'customer_id',

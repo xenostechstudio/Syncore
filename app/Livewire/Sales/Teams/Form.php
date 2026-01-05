@@ -2,17 +2,21 @@
 
 namespace App\Livewire\Sales\Teams;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Sales\SalesTeam;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Sales Team')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $teamId = null;
     public string $type = 'team'; // 'team' or 'salesperson'
     
@@ -29,9 +33,52 @@ class Form extends Component
     
     // Members
     public array $member_ids = [];
-    
-    // Activity log
-    public array $activities = [];
+
+    // Timestamps
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+
+    protected function getNotableModel()
+    {
+        return $this->teamId ? SalesTeam::find($this->teamId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->teamId) {
+            return collect();
+        }
+
+        $team = SalesTeam::find($this->teamId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', SalesTeam::class)
+            ->where('subject_id', $this->teamId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $team->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public function mount(?int $id = null, string $type = 'team'): void
     {
@@ -47,15 +94,8 @@ class Form extends Component
             $this->target_amount = $team->target_amount;
             $this->is_active = $team->is_active;
             $this->member_ids = $team->members->pluck('id')->toArray();
-            
-            // Load activities (mock for now)
-            $this->activities = [
-                [
-                    'user' => Auth::user(),
-                    'action' => 'Team created',
-                    'created_at' => $team->created_at,
-                ],
-            ];
+            $this->createdAt = $team->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $team->updated_at->format('M d, Y \a\t H:i');
         }
     }
 
@@ -108,6 +148,7 @@ class Form extends Component
         return view('livewire.sales.teams.form', [
             'users' => $users,
             'teams' => $teams,
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Inventory\Transfers;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Inventory\InventoryTransfer;
 use App\Models\Inventory\InventoryTransferItem;
 use App\Models\Inventory\Product;
@@ -10,11 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Internal Transfer')]
 class Form extends Component
 {
+    use WithNotes;
     public ?int $transferId = null;
     public ?InventoryTransfer $transfer = null;
     public bool $editing = false;
@@ -28,6 +31,48 @@ class Form extends Component
 
     public array $items = [];
     public string $productSearch = '';
+
+    protected function getNotableModel()
+    {
+        return $this->transferId ? InventoryTransfer::find($this->transferId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->transferId) {
+            return collect();
+        }
+
+        $transfer = InventoryTransfer::find($this->transferId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', InventoryTransfer::class)
+            ->where('subject_id', $this->transferId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $transfer->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public function mount(?int $id = null): void
     {

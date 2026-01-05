@@ -2,6 +2,7 @@
 
 namespace App\Livewire\HR\Employees;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\HR\Department;
 use App\Models\HR\Employee;
 use App\Models\HR\EmployeeSalaryComponent;
@@ -18,8 +19,53 @@ use Spatie\Activitylog\Models\Activity;
 #[Title('Employee')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $employeeId = null;
     public ?Employee $employee = null;
+
+    // Timestamps
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+
+    protected function getNotableModel()
+    {
+        return $this->employeeId ? Employee::find($this->employeeId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->employeeId) {
+            return collect();
+        }
+
+        $employee = Employee::find($this->employeeId);
+        
+        $activities = Activity::where('subject_type', Employee::class)
+            ->where('subject_id', $this->employeeId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        $notes = $employee->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     // Basic Info
     public string $name = '';
@@ -229,20 +275,6 @@ class Form extends Component
         }
     }
 
-    public function getActivities(): \Illuminate\Support\Collection
-    {
-        if (!$this->employeeId) {
-            return collect();
-        }
-
-        return Activity::where('subject_type', Employee::class)
-            ->where('subject_id', $this->employeeId)
-            ->with('causer')
-            ->latest()
-            ->take(20)
-            ->get();
-    }
-
     #[Computed]
     public function positions(): \Illuminate\Database\Eloquent\Collection
     {
@@ -329,6 +361,8 @@ class Form extends Component
             $this->hrResponsibleId = $this->employee->hr_responsible_id;
             $this->pinCode = $this->employee->pin_code ?? '';
             $this->notes = $this->employee->notes ?? '';
+            $this->createdAt = $this->employee->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $this->employee->updated_at->format('M d, Y \a\t H:i');
             
             $this->loadEmployeeSalaryComponents();
         } else {
@@ -405,7 +439,7 @@ class Form extends Component
                 ->orderBy('name')
                 ->get(),
             'users' => User::orderBy('name')->get(),
-            'activities' => $this->getActivities(),
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

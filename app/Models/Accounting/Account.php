@@ -2,12 +2,17 @@
 
 namespace App\Models\Accounting;
 
+use App\Traits\HasNotes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Account extends Model
 {
+    use LogsActivity, HasNotes;
+
     protected $fillable = [
         'code',
         'name',
@@ -81,5 +86,19 @@ class Account extends Model
             : $credits - $debits;
         
         $this->save();
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['code', 'name', 'type', 'parent_id', 'description', 'balance', 'is_active', 'is_system'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'Account created',
+                'updated' => 'Account updated',
+                'deleted' => 'Account deleted',
+                default => "Account {$eventName}",
+            });
     }
 }

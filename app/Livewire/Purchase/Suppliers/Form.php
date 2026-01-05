@@ -2,16 +2,19 @@
 
 namespace App\Livewire\Purchase\Suppliers;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\WithNotes;
+use App\Models\Purchase\Supplier;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Purchase'])]
 #[Title('Supplier')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $supplierId = null;
     public string $name = '';
     public string $contact_person = '';
@@ -24,88 +27,100 @@ class Form extends Component
 
     public ?string $createdAt = null;
     public ?string $updatedAt = null;
-    public array $activityLog = [];
+
+    protected function getNotableModel()
+    {
+        return $this->supplierId ? Supplier::find($this->supplierId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->supplierId) {
+            return collect();
+        }
+
+        $supplier = Supplier::find($this->supplierId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', Supplier::class)
+            ->where('subject_id', $this->supplierId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $supplier->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     public function mount(?int $id = null): void
     {
         if ($id) {
-            $supplier = DB::table('suppliers')->where('id', $id)->first();
+            $supplier = Supplier::findOrFail($id);
 
-            if ($supplier) {
-                $this->supplierId = $supplier->id;
-                $this->name = $supplier->name;
-                $this->contact_person = $supplier->contact_person ?? '';
-                $this->email = $supplier->email ?? '';
-                $this->phone = $supplier->phone ?? '';
-                $this->address = $supplier->address ?? '';
-                $this->city = $supplier->city ?? '';
-                $this->country = $supplier->country ?? '';
-                $this->is_active = $supplier->is_active;
+            $this->supplierId = $supplier->id;
+            $this->name = $supplier->name;
+            $this->contact_person = $supplier->contact_person ?? '';
+            $this->email = $supplier->email ?? '';
+            $this->phone = $supplier->phone ?? '';
+            $this->address = $supplier->address ?? '';
+            $this->city = $supplier->city ?? '';
+            $this->country = $supplier->country ?? '';
+            $this->is_active = $supplier->is_active;
 
-                $this->createdAt = \Carbon\Carbon::parse($supplier->created_at)->format('M d, Y \a\t H:i');
-                $this->updatedAt = \Carbon\Carbon::parse($supplier->updated_at)->format('M d, Y \a\t H:i');
-
-                $this->activityLog = [
-                    [
-                        'type' => 'created',
-                        'message' => 'Supplier created',
-                        'user' => Auth::user()?->name ?? 'System',
-                        'time' => $this->createdAt,
-                    ],
-                ];
-
-                if ($supplier->updated_at > $supplier->created_at) {
-                    $this->activityLog[] = [
-                        'type' => 'updated',
-                        'message' => 'Supplier updated',
-                        'user' => Auth::user()?->name ?? 'System',
-                        'time' => $this->updatedAt,
-                    ];
-                }
-            }
+            $this->createdAt = $supplier->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $supplier->updated_at->format('M d, Y \a\t H:i');
         }
     }
 
     public function save(): void
     {
-        $validated = $this->validate([
+        $this->validate([
             'name' => 'required|string|max:255',
+            'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:500',
+            'city' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
         ]);
 
-        if ($this->supplierId) {
-            DB::table('suppliers')
-                ->where('id', $this->supplierId)
-                ->update([
-                    'name' => $this->name,
-                    'contact_person' => $this->contact_person,
-                    'email' => $this->email,
-                    'phone' => $this->phone,
-                    'address' => $this->address,
-                    'city' => $this->city,
-                    'country' => $this->country,
-                    'is_active' => $this->is_active,
-                    'updated_at' => now(),
-                ]);
+        $data = [
+            'name' => $this->name,
+            'contact_person' => $this->contact_person ?: null,
+            'email' => $this->email ?: null,
+            'phone' => $this->phone ?: null,
+            'address' => $this->address ?: null,
+            'city' => $this->city ?: null,
+            'country' => $this->country ?: null,
+            'is_active' => $this->is_active,
+        ];
 
+        if ($this->supplierId) {
+            $supplier = Supplier::findOrFail($this->supplierId);
+            $supplier->update($data);
             session()->flash('success', 'Supplier updated successfully.');
         } else {
-            $id = DB::table('suppliers')->insertGetId([
-                'name' => $this->name,
-                'contact_person' => $this->contact_person,
-                'email' => $this->email,
-                'phone' => $this->phone,
-                'address' => $this->address,
-                'city' => $this->city,
-                'country' => $this->country,
-                'is_active' => $this->is_active,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
+            $supplier = Supplier::create($data);
             session()->flash('success', 'Supplier created successfully.');
-            $this->redirect(route('purchase.suppliers.edit', $id), navigate: true);
+            $this->redirect(route('purchase.suppliers.edit', $supplier->id), navigate: true);
         }
     }
 
@@ -115,7 +130,7 @@ class Form extends Component
             return;
         }
 
-        DB::table('suppliers')->where('id', $this->supplierId)->delete();
+        Supplier::destroy($this->supplierId);
 
         session()->flash('success', 'Supplier deleted successfully.');
         $this->redirect(route('purchase.suppliers.index'), navigate: true);
@@ -123,6 +138,8 @@ class Form extends Component
 
     public function render()
     {
-        return view('livewire.purchase.suppliers.form');
+        return view('livewire.purchase.suppliers.form', [
+            'activities' => $this->activitiesAndNotes,
+        ]);
     }
 }

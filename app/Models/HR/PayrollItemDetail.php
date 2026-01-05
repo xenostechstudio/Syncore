@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PayrollItemDetail extends Model
 {
     protected $fillable = [
-        'payroll_item_id', 'salary_component_id', 'component_name', 'type', 'amount', 'notes',
+        'payroll_item_id', 'salary_component_id', 'component_name', 'type', 'source', 'amount', 'notes',
     ];
 
     protected $casts = [
@@ -23,5 +23,15 @@ class PayrollItemDetail extends Model
     public function salaryComponent(): BelongsTo
     {
         return $this->belongsTo(SalaryComponent::class);
+    }
+
+    public function isAdjustment(): bool
+    {
+        return $this->source === 'adjustment';
+    }
+
+    public function isFromComponent(): bool
+    {
+        return $this->source === 'component';
     }
 }

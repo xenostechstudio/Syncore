@@ -1,17 +1,43 @@
-<div x-data="{ showSendMessage: false, showLogNote: false, showScheduleActivity: false }">
+<div x-data="{ 
+    showSendMessage: false, 
+    showLogNote: false, 
+    showScheduleActivity: false,
+    showDeleteModal: false 
+}">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <a href="{{ route('purchase.suppliers.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                     <flux:icon name="arrow-left" class="size-5" />
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    {{ $supplierId ? $name : 'New Supplier' }}
-                </span>
+                <div class="flex flex-col">
+                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                        Supplier
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            {{ $supplierId ? $name : 'New Supplier' }}
+                        </span>
+                        @if($supplierId)
+                            <flux:dropdown position="bottom" align="start">
+                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                    <flux:icon name="cog-6-tooth" class="size-4" />
+                                </button>
+                                <flux:menu class="w-40">
+                                    <button type="button" @click="showDeleteModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <flux:icon name="trash" class="size-4" />
+                                        <span>Delete</span>
+                                    </button>
+                                </flux:menu>
+                            </flux:dropdown>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </x-slot:header>
 
+    {{-- Flash Messages --}}
     <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
         @if(session('success'))
             <x-ui.alert type="success" :duration="5000">
@@ -37,6 +63,7 @@
         @endif
     </div>
 
+    {{-- Action Buttons Bar --}}
     <div class="-mx-4 -mt-6 bg-zinc-50 px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:bg-zinc-900/50">
         <div class="grid grid-cols-12 items-center gap-6">
             <div class="col-span-9 flex items-center justify-between">
@@ -49,149 +76,163 @@
                         <flux:icon name="document-check" class="size-4" />
                         Save
                     </button>
-                    @if($userId)
-                        <button 
-                            type="button"
-                            wire:click="delete"
-                            wire:confirm="Are you sure you want to delete this user?"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                        >
-                            <flux:icon name="trash" class="size-4" />
-                            Delete
-                        </button>
-                    @endif
                 </div>
 
+                {{-- Status Badge --}}
                 <div class="hidden items-center lg:flex">
                     @if($is_active)
-                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                            <flux:icon name="check-circle" class="mr-1 size-3" />
+                        <span class="inline-flex h-[38px] items-center rounded-lg bg-emerald-100 px-4 text-sm font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                            <flux:icon name="check-circle" class="mr-1.5 size-4" />
                             Active
                         </span>
                     @else
-                        <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                        <span class="inline-flex h-[38px] items-center rounded-lg bg-zinc-200 px-4 text-sm font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
                             Inactive
                         </span>
                     @endif
                 </div>
             </div>
 
-            <div class="col-span-3 flex items-center justify-end gap-1">
+            {{-- Right: Chatter Icons --}}
+            <div class="col-span-3">
+                <x-ui.chatter-buttons />
+            </div>
+        </div>
+    </div>
+
+    {{-- Delete Modal --}}
+    <div 
+        x-show="showDeleteModal" 
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div class="absolute inset-0 bg-black/50" @click="showDeleteModal = false"></div>
+        <div 
+            class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            @click.outside="showDeleteModal = false"
+        >
+            <div class="mb-4 flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                    <flux:icon name="trash" class="size-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Delete Supplier</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">This action cannot be undone.</p>
+                </div>
+            </div>
+            <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+                Are you sure you want to delete this supplier? All associated data will be permanently removed.
+            </p>
+            <div class="flex justify-end gap-3">
                 <button 
-                    @click="showSendMessage = !showSendMessage; showLogNote = false; showScheduleActivity = false" 
-                    :class="showSendMessage ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Send message"
+                    type="button"
+                    @click="showDeleteModal = false"
+                    class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
-                    <flux:icon name="chat-bubble-left" class="size-5" />
+                    Cancel
                 </button>
                 <button 
-                    @click="showLogNote = !showLogNote; showSendMessage = false; showScheduleActivity = false" 
-                    :class="showLogNote ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Log note"
+                    type="button"
+                    wire:click="delete"
+                    @click="showDeleteModal = false"
+                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                 >
-                    <flux:icon name="pencil-square" class="size-5" />
-                </button>
-                <button 
-                    @click="showScheduleActivity = !showScheduleActivity; showSendMessage = false; showLogNote = false" 
-                    :class="showScheduleActivity ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Schedule activity"
-                >
-                    <flux:icon name="clock" class="size-5" />
+                    Delete
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    {{-- Main Content --}}
+    <div class="-mx-4 px-4 py-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div class="grid gap-6 lg:grid-cols-12">
+            {{-- Left Column: Main Form --}}
             <div class="lg:col-span-9">
                 <div class="overflow-visible rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                     <div class="p-5">
-                        <h1 class="mb-5 text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-                            {{ $supplierId ? $name : 'New' }}
-                        </h1>
+                        {{-- Big Title --}}
+                        <div class="mb-6">
+                            <input 
+                                type="text"
+                                wire:model="name"
+                                placeholder="Supplier Name"
+                                class="w-full border-0 bg-transparent p-0 text-2xl font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-100 dark:placeholder-zinc-500"
+                            />
+                            @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
 
-                        <div class="grid gap-6 sm:grid-cols-2">
+                        {{-- Form Fields --}}
+                        <div class="grid grid-cols-2 gap-x-8 gap-y-4">
+                            {{-- Left Column --}}
                             <div class="space-y-4">
-                                <div>
-                                    <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Supplier Name <span class="text-red-500">*</span></label>
-                                    <input 
-                                        type="text"
-                                        wire:model="name"
-                                        placeholder="Company name"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600"
-                                    />
-                                    @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Contact Person</label>
+                                <div class="flex items-center gap-4">
+                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Contact Person</label>
                                     <input 
                                         type="text"
                                         wire:model="contact_person"
                                         placeholder="Contact name"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Email</label>
-                                    <input 
-                                        type="email"
-                                        wire:model="email"
-                                        placeholder="supplier@example.com"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600"
-                                    />
-                                    @error('email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Phone</label>
-                                    <input 
-                                        type="text"
-                                        wire:model="phone"
-                                        placeholder="+1 234 567 890"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600"
-                                    />
-                                    @error('phone') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Address</label>
-                                    <textarea 
-                                        wire:model="address"
-                                        rows="2"
-                                        placeholder="Street address"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600"
-                                    ></textarea>
-                                </div>
-
-                                <div>
-                                    <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">City</label>
-                                    <input 
-                                        type="text"
-                                        wire:model="city"
-                                        placeholder="City"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Country</label>
-                                    <input 
-                                        type="text"
-                                        wire:model="country"
-                                        placeholder="Country"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600"
+                                        class="flex-1 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700"
                                     />
                                 </div>
 
                                 <div class="flex items-center gap-4">
+                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Email</label>
+                                    <input 
+                                        type="email"
+                                        wire:model="email"
+                                        placeholder="supplier@example.com"
+                                        class="flex-1 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700"
+                                    />
+                                </div>
+                                @error('email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+
+                                <div class="flex items-center gap-4">
+                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Phone</label>
+                                    <input 
+                                        type="text"
+                                        wire:model="phone"
+                                        placeholder="+1 234 567 890"
+                                        class="flex-1 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700"
+                                    />
+                                </div>
+                            </div>
+
+                            {{-- Right Column --}}
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">City</label>
+                                    <input 
+                                        type="text"
+                                        wire:model="city"
+                                        placeholder="City"
+                                        class="flex-1 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700"
+                                    />
+                                </div>
+
+                                <div class="flex items-center gap-4">
+                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Country</label>
+                                    <input 
+                                        type="text"
+                                        wire:model="country"
+                                        placeholder="Country"
+                                        class="flex-1 rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700"
+                                    />
+                                </div>
+
+                                <div class="flex items-center gap-4">
+                                    <label class="w-28 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Status</label>
                                     <label class="flex cursor-pointer items-center gap-2">
                                         <input 
                                             type="checkbox"
@@ -203,126 +244,134 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Address --}}
+                        <div class="mt-6">
+                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Address</label>
+                            <textarea 
+                                wire:model="address"
+                                rows="3"
+                                placeholder="Full address..."
+                                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                            ></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            {{-- Right Column: Activity Timeline --}}
             <div class="lg:col-span-3">
-                <div x-show="showSendMessage" x-collapse class="mb-4">
-                    <div class="flex gap-3">
-                        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                            <flux:icon name="chat-bubble-left" class="size-4" />
-                        </div>
-                        <div class="flex-1">
-                            <textarea rows="3" placeholder="Send a message to followers..." class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-blue-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"></textarea>
-                            <div class="mt-2 flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Attach file">
-                                        <flux:icon name="paper-clip" class="size-4" />
-                                    </button>
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Mention">
-                                        <flux:icon name="at-symbol" class="size-4" />
-                                    </button>
-                                </div>
-                                <button type="button" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700">
-                                    Send
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {{-- Chatter Forms --}}
+                <x-ui.chatter-forms />
 
-                <div x-show="showLogNote" x-collapse class="mb-4">
-                    <div class="flex gap-3">
-                        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
-                            <flux:icon name="pencil-square" class="size-4" />
-                        </div>
-                        <div class="flex-1">
-                            <textarea rows="3" placeholder="Log an internal note..." class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-colors focus:border-amber-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"></textarea>
-                            <div class="mt-2 flex items-center justify-between">
-                                <div class="flex items-center gap-1">
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Attach file">
-                                        <flux:icon name="paper-clip" class="size-4" />
-                                    </button>
-                                    <button type="button" class="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Mention">
-                                        <flux:icon name="at-symbol" class="size-4" />
-                                    </button>
-                                </div>
-                                <button type="button" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700">
-                                    Log Note
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="showScheduleActivity" x-collapse class="mb-4">
-                    <div class="flex gap-3">
-                        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
-                            <flux:icon name="clock" class="size-4" />
-                        </div>
-                        <div class="flex-1 space-y-3">
-                            <div>
-                                <label class="mb-1 block text-xs text-zinc-500 dark:text-zinc-400">Activity Type</label>
-                                <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                    <option value="">Select activity type...</option>
-                                    <option value="call">Call</option>
-                                    <option value="meeting">Meeting</option>
-                                    <option value="todo">To-Do</option>
-                                    <option value="email">Email</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-xs text-zinc-500 dark:text-zinc-400">Due Date</label>
-                                <input type="date" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                            </div>
-                            <div>
-                                <label class="mb-1 block text-xs text-zinc-500 dark:text-zinc-400">Summary</label>
-                                <input type="text" placeholder="Activity summary..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-violet-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                            </div>
-                            <div class="flex justify-end">
-                                <button type="button" class="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-violet-700">
-                                    Schedule
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                @if($userId)
+                {{-- Activity Timeline --}}
+                @if($supplierId)
                     <div class="flex items-center gap-3 py-2">
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Today</span>
+                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                            @if($activities->isNotEmpty() && $activities->first()['created_at']->isToday())
+                                Today
+                            @else
+                                Activity
+                            @endif
+                        </span>
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                     </div>
 
                     <div class="space-y-4">
-                        @if(isset($activityLog) && count($activityLog) > 0)
-                            @foreach($activityLog as $activity)
-                                <div class="flex gap-3">
-                                    <div class="relative flex-shrink-0">
-                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                                            {{ strtoupper(substr($activity['user'] ?? 'U', 0, 2)) }}
-                                        </div>
+                        @forelse($activities as $item)
+                            @if($item['type'] === 'note')
+                                {{-- Note Item --}}
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        <x-ui.user-avatar :user="$item['data']->user" size="md" :showPopup="true" />
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $activity['user'] }}</span>
-                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $activity['time'] }}</span>
+                                            <x-ui.user-name :user="$item['data']->user" />
+                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                                {{ $item['created_at']->diffForHumans() }}
+                                            </span>
                                         </div>
-                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $activity['message'] }}</p>
+                                        <div class="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-zinc-700 dark:bg-amber-900/20 dark:text-zinc-300">
+                                            <div class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mb-1">
+                                                <flux:icon name="pencil-square" class="size-3" />
+                                                <span>Internal Note</span>
+                                            </div>
+                                            {{ $item['data']->content }}
+                                        </div>
                                     </div>
                                 </div>
-                            @endforeach
-                        @endif
+                            @else
+                                {{-- Activity Log Item --}}
+                                @php $activity = $item['data']; @endphp
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <x-ui.user-name :user="$activity->causer" />
+                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                                                {{ $activity->created_at->diffForHumans() }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                            @if($activity->event === 'created')
+                                                Supplier created
+                                            @elseif($activity->properties->has('old') && $activity->event === 'updated')
+                                                @php
+                                                    $old = $activity->properties->get('old', []);
+                                                    $new = $activity->properties->get('attributes', []);
+                                                    $changes = collect($new)->filter(fn($val, $key) => isset($old[$key]) && $old[$key] !== $val);
+                                                @endphp
+                                                @if($changes->isNotEmpty())
+                                                    @foreach($changes as $key => $newVal)
+                                                        @php
+                                                            $oldVal = $old[$key] ?? '-';
+                                                            $label = ucfirst(str_replace('_', ' ', $key));
+                                                        @endphp
+                                                        <span class="block">
+                                                            Updated <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</span>:
+                                                            <span class="text-zinc-400 line-through">{{ is_string($oldVal) ? $oldVal : $oldVal }}</span>
+                                                            <flux:icon name="arrow-right" class="inline size-3 mx-1" />
+                                                            <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ is_string($newVal) ? $newVal : $newVal }}</span>
+                                                        </span>
+                                                    @endforeach
+                                                @else
+                                                    {{ $activity->description }}
+                                                @endif
+                                            @else
+                                                {{ $activity->description }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
+                        @empty
+                            {{-- Supplier Created (fallback when no activities yet) --}}
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.user-name :user="auth()->user()" />
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $createdAt ?? now()->format('H:i') }}</span>
+                                    </div>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Supplier created</p>
+                                </div>
+                            </div>
+                        @endforelse
                     </div>
                 @else
+                    {{-- Empty State for New Supplier --}}
                     <div class="py-8 text-center">
                         <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
                             <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
                         </div>
                         <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
-                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once the supplier is saved</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once you save</p>
                     </div>
                 @endif
             </div>

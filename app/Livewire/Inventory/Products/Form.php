@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Inventory\Products;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Inventory\Category;
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\InventoryAdjustmentItem;
@@ -14,14 +15,60 @@ use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Product')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $productId = null;
     public ?Product $product = null;
     public bool $editing = false;
+
+    // Timestamps
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+
+    protected function getNotableModel()
+    {
+        return $this->productId ? Product::find($this->productId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->productId) {
+            return collect();
+        }
+
+        $product = Product::find($this->productId);
+        
+        $activities = Activity::where('subject_type', Product::class)
+            ->where('subject_id', $this->productId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        $notes = $product->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     // General Info
     public string $name = '';
@@ -94,6 +141,8 @@ class Form extends Component
             $this->receipt_note = $this->product->receipt_note;
             $this->delivery_note = $this->product->delivery_note;
             $this->internal_notes = $this->product->internal_notes;
+            $this->createdAt = $this->product->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $this->product->updated_at->format('M d, Y \a\t H:i');
 
             $this->loadForecast();
 
@@ -348,6 +397,7 @@ class Form extends Component
             'users' => User::orderBy('name')->get(),
             'pricelists' => Pricelist::where('is_active', true)->orderBy('name')->get(),
             'pricelistRules' => $this->product?->pricelistRules()->with('pricelist')->get() ?? collect(),
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

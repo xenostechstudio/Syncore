@@ -2,15 +2,18 @@
 
 namespace App\Livewire\Accounting\Accounts;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Accounting\Account;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Accounting'])]
 #[Title('Account')]
 class Form extends Component
 {
+    use WithNotes;
     public ?int $accountId = null;
     public ?Account $account = null;
 
@@ -20,6 +23,48 @@ class Form extends Component
     public ?int $parentId = null;
     public string $description = '';
     public bool $isActive = true;
+
+    protected function getNotableModel()
+    {
+        return $this->accountId ? Account::find($this->accountId) : null;
+    }
+
+    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
+    {
+        if (!$this->accountId) {
+            return collect();
+        }
+
+        $account = Account::find($this->accountId);
+        
+        // Get activity logs
+        $activities = Activity::where('subject_type', Account::class)
+            ->where('subject_id', $this->accountId)
+            ->with('causer')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'type' => 'activity',
+                    'data' => $activity,
+                    'created_at' => $activity->created_at,
+                ];
+            });
+
+        // Get notes
+        $notes = $account->notes()->with('user')->get()->map(function ($note) {
+            return [
+                'type' => 'note',
+                'data' => $note,
+                'created_at' => $note->created_at,
+            ];
+        });
+
+        // Merge and sort by created_at descending
+        return $activities->concat($notes)
+            ->sortByDesc('created_at')
+            ->take(30)
+            ->values();
+    }
 
     protected function rules(): array
     {

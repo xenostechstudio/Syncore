@@ -5,18 +5,21 @@ namespace App\Livewire\HR\Payroll;
 use App\Livewire\Concerns\WithNotes;
 use App\Models\HR\Employee;
 use App\Models\HR\PayrollItem;
+use App\Models\HR\PayrollItemDetail;
 use App\Models\HR\PayrollPeriod;
 use App\Models\HR\SalaryComponent;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Payroll')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPagination;
 
     public ?int $periodId = null;
     public ?PayrollPeriod $period = null;
@@ -27,6 +30,11 @@ class Form extends Component
     public ?string $paymentDate = null;
     public string $status = 'draft';
     public string $notes = '';
+
+    // Payslip search & pagination
+    #[Url(as: 'q')]
+    public string $payslipSearch = '';
+    public int $perPage = 10;
 
     protected function rules(): array
     {
@@ -87,7 +95,11 @@ class Form extends Component
     {
         if (!$this->period || $this->period->status !== 'draft') return;
 
-        $employees = Employee::where('status', 'active')->get();
+        $employees = Employee::where('status', 'active')
+            ->with(['employeeSalaryComponents.salaryComponent'])
+            ->get();
+
+        $generatedCount = 0;
 
         foreach ($employees as $employee) {
             $existing = PayrollItem::where('payroll_period_id', $this->period->id)
@@ -95,21 +107,48 @@ class Form extends Component
                 ->first();
 
             if (!$existing) {
-                PayrollItem::create([
+                // Create payroll item
+                $payrollItem = PayrollItem::create([
                     'payroll_period_id' => $this->period->id,
                     'employee_id' => $employee->id,
-                    'basic_salary' => $employee->basic_salary,
+                    'basic_salary' => $employee->basic_salary ?? 0,
                     'total_earnings' => 0,
                     'total_deductions' => 0,
-                    'net_salary' => $employee->basic_salary,
+                    'net_salary' => $employee->basic_salary ?? 0,
                     'working_days' => 22,
                     'days_worked' => 22,
                 ]);
+
+                // Copy active salary components as details
+                foreach ($employee->employeeSalaryComponents as $empComponent) {
+                    if (!$empComponent->is_active) continue;
+                    
+                    // Check if component is within effective date range
+                    $periodStart = $this->period->start_date;
+                    $periodEnd = $this->period->end_date;
+                    
+                    if ($empComponent->effective_from && $empComponent->effective_from > $periodEnd) continue;
+                    if ($empComponent->effective_to && $empComponent->effective_to < $periodStart) continue;
+
+                    PayrollItemDetail::create([
+                        'payroll_item_id' => $payrollItem->id,
+                        'salary_component_id' => $empComponent->salary_component_id,
+                        'component_name' => $empComponent->salaryComponent->name,
+                        'type' => $empComponent->salaryComponent->type,
+                        'source' => 'component',
+                        'amount' => $empComponent->amount,
+                        'notes' => null,
+                    ]);
+                }
+
+                // Recalculate totals
+                $payrollItem->recalculate();
+                $generatedCount++;
             }
         }
 
         $this->period->recalculateTotals();
-        session()->flash('success', 'Payroll generated for ' . $employees->count() . ' employees.');
+        session()->flash('success', "Payroll generated for {$generatedCount} employees.");
     }
 
     public function approve(): void
@@ -124,6 +163,49 @@ class Form extends Component
 
         $this->status = 'approved';
         session()->flash('success', 'Payroll approved.');
+    }
+
+    public function startProcessing(): void
+    {
+        if (!$this->period || $this->period->status !== 'approved') return;
+
+        $this->period->update(['status' => 'processing']);
+        $this->status = 'processing';
+        session()->flash('success', 'Payroll processing started.');
+    }
+
+    public function markAsPaid(): void
+    {
+        if (!$this->period || $this->period->status !== 'processing') return;
+
+        $this->period->update([
+            'status' => 'paid',
+            'payment_date' => $this->paymentDate ?? now()->format('Y-m-d'),
+        ]);
+        $this->status = 'paid';
+        session()->flash('success', 'Payroll marked as paid.');
+    }
+
+    public function cancel(): void
+    {
+        if (!$this->period || in_array($this->period->status, ['paid', 'cancelled'])) return;
+
+        $this->period->update(['status' => 'cancelled']);
+        $this->status = 'cancelled';
+        session()->flash('success', 'Payroll cancelled.');
+    }
+
+    public function resetToDraft(): void
+    {
+        if (!$this->period || !in_array($this->period->status, ['approved', 'cancelled'])) return;
+
+        $this->period->update([
+            'status' => 'draft',
+            'approved_by' => null,
+            'approved_at' => null,
+        ]);
+        $this->status = 'draft';
+        session()->flash('success', 'Payroll reset to draft.');
     }
 
     public function delete(): void
@@ -178,10 +260,39 @@ class Form extends Component
         return $activities;
     }
 
+    public function updatedPayslipSearch(): void
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
+        $itemsQuery = $this->period
+            ? $this->period->items()
+                ->with(['employee.department', 'employee.position'])
+                ->when($this->payslipSearch, function ($query) {
+                    $query->whereHas('employee', function ($q) {
+                        $q->where('name', 'ilike', '%' . $this->payslipSearch . '%')
+                          ->orWhere('email', 'ilike', '%' . $this->payslipSearch . '%');
+                    })
+                    ->orWhereHas('employee.department', function ($q) {
+                        $q->where('name', 'ilike', '%' . $this->payslipSearch . '%');
+                    });
+                })
+            : null;
+
+        $items = $itemsQuery?->paginate($this->perPage) ?? collect();
+        
+        // Calculate totals for all items (not just current page)
+        $allItems = $this->period?->items ?? collect();
+
         return view('livewire.hr.payroll.form', [
-            'items' => $this->period?->items()->with(['employee.department', 'employee.position'])->get() ?? collect(),
+            'items' => $items,
+            'totalBasicSalary' => $allItems->sum('basic_salary'),
+            'totalEarnings' => $allItems->sum('total_earnings'),
+            'totalDeductions' => $allItems->sum('total_deductions'),
+            'totalNetSalary' => $allItems->sum('net_salary'),
+            'totalItemsCount' => $allItems->count(),
             'activities' => $this->getActivities(),
             'periodCreatedAt' => $this->period?->created_at?->format('H:i'),
         ]);
