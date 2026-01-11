@@ -10,7 +10,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.settings')]
 #[Title('Role')]
@@ -35,16 +34,36 @@ class Form extends Component
             ],
         ],
         'sales' => [
-            'label' => 'Sales',
+            'label' => 'Sales & CRM',
             'modules' => [
                 ['key' => 'sales', 'label' => 'Sales Order'],
                 ['key' => 'invoicing', 'label' => 'Invoicing'],
+                ['key' => 'customers', 'label' => 'Customers'],
+                ['key' => 'crm', 'label' => 'CRM'],
             ],
         ],
-        'other' => [
-            'label' => 'Other',
+        'hr' => [
+            'label' => 'Human Resources',
             'modules' => [
-                ['key' => 'settings', 'label' => 'General Setup'],
+                ['key' => 'hr', 'label' => 'HR Management'],
+                ['key' => 'payroll', 'label' => 'Payroll'],
+                ['key' => 'leave', 'label' => 'Leave Management'],
+            ],
+        ],
+        'finance' => [
+            'label' => 'Finance',
+            'modules' => [
+                ['key' => 'accounting', 'label' => 'Accounting'],
+                ['key' => 'reports', 'label' => 'Reports'],
+            ],
+        ],
+        'admin' => [
+            'label' => 'Administration',
+            'modules' => [
+                ['key' => 'settings', 'label' => 'General Settings'],
+                ['key' => 'users', 'label' => 'User Management'],
+                ['key' => 'roles', 'label' => 'Roles & Permissions'],
+                ['key' => 'audit', 'label' => 'Audit Trail'],
             ],
         ],
     ];
@@ -54,7 +73,30 @@ class Form extends Component
     public array $accessLevelOptions = [
         '' => 'No Access',
         'view' => 'View Only',
+        'edit' => 'View & Edit',
         'full' => 'Full Access',
+    ];
+
+    /**
+     * Module-specific permissions mapping (matches ModulePermissionSeeder).
+     */
+    public array $modulePermissions = [
+        'sales' => ['view', 'create', 'edit', 'delete', 'export', 'confirm', 'cancel'],
+        'customers' => ['view', 'create', 'edit', 'delete', 'export'],
+        'invoicing' => ['view', 'create', 'edit', 'delete', 'export', 'send', 'record_payment'],
+        'crm' => ['view', 'create', 'edit', 'delete', 'export', 'convert_lead'],
+        'purchase' => ['view', 'create', 'edit', 'delete', 'export', 'confirm', 'receive'],
+        'inventory' => ['view', 'create', 'edit', 'delete', 'export', 'adjust', 'transfer'],
+        'delivery' => ['view', 'create', 'edit', 'delete', 'export', 'confirm', 'complete'],
+        'hr' => ['view', 'create', 'edit', 'delete', 'export'],
+        'payroll' => ['view', 'create', 'edit', 'delete', 'export', 'process', 'approve'],
+        'leave' => ['view', 'create', 'edit', 'delete', 'approve', 'reject'],
+        'accounting' => ['view', 'create', 'edit', 'delete', 'export', 'post', 'close_period'],
+        'reports' => ['view', 'export', 'sales', 'inventory', 'financial'],
+        'settings' => ['view', 'edit'],
+        'users' => ['view', 'create', 'edit', 'delete', 'assign_roles'],
+        'roles' => ['view', 'create', 'edit', 'delete'],
+        'audit' => ['view', 'export'],
     ];
 
     public function mount(?int $id = null): void
@@ -85,9 +127,15 @@ class Form extends Component
             foreach ($this->moduleGroups as $group) {
                 foreach ($group['modules'] as $module) {
                     $key = $module['key'];
-                    if (in_array("{$key}.full", $this->selectedPermissions, true)) {
+                    $hasView = in_array("{$key}.view", $this->selectedPermissions, true);
+                    $hasEdit = in_array("{$key}.edit", $this->selectedPermissions, true);
+                    $hasDelete = in_array("{$key}.delete", $this->selectedPermissions, true);
+                    
+                    if ($hasDelete) {
                         $this->moduleAccessLevels[$key] = 'full';
-                    } elseif (in_array("{$key}.view", $this->selectedPermissions, true)) {
+                    } elseif ($hasEdit) {
+                        $this->moduleAccessLevels[$key] = 'edit';
+                    } elseif ($hasView) {
                         $this->moduleAccessLevels[$key] = 'view';
                     } else {
                         $this->moduleAccessLevels[$key] = '';
@@ -131,10 +179,21 @@ class Form extends Component
                 // Add module access permission
                 $permissionsToSync[] = "access.{$module}";
                 
-                // Add level-based permissions (full includes view)
-                $permissionsToSync[] = "{$module}.view";
-                if ($level === 'full') {
-                    $permissionsToSync[] = "{$module}.full";
+                // Get available permissions for this module
+                $availablePerms = $this->modulePermissions[$module] ?? ['view', 'create', 'edit', 'delete', 'export'];
+                
+                // Add permissions based on access level
+                if ($level === 'view') {
+                    $permissionsToSync[] = "{$module}.view";
+                } elseif ($level === 'edit') {
+                    $permissionsToSync[] = "{$module}.view";
+                    if (in_array('create', $availablePerms)) $permissionsToSync[] = "{$module}.create";
+                    if (in_array('edit', $availablePerms)) $permissionsToSync[] = "{$module}.edit";
+                } elseif ($level === 'full') {
+                    // Full access = all permissions for this module
+                    foreach ($availablePerms as $perm) {
+                        $permissionsToSync[] = "{$module}.{$perm}";
+                    }
                 }
             }
         }

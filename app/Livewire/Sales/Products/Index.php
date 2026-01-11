@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Sales\Products;
 
+use App\Exports\ProductsExport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Inventory\Product;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Products')]
@@ -120,13 +122,26 @@ class Index extends Component
         $product->save();
     }
 
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            session()->flash('error', 'Please select at least one product to export.');
+            return;
+        }
+
+        $ids = array_map('intval', $this->selected);
+        $this->clearSelection();
+
+        return Excel::download(new ProductsExport($ids), 'products-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
     private function getProductsQuery()
     {
         return Product::query()
             ->when($this->groupBy === 'category', fn ($q) => $q->with('category'))
             ->when($this->search, fn ($q) => $q->where(fn ($qq) => $qq
-                ->where('name', 'like', "%{$this->search}%")
-                ->orWhere('sku', 'like', "%{$this->search}%")
+                ->where('name', 'ilike', "%{$this->search}%")
+                ->orWhere('sku', 'ilike', "%{$this->search}%")
             ))
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->when($this->sort === 'latest', fn ($q) => $q->latest())

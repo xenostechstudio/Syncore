@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Reports\Sales;
 
+use App\Services\Reports\ReportExportService;
 use App\Services\Reports\SalesReportService;
 use Carbon\Carbon;
 use Livewire\Attributes\Layout;
@@ -46,6 +47,32 @@ class Index extends Component
 
         $this->startDate = $start->format('Y-m-d');
         $this->endDate = $end->format('Y-m-d');
+    }
+
+    public function exportPdf()
+    {
+        $startDate = Carbon::parse($this->startDate)->startOfDay();
+        $endDate = Carbon::parse($this->endDate)->endOfDay();
+
+        $service = app(SalesReportService::class);
+        $exportService = app(ReportExportService::class);
+
+        $data = [
+            'summary' => $service->getSummary($startDate, $endDate),
+            'salesByPeriod' => $service->getSalesByPeriod($startDate, $endDate, $this->groupBy),
+            'salesByCustomer' => $service->getSalesByCustomer($startDate, $endDate, 10),
+            'salesByProduct' => $service->getSalesByProduct($startDate, $endDate, 10),
+            'salespersonPerformance' => $service->getSalespersonPerformance($startDate, $endDate),
+        ];
+
+        $pdf = $exportService->exportSalesReportPdf($data, $startDate, $endDate);
+        $filename = $exportService->generateFilename('sales', $startDate, $endDate);
+
+        return response()->streamDownload(
+            fn () => print($pdf->output()),
+            $filename,
+            ['Content-Type' => 'application/pdf']
+        );
     }
 
     public function render()

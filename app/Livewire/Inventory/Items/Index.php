@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Inventory\Items;
 
+use App\Exports\ProductsExport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
@@ -10,6 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Products')]
@@ -38,6 +40,10 @@ class Index extends Component
     public array $selected = [];
     public bool $selectAll = false;
 
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
+
     public array $visibleColumns = [
         'name' => true,
         'sku' => true,
@@ -56,8 +62,8 @@ class Index extends Component
     {
         if ($value) {
             $this->selected = Product::query()
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('sku', 'like', "%{$this->search}%"))
+                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
+                    ->orWhere('sku', 'ilike', "%{$this->search}%"))
                 ->when($this->status, fn($q) => $q->where('status', $this->status))
                 ->pluck('id')
                 ->map(fn($id) => (string) $id)
@@ -102,14 +108,144 @@ class Index extends Component
 
     public function delete(int $id): void
     {
-        Product::findOrFail($id)->delete();
+        $product = Product::findOrFail($id);
+        
+        // Check if product has stock
+        $totalStock = DB::table('inventory_stocks')
+            ->where('product_id', $id)
+            ->sum('quantity');
+        
+        if ($totalStock > 0) {
+            session()->flash('error', "Cannot delete '{$product->name}'. Product has {$totalStock} units in stock.");
+            return;
+        }
+        
+        $product->delete();
         $this->selected = array_filter($this->selected, fn($s) => $s != $id);
+        session()->flash('success', "Product '{$product->name}' deleted successfully.");
     }
 
     public function deleteSelected(): void
     {
-        Product::whereIn('id', $this->selected)->delete();
+        $this->confirmBulkDelete();
+    }
+
+    // Bulk Actions
+    public function confirmBulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        // Validate which products can be deleted (quantity = 0)
+        $products = Product::whereIn('id', $this->selected)->get();
+        
+        $stockByProduct = DB::table('inventory_stocks')
+            ->whereIn('product_id', $this->selected)
+            ->selectRaw('product_id, SUM(quantity) as total_stock')
+            ->groupBy('product_id')
+            ->pluck('total_stock', 'product_id');
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($products as $product) {
+            $stock = (int) ($stockByProduct[$product->id] ?? 0);
+            if ($stock === 0) {
+                $canDelete[] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'stock' => $stock,
+                    'reason' => "Has {$stock} units in stock",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        // Only delete products with 0 stock
+        $productsWithStock = DB::table('inventory_stocks')
+            ->whereIn('product_id', $this->selected)
+            ->selectRaw('product_id, SUM(quantity) as total_stock')
+            ->groupBy('product_id')
+            ->having('total_stock', '>', 0)
+            ->pluck('product_id')
+            ->toArray();
+
+        $deletableIds = array_diff($this->selected, array_map('strval', $productsWithStock));
+
+        if (empty($deletableIds)) {
+            session()->flash('error', 'No products can be deleted. All selected products have stock.');
+            $this->cancelDelete();
+            return;
+        }
+
+        $count = Product::whereIn('id', $deletableIds)->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} products deleted successfully.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
         $this->clearSelection();
+    }
+
+    public function bulkActivate(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Product::whereIn('id', $this->selected)
+            ->update(['status' => 'active']);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} products activated.");
+    }
+
+    public function bulkDeactivate(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Product::whereIn('id', $this->selected)
+            ->update(['status' => 'inactive']);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} products deactivated.");
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new ProductsExport(), 'products-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new ProductsExport($this->selected), 'products-selected-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function render()
@@ -121,8 +257,8 @@ class Index extends Component
 
         $products = Product::query()
             ->with('category')
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('sku', 'like', "%{$this->search}%"))
+            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
+                ->orWhere('sku', 'ilike', "%{$this->search}%"))
             ->when($this->status, fn($q) => $q->where('status', $this->status))
             ->when($this->sort === 'latest', fn($q) => $q->latest())
             ->when($this->sort === 'oldest', fn($q) => $q->oldest())
@@ -188,8 +324,8 @@ class Index extends Component
         if ($this->view === 'kanban') {
             $productsByStatus = Product::query()
                 ->with('category')
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('sku', 'like', "%{$this->search}%"))
+                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
+                    ->orWhere('sku', 'ilike', "%{$this->search}%"))
                 ->get()
                 ->groupBy('status');
         }

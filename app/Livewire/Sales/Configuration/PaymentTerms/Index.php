@@ -2,18 +2,22 @@
 
 namespace App\Livewire\Sales\Configuration\PaymentTerms;
 
+use App\Exports\PaymentTermsExport;
+use App\Imports\PaymentTermsImport;
+use App\Livewire\Concerns\WithImport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Sales\PaymentTerm;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Payment Terms')]
 class Index extends Component
 {
-    use WithManualPagination;
+    use WithManualPagination, WithImport;
 
     #[Url]
     public string $search = '';
@@ -32,7 +36,7 @@ class Index extends Component
     {
         if ($value) {
             $this->selected = PaymentTerm::query()
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
+                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
                 ->pluck('id')
                 ->map(fn($id) => (string) $id)
                 ->toArray();
@@ -47,6 +51,12 @@ class Index extends Component
         $this->selectAll = false;
     }
 
+    public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $ids = !empty($this->selected) ? $this->selected : null;
+        return Excel::download(new PaymentTermsExport($ids), 'payment-terms-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
     public function deleteSelected(): void
     {
         PaymentTerm::whereIn('id', $this->selected)->delete();
@@ -55,11 +65,24 @@ class Index extends Component
         session()->flash('success', 'Selected payment terms deleted successfully.');
     }
 
+    protected function getImportClass(): string
+    {
+        return PaymentTermsImport::class;
+    }
+
+    protected function getImportTemplate(): array
+    {
+        return [
+            'headers' => ['name', 'code', 'days', 'description', 'is_active', 'sort_order'],
+            'filename' => 'payment-terms-template.csv',
+        ];
+    }
+
     public function render()
     {
         $paymentTerms = PaymentTerm::query()
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('code', 'like', "%{$this->search}%"))
+            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
+                ->orWhere('code', 'ilike', "%{$this->search}%"))
             ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate(15, ['*'], 'page', $this->page);

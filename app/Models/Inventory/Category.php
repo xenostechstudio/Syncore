@@ -3,15 +3,16 @@
 namespace App\Models\Inventory;
 
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class Category extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $table = 'product_categories';
 
@@ -56,19 +57,5 @@ class Category extends Model
         }
         
         return $path;
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'code', 'description', 'parent_id', 'color', 'is_active', 'sort_order'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Category created',
-                'updated' => 'Category updated',
-                'deleted' => 'Category deleted',
-                default => "Category {$eventName}",
-            });
     }
 }

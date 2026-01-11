@@ -8,7 +8,6 @@ use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Lead')]
@@ -38,43 +37,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->leadId ? Lead::find($this->leadId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->leadId) {
-            return collect();
-        }
-
-        $lead = Lead::find($this->leadId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', Lead::class)
-            ->where('subject_id', $this->leadId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $lead->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     protected function rules(): array
@@ -155,6 +117,33 @@ class Form extends Component
         } else {
             session()->flash('error', 'Failed to convert lead.');
         }
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->leadId) {
+            session()->flash('error', 'Please save the lead first.');
+            return;
+        }
+
+        $lead = Lead::findOrFail($this->leadId);
+
+        $newLead = Lead::create([
+            'name' => $lead->name . ' (Copy)',
+            'email' => null, // Don't duplicate email to avoid conflicts
+            'phone' => $lead->phone,
+            'company_name' => $lead->company_name,
+            'job_title' => $lead->job_title,
+            'website' => $lead->website,
+            'address' => $lead->address,
+            'source' => $lead->source,
+            'status' => 'new',
+            'notes' => $lead->notes,
+            'assigned_to' => $lead->assigned_to,
+        ]);
+
+        session()->flash('success', 'Lead duplicated successfully.');
+        $this->redirect(route('crm.leads.edit', $newLead->id), navigate: true);
     }
 
     public function delete(): void

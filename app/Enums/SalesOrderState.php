@@ -34,6 +34,17 @@ enum SalesOrderState: string
         };
     }
 
+    public function icon(): string
+    {
+        return match($this) {
+            self::QUOTATION      => 'document-text',
+            self::QUOTATION_SENT => 'paper-airplane',
+            self::SALES_ORDER    => 'shopping-cart',
+            self::DONE           => 'check-circle',
+            self::CANCELLED      => 'x-circle',
+        };
+    }
+
     public function canConfirm(): bool
     {
         // "Confirm" moves the document into Sales Order

@@ -3,11 +3,16 @@
 namespace App\Models\Inventory;
 
 use App\Models\Sales\Pricelist;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductPricelistRule extends Model
 {
+    use LogsActivity;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
+
     protected $fillable = [
         'product_id',
         'pricelist_id',

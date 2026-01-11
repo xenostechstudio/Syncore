@@ -24,6 +24,20 @@
 
     {{-- Module Grid --}}
     <div class="relative grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {{-- Dashboard --}}
+        <a href="{{ route('dashboard') }}" wire:navigate class="group relative flex items-center gap-4 rounded-2xl border border-white/40 bg-white/40 p-5 backdrop-blur-md transition-all hover:border-white/60 hover:bg-white/60 hover:shadow-lg hover:shadow-zinc-500/10 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">
+            <div class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 text-white shadow-lg shadow-zinc-500/30 dark:from-zinc-500 dark:to-zinc-700">
+                <svg class="size-7" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Dashboard</h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Analytics & KPIs</p>
+            </div>
+            <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
+        </a>
+
         {{-- Sales --}}
         @can('access.sales')
             <a href="{{ route('sales.index') }}" wire:navigate class="group relative flex items-center gap-4 rounded-2xl border border-white/40 bg-white/40 p-5 backdrop-blur-md transition-all hover:border-white/60 hover:bg-white/60 hover:shadow-lg hover:shadow-violet-500/10 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10">

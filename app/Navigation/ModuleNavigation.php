@@ -246,20 +246,29 @@ class ModuleNavigation
                     'children' => [
                         ['label' => 'Request for Quotation', 'route' => 'purchase.rfq.index', 'pattern' => 'purchase.rfq*'],
                         ['label' => 'Purchase Orders', 'route' => 'purchase.orders.index', 'pattern' => 'purchase.orders*'],
-                        ['label' => 'Suppliers', 'route' => 'purchase.suppliers.index', 'pattern' => 'purchase.suppliers*'],
                     ],
                 ],
                 [
-                    'label' => 'Products',
-                    'route' => 'purchase.rfq.index',
-                    'icon' => 'cube',
-                    'pattern' => 'purchase.products*',
+                    'label' => 'Vendor Bills',
+                    'route' => 'purchase.bills.index',
+                    'icon' => 'document-text',
+                    'pattern' => 'purchase.bills*',
                 ],
                 [
-                    'label' => 'Configuration',
-                    'route' => 'purchase.rfq.index',
-                    'icon' => 'cog-6-tooth',
-                    'pattern' => 'purchase.configuration*',
+                    'label' => 'Suppliers',
+                    'route' => 'purchase.suppliers.index',
+                    'icon' => 'building-storefront',
+                    'pattern' => 'purchase.suppliers*',
+                ],
+                [
+                    'label' => 'Products',
+                    'route' => 'inventory.products.index',
+                    'icon' => 'cube',
+                    'pattern' => 'inventory.products*',
+                    'children' => [
+                        ['label' => 'Products', 'route' => 'inventory.products.index', 'pattern' => 'inventory.products.index|inventory.products.create|inventory.products.edit'],
+                        ['label' => 'Categories', 'route' => 'inventory.categories.index', 'pattern' => 'inventory.categories*'],
+                    ],
                 ],
             ],
             'Settings' => [

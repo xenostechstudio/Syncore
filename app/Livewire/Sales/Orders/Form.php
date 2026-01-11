@@ -22,7 +22,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Sales Order')]
@@ -89,55 +88,30 @@ class Form extends Component
         return $this->orderId ? SalesOrder::find($this->orderId) : null;
     }
 
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->orderId) {
-            return collect();
-        }
-
-        $order = SalesOrder::find($this->orderId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', SalesOrder::class)
-            ->where('subject_id', $this->orderId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $order->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
-    }
-
     public function getActivities(): \Illuminate\Support\Collection
     {
         if (!$this->orderId) {
             return collect();
         }
 
-        return Activity::where('subject_type', SalesOrder::class)
-            ->where('subject_id', $this->orderId)
-            ->with('causer')
-            ->latest()
-            ->take(20)
-            ->get();
+        $modelClass = SalesOrder::class;
+
+        return DB::table('activity_logs')
+            ->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
+            ->where('activity_logs.model_type', $modelClass)
+            ->where('activity_logs.model_id', $this->orderId)
+            ->select('activity_logs.*', 'users.name as causer_name')
+            ->orderByDesc('activity_logs.created_at')
+            ->limit(20)
+            ->get()
+            ->map(fn($activity) => (object) [
+                'id' => $activity->id,
+                'action' => $activity->action,
+                'description' => $activity->description,
+                'properties' => json_decode($activity->properties ?? '{}', true),
+                'causer' => (object) ['name' => $activity->causer_name ?? $activity->user_name ?? 'System'],
+                'created_at' => \Carbon\Carbon::parse($activity->created_at),
+            ]);
     }
 
     public function mount(?int $id = null): void
@@ -398,28 +372,27 @@ class Form extends Component
         return $this->subtotal + $this->tax;
     }
 
-    public function save(): void
+    /**
+     * Get validation rules for the order
+     */
+    protected function orderRules(): array
     {
-        // Filter out empty items (no product selected)
-        $validItems = collect($this->items)->filter(fn($item) => !empty($item['product_id']))->values()->toArray();
-        
-        // Check if there are valid items
-        if (empty($validItems)) {
-            $this->addError('items', 'Please add at least one product to the order.');
-            return;
-        }
-
-        // Update items with only valid ones for validation
-        $this->items = $validItems;
-
-        $this->validate([
+        return [
             'customer_id' => 'required|exists:customers,id',
             'order_date' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
-        ], [
+        ];
+    }
+
+    /**
+     * Get validation messages for the order
+     */
+    protected function orderMessages(): array
+    {
+        return [
             'customer_id.required' => 'Please select a customer.',
             'order_date.required' => 'Please enter the order date.',
             'items.required' => 'Please add at least one product to the order.',
@@ -429,44 +402,45 @@ class Form extends Component
             'items.*.quantity.min' => 'Quantity must be at least 1.',
             'items.*.unit_price.required' => 'Please enter unit price for all products.',
             'items.*.unit_price.min' => 'Unit price cannot be negative.',
-        ]);
+        ];
+    }
 
+    /**
+     * Validate and filter order items
+     */
+    protected function validateOrderItems(): bool
+    {
+        // Filter out empty items (no product selected)
+        $validItems = collect($this->items)->filter(fn($item) => !empty($item['product_id']))->values()->toArray();
+        
+        // Check if there are valid items
+        if (empty($validItems)) {
+            $this->addError('items', 'Please add at least one product to the order.');
+            return false;
+        }
+
+        // Update items with only valid ones for validation
+        $this->items = $validItems;
+        return true;
+    }
+
+    public function save(): void
+    {
+        if (!$this->validateOrderItems()) {
+            return;
+        }
+
+        $this->validate($this->orderRules(), $this->orderMessages());
         $this->saveOrder();
     }
 
     public function confirm(): void
     {
-        // Filter out empty items (no product selected)
-        $validItems = collect($this->items)->filter(fn($item) => !empty($item['product_id']))->values()->toArray();
-        
-        // Check if there are valid items
-        if (empty($validItems)) {
-            $this->addError('items', 'Please add at least one product to the order.');
+        if (!$this->validateOrderItems()) {
             return;
         }
 
-        // Update items with only valid ones for validation
-        $this->items = $validItems;
-
-        // Validate first before changing status
-        $this->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'order_date' => 'required|date',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ], [
-            'customer_id.required' => 'Please select a customer.',
-            'order_date.required' => 'Please enter the order date.',
-            'items.required' => 'Please add at least one product to the order.',
-            'items.min' => 'Please add at least one product to the order.',
-            'items.*.product_id.required' => 'Please select a product for all order lines.',
-            'items.*.quantity.required' => 'Please enter quantity for all products.',
-            'items.*.quantity.min' => 'Quantity must be at least 1.',
-            'items.*.unit_price.required' => 'Please enter unit price for all products.',
-            'items.*.unit_price.min' => 'Unit price cannot be negative.',
-        ]);
+        $this->validate($this->orderRules(), $this->orderMessages());
 
         // Only change status after validation passes - set to 'sales_order'
         $this->status = SalesOrderState::SALES_ORDER->value;
@@ -847,6 +821,55 @@ Best regards,
     public function getStateProperty(): SalesOrderState
     {
         return SalesOrderState::tryFrom($this->status) ?? SalesOrderState::QUOTATION;
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->orderId) {
+            session()->flash('error', 'Please save the order first.');
+            return;
+        }
+
+        try {
+            $order = SalesOrder::with('items')->findOrFail($this->orderId);
+
+            // Create new order with copied data
+            $newOrder = SalesOrder::create([
+                'order_number' => SalesOrder::generateOrderNumber(),
+                'customer_id' => $order->customer_id,
+                'user_id' => Auth::id(),
+                'order_date' => now(),
+                'expected_delivery_date' => now()->addDays(7),
+                'status' => 'draft',
+                'payment_terms' => $order->payment_terms,
+                'notes' => $order->notes,
+                'terms' => $order->terms,
+                'shipping_address' => $order->shipping_address,
+                'subtotal' => $order->subtotal,
+                'tax' => $order->tax,
+                'discount' => $order->discount,
+                'total' => $order->total,
+            ]);
+
+            // Copy items
+            foreach ($order->items as $item) {
+                SalesOrderItem::create([
+                    'sales_order_id' => $newOrder->id,
+                    'product_id' => $item->product_id,
+                    'tax_id' => $item->tax_id,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'discount' => $item->discount,
+                    'total' => $item->total,
+                ]);
+            }
+
+            session()->flash('success', 'Order duplicated successfully.');
+            $this->redirect(route('sales.orders.edit', $newOrder->id), navigate: true);
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to duplicate order: ' . $e->getMessage());
+        }
     }
 
     public function render()

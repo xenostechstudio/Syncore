@@ -2,17 +2,19 @@
 
 namespace App\Models\HR;
 
+use App\Enums\PayrollState;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class PayrollPeriod extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'name', 'start_date', 'end_date', 'payment_date', 'status',
@@ -29,6 +31,11 @@ class PayrollPeriod extends Model
         'total_deductions' => 'decimal:2',
         'total_net' => 'decimal:2',
     ];
+
+    public function getStateAttribute(): PayrollState
+    {
+        return PayrollState::tryFrom($this->status) ?? PayrollState::DRAFT;
+    }
 
     public function items(): HasMany
     {
@@ -56,62 +63,41 @@ class PayrollPeriod extends Model
 
     public function isLocked(): bool
     {
-        return in_array($this->status, ['processing', 'paid', 'cancelled']);
+        return $this->state->isLocked();
     }
 
     public function canBeEdited(): bool
     {
-        return $this->status === 'draft';
+        return $this->state->canEdit();
     }
 
     public function canBeApproved(): bool
     {
-        return $this->status === 'draft' && $this->items()->count() > 0;
+        return $this->state->canApprove() && $this->items()->count() > 0;
     }
 
     public function canStartProcessing(): bool
     {
-        return $this->status === 'approved';
+        return $this->state->canStartProcessing();
     }
 
     public function canBeMarkedAsPaid(): bool
     {
-        return $this->status === 'processing';
+        return $this->state->canMarkPaid();
     }
 
     public function canBeCancelled(): bool
     {
-        return !in_array($this->status, ['paid', 'cancelled']);
+        return $this->state->canCancel();
     }
 
     public function canBeResetToDraft(): bool
     {
-        return in_array($this->status, ['approved', 'cancelled']);
+        return $this->state->canResetToDraft();
     }
 
     public function getStatusColorAttribute(): string
     {
-        return match ($this->status) {
-            'draft' => 'zinc',
-            'approved' => 'blue',
-            'processing' => 'amber',
-            'paid' => 'emerald',
-            'cancelled' => 'red',
-            default => 'zinc',
-        };
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'start_date', 'end_date', 'payment_date', 'status', 'notes'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Payroll period created',
-                'updated' => 'Payroll period updated',
-                'deleted' => 'Payroll period deleted',
-                default => "Payroll period {$eventName}",
-            });
+        return $this->state->color();
     }
 }

@@ -7,17 +7,18 @@ use App\Models\Delivery\DeliveryOrder;
 use App\Models\Invoicing\Invoice;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class SalesOrder extends Model
 {
     use LogsActivity, HasNotes;
+    
+    protected array $logActions = ['created', 'updated', 'deleted'];
     protected $fillable = [
         'order_number',
         'customer_id',
@@ -244,24 +245,4 @@ class SalesOrder extends Model
         }
     }
 
-    /**
-     * Activity log options
-     */
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'order_number', 'customer_id', 'order_date', 'expected_delivery_date',
-                'status', 'payment_terms', 'subtotal', 'tax', 'discount', 'total',
-                'notes', 'terms', 'shipping_address',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => __('activity.sales_order_created'),
-                'updated' => __('activity.sales_order_updated'),
-                'deleted' => __('activity.sales_order_deleted'),
-                default => __('activity.sales_order_event', ['event' => $eventName]),
-            });
-    }
 }

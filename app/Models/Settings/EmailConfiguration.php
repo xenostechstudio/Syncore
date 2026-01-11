@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class EmailConfiguration extends Model
 {
-    protected $table = 'email_configuration';
+    protected $table = 'email_configurations';
 
     protected $fillable = [
         'mailer',

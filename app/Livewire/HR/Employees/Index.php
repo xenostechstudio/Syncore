@@ -2,6 +2,7 @@
 
 namespace App\Livewire\HR\Employees;
 
+use App\Exports\EmployeesExport;
 use App\Models\HR\Department;
 use App\Models\HR\Employee;
 use App\Models\HR\Position;
@@ -10,6 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Employees')]
@@ -40,6 +42,10 @@ class Index extends Component
     public array $selected = [];
     public bool $selectAll = false;
 
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
+
     public function updatedSelectAll($value): void
     {
         if ($value) {
@@ -49,9 +55,16 @@ class Index extends Component
         }
     }
 
+    public function updatedSelected(): void
+    {
+        $this->selectAll = false;
+    }
+
     public function updatedSearch(): void
     {
         $this->resetPage();
+        $this->selected = [];
+        $this->selectAll = false;
     }
 
     public function setView(string $view): void
@@ -78,6 +91,92 @@ class Index extends Component
     {
         $this->selected = [];
         $this->selectAll = false;
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'departmentId', 'status', 'sort', 'groupBy']);
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
+    // Bulk Actions
+    public function confirmBulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $employees = Employee::whereIn('id', $this->selected)->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($employees as $employee) {
+            if ($employee->status === 'terminated' || $employee->status === 'resigned') {
+                $canDelete[] = [
+                    'id' => $employee->id,
+                    'name' => $employee->name,
+                    'status' => $employee->status,
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $employee->id,
+                    'name' => $employee->name,
+                    'reason' => "Status is '{$employee->status}' - only terminated/resigned employees can be deleted",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Employee::whereIn('id', $this->selected)
+            ->whereIn('status', ['terminated', 'resigned'])
+            ->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} employees deleted successfully.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
+        $this->clearSelection();
+    }
+
+    public function bulkUpdateStatus(string $status): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Employee::whereIn('id', $this->selected)->update(['status' => $status]);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} employees updated to {$status}.");
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new EmployeesExport(), 'employees-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new EmployeesExport($this->selected), 'employees-selected-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function getStatisticsProperty(): array

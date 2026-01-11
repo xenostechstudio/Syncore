@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Stock Adjustment')]
@@ -37,43 +36,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->adjustmentId ? InventoryAdjustment::find($this->adjustmentId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->adjustmentId) {
-            return collect();
-        }
-
-        $adjustment = InventoryAdjustment::find($this->adjustmentId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', InventoryAdjustment::class)
-            ->where('subject_id', $this->adjustmentId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $adjustment->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     public function mount(?int $id = null): void
@@ -311,6 +273,42 @@ class Form extends Component
             }
 
             return $adjustment;
+        });
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->adjustmentId) {
+            session()->flash('error', 'Please save the adjustment first.');
+            return;
+        }
+
+        $adjustment = InventoryAdjustment::with('items')->findOrFail($this->adjustmentId);
+
+        DB::transaction(function () use ($adjustment) {
+            $newAdjustment = InventoryAdjustment::create([
+                'adjustment_number' => InventoryAdjustment::generateAdjustmentNumber($adjustment->adjustment_type),
+                'warehouse_id' => $adjustment->warehouse_id,
+                'user_id' => Auth::id(),
+                'adjustment_date' => now()->format('Y-m-d'),
+                'adjustment_type' => $adjustment->adjustment_type,
+                'status' => 'draft',
+                'reason' => $adjustment->reason,
+                'notes' => $adjustment->notes,
+            ]);
+
+            foreach ($adjustment->items as $item) {
+                InventoryAdjustmentItem::create([
+                    'inventory_adjustment_id' => $newAdjustment->id,
+                    'product_id' => $item->product_id,
+                    'system_quantity' => $item->system_quantity,
+                    'counted_quantity' => $item->counted_quantity,
+                    'difference' => $item->difference,
+                ]);
+            }
+
+            session()->flash('success', 'Adjustment duplicated successfully.');
+            $this->redirect(route('inventory.adjustments.edit', $newAdjustment->id), navigate: true);
         });
     }
 

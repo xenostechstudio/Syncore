@@ -2,17 +2,19 @@
 
 namespace App\Models\Purchase;
 
+use App\Enums\PurchaseOrderState;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class PurchaseRfq extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $table = 'purchase_rfqs';
 
@@ -61,6 +63,11 @@ class PurchaseRfq extends Model
         return "{$prefix}/{$year}/" . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
     }
 
+    public function getStateAttribute(): PurchaseOrderState
+    {
+        return PurchaseOrderState::tryFrom($this->status) ?? PurchaseOrderState::RFQ;
+    }
+
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
@@ -74,22 +81,5 @@ class PurchaseRfq extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'reference', 'supplier_id', 'supplier_name', 'order_date',
-                'expected_arrival', 'status', 'subtotal', 'tax', 'total', 'notes',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'RFQ created',
-                'updated' => 'RFQ updated',
-                'deleted' => 'RFQ deleted',
-                default => "RFQ {$eventName}",
-            });
     }
 }

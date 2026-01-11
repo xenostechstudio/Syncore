@@ -4,12 +4,18 @@ namespace App\Models\Delivery;
 
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\Warehouse;
+use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DeliveryReturn extends Model
 {
+    use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
+
     protected $fillable = [
         'return_number',
         'delivery_order_id',

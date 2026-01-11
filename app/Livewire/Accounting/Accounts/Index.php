@@ -2,18 +2,22 @@
 
 namespace App\Livewire\Accounting\Accounts;
 
+use App\Exports\AccountsExport;
+use App\Imports\AccountsImport;
+use App\Livewire\Concerns\WithImport;
 use App\Models\Accounting\Account;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Accounting'])]
 #[Title('Chart of Accounts')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, WithImport;
 
     #[Url]
     public string $search = '';
@@ -73,6 +77,28 @@ class Index extends Component
 
         $account->delete();
         session()->flash('success', 'Account deleted successfully.');
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new AccountsExport(), 'accounts-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new AccountsExport($this->selected), 'accounts-selected-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    protected function getImportClass(): string
+    {
+        return AccountsImport::class;
+    }
+
+    protected function getImportTemplate(): array
+    {
+        return [
+            'headers' => ['code', 'name', 'type', 'parent_code', 'description', 'is_active'],
+            'filename' => 'accounts-template.csv',
+        ];
     }
 
     protected function getAccountsQuery()

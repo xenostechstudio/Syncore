@@ -128,16 +128,18 @@
             </thead>
             <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                 @forelse($roles as $role)
+                    @php $isSelected = in_array($role->id, $selected); @endphp
                     <tr 
                         wire:click="goToEdit({{ $role->id }})"
-                        class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                        class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}"
                     >
-                        <td class="py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" wire:click.stop>
+                        <td class="relative py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" wire:click.stop>
+                            <div class="absolute inset-y-0 left-0 w-0.5 transition-all duration-150 {{ $isSelected ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700' }}"></div>
                             <input 
                                 type="checkbox" 
                                 wire:model.live="selected"
                                 value="{{ $role->id }}"
-                                class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                                class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}"
                             >
                         </td>
                         <td class="py-4 pl-2 pr-4">

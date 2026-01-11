@@ -40,7 +40,7 @@
                             <flux:icon name="x-mark" class="size-4" />
                             <span>{{ count($selected) }} Selected</span>
                         </button>
-                        <button wire:click="deleteSelected" wire:confirm="Delete selected leave types?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-700 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
+                        <button wire:click="confirmBulkDelete" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-700 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
                             <flux:icon name="trash" class="size-4" />
                             <span>Delete</span>
                         </button>
@@ -163,9 +163,11 @@
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                             @foreach($leaveTypes as $leaveType)
-                                <tr wire:key="lt-{{ $leaveType->id }}" onclick="window.location.href='{{ route('hr.leave.types.edit', $leaveType->id) }}'" class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                                    <td class="py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
-                                        <input type="checkbox" wire:model.live="selected" value="{{ $leaveType->id }}" class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600">
+                                @php $isSelected = in_array($leaveType->id, $selected); @endphp
+                                <tr wire:key="lt-{{ $leaveType->id }}" onclick="window.location.href='{{ route('hr.leave.types.edit', $leaveType->id) }}'" class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}">
+                                    <td class="relative py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                        <div class="absolute inset-y-0 left-0 w-0.5 transition-all duration-150 {{ $isSelected ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700' }}"></div>
+                                        <input type="checkbox" wire:model.live="selected" value="{{ $leaveType->id }}" class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}">
                                     </td>
                                     <td class="py-3 pl-2 pr-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $leaveType->name }}</td>
                                     <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{{ $leaveType->code }}</td>
@@ -212,4 +214,14 @@
             @endif
         @endif
     </div>
+
+    {{-- Delete Confirmation Modal --}}
+    @isset($showDeleteConfirm)
+        <x-ui.delete-confirm-modal 
+            wire:model="showDeleteConfirm"
+            :validation="$deleteValidation ?? []"
+            title="Confirm Delete"
+            itemLabel="leave types"
+        />
+    @endisset
 </div>

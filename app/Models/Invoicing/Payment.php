@@ -2,13 +2,17 @@
 
 namespace App\Models\Invoicing;
 
+use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'payment_number',

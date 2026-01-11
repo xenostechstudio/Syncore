@@ -13,7 +13,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Employee')]
@@ -31,40 +30,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->employeeId ? Employee::find($this->employeeId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->employeeId) {
-            return collect();
-        }
-
-        $employee = Employee::find($this->employeeId);
-        
-        $activities = Activity::where('subject_type', Employee::class)
-            ->where('subject_id', $this->employeeId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        $notes = $employee->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     // Basic Info
@@ -419,6 +384,48 @@ class Form extends Component
             $this->saveEmployeeSalaryComponents();
             session()->flash('success', 'Employee created successfully.');
         }
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->employeeId) {
+            session()->flash('error', 'Please save the employee first.');
+            return;
+        }
+
+        $employee = Employee::with('employeeSalaryComponents')->findOrFail($this->employeeId);
+
+        $newEmployee = Employee::create([
+            'name' => $employee->name . ' (Copy)',
+            'email' => null, // Don't duplicate email
+            'phone' => $employee->phone,
+            'mobile' => $employee->mobile,
+            'department_id' => $employee->department_id,
+            'position_id' => $employee->position_id,
+            'manager_id' => $employee->manager_id,
+            'hire_date' => now()->format('Y-m-d'),
+            'employment_type' => $employee->employment_type,
+            'status' => 'active',
+            'basic_salary' => $employee->basic_salary,
+            'bank_name' => $employee->bank_name,
+            'hr_responsible_id' => $employee->hr_responsible_id,
+            'notes' => $employee->notes,
+        ]);
+
+        // Copy salary components
+        foreach ($employee->employeeSalaryComponents as $component) {
+            EmployeeSalaryComponent::create([
+                'employee_id' => $newEmployee->id,
+                'salary_component_id' => $component->salary_component_id,
+                'amount' => $component->amount,
+                'effective_from' => now()->format('Y-m-d'),
+                'effective_to' => $component->effective_to,
+                'is_active' => $component->is_active,
+            ]);
+        }
+
+        session()->flash('success', 'Employee duplicated successfully.');
+        $this->redirect(route('hr.employees.edit', $newEmployee->id), navigate: true);
     }
 
     public function delete(): void

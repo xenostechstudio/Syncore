@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Inventory\Adjustments;
 
+use App\Exports\AdjustmentsExport;
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\Warehouse;
 use Livewire\Attributes\Layout;
@@ -9,6 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Stock Adjustment')]
@@ -36,6 +38,10 @@ class Index extends Component
 
     public array $selected = [];
     public bool $selectAll = false;
+
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
 
     public array $visibleColumns = [
         'adjustment' => true,
@@ -71,20 +77,31 @@ class Index extends Component
     public function updatingSearch(): void
     {
         $this->resetPage();
+        $this->clearSelection();
+    }
+
+    public function updatedSelected(): void
+    {
+        $this->selectAll = false;
     }
 
     public function updatedSelectAll($value): void
     {
         if ($value) {
-            $this->selected = InventoryAdjustment::query()
-                ->when($this->search, fn($q) => $q->where('adjustment_number', 'like', "%{$this->search}%"))
-                ->when($this->status, fn($q) => $q->where('status', $this->status))
+            $this->selected = $this->getAdjustmentsQuery()
                 ->pluck('id')
                 ->map(fn($id) => (string) $id)
                 ->toArray();
         } else {
             $this->selected = [];
         }
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'status', 'warehouse']);
+        $this->resetPage();
+        $this->clearSelection();
     }
 
     public function sortBy(string $field): void
@@ -97,28 +114,98 @@ class Index extends Component
         }
     }
 
-    public function delete(int $id): void
+    // Bulk Actions
+    public function confirmBulkDelete(): void
     {
-        InventoryAdjustment::findOrFail($id)->delete();
-        session()->flash('success', 'Adjustment deleted successfully.');
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $adjustments = InventoryAdjustment::whereIn('id', $this->selected)->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($adjustments as $adjustment) {
+            if (in_array($adjustment->status, ['draft', 'pending'])) {
+                $canDelete[] = [
+                    'id' => $adjustment->id,
+                    'name' => $adjustment->adjustment_number,
+                    'status' => $adjustment->status,
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $adjustment->id,
+                    'name' => $adjustment->adjustment_number,
+                    'reason' => "Status is '{$adjustment->status}' - only draft/pending can be deleted",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
     }
 
-    public function deleteSelected(): void
+    public function bulkDelete(): void
     {
-        InventoryAdjustment::whereIn('id', $this->selected)->delete();
-        $this->selected = [];
-        $this->selectAll = false;
-        session()->flash('success', 'Selected adjustments deleted successfully.');
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = InventoryAdjustment::whereIn('id', $this->selected)
+            ->whereIn('status', ['draft', 'pending'])
+            ->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} adjustments deleted successfully.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
+        $this->clearSelection();
+    }
+
+    public function bulkUpdateStatus(string $status): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = InventoryAdjustment::whereIn('id', $this->selected)->update(['status' => $status]);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} adjustments updated to {$status}.");
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new AdjustmentsExport(), 'adjustments-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new AdjustmentsExport($this->selected), 'adjustments-selected-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    protected function getAdjustmentsQuery()
+    {
+        return InventoryAdjustment::query()
+            ->when($this->search, fn($q) => $q->where('adjustment_number', 'ilike', "%{$this->search}%"))
+            ->when($this->status, fn($q) => $q->where('status', $this->status))
+            ->when($this->warehouse, fn($q) => $q->where('warehouse_id', $this->warehouse))
+            ->when($this->adjustmentType, fn($q) => $q->where('adjustment_type', $this->adjustmentType));
     }
 
     public function render()
     {
-        $adjustments = InventoryAdjustment::query()
+        $adjustments = $this->getAdjustmentsQuery()
             ->with(['warehouse', 'user', 'items'])
-            ->when($this->search, fn($q) => $q->where('adjustment_number', 'like', "%{$this->search}%"))
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->when($this->warehouse, fn($q) => $q->where('warehouse_id', $this->warehouse))
-            ->when($this->adjustmentType, fn($q) => $q->where('adjustment_type', $this->adjustmentType))
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(15);
 

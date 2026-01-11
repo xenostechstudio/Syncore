@@ -21,7 +21,6 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Delivery'])]
 #[Title('Delivery Order')]
@@ -38,40 +37,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->deliveryId ? DeliveryOrder::find($this->deliveryId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->deliveryId) {
-            return collect();
-        }
-
-        $delivery = DeliveryOrder::find($this->deliveryId);
-        
-        $activities = Activity::where('subject_type', DeliveryOrder::class)
-            ->where('subject_id', $this->deliveryId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        $notes = $delivery->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     public bool $showReturnModal = false;
@@ -902,6 +867,45 @@ class Form extends Component
         }
 
         $adjustment->post();
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->deliveryId) {
+            return;
+        }
+
+        $delivery = DeliveryOrder::with(['items.salesOrderItem'])->findOrFail($this->deliveryId);
+
+        $newDelivery = DB::transaction(function () use ($delivery) {
+            $newDelivery = DeliveryOrder::create([
+                'delivery_number' => DeliveryOrder::generateDeliveryNumber(),
+                'sales_order_id' => $delivery->sales_order_id,
+                'warehouse_id' => $delivery->warehouse_id,
+                'user_id' => Auth::id(),
+                'delivery_date' => now()->format('Y-m-d'),
+                'status' => DeliveryOrderState::PENDING->value,
+                'shipping_address' => $delivery->shipping_address,
+                'recipient_name' => $delivery->recipient_name,
+                'recipient_phone' => $delivery->recipient_phone,
+                'courier' => $delivery->courier,
+                'notes' => $delivery->notes,
+            ]);
+
+            foreach ($delivery->items as $item) {
+                DeliveryOrderItem::create([
+                    'delivery_order_id' => $newDelivery->id,
+                    'sales_order_item_id' => $item->sales_order_item_id,
+                    'quantity_to_deliver' => $item->quantity_to_deliver,
+                    'quantity_delivered' => 0,
+                ]);
+            }
+
+            return $newDelivery;
+        });
+
+        session()->flash('success', 'Delivery order duplicated successfully.');
+        $this->redirect(route('delivery.orders.edit', $newDelivery->id), navigate: true);
     }
 
     public function delete(): void

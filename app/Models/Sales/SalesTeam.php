@@ -4,17 +4,18 @@ namespace App\Models\Sales;
 
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class SalesTeam extends Model
 {
     use HasFactory, LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'name',
@@ -42,13 +43,5 @@ class SalesTeam extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(SalesOrder::class);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'description', 'leader_id', 'target_amount', 'is_active'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
     }
 }

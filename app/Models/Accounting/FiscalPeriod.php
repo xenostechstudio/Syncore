@@ -3,14 +3,15 @@
 namespace App\Models\Accounting;
 
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class FiscalPeriod extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'name',
@@ -40,19 +41,5 @@ class FiscalPeriod extends Model
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->first();
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'start_date', 'end_date', 'status'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Fiscal period created',
-                'updated' => 'Fiscal period updated',
-                'deleted' => 'Fiscal period deleted',
-                default => "Fiscal period {$eventName}",
-            });
     }
 }

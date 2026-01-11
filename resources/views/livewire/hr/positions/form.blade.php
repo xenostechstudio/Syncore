@@ -203,37 +203,7 @@
                     {{-- Activity Items --}}
                     <div class="space-y-4">
                         @forelse($activities as $activity)
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0">
-                                    <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <x-ui.user-name :user="$activity->causer" />
-                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                            {{ $activity->created_at->diffForHumans() }}
-                                        </span>
-                                    </div>
-                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                        @if($activity->properties->has('old') && $activity->event === 'updated')
-                                            @php
-                                                $changes = collect($activity->properties->get('attributes', []))
-                                                    ->filter(fn($val, $key) => isset($activity->properties->get('old', [])[$key]) && $activity->properties->get('old')[$key] !== $val)
-                                                    ->keys()
-                                                    ->map(fn($key) => '<span class="font-medium text-zinc-900 dark:text-zinc-100">' . str_replace('_', ' ', $key) . '</span>')
-                                                    ->implode(', ');
-                                            @endphp
-                                            @if($changes)
-                                                Updated {!! $changes !!}
-                                            @else
-                                                {{ $activity->description }}
-                                            @endif
-                                        @else
-                                            {{ $activity->description }}
-                                        @endif
-                                    </p>
-                                </div>
-                            </div>
+                            <x-ui.activity-item :activity="$activity" emptyMessage="Position created" />
                         @empty
                             {{-- Position Created (fallback when no activities yet) --}}
                             <div class="flex items-start gap-3">

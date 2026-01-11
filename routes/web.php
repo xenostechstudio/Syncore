@@ -6,7 +6,6 @@ use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 
 use App\Livewire\Inventory\Index as InventoryIndex;
-use App\Livewire\Inventory\ItemForm as InventoryItemForm;
 use App\Livewire\Inventory\Items\Index as ItemsIndex;
 use App\Livewire\Inventory\Products\Form as InventoryProductForm;
 use App\Livewire\Inventory\Products\Pricelists\Index as InventoryProductPricelistsIndex;
@@ -57,6 +56,8 @@ use App\Livewire\Purchase\Orders\Index as PurchaseOrdersIndex;
 use App\Livewire\Purchase\Orders\Form as PurchaseOrdersForm;
 use App\Livewire\Purchase\Suppliers\Index as PurchaseSuppliersIndex;
 use App\Livewire\Purchase\Suppliers\Form as PurchaseSuppliersForm;
+use App\Livewire\Purchase\Bills\Index as PurchaseBillsIndex;
+use App\Livewire\Purchase\Bills\Form as PurchaseBillsForm;
 
 Route::post('/locale', function (Request $request) {
     $locale = $request->input('locale');
@@ -74,7 +75,7 @@ Route::view('/', 'home')
     ->middleware(['auth', 'verified'])
     ->name('home');
 
-Route::view('dashboard', 'dashboard')
+Route::get('dashboard', \App\Livewire\Dashboard\Index::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -192,6 +193,8 @@ Route::middleware(['auth', 'verified', 'permission:access.invoicing'])->prefix('
     
     // Payments
     Route::get('/payments', PaymentsIndex::class)->name('payments.index');
+    Route::get('/payments/create', \App\Livewire\Invoicing\Payments\Form::class)->name('payments.create');
+    Route::get('/payments/{id}/edit', \App\Livewire\Invoicing\Payments\Form::class)->name('payments.edit');
     
     // Reports
     Route::get('/reports', \App\Livewire\Invoicing\Reports\Index::class)->name('reports');
@@ -217,6 +220,11 @@ Route::middleware(['auth', 'verified', 'permission:access.purchase'])->prefix('p
     Route::get('/suppliers', PurchaseSuppliersIndex::class)->name('suppliers.index');
     Route::get('/suppliers/create', PurchaseSuppliersForm::class)->name('suppliers.create');
     Route::get('/suppliers/{id}/edit', PurchaseSuppliersForm::class)->name('suppliers.edit');
+    
+    // Vendor Bills
+    Route::get('/bills', PurchaseBillsIndex::class)->name('bills.index');
+    Route::get('/bills/create', PurchaseBillsForm::class)->name('bills.create');
+    Route::get('/bills/{id}/edit', PurchaseBillsForm::class)->name('bills.edit');
 });
 
 // General Setup Module
@@ -270,6 +278,17 @@ Route::middleware(['auth', 'verified'])->prefix('pdf')->name('pdf.')->group(func
     Route::get('/invoice/{invoice}', [\App\Http\Controllers\PdfController::class, 'invoice'])->name('invoice');
     Route::get('/sales-order/{salesOrder}', [\App\Http\Controllers\PdfController::class, 'salesOrder'])->name('sales-order');
     Route::get('/delivery-order/{deliveryOrder}', [\App\Http\Controllers\PdfController::class, 'deliveryOrder'])->name('delivery-order');
+    Route::get('/purchase-order/{purchaseOrder}', [\App\Http\Controllers\PdfController::class, 'purchaseOrder'])->name('purchase-order');
+    Route::get('/vendor-bill/{vendorBill}', [\App\Http\Controllers\PdfController::class, 'vendorBill'])->name('vendor-bill');
+    Route::get('/payroll-slip/{payrollItem}', [\App\Http\Controllers\PdfController::class, 'payrollSlip'])->name('payroll-slip');
+});
+
+// Import Routes
+Route::middleware(['auth', 'verified'])->prefix('import')->name('import.')->group(function () {
+    Route::post('/products', [\App\Http\Controllers\ImportController::class, 'products'])->name('products');
+    Route::post('/customers', [\App\Http\Controllers\ImportController::class, 'customers'])->name('customers');
+    Route::post('/suppliers', [\App\Http\Controllers\ImportController::class, 'suppliers'])->name('suppliers');
+    Route::get('/template/{type}', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('template');
 });
 
 // Accounting Module

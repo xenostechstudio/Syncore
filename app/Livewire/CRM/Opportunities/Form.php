@@ -11,7 +11,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Opportunity')]
@@ -38,43 +37,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->opportunityId ? Opportunity::find($this->opportunityId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->opportunityId) {
-            return collect();
-        }
-
-        $opportunity = Opportunity::find($this->opportunityId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', Opportunity::class)
-            ->where('subject_id', $this->opportunityId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $opportunity->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     #[Computed]
@@ -195,6 +157,30 @@ class Form extends Component
 
         $this->opportunity->markAsLost();
         session()->flash('success', "'{$this->opportunity->name}' marked as Lost.");
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->opportunityId) {
+            session()->flash('error', 'Please save the opportunity first.');
+            return;
+        }
+
+        $opportunity = Opportunity::findOrFail($this->opportunityId);
+
+        $newOpportunity = Opportunity::create([
+            'name' => $opportunity->name . ' (Copy)',
+            'lead_id' => $opportunity->lead_id,
+            'pipeline_id' => Pipeline::orderBy('sequence')->first()?->id,
+            'expected_revenue' => $opportunity->expected_revenue,
+            'probability' => 10,
+            'expected_close_date' => now()->addDays(30)->format('Y-m-d'),
+            'description' => $opportunity->description,
+            'assigned_to' => $opportunity->assigned_to,
+        ]);
+
+        session()->flash('success', 'Opportunity duplicated successfully.');
+        $this->redirect(route('crm.opportunities.edit', $newOpportunity->id), navigate: true);
     }
 
     public function delete(): void

@@ -3,15 +3,16 @@
 namespace App\Models\HR;
 
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class PayrollItem extends Model
 {
     use HasNotes, LogsActivity;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'payroll_period_id', 'employee_id', 'basic_salary',
@@ -48,19 +49,5 @@ class PayrollItem extends Model
         $this->total_deductions = $this->details()->where('type', 'deduction')->sum('amount');
         $this->net_salary = $this->basic_salary + $this->total_earnings - $this->total_deductions;
         $this->save();
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['basic_salary', 'total_earnings', 'total_deductions', 'net_salary', 'status'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Payslip created',
-                'updated' => 'Payslip updated',
-                'deleted' => 'Payslip deleted',
-                default => "Payslip {$eventName}",
-            });
     }
 }

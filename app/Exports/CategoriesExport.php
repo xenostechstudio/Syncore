@@ -11,9 +11,17 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class CategoriesExport implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize
 {
+    protected ?array $ids;
+
+    public function __construct(?array $ids = null)
+    {
+        $this->ids = $ids;
+    }
+
     public function collection()
     {
         return Category::withCount('products')
+            ->when($this->ids, fn($q) => $q->whereIn('id', $this->ids))
             ->orderBy('name')
             ->get()
             ->map(fn ($category) => [

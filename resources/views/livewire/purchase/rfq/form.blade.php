@@ -25,10 +25,12 @@
                             </button>
 
                             <flux:menu class="w-40">
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                @if($rfqId)
+                                <button type="button" wire:click="duplicate" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
+                                @endif
                                 <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="archive-box" class="size-4" />
                                     <span>Archive</span>
@@ -192,34 +194,8 @@
                 @endif
             </div>
 
-            <div class="col-span-3 flex items-center justify-end gap-2">
-                <button 
-                    type="button"
-                    @click="showSendMessage = !showSendMessage; showLogNote = false; showScheduleActivity = false" 
-                    :class="showSendMessage ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Send message"
-                >
-                    <flux:icon name="chat-bubble-left" class="size-5" />
-                </button>
-                <button 
-                    type="button"
-                    @click="showLogNote = !showLogNote; showSendMessage = false; showScheduleActivity = false" 
-                    :class="showLogNote ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Log note"
-                >
-                    <flux:icon name="pencil-square" class="size-5" />
-                </button>
-                <button 
-                    type="button"
-                    @click="showScheduleActivity = !showScheduleActivity; showSendMessage = false; showLogNote = false" 
-                    :class="showScheduleActivity ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Schedule activity"
-                >
-                    <flux:icon name="clock" class="size-5" />
-                </button>
+            <div class="col-span-3 flex items-center justify-end gap-1">
+                <x-ui.chatter-buttons :showMessage="false" />
             </div>
         </div>
     </div>
@@ -406,11 +382,11 @@
                                 <thead>
                                     <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
                                         <th class="w-10 px-2 py-2.5"></th>
-                                        <th x-show="isColumnVisible('product')" class="w-48 px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Product</th>
+                                        <th x-show="isColumnVisible('product')" class="w-[32rem] px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Product</th>
                                         <th x-show="isColumnVisible('description')" class="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Description</th>
                                         <th x-show="isColumnVisible('discount')" class="w-20 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Disc %</th>
-                                        <th x-show="isColumnVisible('qty')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
-                                        <th x-show="isColumnVisible('unit_price')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Unit Price</th>
+                                        <th x-show="isColumnVisible('qty')" class="w-16 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
+                                        <th x-show="isColumnVisible('unit_price')" class="w-32 px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Unit Price</th>
                                         <th x-show="isColumnVisible('subtotal')" class="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Subtotal</th>
                                         <th class="w-10 pl-2 pr-2 py-2.5 text-right">
                                             {{-- Column Visibility Toggle --}}
@@ -489,35 +465,45 @@
                                             </td>
 
                                             {{-- Product Selection --}}
-                                            <td x-show="isColumnVisible('product')" class="w-48 px-3 py-2 overflow-visible">
+                                            <td x-show="isColumnVisible('product')" class="w-[32rem] px-3 py-2 overflow-visible">
                                                 <div x-data="{ open: false, search: '' }" class="relative">
-                                                    <button 
-                                                        type="button"
-                                                        @click="open = true; $nextTick(() => $refs.productSearch{{ $index }}.focus())"
-                                                        class="flex w-full items-center gap-2 text-left"
-                                                    >
-                                                        @if($line['product_id'])
+                                                    @if($line['product_id'])
+                                                        <button 
+                                                            type="button"
+                                                            @click="open = true; $nextTick(() => $refs.productSearch{{ $index }}.focus())"
+                                                            class="flex w-full items-center gap-2 text-left"
+                                                            @disabled($status === 'purchase_order' || $status === 'cancelled')
+                                                        >
                                                             <div>
                                                                 <p class="text-sm text-zinc-900 dark:text-zinc-100">{{ $line['product_name'] }}</p>
                                                                 <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ $line['product_sku'] }}</p>
                                                             </div>
-                                                        @else
-                                                            <span class="text-sm text-zinc-400">Select a product...</span>
-                                                        @endif
-                                                    </button>
+                                                        </button>
+                                                    @else
+                                                        <button 
+                                                            type="button"
+                                                            @click="open = true; $nextTick(() => $refs.productSearch{{ $index }}.focus())"
+                                                            class="text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                                                            @disabled($status === 'purchase_order' || $status === 'cancelled')
+                                                        >
+                                                            Select a product...
+                                                        </button>
+                                                    @endif
 
+                                                    @if($status !== 'purchase_order' && $status !== 'cancelled')
                                                     <div 
                                                         x-show="open" 
                                                         @click.outside="open = false; search = ''"
                                                         x-transition
-                                                        class="absolute left-0 top-full z-[200] mt-1 w-80 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
-                                                        style="position: fixed; transform: translateY(0);"
+                                                        class="absolute left-0 top-full z-[200] mt-1 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
                                                         x-init="$watch('open', value => {
                                                             if (value) {
-                                                                const rect = $el.previousElementSibling?.getBoundingClientRect() || $el.parentElement.getBoundingClientRect();
+                                                                const cell = $el.closest('td');
+                                                                const rect = cell.getBoundingClientRect();
                                                                 $el.style.position = 'fixed';
                                                                 $el.style.top = (rect.bottom + 4) + 'px';
                                                                 $el.style.left = rect.left + 'px';
+                                                                $el.style.width = rect.width + 'px';
                                                             }
                                                         })"
                                                     >
@@ -538,19 +524,18 @@
                                                                     x-show="'{{ strtolower($catalogProduct->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($catalogProduct->sku ?? '') }}'.includes(search.toLowerCase()) || search === ''"
                                                                     wire:click="selectProduct({{ $index }}, {{ $catalogProduct->id }})"
                                                                     @click="open = false; search = ''"
-                                                                    class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 {{ $line['product_id'] === $catalogProduct->id ? 'bg-zinc-50 dark:bg-zinc-800/70' : '' }}"
+                                                                    class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
                                                                 >
-                                                                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                                                                        {{ strtoupper(substr($catalogProduct->name, 0, 2)) }}
+                                                                    <div class="flex-1">
+                                                                        <p class="text-zinc-900 dark:text-zinc-100">{{ $catalogProduct->name }}</p>
+                                                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $catalogProduct->sku ?? 'No SKU' }} · Rp {{ number_format($catalogProduct->cost_price ?? 0, 0, ',', '.') }}</p>
                                                                     </div>
-                                                                    <div>
-                                                                        <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $catalogProduct->name }}</p>
-                                                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $catalogProduct->sku ?? 'No SKU' }}</p>
-                                                                    </div>
+                                                                    <span class="text-xs text-zinc-400">{{ $catalogProduct->quantity ?? 0 }} in stock</span>
                                                                 </button>
                                                             @endforeach
                                                         </div>
                                                     </div>
+                                                    @endif
                                                 </div>
                                             </td>
 
@@ -561,6 +546,7 @@
                                                     wire:model.live="lines.{{ $index }}.description"
                                                     placeholder="Add description..."
                                                     class="w-full bg-transparent text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
+                                                    @disabled($status === 'purchase_order' || $status === 'cancelled')
                                                 />
                                             </td>
 
@@ -570,24 +556,27 @@
                                                     type="text"
                                                     wire:model.live="lines.{{ $index }}.discount"
                                                     class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
+                                                    @disabled($status === 'purchase_order' || $status === 'cancelled')
                                                 />
                                             </td>
 
                                             {{-- Quantity --}}
-                                            <td x-show="isColumnVisible('qty')" class="px-3 py-2">
+                                            <td x-show="isColumnVisible('qty')" class="w-16 px-3 py-2">
                                                 <input 
                                                     type="text"
                                                     wire:model.live="lines.{{ $index }}.quantity"
                                                     class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
+                                                    @disabled($status === 'purchase_order' || $status === 'cancelled')
                                                 />
                                             </td>
 
                                             {{-- Unit Price --}}
-                                            <td x-show="isColumnVisible('unit_price')" class="px-3 py-2">
+                                            <td x-show="isColumnVisible('unit_price')" class="w-32 px-3 py-2">
                                                 <input 
                                                     type="text"
                                                     wire:model.live="lines.{{ $index }}.unit_price"
                                                     class="w-full bg-transparent text-right text-sm text-zinc-900 focus:outline-none dark:text-zinc-100"
+                                                    @disabled($status === 'purchase_order' || $status === 'cancelled')
                                                 />
                                             </td>
 
@@ -598,7 +587,7 @@
 
                                             {{-- Remove --}}
                                             <td class="pl-2 pr-2 py-2 text-right">
-                                                @if(count($lines) > 1)
+                                                @if(count($lines) > 1 && $status !== 'purchase_order' && $status !== 'cancelled')
                                                     <button 
                                                         type="button"
                                                         wire:click="removeLine({{ $index }})"
@@ -623,14 +612,21 @@
                         {{-- Add Line Button --}}
                         <div class="border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
                             <div class="flex items-center justify-between">
-                                <button 
-                                    type="button"
-                                    wire:click="addLine"
-                                    class="inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                                >
-                                    <flux:icon name="plus" class="size-4" />
-                                    Add a line
-                                </button>
+                                @if($status !== 'purchase_order' && $status !== 'cancelled')
+                                    <button 
+                                        type="button"
+                                        wire:click="addLine"
+                                        class="inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                    >
+                                        <flux:icon name="plus" class="size-4" />
+                                        Add a line
+                                    </button>
+                                @else
+                                    <span class="inline-flex cursor-not-allowed items-center gap-1.5 text-sm text-zinc-300 dark:text-zinc-600">
+                                        <flux:icon name="lock-closed" class="size-4" />
+                                        Items locked
+                                    </span>
+                                @endif
                                 @error('lines') <p class="text-sm text-red-500">{{ $message }}</p> @enderror
                             </div>
                         </div>
@@ -741,23 +737,7 @@
                                     </div>
                                 @else
                                     {{-- Activity Log Item --}}
-                                    @php $activity = $item['data']; @endphp
-                                    <div class="flex items-start gap-3">
-                                        <div class="flex-shrink-0">
-                                            <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-2">
-                                                <x-ui.user-name :user="$activity->causer" />
-                                                <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                                    {{ $activity->created_at->diffForHumans() }}
-                                                </span>
-                                            </div>
-                                            <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                                {{ $activity->description }}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    <x-ui.activity-item :activity="$item['data']" emptyMessage="RFQ created" />
                                 @endif
                             @endforeach
                         @else

@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Invoicing\Payments;
 
+use App\Exports\PaymentsExport;
+use App\Imports\PaymentsImport;
+use App\Livewire\Concerns\WithImport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Invoicing\Payment;
 use Illuminate\Support\Facades\DB;
@@ -9,12 +12,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Invoicing'])]
 #[Title('Payments')]
 class Index extends Component
 {
-    use WithManualPagination;
+    use WithManualPagination, WithImport;
 
     #[Url]
     public string $search = '';
@@ -24,6 +28,9 @@ class Index extends Component
 
     #[Url]
     public bool $showStats = true;
+
+    public array $selected = [];
+    public bool $selectAll = false;
 
     public function toggleStats(): void
     {
@@ -42,6 +49,38 @@ class Index extends Component
     public function updatingSearch(): void
     {
         $this->resetPage();
+    }
+
+    public function updatedSelectAll($value): void
+    {
+        if ($value) {
+            $this->selected = Payment::query()
+                ->when($this->search, fn($q) => $q->where('reference', 'ilike', "%{$this->search}%"))
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray();
+        } else {
+            $this->selected = [];
+        }
+    }
+
+    public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $ids = !empty($this->selected) ? $this->selected : null;
+        return Excel::download(new PaymentsExport($ids), 'payments-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    protected function getImportClass(): string
+    {
+        return PaymentsImport::class;
+    }
+
+    protected function getImportTemplate(): array
+    {
+        return [
+            'headers' => ['invoice_number', 'payment_date', 'amount', 'payment_method', 'reference', 'notes', 'status'],
+            'filename' => 'payments-template.csv',
+        ];
     }
 
     private function getStatistics(): array
@@ -76,8 +115,8 @@ class Index extends Component
         $payments = Payment::query()
             ->with(['invoice.customer'])
             ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
-                ->where('reference', 'like', "%{$this->search}%")
-                ->orWhereHas('invoice', fn($q) => $q->where('invoice_number', 'like', "%{$this->search}%"))
+                ->where('reference', 'ilike', "%{$this->search}%")
+                ->orWhereHas('invoice', fn($q) => $q->where('invoice_number', 'ilike', "%{$this->search}%"))
             ))
             ->latest()
             ->paginate(15, ['*'], 'page', $this->page);

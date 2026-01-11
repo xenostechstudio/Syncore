@@ -2,20 +2,22 @@
 
 namespace App\Models\Invoicing;
 
+use App\Enums\InvoiceState;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class Invoice extends Model
 {
     use HasFactory, LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'invoice_number',
@@ -61,7 +63,6 @@ class Invoice extends Model
                 $year = now()->year;
                 $prefix = "INV/{$year}/";
 
-                // Get all invoice numbers for the current year and compute the next numeric suffix in PHP
                 $lastNumber = static::where('invoice_number', 'like', $prefix . '%')
                     ->pluck('invoice_number')
                     ->map(function (string $number) use ($prefix) {
@@ -74,6 +75,11 @@ class Invoice extends Model
                 $invoice->invoice_number = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
             }
         });
+    }
+
+    public function getStateAttribute(): InvoiceState
+    {
+        return InvoiceState::tryFrom($this->status) ?? InvoiceState::DRAFT;
     }
 
     public function customer(): BelongsTo
@@ -109,26 +115,5 @@ class Invoice extends Model
         }
 
         return $this;
-    }
-
-    /**
-     * Activity log options
-     */
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'invoice_number', 'customer_id', 'sales_order_id', 'invoice_date', 'due_date',
-                'status', 'subtotal', 'tax', 'discount', 'total', 'notes', 'terms',
-                'paid_amount', 'paid_date',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => __('activity.invoice_created'),
-                'updated' => __('activity.invoice_updated'),
-                'deleted' => __('activity.invoice_deleted'),
-                default => __('activity.invoice_event', ['event' => $eventName]),
-            });
     }
 }

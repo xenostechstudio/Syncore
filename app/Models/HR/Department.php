@@ -4,15 +4,16 @@ namespace App\Models\HR;
 
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class Department extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'name',
@@ -50,19 +51,5 @@ class Department extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'code', 'parent_id', 'manager_id', 'description', 'is_active'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Department created',
-                'updated' => 'Department updated',
-                'deleted' => 'Department deleted',
-                default => "Department {$eventName}",
-            });
     }
 }

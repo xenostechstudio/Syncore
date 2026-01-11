@@ -2,20 +2,22 @@
 
 namespace App\Models\Inventory;
 
+use App\Enums\AdjustmentState;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\InventoryStock;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class InventoryAdjustment extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'adjustment_number',
@@ -36,6 +38,11 @@ class InventoryAdjustment extends Model
         'posted_at' => 'datetime',
     ];
 
+    public function getStateAttribute(): AdjustmentState
+    {
+        return AdjustmentState::tryFrom($this->status) ?? AdjustmentState::DRAFT;
+    }
+
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
@@ -53,27 +60,19 @@ class InventoryAdjustment extends Model
 
     public static function generateAdjustmentNumber(?string $adjustmentType = null): string
     {
+        $year = now()->year;
         $prefix = match ($adjustmentType) {
-            'increase' => 'WH/IN/',
-            'decrease' => 'WH/OUT/',
-            default => 'ADJ/',
+            'increase' => "WH/IN/{$year}/",
+            'decrease' => "WH/OUT/{$year}/",
+            default => "ADJ/{$year}/",
         };
 
-        $last = self::query()
-            ->where('adjustment_number', 'like', $prefix . '%')
-            ->orderByDesc('id')
-            ->value('adjustment_number');
+        $lastNumber = self::where('adjustment_number', 'like', $prefix . '%')
+            ->pluck('adjustment_number')
+            ->map(fn($num) => (int) substr($num, strlen($prefix)))
+            ->max() ?? 0;
 
-        $sequence = 1;
-
-        if ($last) {
-            $suffix = substr($last, strlen($prefix));
-            if (ctype_digit($suffix)) {
-                $sequence = ((int) $suffix) + 1;
-            }
-        }
-
-        return $prefix . str_pad((string) $sequence, 5, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
     }
 
     public function isPosted(): bool
@@ -161,26 +160,9 @@ class InventoryAdjustment extends Model
                 $product->save();
             }
 
-            $this->status = 'completed';
+            $this->status = AdjustmentState::COMPLETED->value;
             $this->posted_at = now();
             $this->save();
         });
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'adjustment_number', 'warehouse_id', 'adjustment_date',
-                'adjustment_type', 'status', 'reason', 'notes',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Adjustment created',
-                'updated' => 'Adjustment updated',
-                'deleted' => 'Adjustment deleted',
-                default => "Adjustment {$eventName}",
-            });
     }
 }

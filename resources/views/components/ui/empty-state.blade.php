@@ -1,20 +1,32 @@
 @props([
     'icon' => 'inbox',
-    'title' => 'No data',
+    'title' => 'No data found',
     'description' => null,
+    'actionLabel' => null,
+    'actionUrl' => null,
 ])
 
-<div {{ $attributes->merge(['class' => 'flex flex-col items-center justify-center py-12 text-center']) }}>
-    <div class="flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-        <flux:icon :name="$icon" class="size-7 text-zinc-400" />
+<div {{ $attributes->merge(['class' => 'flex flex-col items-center justify-center py-12 px-4']) }}>
+    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+        <flux:icon name="{{ $icon }}" class="size-8 text-zinc-400" />
     </div>
-    <h3 class="mt-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ $title }}</h3>
+    
+    <h3 class="mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $title }}</h3>
+    
     @if($description)
         <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ $description }}</p>
     @endif
-    @if(isset($action))
-        <div class="mt-6">
-            {{ $action }}
-        </div>
+    
+    @if($actionLabel && $actionUrl)
+        <a 
+            href="{{ $actionUrl }}" 
+            wire:navigate
+            class="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+            <flux:icon name="plus" class="size-4" />
+            {{ $actionLabel }}
+        </a>
     @endif
+    
+    {{ $slot }}
 </div>

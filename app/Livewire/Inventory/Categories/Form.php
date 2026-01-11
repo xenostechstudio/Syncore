@@ -7,7 +7,6 @@ use App\Models\Inventory\Category;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Category')]
@@ -26,43 +25,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->categoryId ? Category::find($this->categoryId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->categoryId) {
-            return collect();
-        }
-
-        $category = Category::find($this->categoryId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', Category::class)
-            ->where('subject_id', $this->categoryId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $category->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     public function mount(?int $id = null): void

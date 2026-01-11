@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Purchase'])]
 #[Title('RFQ')]
@@ -36,43 +35,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->rfqId ? PurchaseRfq::find($this->rfqId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->rfqId) {
-            return collect();
-        }
-
-        $rfq = PurchaseRfq::find($this->rfqId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', PurchaseRfq::class)
-            ->where('subject_id', $this->rfqId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $rfq->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     public function mount(?int $id = null): void
@@ -339,5 +301,52 @@ class Form extends Component
     public function render()
     {
         return view('livewire.purchase.rfq.form', $this->getViewData());
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->rfqId) {
+            session()->flash('error', 'Please save the RFQ first.');
+            return;
+        }
+
+        try {
+            $rfq = PurchaseRfq::with('items')->findOrFail($this->rfqId);
+
+            // Create new RFQ with copied data
+            $newRfq = PurchaseRfq::create([
+                'reference' => PurchaseRfq::generateReference(),
+                'supplier_id' => $rfq->supplier_id,
+                'supplier_reference' => null,
+                'order_date' => now(),
+                'expected_arrival' => now()->addDays(14),
+                'deliver_to' => $rfq->deliver_to,
+                'status' => 'rfq',
+                'subtotal' => $rfq->subtotal,
+                'tax' => $rfq->tax,
+                'total' => $rfq->total,
+                'notes' => $rfq->notes,
+                'created_by' => Auth::id(),
+            ]);
+
+            // Copy items
+            foreach ($rfq->items as $item) {
+                \App\Models\Purchase\PurchaseRfqItem::create([
+                    'purchase_rfq_id' => $newRfq->id,
+                    'product_id' => $item->product_id,
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'tax' => $item->tax,
+                    'total' => $item->total,
+                ]);
+            }
+
+            session()->flash('success', 'RFQ duplicated successfully.');
+            $this->redirect(route('purchase.rfq.edit', $newRfq->id), navigate: true);
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to duplicate RFQ: ' . $e->getMessage());
+        }
     }
 }

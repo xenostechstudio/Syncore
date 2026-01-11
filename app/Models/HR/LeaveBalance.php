@@ -2,11 +2,16 @@
 
 namespace App\Models\HR;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveBalance extends Model
 {
+    use LogsActivity;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
+
     protected $fillable = [
         'employee_id',
         'leave_type_id',

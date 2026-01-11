@@ -437,23 +437,7 @@
                                 </div>
                             @else
                                 {{-- Activity Log Item --}}
-                                @php $activity = $item['data']; @endphp
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0">
-                                        <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <x-ui.user-name :user="$activity->causer" />
-                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                                {{ $activity->created_at->diffForHumans() }}
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                            {{ $activity->description }}
-                                        </p>
-                                    </div>
-                                </div>
+                                <x-ui.activity-item :activity="$item['data']" emptyMessage="Adjustment created" />
                             @endif
                         @endforeach
                     @else

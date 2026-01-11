@@ -1,40 +1,42 @@
 @props([
-    'headers' => [],
-    'empty' => 'No data found.',
+    'selectable' => false,
+    'selectAll' => false,
+    'selectedCount' => 0,
+    'showBulkActions' => false,
 ])
 
-<x-ui.card :padding="false">
-    @if(isset($toolbar))
-        <div class="flex items-center justify-between gap-4 border-b border-zinc-200 p-4 dark:border-zinc-700">
-            {{ $toolbar }}
+<div {{ $attributes->merge(['class' => '-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900']) }}>
+    {{-- Bulk Actions Bar --}}
+    @if($showBulkActions && $selectedCount > 0)
+        <div class="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200 bg-violet-50 px-4 py-2 sm:px-6 lg:px-8 dark:border-zinc-700 dark:bg-violet-900/20">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-violet-700 dark:text-violet-300">
+                    {{ $selectedCount }} item{{ $selectedCount > 1 ? 's' : '' }} selected
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                {{ $bulkActions ?? '' }}
+            </div>
         </div>
     @endif
 
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-            <thead class="bg-zinc-50 dark:bg-zinc-800/50">
-                <tr>
-                    @foreach($headers as $header)
-                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                            {{ $header }}
-                        </th>
-                    @endforeach
-                    @if(isset($actions))
-                        <th scope="col" class="relative px-4 py-3">
-                            <span class="sr-only">Actions</span>
-                        </th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 bg-white dark:divide-zinc-700 dark:bg-zinc-900">
-                {{ $slot }}
-            </tbody>
-        </table>
-    </div>
-
-    @if(isset($pagination))
-        <div class="border-t border-zinc-200 px-4 py-3 dark:border-zinc-700">
-            {{ $pagination }}
-        </div>
-    @endif
-</x-ui.card>
+    <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
+        <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+            <tr>
+                @if($selectable)
+                    <th scope="col" class="w-10 py-3 pl-4 sm:pl-6 lg:pl-8">
+                        <input 
+                            type="checkbox" 
+                            wire:model.live="selectAll"
+                            class="rounded border-zinc-300 text-violet-600 focus:ring-violet-500 dark:border-zinc-600 dark:bg-zinc-700"
+                        />
+                    </th>
+                @endif
+                {{ $head }}
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+            {{ $body }}
+        </tbody>
+    </table>
+</div>

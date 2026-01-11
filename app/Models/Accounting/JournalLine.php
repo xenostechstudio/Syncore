@@ -2,11 +2,16 @@
 
 namespace App\Models\Accounting;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JournalLine extends Model
 {
+    use LogsActivity;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
+
     protected $fillable = [
         'journal_entry_id',
         'account_id',

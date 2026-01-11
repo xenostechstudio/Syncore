@@ -28,6 +28,18 @@
                     <option value="week">By Week</option>
                     <option value="month">By Month</option>
                 </select>
+                
+                {{-- Export Button --}}
+                <button 
+                    wire:click="exportPdf"
+                    wire:loading.attr="disabled"
+                    class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                >
+                    <flux:icon name="arrow-down-tray" class="size-4" wire:loading.remove wire:target="exportPdf" />
+                    <flux:icon name="arrow-path" class="size-4 animate-spin" wire:loading wire:target="exportPdf" />
+                    <span wire:loading.remove wire:target="exportPdf">Export PDF</span>
+                    <span wire:loading wire:target="exportPdf">Exporting...</span>
+                </button>
             </div>
         </div>
     </div>

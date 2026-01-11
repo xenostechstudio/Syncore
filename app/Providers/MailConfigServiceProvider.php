@@ -23,7 +23,7 @@ class MailConfigServiceProvider extends ServiceProvider
         // Apply database email configuration if available
         // Only run if the table exists (after migration)
         try {
-            if (\Schema::hasTable('email_configuration')) {
+            if (\Schema::hasTable('email_configurations')) {
                 EmailConfiguration::applyToConfig();
             }
         } catch (\Exception $e) {

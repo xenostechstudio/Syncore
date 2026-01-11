@@ -11,7 +11,6 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.settings')]
 #[Title('User')]
@@ -52,43 +51,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->userId ? User::find($this->userId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->userId) {
-            return collect();
-        }
-
-        $user = User::find($this->userId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', User::class)
-            ->where('subject_id', $this->userId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $user->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     public function mount(?int $id = null): void
@@ -297,25 +259,27 @@ class Form extends Component
             
             $user->syncRoles($newRoles);
             
-            // Log role changes
+            // Log role changes using custom ActivityLogService
             if ($oldRoles !== $newRoles) {
                 $addedRoles = array_diff($newRoles, $oldRoles);
                 $removedRoles = array_diff($oldRoles, $newRoles);
                 
                 if (!empty($addedRoles)) {
-                    activity()
-                        ->performedOn($user)
-                        ->causedBy(Auth::user())
-                        ->withProperties(['role' => implode(', ', $addedRoles)])
-                        ->log(__('activity.role_assigned', ['role' => implode(', ', $addedRoles)]));
+                    \App\Services\ActivityLogService::logAction(
+                        $user,
+                        'role_assigned',
+                        __('activity.role_assigned', ['role' => implode(', ', $addedRoles)]),
+                        ['role' => implode(', ', $addedRoles)]
+                    );
                 }
                 
                 if (!empty($removedRoles)) {
-                    activity()
-                        ->performedOn($user)
-                        ->causedBy(Auth::user())
-                        ->withProperties(['role' => implode(', ', $removedRoles)])
-                        ->log(__('activity.role_removed', ['role' => implode(', ', $removedRoles)]));
+                    \App\Services\ActivityLogService::logAction(
+                        $user,
+                        'role_removed',
+                        __('activity.role_removed', ['role' => implode(', ', $removedRoles)]),
+                        ['role' => implode(', ', $removedRoles)]
+                    );
                 }
             }
         }

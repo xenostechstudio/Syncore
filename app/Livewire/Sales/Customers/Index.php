@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Sales\Customers;
 
+use App\Exports\CustomersExport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Sales\Customer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Customers')]
@@ -28,6 +30,10 @@ class Index extends Component
 
     public array $selected = [];
     public bool $selectAll = false;
+
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
 
     // Filters
     public bool $filterActive = false;
@@ -87,10 +93,114 @@ class Index extends Component
 
     public function deleteSelected(): void
     {
-        Customer::whereIn('id', $this->selected)->delete();
-        $this->selected = [];
-        $this->selectAll = false;
-        session()->flash('success', 'Selected customers deleted successfully.');
+        $this->confirmBulkDelete();
+    }
+
+    // Bulk Actions
+    public function confirmBulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        // Validate which customers can be deleted (no active orders)
+        $customers = Customer::whereIn('id', $this->selected)
+            ->withCount(['salesOrders as active_orders_count' => fn($q) => $q->whereNotIn('status', ['cancelled', 'delivered'])])
+            ->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($customers as $customer) {
+            if ($customer->active_orders_count === 0) {
+                $canDelete[] = [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'reason' => "Has {$customer->active_orders_count} active orders",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        // Only delete customers without active orders
+        $customersWithOrders = Customer::whereIn('id', $this->selected)
+            ->whereHas('salesOrders', fn($q) => $q->whereNotIn('status', ['cancelled', 'delivered']))
+            ->pluck('id')
+            ->toArray();
+
+        $deletableIds = array_diff($this->selected, array_map('strval', $customersWithOrders));
+
+        if (empty($deletableIds)) {
+            session()->flash('error', 'No customers can be deleted. All selected customers have active orders.');
+            $this->cancelDelete();
+            return;
+        }
+
+        $count = Customer::whereIn('id', $deletableIds)->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} customers deleted successfully.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
+        $this->clearSelection();
+    }
+
+    public function bulkActivate(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Customer::whereIn('id', $this->selected)
+            ->update(['status' => 'active']);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} customers activated.");
+    }
+
+    public function bulkDeactivate(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Customer::whereIn('id', $this->selected)
+            ->update(['status' => 'inactive']);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} customers deactivated.");
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new CustomersExport(), 'customers-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new CustomersExport($this->selected), 'customers-selected-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     private function getCustomersQuery()
@@ -98,9 +208,9 @@ class Index extends Component
         return Customer::query()
             ->withCount('salesOrders as orders_count')
             ->withSum(['salesOrders' => fn($q) => $q->where('status', 'delivered')], 'total')
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('email', 'like', "%{$this->search}%")
-                ->orWhere('phone', 'like', "%{$this->search}%"))
+            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
+                ->orWhere('email', 'ilike', "%{$this->search}%")
+                ->orWhere('phone', 'ilike', "%{$this->search}%"))
             ->when($this->status, fn($q) => $q->where('status', $this->status))
             ->when($this->filterActive, fn($q) => $q->where('status', 'active'))
             ->when($this->filterInactive, fn($q) => $q->where('status', 'inactive'))

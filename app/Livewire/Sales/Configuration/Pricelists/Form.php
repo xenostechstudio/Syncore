@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sales\Configuration\Pricelists;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Sales\Pricelist;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -11,6 +12,8 @@ use Livewire\Component;
 #[Title('Pricelist')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $pricelistId = null;
     
     public string $name = '';
@@ -22,6 +25,15 @@ class Form extends Component
     public ?string $end_date = null;
     public bool $is_active = true;
     public string $description = '';
+
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+    public bool $showDeleteConfirm = false;
+
+    protected function getNotableModel()
+    {
+        return $this->pricelistId ? Pricelist::find($this->pricelistId) : null;
+    }
 
     public function mount(?int $id = null): void
     {
@@ -38,6 +50,8 @@ class Form extends Component
             $this->end_date = $pricelist->end_date?->format('Y-m-d');
             $this->is_active = $pricelist->is_active;
             $this->description = $pricelist->description ?? '';
+            $this->createdAt = $pricelist->created_at?->format('M d, Y \a\t H:i');
+            $this->updatedAt = $pricelist->updated_at?->format('M d, Y \a\t H:i');
         }
     }
 
@@ -66,13 +80,28 @@ class Form extends Component
         ];
 
         if ($this->pricelistId) {
-            Pricelist::findOrFail($this->pricelistId)->update($data);
+            $pricelist = Pricelist::findOrFail($this->pricelistId);
+            $pricelist->update($data);
+            $this->updatedAt = $pricelist->updated_at->format('M d, Y \a\t H:i');
             session()->flash('success', 'Pricelist updated successfully.');
         } else {
             $pricelist = Pricelist::create($data);
+            $this->pricelistId = $pricelist->id;
+            $this->createdAt = $pricelist->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $pricelist->updated_at->format('M d, Y \a\t H:i');
             session()->flash('success', 'Pricelist created successfully.');
             $this->redirect(route('sales.configuration.pricelists.edit', $pricelist->id), navigate: true);
         }
+    }
+
+    public function confirmDelete(): void
+    {
+        $this->showDeleteConfirm = true;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
     }
 
     public function delete(): void
@@ -86,6 +115,8 @@ class Form extends Component
 
     public function render()
     {
-        return view('livewire.sales.configuration.pricelists.form');
+        return view('livewire.sales.configuration.pricelists.form', [
+            'activities' => $this->activitiesAndNotes,
+        ]);
     }
 }

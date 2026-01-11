@@ -8,7 +8,6 @@ use App\Models\HR\Position;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Position')]
@@ -29,43 +28,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->positionId ? Position::find($this->positionId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->positionId) {
-            return collect();
-        }
-
-        $position = Position::find($this->positionId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', Position::class)
-            ->where('subject_id', $this->positionId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $position->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     protected function rules(): array

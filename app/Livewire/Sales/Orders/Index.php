@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Sales\Orders;
 
+use App\Exports\SalesOrdersExport;
+use App\Imports\SalesOrdersImport;
+use App\Livewire\Concerns\WithImport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Sales\SalesOrder;
 use Illuminate\Support\Facades\Auth;
@@ -10,12 +13,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Sales'])]
 #[Title('Sales Orders')]
 class Index extends Component
 {
-    use WithManualPagination;
+    use WithManualPagination, WithImport;
 
     #[Url]
     public string $search = '';
@@ -40,6 +44,10 @@ class Index extends Component
 
     public array $selected = [];
     public bool $selectAll = false;
+
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
 
     // Context: 'quotations' (default) or 'orders'
     public string $mode = 'quotations';
@@ -177,6 +185,115 @@ class Index extends Component
         $this->resetPage();
     }
 
+    // Bulk Actions
+    public function confirmBulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        // Validate which orders can be deleted
+        $orders = SalesOrder::whereIn('id', $this->selected)->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($orders as $order) {
+            if (in_array($order->status, ['draft', 'quotation', 'confirmed'])) {
+                $canDelete[] = [
+                    'id' => $order->id,
+                    'name' => $order->order_number,
+                    'status' => $order->status,
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $order->id,
+                    'name' => $order->order_number,
+                    'reason' => "Status is '{$order->status}' - only draft/quotation/confirmed can be deleted",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = SalesOrder::whereIn('id', $this->selected)
+            ->whereIn('status', ['draft', 'quotation', 'confirmed'])
+            ->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} orders deleted successfully.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
+        $this->clearSelection();
+    }
+
+    public function bulkCancel(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = SalesOrder::whereIn('id', $this->selected)
+            ->whereNotIn('status', ['cancelled', 'delivered'])
+            ->update(['status' => 'cancelled']);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} orders cancelled successfully.");
+    }
+
+    public function bulkConfirm(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = SalesOrder::whereIn('id', $this->selected)
+            ->whereIn('status', ['draft', 'quotation'])
+            ->update(['status' => 'confirmed']);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} orders confirmed successfully.");
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new SalesOrdersExport(), 'sales-orders-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new SalesOrdersExport($this->selected), 'sales-orders-selected-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    protected function getImportClass(): string
+    {
+        return SalesOrdersImport::class;
+    }
+
+    protected function getImportTemplate(): array
+    {
+        return [
+            'headers' => ['customer', 'order_date', 'expected_delivery_date', 'status', 'payment_terms', 'subtotal', 'tax', 'discount', 'total', 'notes', 'shipping_address'],
+            'filename' => 'sales-orders-template.csv',
+        ];
+    }
+
     private function getOrdersQuery()
     {
         return SalesOrder::query()
@@ -186,8 +303,8 @@ class Index extends Component
                 fn ($q) => $q->where('user_id', Auth::id())
             )
             ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
-                ->where('order_number', 'like', "%{$this->search}%")
-                ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%"))
+                ->where('order_number', 'ilike', "%{$this->search}%")
+                ->orWhereHas('customer', fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
             ))
             ->when($this->mode === 'orders', fn($q) => $q->where('status', 'processing'))
             ->when($this->status, fn($q) => $q->where('status', $this->status))
@@ -200,7 +317,8 @@ class Index extends Component
     public function render()
     {
         $orders = $this->getOrdersQuery()
-            ->with(['items', 'invoices', 'deliveryOrders'])
+            ->with(['customer:id,name', 'user:id,name'])
+            ->withCount(['items', 'invoices', 'deliveryOrders'])
             ->paginate(12, ['*'], 'page', $this->page);
 
         return view('livewire.sales.orders.index', [

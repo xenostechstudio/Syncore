@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Invoicing'])]
 #[Title('Invoice')]
@@ -57,40 +56,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->invoiceId ? Invoice::find($this->invoiceId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->invoiceId) {
-            return collect();
-        }
-
-        $invoice = Invoice::find($this->invoiceId);
-        
-        $activities = Activity::where('subject_type', Invoice::class)
-            ->where('subject_id', $this->invoiceId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        $notes = $invoice->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     public function mount(?int $id = null): void
@@ -364,6 +329,54 @@ class Form extends Component
         $this->shareLink = URL::signedRoute('public.invoices.show', [
             'token' => $invoice->share_token,
         ]);
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->invoiceId) {
+            session()->flash('error', 'Please save the invoice first.');
+            return;
+        }
+
+        try {
+            $invoice = Invoice::with('items')->findOrFail($this->invoiceId);
+
+            // Create new invoice with copied data
+            $newInvoice = Invoice::create([
+                'customer_id' => $invoice->customer_id,
+                'sales_order_id' => null, // Don't link to same sales order
+                'invoice_date' => now(),
+                'due_date' => now()->addDays(30),
+                'status' => 'draft',
+                'subtotal' => $invoice->subtotal,
+                'tax' => $invoice->tax,
+                'discount' => $invoice->discount,
+                'total' => $invoice->total,
+                'notes' => $invoice->notes,
+                'terms' => $invoice->terms,
+                'paid_amount' => 0,
+            ]);
+
+            // Copy items
+            foreach ($invoice->items as $item) {
+                \App\Models\Invoicing\InvoiceItem::create([
+                    'invoice_id' => $newInvoice->id,
+                    'product_id' => $item->product_id,
+                    'tax_id' => $item->tax_id,
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'discount' => $item->discount,
+                    'total' => $item->total,
+                ]);
+            }
+
+            session()->flash('success', 'Invoice duplicated successfully.');
+            $this->redirect(route('invoicing.invoices.edit', $newInvoice->id), navigate: true);
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to duplicate invoice: ' . $e->getMessage());
+        }
     }
 
     public function render()

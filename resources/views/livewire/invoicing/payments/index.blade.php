@@ -17,7 +17,25 @@
     <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
         <div class="flex w-full items-center justify-between gap-4">
             <div class="flex items-center gap-3">
+                <a href="{{ route('invoicing.payments.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                    New
+                </a>
                 <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Payments</span>
+                <flux:dropdown position="bottom" align="start">
+                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <flux:icon name="cog-6-tooth" class="size-5" />
+                    </button>
+                    <flux:menu class="w-48">
+                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <flux:icon name="arrow-down-tray" class="size-4" />
+                            <span>Import</span>
+                        </button>
+                        <button type="button" wire:click="export" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                            <flux:icon name="arrow-up-tray" class="size-4" />
+                            <span>Export</span>
+                        </button>
+                    </flux:menu>
+                </flux:dropdown>
             </div>
 
             <div class="flex flex-1 items-center justify-center">
@@ -62,6 +80,17 @@
                 >
                     <flux:icon name="chart-bar" class="size-4" />
                 </button>
+
+                {{-- Export --}}
+                <button type="button" wire:click="export" class="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Export to Excel">
+                    <flux:icon name="arrow-down-tray" class="size-4" />
+                </button>
+
+                {{-- Create --}}
+                <a href="{{ route('invoicing.payments.create') }}" wire:navigate class="flex h-8 items-center gap-1.5 rounded-md bg-zinc-900 px-3 text-sm text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                    <flux:icon name="plus" class="size-4" />
+                    <span>New</span>
+                </a>
             </div>
         </div>
     </div>
@@ -181,4 +210,13 @@
         </div>
         @endif
     </div>
+
+    {{-- Import Modal --}}
+    <x-ui.import-modal
+        wire:model="showImportModal"
+        title="Import Payments"
+        :livewire="true"
+        :result="$this->importResult"
+        :importErrors="$this->importErrors"
+    />
 </div>

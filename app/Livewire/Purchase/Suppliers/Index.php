@@ -2,12 +2,15 @@
 
 namespace App\Livewire\Purchase\Suppliers;
 
+use App\Exports\SuppliersExport;
 use App\Livewire\Concerns\WithManualPagination;
+use App\Models\Purchase\Supplier;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Purchase'])]
 #[Title('Suppliers')]
@@ -25,6 +28,10 @@ class Index extends Component
 
     public array $selected = [];
     public bool $selectAll = false;
+
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
 
     public array $visibleColumns = [
         'supplier' => true,
@@ -82,14 +89,121 @@ class Index extends Component
         $this->viewType = $view;
     }
 
+    // Bulk Actions
+    public function confirmBulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        // Validate which suppliers can be deleted (no active POs)
+        $suppliers = Supplier::whereIn('id', $this->selected)
+            ->withCount(['purchaseOrders as active_po_count' => fn($q) => $q->whereNotIn('status', ['cancelled', 'received'])])
+            ->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($suppliers as $supplier) {
+            if ($supplier->active_po_count === 0) {
+                $canDelete[] = [
+                    'id' => $supplier->id,
+                    'name' => $supplier->name,
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $supplier->id,
+                    'name' => $supplier->name,
+                    'reason' => "Has {$supplier->active_po_count} active purchase orders",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        // Only delete suppliers without active POs
+        $suppliersWithPOs = Supplier::whereIn('id', $this->selected)
+            ->whereHas('purchaseOrders', fn($q) => $q->whereNotIn('status', ['cancelled', 'received']))
+            ->pluck('id')
+            ->toArray();
+
+        $deletableIds = array_diff($this->selected, array_map('strval', $suppliersWithPOs));
+
+        if (empty($deletableIds)) {
+            session()->flash('error', 'No suppliers can be deleted. All selected suppliers have active purchase orders.');
+            $this->cancelDelete();
+            return;
+        }
+
+        $count = Supplier::whereIn('id', $deletableIds)->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} suppliers deleted successfully.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
+        $this->clearSelection();
+    }
+
+    public function bulkActivate(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Supplier::whereIn('id', $this->selected)
+            ->update(['is_active' => true]);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} suppliers activated.");
+    }
+
+    public function bulkDeactivate(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Supplier::whereIn('id', $this->selected)
+            ->update(['is_active' => false]);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} suppliers deactivated.");
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new SuppliersExport(), 'suppliers-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new SuppliersExport($this->selected), 'suppliers-selected-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
     private function getSuppliersQuery()
     {
         return DB::table('suppliers')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('email', 'like', "%{$this->search}%")
-                        ->orWhere('contact_person', 'like', "%{$this->search}%");
+                    $q->where('name', 'ilike', "%{$this->search}%")
+                        ->orWhere('email', 'ilike', "%{$this->search}%")
+                        ->orWhere('contact_person', 'ilike', "%{$this->search}%");
                 });
             })
             ->when($this->status === 'active', fn($q) => $q->where('is_active', true))

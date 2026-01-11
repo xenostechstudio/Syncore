@@ -143,7 +143,7 @@
                         <div class="grid gap-6 lg:grid-cols-2">
                             {{-- Left Column --}}
                             <div class="space-y-6">
-                                @foreach(['supply_chain'] as $groupKey)
+                                @foreach(['supply_chain', 'hr'] as $groupKey)
                                     @if(isset($moduleGroups[$groupKey]))
                                         @php $group = $moduleGroups[$groupKey]; @endphp
                                         <div>
@@ -171,7 +171,7 @@
 
                             {{-- Right Column --}}
                             <div class="space-y-6">
-                                @foreach(['sales', 'other'] as $groupKey)
+                                @foreach(['sales', 'finance', 'admin'] as $groupKey)
                                     @if(isset($moduleGroups[$groupKey]))
                                         @php $group = $moduleGroups[$groupKey]; @endphp
                                         <div>

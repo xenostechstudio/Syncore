@@ -25,6 +25,32 @@ enum DeliveryOrderState: string
         };
     }
 
+    public function color(): string
+    {
+        return match ($this) {
+            self::PENDING => 'zinc',
+            self::PICKED => 'blue',
+            self::IN_TRANSIT => 'amber',
+            self::DELIVERED => 'emerald',
+            self::FAILED => 'red',
+            self::RETURNED => 'violet',
+            self::CANCELLED => 'zinc',
+        };
+    }
+
+    public function icon(): string
+    {
+        return match ($this) {
+            self::PENDING => 'clock',
+            self::PICKED => 'cube',
+            self::IN_TRANSIT => 'truck',
+            self::DELIVERED => 'check-circle',
+            self::FAILED => 'exclamation-circle',
+            self::RETURNED => 'arrow-uturn-left',
+            self::CANCELLED => 'x-circle',
+        };
+    }
+
     public function next(): ?self
     {
         return match ($this) {

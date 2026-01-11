@@ -32,8 +32,46 @@
                 </flux:dropdown>
             </div>
 
-            {{-- Center Group: Search --}}
+            {{-- Center Group: Search or Selection Toolbar --}}
             <div class="flex flex-1 items-center justify-center">
+                @if(count($selected) > 0)
+                    {{-- Selection Toolbar --}}
+                    <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                            <span>{{ count($selected) }} selected</span>
+                            <flux:icon name="x-mark" class="size-3.5" />
+                        </button>
+
+                        <div class="h-5 w-px bg-zinc-200 dark:bg-zinc-700"></div>
+
+                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                            <flux:icon name="arrow-down-tray" class="size-4" />
+                            <span>Export</span>
+                        </button>
+
+                        <flux:dropdown position="bottom" align="center">
+                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                <flux:icon name="ellipsis-horizontal" class="size-4" />
+                            </button>
+
+                            <flux:menu class="w-56">
+                                <button type="button" wire:click="bulkUpdateStatus('active')" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="check-circle" class="size-4 text-emerald-500" />
+                                    <span>Set Active</span>
+                                </button>
+                                <button type="button" wire:click="bulkUpdateStatus('inactive')" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="pause-circle" class="size-4 text-zinc-400" />
+                                    <span>Set Inactive</span>
+                                </button>
+                                <flux:menu.separator />
+                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <flux:icon name="trash" class="size-4" />
+                                    <span>Delete</span>
+                                </button>
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+                @else
                 <x-ui.searchbox-dropdown placeholder="Search employees..." widthClass="w-[520px]" width="520px">
                     <x-slot:badge>
                         @if($status)
@@ -157,6 +195,7 @@
                         </div>
                     </div>
                 </x-ui.searchbox-dropdown>
+                @endif
             </div>
 
             {{-- Right Group --}}
@@ -263,9 +302,11 @@
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @foreach($employees as $employee)
-                            <tr wire:key="emp-{{ $employee->id }}" onclick="window.Livewire.navigate('{{ route('hr.employees.edit', $employee->id) }}')" class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                                <td class="py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
-                                    <input type="checkbox" wire:model.live="selected" value="{{ $employee->id }}" class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600">
+                            @php $isSelected = in_array($employee->id, $selected); @endphp
+                            <tr wire:key="emp-{{ $employee->id }}" onclick="window.Livewire.navigate('{{ route('hr.employees.edit', $employee->id) }}')" class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}">
+                                <td class="relative py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                    <div class="absolute inset-y-0 left-0 w-0.5 transition-all duration-150 {{ $isSelected ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700' }}"></div>
+                                    <input type="checkbox" wire:model.live="selected" value="{{ $employee->id }}" class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}">
                                 </td>
                                 <td class="py-3 pl-2 pr-4">
                                     <div class="flex items-center gap-3">
@@ -398,4 +439,14 @@
             </div>
         @endif
     @endif
+
+    {{-- Delete Confirmation Modal --}}
+    @isset($showDeleteConfirm)
+        <x-ui.delete-confirm-modal 
+            wire:model="showDeleteConfirm"
+            :validation="$deleteValidation ?? []"
+            title="Confirm Delete"
+            itemLabel="employees"
+        />
+    @endisset
 </div>

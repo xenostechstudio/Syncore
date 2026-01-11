@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sales\Configuration\PaymentTerms;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Sales\PaymentTerm;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -11,6 +12,8 @@ use Livewire\Component;
 #[Title('Payment Term')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $paymentTermId = null;
     
     public string $name = '';
@@ -19,6 +22,15 @@ class Form extends Component
     public string $description = '';
     public bool $is_active = true;
     public int $sort_order = 0;
+
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+    public bool $showDeleteConfirm = false;
+
+    protected function getNotableModel()
+    {
+        return $this->paymentTermId ? PaymentTerm::find($this->paymentTermId) : null;
+    }
 
     public function mount(?int $id = null): void
     {
@@ -32,6 +44,8 @@ class Form extends Component
             $this->description = $term->description ?? '';
             $this->is_active = $term->is_active;
             $this->sort_order = $term->sort_order;
+            $this->createdAt = $term->created_at?->format('M d, Y \a\t H:i');
+            $this->updatedAt = $term->updated_at?->format('M d, Y \a\t H:i');
         }
     }
 
@@ -53,13 +67,28 @@ class Form extends Component
         ];
 
         if ($this->paymentTermId) {
-            PaymentTerm::findOrFail($this->paymentTermId)->update($data);
+            $term = PaymentTerm::findOrFail($this->paymentTermId);
+            $term->update($data);
+            $this->updatedAt = $term->updated_at->format('M d, Y \a\t H:i');
             session()->flash('success', 'Payment term updated successfully.');
         } else {
             $term = PaymentTerm::create($data);
+            $this->paymentTermId = $term->id;
+            $this->createdAt = $term->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $term->updated_at->format('M d, Y \a\t H:i');
             session()->flash('success', 'Payment term created successfully.');
             $this->redirect(route('sales.configuration.payment-terms.edit', $term->id), navigate: true);
         }
+    }
+
+    public function confirmDelete(): void
+    {
+        $this->showDeleteConfirm = true;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
     }
 
     public function delete(): void
@@ -73,6 +102,8 @@ class Form extends Component
 
     public function render()
     {
-        return view('livewire.sales.configuration.payment-terms.form');
+        return view('livewire.sales.configuration.payment-terms.form', [
+            'activities' => $this->activitiesAndNotes,
+        ]);
     }
 }

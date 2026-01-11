@@ -2,6 +2,8 @@
 @php
     $user = auth()->user();
     $isOutOfOffice = $user->isOutOfOffice();
+    // Cache user role to avoid repeated queries
+    $userRole = cache()->remember("user_role_{$user->id}", 300, fn() => $user->roles->first()?->name);
 @endphp
 
 <flux:dropdown position="bottom" align="end">
@@ -20,9 +22,9 @@
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ $user->name }}</p>
                     <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">{{ $user->email }}</p>
-                    @if($user->roles->isNotEmpty())
+                    @if($userRole)
                         <span class="mt-1.5 inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                            {{ $user->roles->first()->name }}
+                            {{ $userRole }}
                         </span>
                     @endif
                 </div>

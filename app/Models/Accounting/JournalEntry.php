@@ -4,15 +4,16 @@ namespace App\Models\Accounting;
 
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class JournalEntry extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'entry_number',
@@ -91,22 +92,5 @@ class JournalEntry extends Model
     public function isBalanced(): bool
     {
         return abs($this->total_debit - $this->total_credit) < 0.01;
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'entry_number', 'entry_date', 'reference', 'reference_type',
-                'description', 'total_debit', 'total_credit', 'status',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Journal entry created',
-                'updated' => 'Journal entry updated',
-                'deleted' => 'Journal entry deleted',
-                default => "Journal entry {$eventName}",
-            });
     }
 }

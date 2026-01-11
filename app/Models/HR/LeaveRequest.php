@@ -3,16 +3,19 @@
 namespace App\Models\HR;
 
 use App\Enums\LeaveRequestState;
+use App\Events\LeaveRequestApproved;
+use App\Events\LeaveRequestRejected;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class LeaveRequest extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'employee_id',
@@ -93,6 +96,9 @@ class LeaveRequest extends Model
                 ]
             );
             $balance->increment('used', $this->days);
+
+            // Dispatch event for notifications
+            event(new LeaveRequestApproved($this));
         }
 
         return $result;
@@ -107,7 +113,14 @@ class LeaveRequest extends Model
         $this->approved_by = $userId;
         $this->approved_at = now();
         $this->rejection_reason = $reason;
-        return $this->transitionTo(LeaveRequestState::REJECTED);
+        $result = $this->transitionTo(LeaveRequestState::REJECTED);
+
+        if ($result) {
+            // Dispatch event for notifications
+            event(new LeaveRequestRejected($this, $reason));
+        }
+
+        return $result;
     }
 
     public function cancel(): bool
@@ -116,19 +129,5 @@ class LeaveRequest extends Model
             return false;
         }
         return $this->transitionTo(LeaveRequestState::CANCELLED);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['employee_id', 'leave_type_id', 'start_date', 'end_date', 'days', 'reason', 'status', 'approved_by', 'rejection_reason'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Leave request created',
-                'updated' => 'Leave request updated',
-                'deleted' => 'Leave request deleted',
-                default => "Leave request {$eventName}",
-            });
     }
 }

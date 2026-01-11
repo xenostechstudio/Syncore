@@ -32,7 +32,7 @@ class Index extends Component
     {
         if ($value) {
             $this->selected = Pricelist::query()
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
+                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
                 ->pluck('id')
                 ->map(fn($id) => (string) $id)
                 ->toArray();
@@ -59,8 +59,8 @@ class Index extends Component
     {
         $pricelists = Pricelist::query()
             ->withCount('items')
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('code', 'like', "%{$this->search}%"))
+            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
+                ->orWhere('code', 'ilike', "%{$this->search}%"))
             ->orderBy('name')
             ->paginate(15, ['*'], 'page', $this->page);
 

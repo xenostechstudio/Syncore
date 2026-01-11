@@ -5,16 +5,17 @@ namespace App\Models\CRM;
 use App\Models\Sales\Customer;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class Lead extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'name',
@@ -104,22 +105,5 @@ class Lead extends Model
             'lost' => 'red',
             default => 'zinc',
         };
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'name', 'email', 'phone', 'company_name', 'job_title',
-                'source', 'status', 'assigned_to',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Lead created',
-                'updated' => 'Lead updated',
-                'deleted' => 'Lead deleted',
-                default => "Lead {$eventName}",
-            });
     }
 }

@@ -41,11 +41,11 @@
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
                             <flux:menu class="w-40">
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                @if($deliveryId)
+                                <button type="button" wire:click="duplicate" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
-                                @if($deliveryId)
                                 <a href="{{ route('pdf.delivery-order', $deliveryId) }}" target="_blank" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="arrow-down-tray" class="size-4" />
                                     <span>Download PDF</span>
@@ -558,49 +558,7 @@
                                 </div>
                             @else
                                 {{-- Activity Log Item --}}
-                                @php $activity = $item['data']; @endphp
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0">
-                                        <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <x-ui.user-name :user="$activity->causer" />
-                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                                {{ $activity->created_at->diffForHumans() }}
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                            @if($activity->event === 'created')
-                                                Delivery order created
-                                            @elseif($activity->properties->has('old') && $activity->event === 'updated')
-                                                @php
-                                                    $old = $activity->properties->get('old', []);
-                                                    $new = $activity->properties->get('attributes', []);
-                                                    $changes = collect($new)->filter(fn($val, $key) => isset($old[$key]) && $old[$key] !== $val);
-                                                @endphp
-                                                @if($changes->isNotEmpty())
-                                                    @foreach($changes as $key => $newVal)
-                                                        @php
-                                                            $oldVal = $old[$key] ?? '-';
-                                                            $label = ucfirst(str_replace('_', ' ', $key));
-                                                        @endphp
-                                                        <span class="block">
-                                                            Updated <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</span>:
-                                                            <span class="text-zinc-400 line-through">{{ is_string($oldVal) ? $oldVal : $oldVal }}</span>
-                                                            <flux:icon name="arrow-right" class="inline size-3 mx-1" />
-                                                            <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ is_string($newVal) ? $newVal : $newVal }}</span>
-                                                        </span>
-                                                    @endforeach
-                                                @else
-                                                    {{ $activity->description }}
-                                                @endif
-                                            @else
-                                                {{ $activity->description }}
-                                            @endif
-                                        </p>
-                                    </div>
-                                </div>
+                                <x-ui.activity-item :activity="$item['data']" emptyMessage="Delivery order created" />
                             @endif
                         @empty
                             {{-- Delivery Order Created (fallback when no activities yet) --}}

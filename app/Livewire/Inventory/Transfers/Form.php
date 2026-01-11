@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Internal Transfer')]
@@ -35,43 +34,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->transferId ? InventoryTransfer::find($this->transferId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->transferId) {
-            return collect();
-        }
-
-        $transfer = InventoryTransfer::find($this->transferId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', InventoryTransfer::class)
-            ->where('subject_id', $this->transferId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $transfer->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     public function mount(?int $id = null): void
@@ -187,6 +149,39 @@ class Form extends Component
 
         session()->flash('success', 'Transfer saved successfully.');
         $this->redirect(route('inventory.transfers.edit', $transfer->id), navigate: true);
+    }
+
+    public function duplicate(): void
+    {
+        if (!$this->transferId) {
+            session()->flash('error', 'Please save the transfer first.');
+            return;
+        }
+
+        $transfer = InventoryTransfer::with('items')->findOrFail($this->transferId);
+
+        $newTransfer = InventoryTransfer::create([
+            'transfer_number' => InventoryTransfer::generateTransferNumber(),
+            'source_warehouse_id' => $transfer->source_warehouse_id,
+            'destination_warehouse_id' => $transfer->destination_warehouse_id,
+            'user_id' => Auth::id(),
+            'transfer_date' => now()->format('Y-m-d'),
+            'expected_arrival_date' => null,
+            'status' => 'draft',
+            'notes' => $transfer->notes,
+        ]);
+
+        foreach ($transfer->items as $item) {
+            InventoryTransferItem::create([
+                'inventory_transfer_id' => $newTransfer->id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                'received_quantity' => 0,
+            ]);
+        }
+
+        session()->flash('success', 'Transfer duplicated successfully.');
+        $this->redirect(route('inventory.transfers.edit', $newTransfer->id), navigate: true);
     }
 
     public function render()

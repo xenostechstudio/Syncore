@@ -30,14 +30,14 @@
                     </button>
 
                     <flux:menu class="w-48">
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-down-tray" class="size-4" />
                             <span>Import records</span>
                         </button>
-                        <a href="{{ route('export.warehouses') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
                             <span>Export All</span>
-                        </a>
+                        </button>
                     </flux:menu>
                 </flux:dropdown>
             </div>
@@ -106,9 +106,10 @@
                         @forelse($warehouses as $warehouse)
                             <tr 
                                 onclick="window.location.href='{{ route('inventory.warehouses.edit', $warehouse->id) }}'"
-                                class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                class="group cursor-pointer transition-all duration-150 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                             >
-                                <td class="whitespace-nowrap py-4 pl-4 pr-4 sm:pl-6 lg:pl-8">
+                                <td class="relative whitespace-nowrap py-4 pl-4 pr-4 sm:pl-6 lg:pl-8">
+                                    <div class="absolute inset-y-0 left-0 w-0.5 bg-transparent transition-all duration-150 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700"></div>
                                     <div class="flex items-center gap-3">
                                         <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
                                             <flux:icon name="building-storefront" class="size-5 text-zinc-500 dark:text-zinc-400" />
@@ -197,4 +198,13 @@
             </div>
         @endif
     </div>
+
+    {{-- Import Modal --}}
+    <x-ui.import-modal
+        wire:model="showImportModal"
+        title="Import Warehouses"
+        :livewire="true"
+        :result="$this->importResult"
+        :importErrors="$this->importErrors"
+    />
 </div>

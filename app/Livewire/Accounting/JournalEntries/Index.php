@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Accounting\JournalEntries;
 
+use App\Exports\JournalEntriesExport;
 use App\Models\Accounting\JournalEntry;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Accounting'])]
 #[Title('Journal Entries')]
@@ -66,6 +68,15 @@ class Index extends Component
         } else {
             session()->flash('error', 'Failed to post journal entry. Ensure it is balanced.');
         }
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new JournalEntriesExport(), 'journal-entries-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new JournalEntriesExport($this->selected), 'journal-entries-selected-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     protected function getEntriesQuery()

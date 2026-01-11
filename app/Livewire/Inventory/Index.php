@@ -41,8 +41,8 @@ class Index extends Component
         
         // Recent products
         $recentProducts = Product::query()
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('sku', 'like', "%{$this->search}%"))
+            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
+                ->orWhere('sku', 'ilike', "%{$this->search}%"))
             ->latest()
             ->take(10)
             ->get();

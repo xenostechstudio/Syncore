@@ -3,14 +3,15 @@
 namespace App\Models\HR;
 
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class SalaryComponent extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'code', 'name', 'type', 'calculation_type', 'default_amount',
@@ -34,19 +35,5 @@ class SalaryComponent extends Model
         $last = static::orderBy('id', 'desc')->first();
         $number = $last ? (int) substr($last->code, 3) + 1 : 1;
         return 'SC-' . str_pad($number, 4, '0', STR_PAD_LEFT);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['code', 'name', 'type', 'calculation_type', 'default_amount', 'is_taxable', 'is_active', 'description'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Salary component created',
-                'updated' => 'Salary component updated',
-                'deleted' => 'Salary component deleted',
-                default => "Salary component {$eventName}",
-            });
     }
 }

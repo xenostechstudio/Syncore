@@ -62,35 +62,31 @@
                 @if(count($selected) > 0)
                     {{-- Selection Toolbar --}}
                     <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600">
+                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                            <span>{{ count($selected) }} selected</span>
                             <flux:icon name="x-mark" class="size-4" />
-                            <span>{{ count($selected) }} Selected</span>
                         </button>
 
-                        <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                            <flux:icon name="printer" class="size-4" />
-                            <span>Print</span>
+                        <div class="h-5 w-px bg-zinc-200 dark:bg-zinc-700"></div>
+
+                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                            <flux:icon name="arrow-up-tray" class="size-4" />
+                            <span>Export</span>
                         </button>
 
                         <flux:dropdown position="bottom" align="center">
-                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                                <span>Actions</span>
-                                <flux:icon name="chevron-down" class="size-3" />
+                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                <flux:icon name="ellipsis-horizontal" class="size-4" />
                             </button>
 
                             <flux:menu class="w-56">
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <flux:icon name="arrow-up-tray" class="size-4" />
-                                    <span>Export</span>
+                                    <flux:icon name="printer" class="size-4" />
+                                    <span>Print</span>
                                 </button>
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
-                                </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
                                 </button>
                                 <flux:menu.separator />
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
@@ -100,6 +96,11 @@
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="envelope" class="size-4" />
                                     <span>Send by Email</span>
+                                </button>
+                                <flux:menu.separator />
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <flux:icon name="trash" class="size-4" />
+                                    <span>Delete</span>
                                 </button>
                             </flux:menu>
                         </flux:dropdown>
@@ -281,16 +282,20 @@
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @forelse ($orders as $order)
+                            @php $isSelected = in_array($order->id, $selected); @endphp
                             <tr 
                                 onclick="window.location.href='{{ route('purchase.orders.edit', $order->id) }}'"
-                                class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                class="group cursor-pointer transition-all duration-150 {{ $isSelected 
+                                    ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' 
+                                    : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}"
                             >
-                                <td class="py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                <td class="relative py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                    <div class="absolute inset-y-0 left-0 w-0.5 transition-all duration-150 {{ $isSelected ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700' }}"></div>
                                     <input 
                                         type="checkbox" 
                                         wire:model.live="selected"
                                         value="{{ $order->id }}"
-                                        class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                                        class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}"
                                     >
                                 </td>
                                 @if($visibleColumns['order'])

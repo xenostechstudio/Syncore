@@ -11,9 +11,17 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SalesOrdersExport implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize
 {
+    protected ?array $ids;
+
+    public function __construct(?array $ids = null)
+    {
+        $this->ids = $ids;
+    }
+
     public function collection()
     {
         return SalesOrder::with(['customer', 'user'])
+            ->when($this->ids, fn($q) => $q->whereIn('id', $this->ids))
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($order) => [

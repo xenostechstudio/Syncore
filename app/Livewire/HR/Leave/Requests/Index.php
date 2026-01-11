@@ -2,6 +2,7 @@
 
 namespace App\Livewire\HR\Leave\Requests;
 
+use App\Exports\LeaveRequestsExport;
 use App\Models\HR\LeaveRequest;
 use App\Models\HR\LeaveType;
 use Livewire\Attributes\Layout;
@@ -9,6 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Leave Requests')]
@@ -33,6 +35,10 @@ class Index extends Component
 
     public array $selected = [];
     public bool $selectAll = false;
+
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
 
     public function updatedSearch(): void
     {
@@ -89,11 +95,71 @@ class Index extends Component
         $this->clearSelection();
     }
 
-    public function deleteSelected(): void
+    public function confirmBulkDelete(): void
     {
-        LeaveRequest::whereIn('id', $this->selected)->delete();
-        session()->flash('success', count($this->selected) . ' leave request(s) deleted.');
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $requests = LeaveRequest::whereIn('id', $this->selected)
+            ->with('employee')
+            ->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($requests as $request) {
+            if (in_array($request->status, ['pending', 'rejected', 'cancelled'])) {
+                $canDelete[] = [
+                    'id' => $request->id,
+                    'name' => $request->employee?->name . ' - ' . $request->start_date?->format('M d'),
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $request->id,
+                    'name' => $request->employee?->name . ' - ' . $request->start_date?->format('M d'),
+                    'reason' => "Status is '{$request->status}' - only pending/rejected/cancelled can be deleted",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = LeaveRequest::whereIn('id', $this->selected)
+            ->whereIn('status', ['pending', 'rejected', 'cancelled'])
+            ->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} leave request(s) deleted.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
         $this->clearSelection();
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new LeaveRequestsExport(), 'leave-requests-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new LeaveRequestsExport($this->selected), 'leave-requests-selected-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     protected function getQuery()

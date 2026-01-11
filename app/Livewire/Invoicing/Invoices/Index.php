@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Invoicing\Invoices;
 
+use App\Exports\InvoicesExport;
+use App\Imports\InvoicesImport;
+use App\Livewire\Concerns\WithImport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Invoicing\Invoice;
 use Illuminate\Support\Facades\DB;
@@ -9,12 +12,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Invoicing'])]
 #[Title('Invoices')]
 class Index extends Component
 {
-    use WithManualPagination;
+    use WithManualPagination, WithImport;
 
     #[Url]
     public string $search = '';
@@ -30,6 +34,10 @@ class Index extends Component
     
     public array $selected = [];
     public bool $selectAll = false;
+
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
     
     public array $visibleColumns = [
         'invoice_number' => true,
@@ -106,12 +114,116 @@ class Index extends Component
 
     public function deleteSelected(): void
     {
-        if (count($this->selected) > 0) {
-            Invoice::whereIn('id', $this->selected)->delete();
-            $this->selected = [];
-            $this->selectAll = false;
-            session()->flash('success', 'Selected invoices deleted successfully.');
+        $this->confirmBulkDelete();
+    }
+
+    // Bulk Actions
+    public function confirmBulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
         }
+
+        // Validate which invoices can be deleted (only draft)
+        $invoices = Invoice::whereIn('id', $this->selected)->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($invoices as $invoice) {
+            if ($invoice->status === 'draft') {
+                $canDelete[] = [
+                    'id' => $invoice->id,
+                    'name' => $invoice->invoice_number,
+                    'status' => $invoice->status,
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $invoice->id,
+                    'name' => $invoice->invoice_number,
+                    'reason' => "Status is '{$invoice->status}' - only draft invoices can be deleted",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Invoice::whereIn('id', $this->selected)
+            ->whereIn('status', ['draft'])
+            ->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} invoices deleted successfully.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
+        $this->clearSelection();
+    }
+
+    public function bulkMarkSent(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Invoice::whereIn('id', $this->selected)
+            ->where('status', 'draft')
+            ->update(['status' => 'sent']);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} invoices marked as sent.");
+    }
+
+    public function bulkMarkPaid(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Invoice::whereIn('id', $this->selected)
+            ->whereIn('status', ['sent', 'partial', 'overdue'])
+            ->update(['status' => 'paid', 'paid_at' => now()]);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} invoices marked as paid.");
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new InvoicesExport(), 'invoices-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new InvoicesExport($this->selected), 'invoices-selected-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    protected function getImportClass(): string
+    {
+        return InvoicesImport::class;
+    }
+
+    protected function getImportTemplate(): array
+    {
+        return [
+            'headers' => ['customer', 'invoice_date', 'due_date', 'status', 'subtotal', 'tax', 'discount', 'total', 'notes', 'terms'],
+            'filename' => 'invoices-template.csv',
+        ];
     }
 
     private function getInvoicesQuery()
@@ -119,8 +231,8 @@ class Index extends Component
         return Invoice::query()
             ->with(['customer', 'salesOrder'])
             ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
-                ->where('invoice_number', 'like', "%{$this->search}%")
-                ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%"))
+                ->where('invoice_number', 'ilike', "%{$this->search}%")
+                ->orWhereHas('customer', fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
             ))
             ->when($this->status, fn($q) => $q->where('status', $this->status))
             ->latest();

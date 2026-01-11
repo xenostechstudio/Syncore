@@ -3,17 +3,18 @@
 namespace App\Models\Inventory;
 
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Inventory\InventoryTransfer;
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\InventoryStock;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class Warehouse extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'name',
@@ -49,19 +50,5 @@ class Warehouse extends Model
     public function warehouseOuts(): HasMany
     {
         return $this->hasMany(InventoryAdjustment::class)->where('adjustment_type', 'decrease');
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['name', 'location', 'contact_info'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Warehouse created',
-                'updated' => 'Warehouse updated',
-                'deleted' => 'Warehouse deleted',
-                default => "Warehouse {$eventName}",
-            });
     }
 }

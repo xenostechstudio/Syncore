@@ -4,11 +4,11 @@ namespace App\Livewire\HR\Payroll\Components;
 
 use App\Livewire\Concerns\WithNotes;
 use App\Models\HR\SalaryComponent;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Salary Component')]
@@ -124,16 +124,26 @@ class Form extends Component
             return collect();
         }
 
-        $activities = Activity::where('subject_type', SalaryComponent::class)
-            ->where('subject_id', $this->componentId)
-            ->with('causer')
-            ->latest()
+        $modelClass = SalaryComponent::class;
+
+        // Get activity logs from custom activity_logs table
+        $activities = DB::table('activity_logs')
+            ->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
+            ->where('activity_logs.model_type', $modelClass)
+            ->where('activity_logs.model_id', $this->componentId)
+            ->select('activity_logs.*', 'users.name as causer_name')
+            ->orderByDesc('activity_logs.created_at')
             ->limit(20)
             ->get()
-            ->map(function ($activity) {
-                $activity->type = 'activity';
-                return $activity;
-            });
+            ->map(fn($activity) => (object) [
+                'id' => $activity->id,
+                'type' => 'activity',
+                'action' => $activity->action,
+                'description' => $activity->description,
+                'properties' => json_decode($activity->properties ?? '{}', true),
+                'causer' => (object) ['name' => $activity->causer_name ?? $activity->user_name ?? 'System'],
+                'created_at' => \Carbon\Carbon::parse($activity->created_at),
+            ]);
 
         if ($this->component && method_exists($this->component, 'notes')) {
             $notes = $this->component->notes()

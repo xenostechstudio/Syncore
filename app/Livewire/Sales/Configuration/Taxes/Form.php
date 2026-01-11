@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sales\Configuration\Taxes;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Sales\Tax;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -11,6 +12,8 @@ use Livewire\Component;
 #[Title('Tax')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?int $taxId = null;
     
     public string $name = '';
@@ -21,6 +24,15 @@ class Form extends Component
     public bool $is_active = true;
     public bool $include_in_price = false;
     public string $description = '';
+
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+    public bool $showDeleteConfirm = false;
+
+    protected function getNotableModel()
+    {
+        return $this->taxId ? Tax::find($this->taxId) : null;
+    }
 
     public function mount(?int $id = null): void
     {
@@ -36,6 +48,8 @@ class Form extends Component
             $this->is_active = $tax->is_active;
             $this->include_in_price = $tax->include_in_price;
             $this->description = $tax->description ?? '';
+            $this->createdAt = $tax->created_at?->format('M d, Y \a\t H:i');
+            $this->updatedAt = $tax->updated_at?->format('M d, Y \a\t H:i');
         }
     }
 
@@ -61,13 +75,28 @@ class Form extends Component
         ];
 
         if ($this->taxId) {
-            Tax::findOrFail($this->taxId)->update($data);
+            $tax = Tax::findOrFail($this->taxId);
+            $tax->update($data);
+            $this->updatedAt = $tax->updated_at->format('M d, Y \a\t H:i');
             session()->flash('success', 'Tax updated successfully.');
         } else {
             $tax = Tax::create($data);
+            $this->taxId = $tax->id;
+            $this->createdAt = $tax->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $tax->updated_at->format('M d, Y \a\t H:i');
             session()->flash('success', 'Tax created successfully.');
             $this->redirect(route('sales.configuration.taxes.edit', $tax->id), navigate: true);
         }
+    }
+
+    public function confirmDelete(): void
+    {
+        $this->showDeleteConfirm = true;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
     }
 
     public function delete(): void
@@ -81,6 +110,8 @@ class Form extends Component
 
     public function render()
     {
-        return view('livewire.sales.configuration.taxes.form');
+        return view('livewire.sales.configuration.taxes.form', [
+            'activities' => $this->activitiesAndNotes,
+        ]);
     }
 }

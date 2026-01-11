@@ -39,24 +39,39 @@
                 @if(count($selected) > 0)
                     {{-- Selection Toolbar --}}
                     <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600">
-                            <flux:icon name="x-mark" class="size-4" />
-                            <span>{{ count($selected) }} Selected</span>
+                        {{-- Count Selected Button --}}
+                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                            <span>{{ count($selected) }} selected</span>
+                            <flux:icon name="x-mark" class="size-3.5" />
                         </button>
-                        <button wire:click="approveSelected" wire:confirm="Approve selected leave requests?" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-700 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
-                            <flux:icon name="check" class="size-4" />
+
+                        <div class="h-5 w-px bg-zinc-200 dark:bg-zinc-700"></div>
+
+                        {{-- Export --}}
+                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                            <flux:icon name="arrow-down-tray" class="size-4" />
+                            <span>Export</span>
+                        </button>
+
+                        {{-- Approve --}}
+                        <button wire:click="approveSelected" wire:confirm="Approve selected leave requests?" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                            <flux:icon name="check" class="size-4 text-emerald-500" />
                             <span>Approve</span>
                         </button>
-                        <button wire:click="rejectSelected" wire:confirm="Reject selected leave requests?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-700 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
-                            <flux:icon name="x-mark" class="size-4" />
+
+                        {{-- Reject --}}
+                        <button wire:click="rejectSelected" wire:confirm="Reject selected leave requests?" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                            <flux:icon name="x-mark" class="size-4 text-red-500" />
                             <span>Reject</span>
                         </button>
+
+                        {{-- Actions Dropdown --}}
                         <flux:dropdown position="bottom" align="center">
-                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
                                 <flux:icon name="ellipsis-horizontal" class="size-4" />
                             </button>
                             <flux:menu class="w-40">
-                                <button type="button" wire:click="deleteSelected" wire:confirm="Delete selected leave requests?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>
@@ -239,17 +254,19 @@
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                             @foreach($requests as $request)
+                                @php $isSelected = in_array($request->id, $selected); @endphp
                                 <tr 
                                     wire:key="lr-{{ $request->id }}" 
                                     onclick="window.location.href='{{ route('hr.leave.requests.edit', $request->id) }}'"
-                                    class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                    class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}"
                                 >
-                                    <td class="py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                    <td class="relative py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
+                                        <div class="absolute inset-y-0 left-0 w-0.5 transition-all duration-150 {{ $isSelected ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700' }}"></div>
                                         <input 
                                             type="checkbox" 
                                             wire:model.live="selected"
                                             value="{{ $request->id }}"
-                                            class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:ring-zinc-600"
+                                            class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}"
                                         >
                                     </td>
                                     <td class="py-3 pl-2 pr-4">
@@ -396,4 +413,14 @@
             @endif
         @endif
     </div>
+
+    {{-- Delete Confirmation Modal --}}
+    @isset($showDeleteConfirm)
+        <x-ui.delete-confirm-modal 
+            wire:model="showDeleteConfirm"
+            :validation="$deleteValidation ?? []"
+            title="Confirm Delete"
+            itemLabel="leave requests"
+        />
+    @endisset
 </div>

@@ -2,10 +2,16 @@
 
 namespace App\Models\Sales;
 
+use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class Tax extends Model
 {
+    use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
+
     protected $fillable = [
         'name',
         'code',

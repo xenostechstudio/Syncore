@@ -30,6 +30,10 @@ class Index extends Component
     public array $selected = [];
     public bool $selectAll = false;
 
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -65,10 +69,72 @@ class Index extends Component
         $this->nextPage();
     }
 
-    public function deleteSelected(): void
+    public function confirmBulkDelete(): void
     {
-        LeaveType::whereIn('id', $this->selected)->delete();
-        session()->flash('success', count($this->selected) . ' leave type(s) deleted.');
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $leaveTypes = LeaveType::whereIn('id', $this->selected)
+            ->withCount('leaveRequests')
+            ->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($leaveTypes as $type) {
+            if ($type->leave_requests_count === 0) {
+                $canDelete[] = [
+                    'id' => $type->id,
+                    'name' => $type->name,
+                ];
+            } else {
+                $cannotDelete[] = [
+                    'id' => $type->id,
+                    'name' => $type->name,
+                    'reason' => "Has {$type->leave_requests_count} leave requests",
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $typesWithRequests = LeaveType::whereIn('id', $this->selected)
+            ->whereHas('leaveRequests')
+            ->pluck('id')
+            ->toArray();
+
+        $deletableIds = array_diff($this->selected, array_map('strval', $typesWithRequests));
+
+        if (empty($deletableIds)) {
+            session()->flash('error', 'No leave types can be deleted. All have leave requests.');
+            $this->cancelDelete();
+            return;
+        }
+
+        $count = LeaveType::whereIn('id', $deletableIds)->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} leave type(s) deleted.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
         $this->clearSelection();
     }
 

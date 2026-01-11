@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Settings\Users;
 
+use App\Exports\UsersExport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.settings')]
 #[Title('Users')]
@@ -28,6 +30,10 @@ class Index extends Component
 
     public array $selected = [];
     public bool $selectAll = false;
+
+    // Delete confirmation
+    public bool $showDeleteConfirm = false;
+    public array $deleteValidation = [];
 
     public array $visibleColumns = [
         'user' => true,
@@ -91,14 +97,89 @@ class Index extends Component
         $this->clearSelection();
     }
 
+    // Bulk Actions
+    public function confirmBulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $currentUserId = auth()->id();
+        $users = User::whereIn('id', $this->selected)->get();
+
+        $canDelete = [];
+        $cannotDelete = [];
+
+        foreach ($users as $user) {
+            if ($user->id === $currentUserId) {
+                $cannotDelete[] = [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'reason' => 'Cannot delete your own account',
+                ];
+            } else {
+                $canDelete[] = [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                ];
+            }
+        }
+
+        $this->deleteValidation = [
+            'canDelete' => $canDelete,
+            'cannotDelete' => $cannotDelete,
+            'totalSelected' => count($this->selected),
+        ];
+
+        $this->showDeleteConfirm = true;
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        // Don't allow deleting current user
+        $currentUserId = auth()->id();
+        $idsToDelete = array_filter($this->selected, fn($id) => (int) $id !== $currentUserId);
+
+        if (empty($idsToDelete)) {
+            session()->flash('error', 'Cannot delete your own account.');
+            $this->cancelDelete();
+            return;
+        }
+
+        $count = User::whereIn('id', $idsToDelete)->delete();
+
+        $this->cancelDelete();
+        session()->flash('success', "{$count} users deleted successfully.");
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDeleteConfirm = false;
+        $this->deleteValidation = [];
+        $this->clearSelection();
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new UsersExport(), 'users-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new UsersExport($this->selected), 'users-selected-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
     private function getUsersQuery()
     {
         $query = User::query();
 
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('email', 'like', "%{$this->search}%");
+                $q->where('name', 'ilike', "%{$this->search}%")
+                    ->orWhere('email', 'ilike', "%{$this->search}%");
             });
         }
 

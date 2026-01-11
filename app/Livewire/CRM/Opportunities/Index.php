@@ -2,6 +2,9 @@
 
 namespace App\Livewire\CRM\Opportunities;
 
+use App\Exports\OpportunitiesExport;
+use App\Imports\OpportunitiesImport;
+use App\Livewire\Concerns\WithImport;
 use App\Models\CRM\Opportunity;
 use App\Models\CRM\Pipeline;
 use Livewire\Attributes\Layout;
@@ -9,12 +12,13 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Opportunities')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, WithImport;
 
     #[Url]
     public string $view = 'kanban';
@@ -26,6 +30,9 @@ class Index extends Component
     public string $stage = '';
 
     public bool $showStats = false;
+
+    public array $selected = [];
+    public bool $selectAll = false;
 
     public function setView(string $view): void
     {
@@ -45,6 +52,48 @@ class Index extends Component
     public function goToNextPage(): void
     {
         $this->nextPage();
+    }
+
+    public function updatedSelectAll($value): void
+    {
+        if ($value) {
+            $this->selected = Opportunity::query()
+                ->when($this->search, fn ($q) => $q->where('name', 'ilike', "%{$this->search}%"))
+                ->when($this->stage, fn ($q) => $q->where('pipeline_id', $this->stage))
+                ->pluck('id')
+                ->map(fn ($id) => (string) $id)
+                ->toArray();
+        } else {
+            $this->selected = [];
+        }
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selected = [];
+        $this->selectAll = false;
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new OpportunitiesExport(), 'opportunities-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new OpportunitiesExport($this->selected), 'opportunities-selected-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    protected function getImportClass(): string
+    {
+        return OpportunitiesImport::class;
+    }
+
+    protected function getImportTemplate(): array
+    {
+        return [
+            'headers' => ['name', 'customer', 'stage', 'expected_revenue', 'probability', 'expected_close_date', 'assigned_to', 'description'],
+            'filename' => 'opportunities-template.csv',
+        ];
     }
 
     public function moveToStage(int $opportunityId, int $pipelineId): void

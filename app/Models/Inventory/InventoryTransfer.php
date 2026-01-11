@@ -2,17 +2,19 @@
 
 namespace App\Models\Inventory;
 
+use App\Enums\TransferState;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class InventoryTransfer extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'transfer_number',
@@ -29,6 +31,11 @@ class InventoryTransfer extends Model
         'transfer_date' => 'date',
         'expected_arrival_date' => 'date',
     ];
+
+    public function getStateAttribute(): TransferState
+    {
+        return TransferState::tryFrom($this->status) ?? TransferState::DRAFT;
+    }
 
     public function sourceWarehouse(): BelongsTo
     {
@@ -53,27 +60,13 @@ class InventoryTransfer extends Model
     public static function generateTransferNumber(): string
     {
         $prefix = 'TRF';
-        $date = now()->format('Ymd');
-        $lastTransfer = self::whereDate('created_at', today())->latest()->first();
-        $sequence = $lastTransfer ? (int) substr($lastTransfer->transfer_number, -4) + 1 : 1;
+        $year = now()->year;
         
-        return sprintf('%s-%s-%04d', $prefix, $date, $sequence);
-    }
+        $lastNumber = self::where('transfer_number', 'like', "{$prefix}/{$year}/%")
+            ->pluck('transfer_number')
+            ->map(fn($num) => (int) substr($num, strlen("{$prefix}/{$year}/")))
+            ->max() ?? 0;
 
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'transfer_number', 'source_warehouse_id', 'destination_warehouse_id',
-                'transfer_date', 'expected_arrival_date', 'status', 'notes',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Transfer created',
-                'updated' => 'Transfer updated',
-                'deleted' => 'Transfer deleted',
-                default => "Transfer {$eventName}",
-            });
+        return "{$prefix}/{$year}/" . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
     }
 }

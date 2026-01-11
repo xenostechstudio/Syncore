@@ -7,7 +7,11 @@
 
 @php
     $firstActivity = $activities->first();
-    $isToday = $firstActivity && isset($firstActivity->created_at) && $firstActivity->created_at?->isToday();
+    $createdAtDate = $firstActivity?->created_at ?? null;
+    if (is_string($createdAtDate)) {
+        $createdAtDate = \Carbon\Carbon::parse($createdAtDate);
+    }
+    $isToday = $createdAtDate?->isToday() ?? false;
 @endphp
 
 {{-- Date Separator --}}
@@ -22,25 +26,54 @@
 {{-- Activity Items --}}
 <div class="space-y-4">
     @forelse($activities as $activity)
+        @php
+            // Handle both Spatie Activity Log (causer) and custom ActivityLogService (user_id/user_name)
+            $causer = $activity->causer ?? null;
+            if (!$causer && isset($activity->user_id)) {
+                $causer = (object) [
+                    'id' => $activity->user_id,
+                    'name' => $activity->user_name ?? 'System',
+                ];
+            }
+            
+            // Parse created_at if it's a string
+            $activityCreatedAt = $activity->created_at ?? null;
+            if (is_string($activityCreatedAt)) {
+                $activityCreatedAt = \Carbon\Carbon::parse($activityCreatedAt);
+            }
+            
+            // Parse properties if it's a JSON string
+            $properties = $activity->properties ?? null;
+            if (is_string($properties)) {
+                $properties = collect(json_decode($properties, true) ?? []);
+            } elseif (is_array($properties)) {
+                $properties = collect($properties);
+            } elseif (!$properties instanceof \Illuminate\Support\Collection) {
+                $properties = collect();
+            }
+            
+            // Get action/event
+            $event = $activity->event ?? $activity->action ?? null;
+        @endphp
         <div class="flex items-start gap-3">
             <div class="flex-shrink-0">
-                <x-ui.user-avatar :user="$activity->causer ?? null" size="md" :showPopup="true" />
+                <x-ui.user-avatar :user="$causer" size="md" :showPopup="true" />
             </div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
-                    <x-ui.user-name :user="$activity->causer ?? null" />
-                    <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $activity->created_at?->diffForHumans() ?? '' }}</span>
+                    <x-ui.user-name :user="$causer" />
+                    <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $activityCreatedAt?->diffForHumans() ?? '' }}</span>
                 </div>
                 <div class="text-sm text-zinc-600 dark:text-zinc-400">
                     @if(($activity->type ?? null) === 'note')
                         {{-- Note display --}}
                         {{ $activity->content }} <span class="text-zinc-400 dark:text-zinc-500">(Internal Note)</span>
-                    @elseif(($activity->event ?? null) === 'created')
+                    @elseif($event === 'created')
                         {{ $emptyMessage }}
-                    @elseif(($activity->properties ?? collect())->has('old') && ($activity->event ?? null) === 'updated')
+                    @elseif($properties->has('old') && $event === 'updated')
                         @php
-                            $old = $activity->properties->get('old', []);
-                            $new = $activity->properties->get('attributes', []);
+                            $old = $properties->get('old', []);
+                            $new = $properties->get('new', $properties->get('attributes', []));
                             $changes = collect($new)->filter(fn($val, $key) => isset($old[$key]) && $old[$key] !== $val);
                         @endphp
                         @if($changes->isNotEmpty())

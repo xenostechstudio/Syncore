@@ -7,7 +7,6 @@ use App\Models\Purchase\Supplier;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'Purchase'])]
 #[Title('Supplier')]
@@ -31,43 +30,6 @@ class Form extends Component
     protected function getNotableModel()
     {
         return $this->supplierId ? Supplier::find($this->supplierId) : null;
-    }
-
-    public function getActivitiesAndNotesProperty(): \Illuminate\Support\Collection
-    {
-        if (!$this->supplierId) {
-            return collect();
-        }
-
-        $supplier = Supplier::find($this->supplierId);
-        
-        // Get activity logs
-        $activities = Activity::where('subject_type', Supplier::class)
-            ->where('subject_id', $this->supplierId)
-            ->with('causer')
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'type' => 'activity',
-                    'data' => $activity,
-                    'created_at' => $activity->created_at,
-                ];
-            });
-
-        // Get notes
-        $notes = $supplier->notes()->with('user')->get()->map(function ($note) {
-            return [
-                'type' => 'note',
-                'data' => $note,
-                'created_at' => $note->created_at,
-            ];
-        });
-
-        // Merge and sort by created_at descending
-        return $activities->concat($notes)
-            ->sortByDesc('created_at')
-            ->take(30)
-            ->values();
     }
 
     public function mount(?int $id = null): void

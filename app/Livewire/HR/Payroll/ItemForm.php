@@ -7,11 +7,12 @@ use App\Models\HR\PayrollItem;
 use App\Models\HR\PayrollItemDetail;
 use App\Models\HR\PayrollPeriod;
 use App\Models\HR\SalaryComponent;
+use App\Services\ActivityLogService;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Spatie\Activitylog\Models\Activity;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Payslip Detail')]
@@ -111,17 +112,17 @@ class ItemForm extends Component
             ]);
 
             // Log activity
-            activity()
-                ->performedOn($this->item)
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'action' => 'update_adjustment',
+            ActivityLogService::logAction(
+                $this->item,
+                'update_adjustment',
+                "Updated {$typeLabel}: {$this->adjustmentName} → {$formattedAmount}",
+                [
                     'component_name' => $this->adjustmentName,
                     'type' => $this->adjustmentType,
                     'amount' => $this->adjustmentAmount,
                     'old_amount' => $oldDetail['amount'],
-                ])
-                ->log("Updated {$typeLabel}: {$this->adjustmentName} → {$formattedAmount}");
+                ]
+            );
         } else {
             // Create new
             PayrollItemDetail::create([
@@ -135,16 +136,16 @@ class ItemForm extends Component
             ]);
 
             // Log activity
-            activity()
-                ->performedOn($this->item)
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'action' => 'add_adjustment',
+            ActivityLogService::logAction(
+                $this->item,
+                'add_adjustment',
+                "Added {$typeLabel}: {$this->adjustmentName} → {$formattedAmount}",
+                [
                     'component_name' => $this->adjustmentName,
                     'type' => $this->adjustmentType,
                     'amount' => $this->adjustmentAmount,
-                ])
-                ->log("Added {$typeLabel}: {$this->adjustmentName} → {$formattedAmount}");
+                ]
+            );
         }
 
         $this->item->recalculate();
@@ -165,16 +166,16 @@ class ItemForm extends Component
         $formattedAmount = 'Rp ' . number_format($detail['amount'], 0, ',', '.');
 
         // Log activity before deleting
-        activity()
-            ->performedOn($this->item)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'action' => 'remove_adjustment',
+        ActivityLogService::logAction(
+            $this->item,
+            'remove_adjustment',
+            "Removed {$typeLabel}: {$detail['component_name']} → {$formattedAmount}",
+            [
                 'component_name' => $detail['component_name'],
                 'type' => $detail['type'],
                 'amount' => $detail['amount'],
-            ])
-            ->log("Removed {$typeLabel}: {$detail['component_name']} → {$formattedAmount}");
+            ]
+        );
 
         PayrollItemDetail::where('id', $detail['id'])->delete();
         $this->item->recalculate();
@@ -202,17 +203,17 @@ class ItemForm extends Component
             $formattedOld = 'Rp ' . number_format($oldAmount, 0, ',', '.');
             $formattedNew = 'Rp ' . number_format($newAmount, 0, ',', '.');
 
-            activity()
-                ->performedOn($this->item)
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'action' => 'update_amount',
+            ActivityLogService::logAction(
+                $this->item,
+                'update_amount',
+                "Updated {$typeLabel}: {$detail['component_name']} {$formattedOld} → {$formattedNew}",
+                [
                     'component_name' => $detail['component_name'],
                     'type' => $detail['type'],
                     'old_amount' => $oldAmount,
                     'new_amount' => $newAmount,
-                ])
-                ->log("Updated {$typeLabel}: {$detail['component_name']} {$formattedOld} → {$formattedNew}");
+                ]
+            );
         }
 
         $this->item->recalculate();
@@ -282,16 +283,26 @@ class ItemForm extends Component
 
     public function getActivities()
     {
-        $activities = Activity::where('subject_type', PayrollItem::class)
-            ->where('subject_id', $this->item->id)
-            ->with('causer')
-            ->latest()
+        $modelClass = PayrollItem::class;
+
+        // Get activity logs from custom activity_logs table
+        $activities = DB::table('activity_logs')
+            ->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
+            ->where('activity_logs.model_type', $modelClass)
+            ->where('activity_logs.model_id', $this->item->id)
+            ->select('activity_logs.*', 'users.name as causer_name')
+            ->orderByDesc('activity_logs.created_at')
             ->limit(20)
             ->get()
-            ->map(function ($activity) {
-                $activity->type = 'activity';
-                return $activity;
-            });
+            ->map(fn($activity) => (object) [
+                'id' => $activity->id,
+                'type' => 'activity',
+                'action' => $activity->action,
+                'description' => $activity->description,
+                'properties' => json_decode($activity->properties ?? '{}', true),
+                'causer' => (object) ['name' => $activity->causer_name ?? $activity->user_name ?? 'System'],
+                'created_at' => \Carbon\Carbon::parse($activity->created_at),
+            ]);
 
         if (method_exists($this->item, 'notes')) {
             $notes = $this->item->notes()

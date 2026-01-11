@@ -2,17 +2,19 @@
 
 namespace App\Models\HR;
 
+use App\Enums\EmployeeStatus;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class Employee extends Model
 {
     use LogsActivity, HasNotes;
+
+    protected array $logActions = ['created', 'updated', 'deleted'];
 
     protected $fillable = [
         'user_id',
@@ -55,6 +57,11 @@ class Employee extends Model
         'contract_end_date' => 'date',
         'basic_salary' => 'decimal:2',
     ];
+
+    public function getEmployeeStatusAttribute(): EmployeeStatus
+    {
+        return EmployeeStatus::tryFrom($this->status) ?? EmployeeStatus::ACTIVE;
+    }
 
     public function user(): BelongsTo
     {
@@ -108,38 +115,11 @@ class Employee extends Model
 
     public function getStatusColorAttribute(): string
     {
-        return match ($this->status) {
-            'active' => 'emerald',
-            'inactive' => 'zinc',
-            'terminated' => 'red',
-            'resigned' => 'amber',
-            default => 'zinc',
-        };
+        return $this->employeeStatus->color();
     }
 
     public function hrResponsible(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'hr_responsible_id');
-    }
-
-    /**
-     * Activity log options
-     */
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'name', 'email', 'phone', 'department_id', 'position_id', 'manager_id',
-                'hire_date', 'contract_end_date', 'employment_type', 'status',
-                'basic_salary', 'user_id', 'hr_responsible_id',
-            ])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
-                'created' => 'Employee record created',
-                'updated' => 'Employee record updated',
-                'deleted' => 'Employee record deleted',
-                default => "Employee {$eventName}",
-            });
     }
 }

@@ -2,12 +2,14 @@
 
 namespace App\Livewire\HR\Payroll;
 
+use App\Exports\PayrollExport;
 use App\Models\HR\PayrollPeriod;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Payroll')]
@@ -69,6 +71,15 @@ class Index extends Component
     public function goToNextPage(): void
     {
         $this->nextPage();
+    }
+
+    public function exportSelected()
+    {
+        if (empty($this->selected)) {
+            return Excel::download(new PayrollExport(), 'payroll-' . now()->format('Y-m-d') . '.xlsx');
+        }
+
+        return Excel::download(new PayrollExport($this->selected), 'payroll-selected-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     protected function getPeriodsQuery()

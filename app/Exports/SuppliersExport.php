@@ -11,9 +11,18 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SuppliersExport implements FromCollection, WithHeadings, WithStyles, ShouldAutoSize
 {
+    protected ?array $ids;
+
+    public function __construct(?array $ids = null)
+    {
+        $this->ids = $ids;
+    }
+
     public function collection()
     {
-        return Supplier::orderBy('name')
+        return Supplier::query()
+            ->when($this->ids, fn($q) => $q->whereIn('id', $this->ids))
+            ->orderBy('name')
             ->get()
             ->map(fn ($supplier) => [
                 'name' => $supplier->name,

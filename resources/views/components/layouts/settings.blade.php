@@ -124,17 +124,23 @@
 
                 {{-- Right Side: Company Name, Notification, Profile --}}
                 <div class="flex items-center gap-4 pl-4">
+                    {{-- Global Search Button --}}
+                    <button 
+                        type="button"
+                        x-data
+                        @click="$dispatch('openGlobalSearch')"
+                        class="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                    >
+                        <flux:icon name="magnifying-glass" class="size-4" />
+                        <span class="hidden sm:inline">Search</span>
+                        <kbd class="hidden rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-400 sm:inline-block dark:bg-zinc-700 dark:text-zinc-500">⌘K</kbd>
+                    </button>
+
                     <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                         {{ \App\Models\Settings\CompanyProfile::getCompanyName() }}
                     </span>
 
-                    <button type="button" class="relative rounded-full p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
-                        <flux:icon name="bell" variant="solid" class="size-5" />
-                        <span class="absolute right-1.5 top-1.5 flex h-2 w-2">
-                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                            <span class="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
-                        </span>
-                    </button>
+                    <livewire:components.notification-dropdown />
 
                     <x-ui.profile-dropdown />
                 </div>
@@ -299,6 +305,9 @@
                 </div>
             </main>
         </div>
+
+        {{-- Global Search --}}
+        <livewire:components.global-search />
 
         @fluxScripts
     </body>

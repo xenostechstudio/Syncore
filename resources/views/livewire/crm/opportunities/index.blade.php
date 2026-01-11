@@ -55,11 +55,11 @@
                         <flux:icon name="cog-6-tooth" class="size-5" />
                     </button>
                     <flux:menu class="w-48">
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-down-tray" class="size-4" />
                             <span>Import opportunities</span>
                         </button>
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
                             <span>Export All</span>
                         </button>
@@ -258,8 +258,9 @@
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                             @foreach($opportunities as $opp)
-                                <tr wire:key="opp-{{ $opp->id }}" onclick="window.Livewire.navigate('{{ route('crm.opportunities.edit', $opp->id) }}')" class="cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                                    <td class="py-3 pl-4 pr-4 sm:pl-6 lg:pl-8">
+                                <tr wire:key="opp-{{ $opp->id }}" onclick="window.Livewire.navigate('{{ route('crm.opportunities.edit', $opp->id) }}')" class="group cursor-pointer transition-all duration-150 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                                    <td class="relative py-3 pl-4 pr-4 sm:pl-6 lg:pl-8">
+                                        <div class="absolute inset-y-0 left-0 w-0.5 bg-transparent transition-all duration-150 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700"></div>
                                         <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $opp->name }}</p>
                                         @if($opp->expected_close_date)
                                             <p class="text-xs text-zinc-500 dark:text-zinc-400">Close: {{ $opp->expected_close_date->format('M d, Y') }}</p>
@@ -290,4 +291,13 @@
             @endif
         @endif
     </div>
+
+    {{-- Import Modal --}}
+    <x-ui.import-modal
+        wire:model="showImportModal"
+        title="Import Opportunities"
+        :livewire="true"
+        :result="$this->importResult"
+        :importErrors="$this->importErrors"
+    />
 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sales\Products;
 
+use App\Livewire\Concerns\WithNotes;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Tax;
@@ -14,6 +15,8 @@ use Livewire\Component;
 #[Title('Product')]
 class Form extends Component
 {
+    use WithNotes;
+
     public ?Product $item = null;
     public bool $editing = false;
 
@@ -64,6 +67,14 @@ class Form extends Component
     #[Validate('nullable|string')]
     public ?string $internal_notes = null;
 
+    public ?string $createdAt = null;
+    public ?string $updatedAt = null;
+
+    protected function getNotableModel()
+    {
+        return $this->item;
+    }
+
     public function mount(?int $id = null): void
     {
         if ($id) {
@@ -80,6 +91,8 @@ class Form extends Component
             $this->warehouse_id = $this->item->warehouse_id;
             $this->is_favorite = (bool) ($this->item->is_favorite ?? false);
             $this->sales_tax_id = $this->item->sales_tax_id;
+            $this->createdAt = $this->item->created_at?->format('M d, Y \a\t H:i');
+            $this->updatedAt = $this->item->updated_at?->format('M d, Y \a\t H:i');
         }
     }
 
@@ -108,7 +121,6 @@ class Form extends Component
             $validated['status'] = 'in_stock';
         }
 
-        // Only persist fields that exist on InventoryItem
         $itemData = [
             'name' => $validated['name'],
             'sku' => (isset($validated['sku']) && $validated['sku'] !== '') ? $validated['sku'] : null,
@@ -124,14 +136,16 @@ class Form extends Component
 
         if ($this->editing && $this->item) {
             $this->item->update($itemData);
+            $this->updatedAt = $this->item->updated_at->format('M d, Y \a\t H:i');
             session()->flash('success', 'Product updated successfully.');
         } else {
             $this->item = Product::create($itemData);
             $this->editing = true;
+            $this->createdAt = $this->item->created_at->format('M d, Y \a\t H:i');
+            $this->updatedAt = $this->item->updated_at->format('M d, Y \a\t H:i');
             session()->flash('success', 'Product created successfully.');
+            $this->redirect(route('sales.products.edit', $this->item->id), navigate: true);
         }
-
-        $this->redirect(route('sales.products.edit', $this->item->id), navigate: true);
     }
 
     public function render()
@@ -139,6 +153,7 @@ class Form extends Component
         return view('livewire.sales.products.form', [
             'warehouses' => Warehouse::all(),
             'taxes' => Tax::where('is_active', true)->orderBy('name')->get(),
+            'activities' => $this->activitiesAndNotes,
         ]);
     }
 }

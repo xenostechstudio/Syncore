@@ -893,49 +893,7 @@
                                 </div>
                             @else
                                 {{-- Activity Log Item --}}
-                                @php $activity = $item['data']; @endphp
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0">
-                                        <x-ui.user-avatar :user="$activity->causer" size="md" :showPopup="true" />
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <x-ui.user-name :user="$activity->causer" />
-                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                                {{ $activity->created_at->diffForHumans() }}
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                                            @if($activity->event === 'created')
-                                                Employee record created
-                                            @elseif($activity->properties->has('old') && $activity->event === 'updated')
-                                                @php
-                                                    $old = $activity->properties->get('old', []);
-                                                    $new = $activity->properties->get('attributes', []);
-                                                    $changes = collect($new)->filter(fn($val, $key) => isset($old[$key]) && $old[$key] !== $val);
-                                                @endphp
-                                                @if($changes->isNotEmpty())
-                                                    @foreach($changes as $key => $newVal)
-                                                        @php
-                                                            $oldVal = $old[$key] ?? '-';
-                                                            $label = ucfirst(str_replace('_', ' ', $key));
-                                                        @endphp
-                                                        <span class="block">
-                                                            Updated <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</span>:
-                                                            <span class="text-zinc-400 line-through">{{ is_string($oldVal) ? $oldVal : $oldVal }}</span>
-                                                            <flux:icon name="arrow-right" class="inline size-3 mx-1" />
-                                                            <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ is_string($newVal) ? $newVal : $newVal }}</span>
-                                                        </span>
-                                                    @endforeach
-                                                @else
-                                                    {{ $activity->description }}
-                                                @endif
-                                            @else
-                                                {{ $activity->description }}
-                                            @endif
-                                        </p>
-                                    </div>
-                                </div>
+                                <x-ui.activity-item :activity="$item['data']" emptyMessage="Employee record created" />
                             @endif
                         @empty
                             <div class="flex items-start gap-3">

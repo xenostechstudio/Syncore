@@ -84,7 +84,7 @@ class Index extends Component
         $query = \Spatie\Permission\Models\Role::withCount('permissions');
 
         if ($this->search) {
-            $query->where('name', 'like', '%' . $this->search . '%');
+            $query->where('name', 'ilike', '%' . $this->search . '%');
         }
 
         return $query->orderBy('name')->paginate(10);

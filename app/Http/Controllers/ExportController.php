@@ -12,57 +12,68 @@ use App\Exports\SalesOrdersExport;
 use App\Exports\SuppliersExport;
 use App\Exports\UsersExport;
 use App\Exports\WarehousesExport;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ExportController extends Controller
 {
-    public function salesOrders()
+    public function salesOrders(Request $request)
     {
-        return Excel::download(new SalesOrdersExport, 'sales-orders-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new SalesOrdersExport($ids), 'sales-orders-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function invoices()
+    public function invoices(Request $request)
     {
-        return Excel::download(new InvoicesExport, 'invoices-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new InvoicesExport($ids), 'invoices-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function deliveryOrders()
+    public function deliveryOrders(Request $request)
     {
-        return Excel::download(new DeliveryOrdersExport, 'delivery-orders-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new DeliveryOrdersExport($ids), 'delivery-orders-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function customers()
+    public function customers(Request $request)
     {
-        return Excel::download(new CustomersExport, 'customers-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new CustomersExport($ids), 'customers-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function products()
+    public function products(Request $request)
     {
-        return Excel::download(new ProductsExport, 'products-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new ProductsExport($ids), 'products-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function purchaseOrders()
+    public function purchaseOrders(Request $request)
     {
-        return Excel::download(new PurchaseOrdersExport, 'purchase-orders-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new PurchaseOrdersExport($ids), 'purchase-orders-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function suppliers()
+    public function suppliers(Request $request)
     {
-        return Excel::download(new SuppliersExport, 'suppliers-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new SuppliersExport($ids), 'suppliers-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function warehouses()
+    public function warehouses(Request $request)
     {
-        return Excel::download(new WarehousesExport, 'warehouses-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new WarehousesExport($ids), 'warehouses-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function categories()
+    public function categories(Request $request)
     {
-        return Excel::download(new CategoriesExport, 'categories-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new CategoriesExport($ids), 'categories-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    public function users()
+    public function users(Request $request)
     {
-        return Excel::download(new UsersExport, 'users-' . now()->format('Y-m-d') . '.xlsx');
+        $ids = $request->input('ids') ? explode(',', $request->input('ids')) : null;
+        return Excel::download(new UsersExport($ids), 'users-' . now()->format('Y-m-d') . '.xlsx');
     }
 }
