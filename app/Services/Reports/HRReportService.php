@@ -161,8 +161,14 @@ class HRReportService
             ->selectRaw("COUNT(CASE WHEN status = 'present' THEN 1 END) as present_count")
             ->selectRaw("COUNT(CASE WHEN status = 'absent' THEN 1 END) as absent_count")
             ->selectRaw("COUNT(CASE WHEN status = 'late' THEN 1 END) as late_count")
-            ->selectRaw('AVG(EXTRACT(EPOCH FROM (check_out - check_in))/3600) as avg_hours')
             ->first();
+
+        // Calculate average work hours using PHP instead of database-specific SQL
+        $avgHours = Attendance::whereBetween('date', [$startDate, $endDate])
+            ->whereNotNull('check_in')
+            ->whereNotNull('check_out')
+            ->get()
+            ->avg(fn($record) => Carbon::parse($record->check_in)->diffInMinutes(Carbon::parse($record->check_out)) / 60);
 
         return [
             'total_work_days' => $totalWorkDays,
@@ -172,7 +178,7 @@ class HRReportService
             'present_count' => $attendance->present_count ?? 0,
             'absent_count' => $attendance->absent_count ?? 0,
             'late_count' => $attendance->late_count ?? 0,
-            'avg_work_hours' => round($attendance->avg_hours ?? 0, 2),
+            'avg_work_hours' => round($avgHours ?? 0, 2),
             'attendance_rate' => $expectedAttendance > 0 
                 ? round((($attendance->present_count ?? 0) / $expectedAttendance) * 100, 1) 
                 : 0,
@@ -193,10 +199,11 @@ class HRReportService
             ->whereDate('end_date', '>=', now())
             ->count();
 
+        // Calculate average tenure using PHP/Carbon instead of database-specific SQL
         $avgTenure = Employee::where('status', 'active')
             ->whereNotNull('hire_date')
-            ->selectRaw('AVG(EXTRACT(YEAR FROM AGE(NOW(), hire_date))) as avg_years')
-            ->value('avg_years');
+            ->get()
+            ->avg(fn($employee) => Carbon::parse($employee->hire_date)->diffInYears(now()));
 
         return [
             'total_employees' => $totalEmployees,

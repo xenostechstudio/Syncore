@@ -158,7 +158,7 @@
                 {{-- List View - Single Card --}}
                 <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
                     <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                        @forelse($recentItems as $item)
+                        @forelse($items as $item)
                             <a href="{{ route('inventory.products.edit', $item->id) }}" wire:navigate class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer">
                                 <div class="flex items-center gap-4">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
@@ -209,7 +209,7 @@
             @else
                 {{-- Grid/Card View --}}
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    @forelse($recentItems as $item)
+                    @forelse($items as $item)
                         <a href="{{ route('inventory.products.edit', $item->id) }}" wire:navigate class="block rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 cursor-pointer">
                             {{-- Image/Icon --}}
                             <div class="mb-4 flex h-24 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">

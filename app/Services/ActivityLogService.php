@@ -20,6 +20,11 @@ class ActivityLogService
     protected static array $excludedFields = [
         'password', 'remember_token', 'two_factor_secret', 
         'two_factor_recovery_codes', 'api_token',
+        // Internal/system fields
+        'xendit_invoice_id', 'xendit_invoice_url', 'xendit_status', 'xendit_external_id',
+        'share_token', 'share_token_expires_at',
+        'email_verified_at', 'session_id',
+        'user_id', // Don't log user assignment changes
     ];
 
     /** @var array Sensitive fields to mask in logs */
@@ -89,10 +94,339 @@ class ActivityLogService
     {
         $changes = $model->getChanges();
         
+        // Fields to ignore in logging
+        $ignoredFields = array_merge(
+            ['updated_at', 'created_at', 'deleted_at'],
+            self::$excludedFields
+        );
+        
+        // Filter out ignored fields and empty changes
+        $filteredChanges = [];
+        $filteredOld = [];
+        
+        foreach ($changes as $key => $newValue) {
+            // Skip ignored fields
+            if (in_array($key, $ignoredFields)) {
+                continue;
+            }
+            
+            $oldValue = $oldValues[$key] ?? null;
+            
+            // Skip if both old and new are empty (no meaningful change)
+            if (self::isEmpty($oldValue) && self::isEmpty($newValue)) {
+                continue;
+            }
+            
+            // Skip if values are the same after normalization
+            if (self::normalizeValue($oldValue) === self::normalizeValue($newValue)) {
+                continue;
+            }
+            
+            $filteredChanges[$key] = $newValue;
+            $filteredOld[$key] = $oldValue;
+        }
+        
+        // Don't log if no meaningful changes
+        if (empty($filteredChanges)) {
+            return;
+        }
+        
+        // Generate human-readable description if not provided
+        if (!$description) {
+            $description = self::generateUpdateDescription($model, $filteredOld, $filteredChanges);
+        }
+        
         self::log('updated', $model, $description, [
-            'old' => array_intersect_key($oldValues, $changes),
-            'new' => $changes,
+            'old' => $filteredOld,
+            'new' => $filteredChanges,
         ]);
+    }
+    
+    /**
+     * Check if a value is considered empty.
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    protected static function isEmpty($value): bool
+    {
+        return $value === null || $value === '' || $value === [];
+    }
+    
+    /**
+     * Normalize a value for comparison.
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    protected static function normalizeValue($value)
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (is_numeric($value)) {
+            return (string) $value;
+        }
+        return $value;
+    }
+    
+    /**
+     * Generate a human-readable description for update changes.
+     *
+     * @param Model $model The updated model
+     * @param array $oldValues The original values
+     * @param array $newValues The new values
+     * @return string
+     */
+    protected static function generateUpdateDescription(Model $model, array $oldValues, array $newValues): string
+    {
+        $changes = [];
+        
+        foreach ($newValues as $field => $newValue) {
+            $oldValue = $oldValues[$field] ?? null;
+            
+            // Skip if no meaningful change
+            if (self::isEmpty($oldValue) && self::isEmpty($newValue)) {
+                continue;
+            }
+            
+            $label = self::formatFieldLabel($field);
+            $formattedOld = self::formatFieldValue($field, $oldValue, $model);
+            $formattedNew = self::formatFieldValue($field, $newValue, $model);
+            
+            // Skip if formatted values are the same
+            if ($formattedOld === $formattedNew) {
+                continue;
+            }
+            
+            // If old value is empty, just show "Set X to Y"
+            if (self::isEmpty($oldValue)) {
+                $changes[] = "Set {$label} to {$formattedNew}";
+            } else {
+                $changes[] = "{$label}: {$formattedOld} → {$formattedNew}";
+            }
+        }
+        
+        if (empty($changes)) {
+            $modelType = class_basename($model);
+            $modelName = self::getModelName($model);
+            return "{$modelType} '{$modelName}' was updated";
+        }
+        
+        return 'Updated ' . implode(', ', $changes);
+    }
+    
+    /**
+     * Format a field name into a human-readable label.
+     *
+     * @param string $field
+     * @return string
+     */
+    protected static function formatFieldLabel(string $field): string
+    {
+        // Custom labels for common fields
+        $customLabels = [
+            'customer_id' => 'Customer',
+            'user_id' => 'Assigned User',
+            'supplier_id' => 'Supplier',
+            'warehouse_id' => 'Warehouse',
+            'product_id' => 'Product',
+            'tax_id' => 'Tax',
+            'payment_terms' => 'Payment Terms',
+            'order_date' => 'Order Date',
+            'due_date' => 'Due Date',
+            'expected_delivery_date' => 'Expected Delivery',
+            'delivery_date' => 'Delivery Date',
+            'invoice_date' => 'Invoice Date',
+            'unit_price' => 'Unit Price',
+            'total' => 'Total',
+            'subtotal' => 'Subtotal',
+            'shipping_address' => 'Shipping Address',
+        ];
+        
+        return $customLabels[$field] ?? ucfirst(str_replace('_', ' ', $field));
+    }
+    
+    /**
+     * Format a field value for display.
+     *
+     * @param string $field
+     * @param mixed $value
+     * @param Model|null $model
+     * @return string
+     */
+    protected static function formatFieldValue(string $field, $value, ?Model $model = null): string
+    {
+        if ($value === null || $value === '') {
+            return '-';
+        }
+        
+        // Handle boolean values
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+        
+        // Handle specific field value mappings (enums, codes, etc.)
+        $formattedValue = self::formatEnumValue($field, $value);
+        if ($formattedValue !== null) {
+            return $formattedValue;
+        }
+        
+        // Handle relationship IDs - try to get the related model name
+        if (str_ends_with($field, '_id') && is_numeric($value)) {
+            $relatedName = self::getRelatedModelName($field, $value, $model);
+            if ($relatedName) {
+                return $relatedName;
+            }
+        }
+        
+        // Handle date fields
+        if (str_contains($field, 'date') || str_contains($field, '_at')) {
+            try {
+                return \Carbon\Carbon::parse($value)->format('M d, Y');
+            } catch (\Exception $e) {
+                return (string) $value;
+            }
+        }
+        
+        // Handle money/price fields
+        if (in_array($field, ['total', 'subtotal', 'tax', 'discount', 'unit_price', 'amount', 'price', 'cost'])) {
+            return number_format((float) $value, 2);
+        }
+        
+        // Handle status fields - make them more readable
+        if ($field === 'status') {
+            return ucfirst(str_replace('_', ' ', $value));
+        }
+        
+        // Truncate long text
+        if (is_string($value) && strlen($value) > 50) {
+            return substr($value, 0, 47) . '...';
+        }
+        
+        return (string) $value;
+    }
+    
+    /**
+     * Format enum/code values to human-readable labels.
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return string|null
+     */
+    protected static function formatEnumValue(string $field, $value): ?string
+    {
+        // Payment terms mapping
+        if ($field === 'payment_terms') {
+            $labels = [
+                'immediate' => 'Immediate Payment',
+                'net15' => 'Net 15 Days',
+                'net30' => 'Net 30 Days',
+                'net45' => 'Net 45 Days',
+                'net60' => 'Net 60 Days',
+                'net90' => 'Net 90 Days',
+                'cod' => 'Cash on Delivery',
+                'prepaid' => 'Prepaid',
+            ];
+            return $labels[$value] ?? ucfirst(str_replace('_', ' ', $value));
+        }
+        
+        // Invoice status mapping
+        if ($field === 'status' || $field === 'invoice_status') {
+            $labels = [
+                'draft' => 'Draft',
+                'confirmed' => 'Confirmed',
+                'sent' => 'Sent',
+                'paid' => 'Paid',
+                'partial' => 'Partially Paid',
+                'overdue' => 'Overdue',
+                'cancelled' => 'Cancelled',
+                'sales_order' => 'Sales Order',
+                'quotation' => 'Quotation',
+                'done' => 'Done',
+                'processing' => 'Processing',
+                'delivered' => 'Delivered',
+                'pending' => 'Pending',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected',
+                'in_transit' => 'In Transit',
+                'picked' => 'Picked',
+            ];
+            return $labels[$value] ?? ucfirst(str_replace('_', ' ', $value));
+        }
+        
+        // Leave type mapping
+        if ($field === 'leave_type' || $field === 'type') {
+            $labels = [
+                'annual' => 'Annual Leave',
+                'sick' => 'Sick Leave',
+                'maternity' => 'Maternity Leave',
+                'paternity' => 'Paternity Leave',
+                'unpaid' => 'Unpaid Leave',
+                'emergency' => 'Emergency Leave',
+                'bereavement' => 'Bereavement Leave',
+            ];
+            return $labels[$value] ?? ucfirst(str_replace('_', ' ', $value));
+        }
+        
+        // Priority mapping
+        if ($field === 'priority') {
+            $labels = [
+                'low' => 'Low',
+                'medium' => 'Medium',
+                'high' => 'High',
+                'urgent' => 'Urgent',
+                'critical' => 'Critical',
+            ];
+            return $labels[$value] ?? ucfirst($value);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Try to get the name of a related model from its ID.
+     *
+     * @param string $field
+     * @param int $id
+     * @param Model|null $model
+     * @return string|null
+     */
+    protected static function getRelatedModelName(string $field, int $id, ?Model $model = null): ?string
+    {
+        // Map field names to model classes
+        $relationMap = [
+            'customer_id' => \App\Models\Sales\Customer::class,
+            'supplier_id' => \App\Models\Purchase\Supplier::class,
+            'user_id' => \App\Models\User::class,
+            'warehouse_id' => \App\Models\Inventory\Warehouse::class,
+            'product_id' => \App\Models\Inventory\Product::class,
+            'tax_id' => \App\Models\Sales\Tax::class,
+            'department_id' => \App\Models\HR\Department::class,
+            'employee_id' => \App\Models\HR\Employee::class,
+        ];
+        
+        $modelClass = $relationMap[$field] ?? null;
+        
+        if (!$modelClass || !class_exists($modelClass)) {
+            return null;
+        }
+        
+        try {
+            $related = $modelClass::find($id);
+            if ($related) {
+                // Try common name fields
+                foreach (['name', 'title', 'order_number', 'invoice_number', 'bill_number'] as $nameField) {
+                    if (isset($related->{$nameField})) {
+                        return $related->{$nameField};
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail if we can't get the related model
+        }
+        
+        return null;
     }
 
     /**

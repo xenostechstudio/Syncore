@@ -23,7 +23,7 @@ class Index extends Component
 
     public function render()
     {
-        // Stats
+        // Stats (always show total, not filtered)
         $totalProducts = Product::count();
         $totalWarehouses = Warehouse::count();
         $inStockProducts = Product::where('status', 'in_stock')->count();
@@ -39,10 +39,16 @@ class Index extends Component
         // Last 30 days
         $productsAddedLast30Days = Product::where('created_at', '>=', now()->subDays(30))->count();
         
-        // Recent products
-        $recentProducts = Product::query()
-            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('sku', 'ilike', "%{$this->search}%"))
+        // Recent items for left sidebar (always unfiltered, last 5)
+        $recentItems = Product::query()
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Items for main table (filtered by search)
+        $items = Product::query()
+            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
+                ->orWhere('sku', 'like', "%{$this->search}%"))
             ->latest()
             ->take(10)
             ->get();
@@ -56,7 +62,8 @@ class Index extends Component
             'totalValue' => $totalValue,
             'totalUnits' => $totalUnits,
             'itemsAddedLast30Days' => $productsAddedLast30Days,
-            'recentItems' => $recentProducts,
+            'recentItems' => $recentItems,
+            'items' => $items,
         ]);
     }
 }

@@ -5,7 +5,9 @@ namespace App\Models\Inventory;
 use App\Enums\AdjustmentState;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\HasSoftDeletes;
 use App\Traits\LogsActivity;
+use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,9 +17,11 @@ use App\Models\Inventory\InventoryStock;
 
 class InventoryAdjustment extends Model
 {
-    use LogsActivity, HasNotes;
+    use LogsActivity, HasNotes, HasSoftDeletes, Searchable;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
+    
+    protected array $searchable = ['adjustment_number', 'reason', 'notes'];
 
     protected $fillable = [
         'adjustment_number',

@@ -11,21 +11,29 @@ class InvoiceReportService
 {
     public function getRevenueByPeriod(Carbon $startDate, Carbon $endDate, string $groupBy = 'month'): array
     {
-        $dbFormat = match ($groupBy) {
-            'day' => "TO_CHAR(invoice_date, 'YYYY-MM-DD')",
-            'week' => "TO_CHAR(invoice_date, 'IYYY-IW')",
-            'month' => "TO_CHAR(invoice_date, 'YYYY-MM')",
-            'year' => "TO_CHAR(invoice_date, 'YYYY')",
-            default => "TO_CHAR(invoice_date, 'YYYY-MM')",
-        };
-
-        return Invoice::query()
-            ->selectRaw("{$dbFormat} as period, COUNT(*) as invoice_count, SUM(total) as total_revenue, SUM(paid_amount) as total_collected")
+        // Use database-agnostic approach: fetch data and group in PHP
+        $invoices = Invoice::query()
+            ->select('invoice_date', 'total', 'paid_amount')
             ->whereBetween('invoice_date', [$startDate, $endDate])
-            ->groupByRaw($dbFormat)
-            ->orderBy('period')
-            ->get()
-            ->toArray();
+            ->get();
+
+        $grouped = $invoices->groupBy(function ($invoice) use ($groupBy) {
+            $date = Carbon::parse($invoice->invoice_date);
+            return match ($groupBy) {
+                'day' => $date->format('Y-m-d'),
+                'week' => $date->format('o-W'),
+                'month' => $date->format('Y-m'),
+                'year' => $date->format('Y'),
+                default => $date->format('Y-m'),
+            };
+        });
+
+        return $grouped->map(fn($items, $period) => [
+            'period' => $period,
+            'invoice_count' => $items->count(),
+            'total_revenue' => $items->sum('total'),
+            'total_collected' => $items->sum('paid_amount'),
+        ])->sortKeys()->values()->toArray();
     }
 
     public function getAgingReport(): array

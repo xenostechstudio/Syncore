@@ -7,15 +7,18 @@ use App\Models\Sales\SalesOrder;
 use App\Models\User;
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Opportunity extends Model
 {
-    use LogsActivity, HasNotes;
+    use LogsActivity, HasNotes, Searchable;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
+    
+    protected array $searchable = ['name', 'description'];
 
     protected $fillable = [
         'name',

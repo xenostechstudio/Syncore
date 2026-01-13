@@ -21,22 +21,29 @@ class PurchaseReportService
      */
     public function getPurchasesByPeriod(Carbon $startDate, Carbon $endDate, string $groupBy = 'month'): array
     {
-        $dbFormat = match ($groupBy) {
-            'day' => "TO_CHAR(order_date, 'YYYY-MM-DD')",
-            'week' => "TO_CHAR(order_date, 'IYYY-IW')",
-            'month' => "TO_CHAR(order_date, 'YYYY-MM')",
-            'year' => "TO_CHAR(order_date, 'YYYY')",
-            default => "TO_CHAR(order_date, 'YYYY-MM')",
-        };
-
-        return PurchaseRfq::query()
-            ->selectRaw("{$dbFormat} as period, COUNT(*) as order_count, SUM(total) as total_amount")
+        // Use database-agnostic approach: fetch data and group in PHP
+        $orders = PurchaseRfq::query()
+            ->select('order_date', 'total')
             ->whereBetween('order_date', [$startDate, $endDate])
             ->whereIn('status', ['purchase_order', 'received', 'billed'])
-            ->groupByRaw($dbFormat)
-            ->orderBy('period')
-            ->get()
-            ->toArray();
+            ->get();
+
+        $grouped = $orders->groupBy(function ($order) use ($groupBy) {
+            $date = Carbon::parse($order->order_date);
+            return match ($groupBy) {
+                'day' => $date->format('Y-m-d'),
+                'week' => $date->format('o-W'),
+                'month' => $date->format('Y-m'),
+                'year' => $date->format('Y'),
+                default => $date->format('Y-m'),
+            };
+        });
+
+        return $grouped->map(fn($items, $period) => [
+            'period' => $period,
+            'order_count' => $items->count(),
+            'total_amount' => $items->sum('total'),
+        ])->sortKeys()->values()->toArray();
     }
 
     /**

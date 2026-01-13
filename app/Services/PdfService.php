@@ -9,6 +9,7 @@ use App\Models\Inventory\InventoryTransfer;
 use App\Models\Invoicing\Invoice;
 use App\Models\Purchase\PurchaseRfq;
 use App\Models\Sales\SalesOrder;
+use App\Models\Settings\InvoiceSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 
@@ -24,6 +25,17 @@ use Illuminate\Http\Response;
 class PdfService
 {
     /**
+     * Sanitize filename by replacing invalid characters.
+     *
+     * @param string $filename The filename to sanitize
+     * @return string Sanitized filename
+     */
+    protected static function sanitizeFilename(string $filename): string
+    {
+        return str_replace(['/', '\\'], '-', $filename);
+    }
+
+    /**
      * Generate and download an invoice PDF.
      *
      * @param Invoice $invoice The invoice to generate PDF for
@@ -32,13 +44,16 @@ class PdfService
     public static function generateInvoice(Invoice $invoice): Response
     {
         $invoice->load(['customer', 'items.product', 'payments']);
+        $settings = InvoiceSetting::instance();
 
         $pdf = Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
             'company' => self::getCompanyInfo(),
+            'settings' => $settings,
         ]);
 
-        return $pdf->download("Invoice-{$invoice->invoice_number}.pdf");
+        $filename = self::sanitizeFilename("Invoice-{$invoice->invoice_number}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -57,7 +72,8 @@ class PdfService
         ]);
 
         $docType = in_array($order->status, ['draft', 'confirmed']) ? 'Quotation' : 'SalesOrder';
-        return $pdf->download("{$docType}-{$order->order_number}.pdf");
+        $filename = self::sanitizeFilename("{$docType}-{$order->order_number}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -76,7 +92,8 @@ class PdfService
         ]);
 
         $docType = $order->status === 'purchase_order' ? 'PO' : 'RFQ';
-        return $pdf->download("{$docType}-{$order->reference}.pdf");
+        $filename = self::sanitizeFilename("{$docType}-{$order->reference}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -94,7 +111,8 @@ class PdfService
             'company' => self::getCompanyInfo(),
         ]);
 
-        return $pdf->download("DeliveryNote-{$delivery->delivery_number}.pdf");
+        $filename = self::sanitizeFilename("DeliveryNote-{$delivery->delivery_number}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -130,7 +148,8 @@ class PdfService
             'company' => self::getCompanyInfo(),
         ]);
 
-        return $pdf->download("Transfer-{$transfer->transfer_number}.pdf");
+        $filename = self::sanitizeFilename("Transfer-{$transfer->transfer_number}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -148,7 +167,8 @@ class PdfService
             'company' => self::getCompanyInfo(),
         ]);
 
-        return $pdf->download("Adjustment-{$adjustment->reference}.pdf");
+        $filename = self::sanitizeFilename("Adjustment-{$adjustment->reference}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -166,7 +186,8 @@ class PdfService
             'company' => self::getCompanyInfo(),
         ]);
 
-        return $pdf->download("RFQ-{$rfq->reference}.pdf");
+        $filename = self::sanitizeFilename("RFQ-{$rfq->reference}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -178,13 +199,16 @@ class PdfService
     public static function streamInvoice(Invoice $invoice): Response
     {
         $invoice->load(['customer', 'items.product', 'payments']);
+        $settings = InvoiceSetting::instance();
 
         $pdf = Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
             'company' => self::getCompanyInfo(),
+            'settings' => $settings,
         ]);
 
-        return $pdf->stream("Invoice-{$invoice->invoice_number}.pdf");
+        $filename = self::sanitizeFilename("Invoice-{$invoice->invoice_number}.pdf");
+        return $pdf->stream($filename);
     }
 
     /**
@@ -202,7 +226,8 @@ class PdfService
             'company' => self::getCompanyInfo(),
         ]);
 
-        return $pdf->stream("Order-{$order->order_number}.pdf");
+        $filename = self::sanitizeFilename("Order-{$order->order_number}.pdf");
+        return $pdf->stream($filename);
     }
 
     /**

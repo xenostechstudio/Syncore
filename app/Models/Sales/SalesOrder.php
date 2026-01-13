@@ -7,7 +7,11 @@ use App\Models\Delivery\DeliveryOrder;
 use App\Models\Invoicing\Invoice;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\HasSoftDeletes;
 use App\Traits\LogsActivity;
+use App\Traits\Searchable;
+use Database\Factories\Sales\SalesOrderFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,9 +20,12 @@ use Illuminate\Support\Str;
 
 class SalesOrder extends Model
 {
-    use LogsActivity, HasNotes;
+    /** @use HasFactory<SalesOrderFactory> */
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable;
     
     protected array $logActions = ['created', 'updated', 'deleted'];
+    
+    protected array $searchable = ['order_number', 'shipping_address', 'notes'];
     protected $fillable = [
         'order_number',
         'customer_id',

@@ -468,7 +468,6 @@
                                 <thead>
                                     <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
                                         <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Product</th>
-                                        <th x-show="isColumnVisible('description')" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Description</th>
                                         <th class="w-24 px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Qty</th>
                                         <th class="w-32 px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Unit Price</th>
                                         <th x-show="isColumnVisible('tax')" class="w-28 px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Tax</th>
@@ -512,10 +511,12 @@
                                         @foreach($invoice->items as $item)
                                             <tr class="group transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                                                 <td class="px-4 py-3">
-                                                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $item->product->name ?? '-' }}</span>
-                                                </td>
-                                                <td x-show="isColumnVisible('description')" class="px-4 py-3">
-                                                    <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $item->description ?? '-' }}</span>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $item->product->name ?? '-' }}</p>
+                                                        @if($item->description)
+                                                            <p x-show="isColumnVisible('description')" class="text-xs text-zinc-400 dark:text-zinc-500">{{ $item->description }}</p>
+                                                        @endif
+                                                    </div>
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
                                                     <span class="text-sm text-zinc-900 dark:text-zinc-100">{{ $item->quantity }}</span>
@@ -526,17 +527,17 @@
                                                 <td x-show="isColumnVisible('tax')" class="px-4 py-3 text-left">
                                                     @php
                                                         $itemTax = $item->tax;
-                                                        $taxLabel = '-';
-                                                        if ($itemTax) {
-                                                            $rateLabel = $itemTax->type === 'percentage'
-                                                                ? number_format((float) $itemTax->rate, 2) . '%'
-                                                                : 'Rp ' . number_format((float) $itemTax->rate, 0, ',', '.');
-                                                            $taxLabel = ($itemTax->name ?? 'Tax') . ' (' . $rateLabel . ')';
-                                                        }
                                                     @endphp
-                                                    <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                                        {{ $taxLabel }}
-                                                    </span>
+                                                    @if($itemTax)
+                                                        <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
+                                                            {{ $itemTax->code ?? $itemTax->name }}
+                                                            @if($itemTax->type === 'percentage')
+                                                                {{ ' ' . number_format((float) $itemTax->rate, 0) . '%' }}
+                                                            @endif
+                                                        </span>
+                                                    @else
+                                                        <span class="text-xs text-zinc-400">No Tax</span>
+                                                    @endif
                                                 </td>
                                                 <td x-show="isColumnVisible('discount')" class="px-4 py-3 text-right">
                                                     <span class="text-sm text-zinc-600 dark:text-zinc-400">Rp {{ number_format($item->discount ?? 0, 0, ',', '.') }}</span>
@@ -549,7 +550,7 @@
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="8" class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                                            <td colspan="7" class="px-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
                                                 No invoice lines yet.
                                             </td>
                                         </tr>
@@ -604,45 +605,55 @@
                     {{-- Tab Content: Other Info --}}
                     <div x-show="activeTab === 'other'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                         <div class="p-6">
-                            <div class="grid gap-8 lg:grid-cols-2">
+                            <div class="grid gap-x-16 gap-y-6 lg:grid-cols-2">
                                 {{-- Invoice Details Section --}}
-                                <div class="space-y-4">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Invoice Details</h3>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Reference</label>
-                                            <input type="text" placeholder="Invoice reference..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                <div class="pb-2 pr-4">
+                                    <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Invoice Details</h3>
+                                    <div class="space-y-3">
+                                        {{-- Reference --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Reference</label>
+                                            <div class="flex-1">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Invoice reference..."
+                                                    class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                                />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Payment Method</label>
-                                            <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                                <option value="">Select payment method...</option>
-                                                <option value="bank_transfer">Bank Transfer</option>
-                                                <option value="cash">Cash</option>
-                                                <option value="credit_card">Credit Card</option>
-                                                <option value="check">Check</option>
-                                            </select>
+
+                                        {{-- Payment Method --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Method</label>
+                                            <div class="relative flex-1">
+                                                <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
+                                                    <option value="">Select payment method...</option>
+                                                    <option value="bank_transfer">Bank Transfer</option>
+                                                    <option value="cash">Cash</option>
+                                                    <option value="credit_card">Credit Card</option>
+                                                    <option value="check">Check</option>
+                                                </select>
+                                                <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {{-- Accounting Section --}}
-                                <div class="space-y-4">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Accounting</h3>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Journal</label>
-                                            <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                                <option value="">Select journal...</option>
-                                                <option value="sales">Sales Journal</option>
-                                                <option value="cash">Cash Journal</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Fiscal Position</label>
-                                            <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                                <option value="">Select fiscal position...</option>
-                                            </select>
+                                <div class="pb-2 pr-4">
+                                    <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Accounting</h3>
+                                    <div class="space-y-3">
+                                        {{-- Journal --}}
+                                        <div class="flex items-center gap-3">
+                                            <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Journal</label>
+                                            <div class="relative flex-1">
+                                                <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
+                                                    <option value="">Select journal...</option>
+                                                    <option value="sales">Sales Journal</option>
+                                                    <option value="cash">Cash Journal</option>
+                                                </select>
+                                                <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -706,30 +717,11 @@
                     </div>
 
                     {{-- Activity Items --}}
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         @forelse($activities as $item)
                             @if($item['type'] === 'note')
-                                {{-- Note Item --}}
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0">
-                                        <x-ui.user-avatar :user="$item['data']->user" size="md" :showPopup="true" />
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <x-ui.user-name :user="$item['data']->user" />
-                                            <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                                {{ $item['created_at']->diffForHumans() }}
-                                            </span>
-                                        </div>
-                                        <div class="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-zinc-700 dark:bg-amber-900/20 dark:text-zinc-300">
-                                            <div class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mb-1">
-                                                <flux:icon name="pencil-square" class="size-3" />
-                                                <span>Internal Note</span>
-                                            </div>
-                                            {{ $item['data']->content }}
-                                        </div>
-                                    </div>
-                                </div>
+                                {{-- Note Item - Compact --}}
+                                <x-ui.note-item :note="$item['data']" />
                             @else
                                 {{-- Activity Log Item --}}
                                 <x-ui.activity-item :activity="$item['data']" emptyMessage="Invoice created" />

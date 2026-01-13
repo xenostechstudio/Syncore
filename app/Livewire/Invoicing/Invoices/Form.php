@@ -105,6 +105,7 @@ class Form extends Component
         $data = [
             'customer_id' => $this->customer_id,
             'sales_order_id' => $this->sales_order_id,
+            'user_id' => auth()->id(),
             'invoice_date' => $this->invoice_date,
             'due_date' => $this->due_date ?: null,
             'status' => $this->status,
@@ -345,6 +346,7 @@ class Form extends Component
             $newInvoice = Invoice::create([
                 'customer_id' => $invoice->customer_id,
                 'sales_order_id' => null, // Don't link to same sales order
+                'user_id' => auth()->id(),
                 'invoice_date' => now(),
                 'due_date' => now()->addDays(30),
                 'status' => 'draft',

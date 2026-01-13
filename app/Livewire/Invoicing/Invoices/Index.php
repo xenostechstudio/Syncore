@@ -7,6 +7,7 @@ use App\Imports\InvoicesImport;
 use App\Livewire\Concerns\WithImport;
 use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Invoicing\Invoice;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -25,12 +26,21 @@ class Index extends Component
     
     #[Url]
     public string $status = '';
+
+    #[Url]
+    public string $sort = 'latest';
+
+    #[Url]
+    public string $groupBy = '';
     
     #[Url]
     public string $view = 'list';
 
     #[Url]
-    public bool $showStats = true;
+    public bool $myInvoice = true;
+
+    #[Url]
+    public bool $showStats = false;
     
     public array $selected = [];
     public bool $selectAll = false;
@@ -42,6 +52,7 @@ class Index extends Component
     public array $visibleColumns = [
         'invoice_number' => true,
         'customer' => true,
+        'salesperson' => true,
         'invoice_date' => true,
         'due_date' => true,
         'total' => true,
@@ -55,7 +66,7 @@ class Index extends Component
 
     public function setView(string $view): void
     {
-        if (! in_array($view, ['list', 'grid'], true)) {
+        if (! in_array($view, ['list', 'grid', 'kanban'], true)) {
             return;
         }
 
@@ -83,7 +94,8 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status']);
+        $this->reset(['search', 'status', 'sort', 'groupBy']);
+        $this->myInvoice = true;
         $this->resetPage();
     }
 
@@ -229,18 +241,26 @@ class Index extends Component
     private function getInvoicesQuery()
     {
         return Invoice::query()
-            ->with(['customer', 'salesOrder'])
+            ->with(['customer', 'salesOrder', 'user'])
+            ->when($this->myInvoice, fn($q) => $q->where('user_id', Auth::id()))
             ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
-                ->where('invoice_number', 'ilike', "%{$this->search}%")
-                ->orWhereHas('customer', fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
+                ->where('invoice_number', 'like', "%{$this->search}%")
+                ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%"))
             ))
             ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->latest();
+            ->when($this->sort === 'latest', fn($q) => $q->latest())
+            ->when($this->sort === 'oldest', fn($q) => $q->oldest())
+            ->when($this->sort === 'total_high', fn($q) => $q->orderByDesc('total'))
+            ->when($this->sort === 'total_low', fn($q) => $q->orderBy('total'))
+            ->when($this->sort === 'due_date', fn($q) => $q->orderBy('due_date'));
     }
 
     private function getStatistics(): array
     {
-        $stats = Invoice::query()
+        $baseQuery = Invoice::query()
+            ->when($this->myInvoice, fn($q) => $q->where('user_id', Auth::id()));
+
+        $stats = (clone $baseQuery)
             ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
             ->groupBy('status')
             ->get()

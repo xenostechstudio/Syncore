@@ -15,8 +15,8 @@ class ProductApiController extends BaseApiController
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                    ->orWhere('sku', 'ilike', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
@@ -40,7 +40,7 @@ class ProductApiController extends BaseApiController
 
     public function show(int $id): JsonResponse
     {
-        $product = Product::with(['category', 'stocks.warehouse'])->find($id);
+        $product = Product::with(['category', 'warehouse'])->find($id);
 
         if (!$product) {
             return $this->notFound('Product not found');
@@ -59,9 +59,11 @@ class ProductApiController extends BaseApiController
             'cost_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
             'quantity' => 'nullable|integer|min:0',
-            'unit' => 'nullable|string|max:20',
             'status' => 'nullable|in:active,inactive',
         ]);
+
+        // Set default values
+        $validated['customer_lead_time'] = $validated['customer_lead_time'] ?? 1;
 
         $product = Product::create($validated);
 
@@ -84,7 +86,6 @@ class ProductApiController extends BaseApiController
             'cost_price' => 'sometimes|numeric|min:0',
             'selling_price' => 'sometimes|numeric|min:0',
             'quantity' => 'nullable|integer|min:0',
-            'unit' => 'nullable|string|max:20',
             'status' => 'nullable|in:active,inactive',
         ]);
 
@@ -95,7 +96,7 @@ class ProductApiController extends BaseApiController
 
     public function stock(int $id): JsonResponse
     {
-        $product = Product::with('stocks.warehouse')->find($id);
+        $product = Product::with('warehouse')->find($id);
 
         if (!$product) {
             return $this->notFound('Product not found');
@@ -104,11 +105,10 @@ class ProductApiController extends BaseApiController
         return $this->success([
             'product_id' => $product->id,
             'total_quantity' => $product->quantity,
-            'stocks' => $product->stocks->map(fn($s) => [
-                'warehouse_id' => $s->warehouse_id,
-                'warehouse_name' => $s->warehouse?->name,
-                'quantity' => $s->quantity,
-            ]),
+            'warehouse' => $product->warehouse ? [
+                'id' => $product->warehouse->id,
+                'name' => $product->warehouse->name,
+            ] : null,
         ]);
     }
 }

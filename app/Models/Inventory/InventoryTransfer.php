@@ -5,16 +5,20 @@ namespace App\Models\Inventory;
 use App\Enums\TransferState;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\HasSoftDeletes;
 use App\Traits\LogsActivity;
+use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InventoryTransfer extends Model
 {
-    use LogsActivity, HasNotes;
+    use LogsActivity, HasNotes, HasSoftDeletes, Searchable;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
+    
+    protected array $searchable = ['transfer_number', 'notes'];
 
     protected $fillable = [
         'transfer_number',

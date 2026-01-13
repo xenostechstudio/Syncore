@@ -25,8 +25,11 @@ Route::post('/webhooks/xendit/invoice', XenditWebhookController::class)->name('w
 // Health Check (no auth required)
 Route::get('/health', HealthController::class);
 
+// Determine API auth middleware (use sanctum if available, otherwise web)
+$apiAuthMiddleware = config('auth.guards.sanctum') ? 'auth:sanctum' : 'auth:web';
+
 // API v1 Routes (requires authentication)
-Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('v1')->middleware([$apiAuthMiddleware])->group(function () {
     
     // Health Check (detailed, requires auth)
     Route::get('/health/detailed', [HealthController::class, 'detailed']);

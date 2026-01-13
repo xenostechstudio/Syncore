@@ -6,6 +6,7 @@ use App\Models\Sales\Customer;
 use App\Models\User;
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,9 +14,11 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Lead extends Model
 {
-    use LogsActivity, HasNotes;
+    use LogsActivity, HasNotes, Searchable;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
+    
+    protected array $searchable = ['name', 'email', 'phone', 'company_name'];
 
     protected $fillable = [
         'name',

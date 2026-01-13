@@ -1193,225 +1193,78 @@
                 {{-- Tab Content: Other Info --}}
                 <div x-show="activeTab === 'other'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                     <div class="p-6">
-                        <div class="grid gap-8 lg:grid-cols-2">
+                        <div class="grid gap-x-16 gap-y-6 lg:grid-cols-2">
                             {{-- Sales Section --}}
-                            <div class="space-y-4">
-                                <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sales</h3>
-                                <div class="space-y-4">
-                                    {{-- Salesperson (Searchable) --}}
-                                    <div x-data="{ 
-                                        open: false, 
-                                        search: '', 
-                                        selected: '{{ auth()->user()->name ?? '' }}',
-                                        users: [
-                                            { id: {{ auth()->id() ?? 1 }}, name: '{{ auth()->user()->name ?? 'Current User' }}' }
-                                        ],
-                                        get filtered() {
-                                            return this.users.filter(u => u.name.toLowerCase().includes(this.search.toLowerCase()));
-                                        }
-                                    }">
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Salesperson</label>
-                                        <div class="relative">
-                                            <button 
-                                                type="button"
-                                                @click="open = !open"
-                                                class="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-left text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                            >
-                                                <span x-text="selected || 'Select salesperson...'"></span>
-                                                <flux:icon name="chevron-down" class="size-4 text-zinc-400" />
-                                            </button>
-                                            <div x-show="open" @click.outside="open = false" x-transition class="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                                                <div class="border-b border-zinc-100 p-2 dark:border-zinc-800">
-                                                    <input type="text" x-model="search" placeholder="Search..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                                </div>
-                                                <div class="max-h-40 overflow-auto py-1">
-                                                    <template x-for="user in filtered" :key="user.id">
-                                                        <button type="button" @click="selected = user.name; open = false" class="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800" x-text="user.name"></button>
-                                                    </template>
-                                                </div>
-                                            </div>
+                            <div class="pb-2 pr-4">
+                                <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sales</h3>
+                                <div class="space-y-3">
+                                    {{-- Salesperson --}}
+                                    <div class="flex items-center gap-3">
+                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Salesperson</label>
+                                        <div class="relative flex-1">
+                                            <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
+                                                <option value="{{ auth()->id() }}">{{ auth()->user()->name ?? 'Current User' }}</option>
+                                            </select>
+                                            <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
                                         </div>
                                     </div>
 
-                                    {{-- Sales Team (Searchable) --}}
-                                    <div x-data="{ 
-                                        open: false, 
-                                        search: '', 
-                                        selected: '',
-                                        teams: [
-                                            { id: 1, name: 'Direct Sales' },
-                                            { id: 2, name: 'Online Sales' },
-                                            { id: 3, name: 'Retail' },
-                                            { id: 4, name: 'Enterprise' },
-                                            { id: 5, name: 'Partners' }
-                                        ],
-                                        get filtered() {
-                                            return this.teams.filter(t => t.name.toLowerCase().includes(this.search.toLowerCase()));
-                                        }
-                                    }">
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Sales Team</label>
-                                        <div class="relative">
-                                            <button 
-                                                type="button"
-                                                @click="open = !open"
-                                                class="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-left text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                            >
-                                                <span x-text="selected || 'Select sales team...'"></span>
-                                                <flux:icon name="chevron-down" class="size-4 text-zinc-400" />
-                                            </button>
-                                            <div x-show="open" @click.outside="open = false" x-transition class="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                                                <div class="border-b border-zinc-100 p-2 dark:border-zinc-800">
-                                                    <input type="text" x-model="search" placeholder="Search..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                                </div>
-                                                <div class="max-h-40 overflow-auto py-1">
-                                                    <template x-for="team in filtered" :key="team.id">
-                                                        <button type="button" @click="selected = team.name; open = false" class="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800" x-text="team.name"></button>
-                                                    </template>
-                                                </div>
-                                            </div>
+                                    {{-- Customer Reference --}}
+                                    <div class="flex items-center gap-3">
+                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Customer Ref</label>
+                                        <div class="flex-1">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Customer PO number..."
+                                                class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                            />
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Customer Reference</label>
-                                        <input type="text" placeholder="Customer PO number..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Tags</label>
-                                        <input type="text" placeholder="Add tags..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Invoicing Section --}}
-                            <div class="space-y-4">
-                                <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Invoicing</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Fiscal Position</label>
-                                        <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                            <option value="">Automatic</option>
-                                            <option value="1">Domestic</option>
-                                            <option value="2">Export</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Payment Terms</label>
-                                        <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                            <option value="">Immediate Payment</option>
-                                            <option value="1">15 Days</option>
-                                            <option value="2">30 Days</option>
-                                            <option value="3">End of Month</option>
-                                        </select>
+                                    {{-- Tags --}}
+                                    <div class="flex items-center gap-3">
+                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Tags</label>
+                                        <div class="flex-1">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Add tags..."
+                                                class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             {{-- Delivery Section --}}
-                            <div class="space-y-4">
-                                <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Delivery</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Shipping Policy</label>
-                                        <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                            <option value="1">As soon as possible</option>
-                                            <option value="2">When all products are ready</option>
-                                        </select>
-                                    </div>
-
-                                    {{-- Delivery Method (Searchable) --}}
-                                    <div x-data="{ 
-                                        open: false, 
-                                        search: '', 
-                                        selected: '',
-                                        methods: [
-                                            { id: 1, name: 'Free Delivery' },
-                                            { id: 2, name: 'Standard Shipping' },
-                                            { id: 3, name: 'Express Shipping' },
-                                            { id: 4, name: 'Same Day Delivery' },
-                                            { id: 5, name: 'Pick Up' }
-                                        ],
-                                        get filtered() {
-                                            return this.methods.filter(m => m.name.toLowerCase().includes(this.search.toLowerCase()));
-                                        }
-                                    }">
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Delivery Method</label>
-                                        <div class="relative">
-                                            <button 
-                                                type="button"
-                                                @click="open = !open"
-                                                class="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-left text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                            >
-                                                <span x-text="selected || 'Select delivery method...'"></span>
-                                                <flux:icon name="chevron-down" class="size-4 text-zinc-400" />
-                                            </button>
-                                            <div x-show="open" @click.outside="open = false" x-transition class="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                                                <div class="border-b border-zinc-100 p-2 dark:border-zinc-800">
-                                                    <input type="text" x-model="search" placeholder="Search..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                                </div>
-                                                <div class="max-h-40 overflow-auto py-1">
-                                                    <template x-for="method in filtered" :key="method.id">
-                                                        <button type="button" @click="selected = method.name; open = false" class="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800" x-text="method.name"></button>
-                                                    </template>
-                                                </div>
-                                            </div>
+                            <div class="pb-2 pr-4">
+                                <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Delivery</h3>
+                                <div class="space-y-3">
+                                    {{-- Shipping Policy --}}
+                                    <div class="flex items-center gap-3">
+                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Shipping Policy</label>
+                                        <div class="relative flex-1">
+                                            <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
+                                                <option value="1">As soon as possible</option>
+                                                <option value="2">When all products are ready</option>
+                                            </select>
+                                            <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
                                         </div>
                                     </div>
 
-                                    {{-- Incoterm (Searchable) --}}
-                                    <div x-data="{ 
-                                        open: false, 
-                                        search: '', 
-                                        selected: '',
-                                        incoterms: [
-                                            { id: 1, name: 'EXW - Ex Works' },
-                                            { id: 2, name: 'FCA - Free Carrier' },
-                                            { id: 3, name: 'CPT - Carriage Paid To' },
-                                            { id: 4, name: 'CIP - Carriage and Insurance Paid To' },
-                                            { id: 5, name: 'DAP - Delivered at Place' },
-                                            { id: 6, name: 'DPU - Delivered at Place Unloaded' },
-                                            { id: 7, name: 'DDP - Delivered Duty Paid' },
-                                            { id: 8, name: 'FAS - Free Alongside Ship' },
-                                            { id: 9, name: 'FOB - Free on Board' },
-                                            { id: 10, name: 'CFR - Cost and Freight' },
-                                            { id: 11, name: 'CIF - Cost, Insurance & Freight' }
-                                        ],
-                                        get filtered() {
-                                            return this.incoterms.filter(i => i.name.toLowerCase().includes(this.search.toLowerCase()));
-                                        }
-                                    }">
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Incoterm</label>
-                                        <div class="relative">
-                                            <button 
-                                                type="button"
-                                                @click="open = !open"
-                                                class="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-left text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                            >
-                                                <span x-text="selected || 'Select incoterm...'"></span>
-                                                <flux:icon name="chevron-down" class="size-4 text-zinc-400" />
-                                            </button>
-                                            <div x-show="open" @click.outside="open = false" x-transition class="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                                                <div class="border-b border-zinc-100 p-2 dark:border-zinc-800">
-                                                    <input type="text" x-model="search" placeholder="Search..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                                </div>
-                                                <div class="max-h-40 overflow-auto py-1">
-                                                    <template x-for="incoterm in filtered" :key="incoterm.id">
-                                                        <button type="button" @click="selected = incoterm.name; open = false" class="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800" x-text="incoterm.name"></button>
-                                                    </template>
-                                                </div>
-                                            </div>
+                                    {{-- Delivery Method --}}
+                                    <div class="flex items-center gap-3">
+                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Delivery Method</label>
+                                        <div class="relative flex-1">
+                                            <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
+                                                <option value="">Select delivery method...</option>
+                                                <option value="1">Free Delivery</option>
+                                                <option value="2">Standard Shipping</option>
+                                                <option value="3">Express Shipping</option>
+                                                <option value="4">Same Day Delivery</option>
+                                                <option value="5">Pick Up</option>
+                                            </select>
+                                            <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Tracking Section --}}
-                            <div class="space-y-4">
-                                <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Tracking</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="mb-1.5 block text-sm text-zinc-600 dark:text-zinc-400">Source Document</label>
-                                        <input type="text" placeholder="Reference of the source document..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                                     </div>
                                 </div>
                             </div>
@@ -1442,30 +1295,11 @@
                 </div>
 
                 {{-- Activity Items --}}
-                <div class="space-y-4">
+                <div class="space-y-3">
                     @forelse($activities as $item)
                         @if($item['type'] === 'note')
-                            {{-- Note Item --}}
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0">
-                                    <x-ui.user-avatar :user="$item['data']->user" size="md" :showPopup="true" />
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <x-ui.user-name :user="$item['data']->user" />
-                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                            {{ $item['created_at']->diffForHumans() }}
-                                        </span>
-                                    </div>
-                                    <div class="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-zinc-700 dark:bg-amber-900/20 dark:text-zinc-300">
-                                        <div class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mb-1">
-                                            <flux:icon name="pencil-square" class="size-3" />
-                                            <span>Internal Note</span>
-                                        </div>
-                                        {{ $item['data']->content }}
-                                    </div>
-                                </div>
-                            </div>
+                            {{-- Note Item - Compact --}}
+                            <x-ui.note-item :note="$item['data']" />
                         @else
                             {{-- Activity Log Item --}}
                             <x-ui.activity-item :activity="$item['data']" emptyMessage="Sales order created" />

@@ -8,21 +8,33 @@ use App\Models\Invoicing\Invoice;
 use App\Models\Purchase\PurchaseRfq;
 use App\Models\Purchase\VendorBill;
 use App\Models\Sales\SalesOrder;
+use App\Models\Settings\InvoiceSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class PdfController extends Controller
 {
+    /**
+     * Sanitize filename by replacing invalid characters
+     */
+    protected function sanitizeFilename(string $filename): string
+    {
+        return str_replace(['/', '\\'], '-', $filename);
+    }
+
     public function invoice(Invoice $invoice)
     {
         $invoice->load(['customer', 'items.product', 'payments']);
+        $settings = InvoiceSetting::instance();
         
         $pdf = Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
             'company' => $this->getCompanyInfo(),
+            'settings' => $settings,
         ]);
         
-        return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
+        $filename = $this->sanitizeFilename("invoice-{$invoice->invoice_number}.pdf");
+        return $pdf->download($filename);
     }
 
     public function salesOrder(SalesOrder $salesOrder)
@@ -35,7 +47,8 @@ class PdfController extends Controller
         ]);
         
         $docType = in_array($salesOrder->status, ['draft', 'confirmed']) ? 'quotation' : 'sales-order';
-        return $pdf->download("{$docType}-{$salesOrder->order_number}.pdf");
+        $filename = $this->sanitizeFilename("{$docType}-{$salesOrder->order_number}.pdf");
+        return $pdf->download($filename);
     }
 
     public function deliveryOrder(DeliveryOrder $deliveryOrder)
@@ -47,7 +60,8 @@ class PdfController extends Controller
             'company' => $this->getCompanyInfo(),
         ]);
         
-        return $pdf->download("delivery-note-{$deliveryOrder->delivery_number}.pdf");
+        $filename = $this->sanitizeFilename("delivery-note-{$deliveryOrder->delivery_number}.pdf");
+        return $pdf->download($filename);
     }
 
     public function purchaseOrder(PurchaseRfq $purchaseOrder)
@@ -60,7 +74,8 @@ class PdfController extends Controller
         ]);
         
         $docType = $purchaseOrder->status === 'purchase_order' ? 'PO' : 'RFQ';
-        return $pdf->download("{$docType}-{$purchaseOrder->reference}.pdf");
+        $filename = $this->sanitizeFilename("{$docType}-{$purchaseOrder->reference}.pdf");
+        return $pdf->download($filename);
     }
 
     public function vendorBill(VendorBill $vendorBill)
@@ -72,7 +87,8 @@ class PdfController extends Controller
             'company' => $this->getCompanyInfo(),
         ]);
         
-        return $pdf->download("vendor-bill-{$vendorBill->bill_number}.pdf");
+        $filename = $this->sanitizeFilename("vendor-bill-{$vendorBill->bill_number}.pdf");
+        return $pdf->download($filename);
     }
 
     public function payrollSlip(PayrollItem $payrollItem)
@@ -87,7 +103,8 @@ class PdfController extends Controller
         $employeeName = str_replace(' ', '-', strtolower($payrollItem->employee?->name ?? 'employee'));
         $periodName = str_replace(' ', '-', strtolower($payrollItem->period?->name ?? 'period'));
         
-        return $pdf->download("payroll-slip-{$employeeName}-{$periodName}.pdf");
+        $filename = $this->sanitizeFilename("payroll-slip-{$employeeName}-{$periodName}.pdf");
+        return $pdf->download($filename);
     }
 
     protected function getCompanyInfo(): array

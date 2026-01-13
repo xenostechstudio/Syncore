@@ -12,30 +12,29 @@ class SalesReportService
 {
     public function getSalesByPeriod(Carbon $startDate, Carbon $endDate, string $groupBy = 'day'): array
     {
-        $dateFormat = match ($groupBy) {
-            'day' => 'Y-m-d',
-            'week' => 'Y-W',
-            'month' => 'Y-m',
-            'year' => 'Y',
-            default => 'Y-m-d',
-        };
-
-        $dbFormat = match ($groupBy) {
-            'day' => "TO_CHAR(order_date, 'YYYY-MM-DD')",
-            'week' => "TO_CHAR(order_date, 'IYYY-IW')",
-            'month' => "TO_CHAR(order_date, 'YYYY-MM')",
-            'year' => "TO_CHAR(order_date, 'YYYY')",
-            default => "TO_CHAR(order_date, 'YYYY-MM-DD')",
-        };
-
-        return SalesOrder::query()
-            ->selectRaw("{$dbFormat} as period, COUNT(*) as order_count, SUM(total) as total_sales")
+        // Use database-agnostic approach: fetch data and group in PHP
+        $orders = SalesOrder::query()
+            ->select('order_date', 'total')
             ->whereBetween('order_date', [$startDate, $endDate])
             ->whereIn('status', ['confirmed', 'processing', 'completed'])
-            ->groupByRaw($dbFormat)
-            ->orderBy('period')
-            ->get()
-            ->toArray();
+            ->get();
+
+        $grouped = $orders->groupBy(function ($order) use ($groupBy) {
+            $date = Carbon::parse($order->order_date);
+            return match ($groupBy) {
+                'day' => $date->format('Y-m-d'),
+                'week' => $date->format('o-W'),
+                'month' => $date->format('Y-m'),
+                'year' => $date->format('Y'),
+                default => $date->format('Y-m-d'),
+            };
+        });
+
+        return $grouped->map(fn($items, $period) => [
+            'period' => $period,
+            'order_count' => $items->count(),
+            'total_sales' => $items->sum('total'),
+        ])->sortKeys()->values()->toArray();
     }
 
     public function getSalesByCustomer(Carbon $startDate, Carbon $endDate, int $limit = 10): array

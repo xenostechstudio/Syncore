@@ -668,31 +668,12 @@
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                     </div>
 
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         @if(isset($activities) && $activities->isNotEmpty())
                             @foreach($activities as $item)
                                 @if($item['type'] === 'note')
-                                    {{-- Note Item --}}
-                                    <div class="flex items-start gap-3">
-                                        <div class="flex-shrink-0">
-                                            <x-ui.user-avatar :user="$item['data']->user" size="md" :showPopup="true" />
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-2">
-                                                <x-ui.user-name :user="$item['data']->user" />
-                                                <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                                                    {{ $item['created_at']->diffForHumans() }}
-                                                </span>
-                                            </div>
-                                            <div class="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-zinc-700 dark:bg-amber-900/20 dark:text-zinc-300">
-                                                <div class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mb-1">
-                                                    <flux:icon name="pencil-square" class="size-3" />
-                                                    <span>Internal Note</span>
-                                                </div>
-                                                {{ $item['data']->content }}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {{-- Note Item - Compact --}}
+                                    <x-ui.note-item :note="$item['data']" />
                                 @else
                                     {{-- Activity Log Item --}}
                                     <x-ui.activity-item :activity="$item['data']" emptyMessage="Purchase order created" />

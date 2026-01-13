@@ -5,8 +5,10 @@ namespace App\Models\Invoicing;
 use App\Enums\InvoiceState;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
+use App\Models\User;
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Database\Factories\Invoicing\InvoiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +17,7 @@ use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
+    /** @use HasFactory<InvoiceFactory> */
     use HasFactory, LogsActivity, HasNotes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
@@ -23,6 +26,7 @@ class Invoice extends Model
         'invoice_number',
         'customer_id',
         'sales_order_id',
+        'user_id',
         'invoice_date',
         'due_date',
         'status',
@@ -90,6 +94,11 @@ class Invoice extends Model
     public function salesOrder(): BelongsTo
     {
         return $this->belongsTo(SalesOrder::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function items(): HasMany
