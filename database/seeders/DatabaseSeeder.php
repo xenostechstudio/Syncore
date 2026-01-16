@@ -12,10 +12,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create main admin user first (before ModulePermissionSeeder assigns super-admin to first user)
         User::firstOrCreate(
-            ['email' => 'test@example.com'],
+            ['email' => 'rifqi@mail.com'],
             [
-                'name' => 'Test User',
+                'name' => 'Rifqi Muhammad Aziz',
                 'password' => 'password',
                 'email_verified_at' => now(),
             ]

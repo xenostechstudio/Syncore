@@ -51,9 +51,10 @@ describe('SalesOrderState', function () {
 });
 
 describe('SalesOrder Model', function () {
-    it('generates order number', function () {
-        $orderNumber = SalesOrder::generateOrderNumber();
-        expect($orderNumber)->toStartWith('SO');
+    it('generates order number on create', function () {
+        $order = SalesOrder::factory()->create();
+        expect($order->order_number)->toStartWith('SO');
+        expect($order->order_number)->toMatch('/^SO\d{5}$/');
     });
 
     it('returns correct state attribute', function () {

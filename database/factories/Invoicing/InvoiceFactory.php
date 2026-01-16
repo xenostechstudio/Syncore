@@ -21,7 +21,6 @@ class InvoiceFactory extends Factory
         };
 
         return [
-            'invoice_number' => 'INV-' . fake()->unique()->numerify('######'),
             'customer_id' => Customer::factory(),
             'sales_order_id' => null,
             'invoice_date' => fake()->dateTimeBetween('-1 month', 'now'),

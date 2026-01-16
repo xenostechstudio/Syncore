@@ -9,6 +9,7 @@ use App\Models\Sales\Pricelist;
 use App\Models\Sales\Promotion;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\HasSequenceNumber;
 use App\Traits\HasSoftDeletes;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
@@ -23,7 +24,11 @@ use Illuminate\Support\Str;
 class SalesOrder extends Model
 {
     /** @use HasFactory<SalesOrderFactory> */
-    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable;
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasSequenceNumber;
+
+    public const NUMBER_PREFIX = 'SO';
+    public const NUMBER_COLUMN = 'order_number';
+    public const NUMBER_DIGITS = 5;
     
     protected array $logActions = ['created', 'updated', 'deleted'];
     
@@ -237,20 +242,12 @@ class SalesOrder extends Model
         return !$this->isLocked();
     }
 
+    /**
+     * @deprecated Use HasSequenceNumber trait instead - number is auto-generated on create
+     */
     public static function generateOrderNumber(): string
     {
-        $prefix = 'SO';
-        $lastOrder = self::orderByDesc('id')->first();
-        $sequence = 1;
-
-        if ($lastOrder && $lastOrder->order_number) {
-            $digits = preg_replace('/\D/', '', $lastOrder->order_number);
-            if ($digits !== '') {
-                $sequence = (int) substr($digits, -4) + 1;
-            }
-        }
-
-        return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return static::generateSequenceNumber();
     }
 
     /**

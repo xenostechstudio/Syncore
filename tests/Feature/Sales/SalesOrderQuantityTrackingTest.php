@@ -79,7 +79,6 @@ function makeSalesOrderScenario(int $quantity = 10, int $stockQty = 100): array
     ]);
 
     $salesOrder = SalesOrder::create([
-        'order_number' => SalesOrder::generateOrderNumber(),
         'customer_id' => $customer->id,
         'user_id' => $user->id,
         'order_date' => now()->format('Y-m-d'),

@@ -164,18 +164,40 @@
                         $nextStatusLabel = \App\Enums\DeliveryOrderState::tryFrom($status)?->nextActionLabel();
                     @endphp
                     @if($deliveryId && $nextStatusLabel)
-                        <button type="button" wire:click="openStatusTransitionModal" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            <flux:icon name="check" class="size-4" />
+                        <button 
+                            type="button" 
+                            wire:click="openStatusTransitionModal" 
+                            wire:loading.attr="disabled"
+                            wire:target="openStatusTransitionModal"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        >
+                            <flux:icon name="check" wire:loading.remove wire:target="openStatusTransitionModal" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="openStatusTransitionModal" class="size-4 animate-spin" />
                             {{ $nextStatusLabel }}
                         </button>
                     @endif
-                    <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                        <flux:icon name="document-check" class="size-4" />
-                        Save
+                    <button 
+                        type="button" 
+                        wire:click="save" 
+                        wire:loading.attr="disabled"
+                        wire:target="save"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                        <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="save">Save</span>
+                        <span wire:loading wire:target="save">Saving...</span>
                     </button>
                     @if($deliveryId && $status === \App\Enums\DeliveryOrderState::DELIVERED->value)
-                        <button type="button" wire:click="openReturnModal" class="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700">
-                            <flux:icon name="arrow-uturn-left" class="size-4" />
+                        <button 
+                            type="button" 
+                            wire:click="openReturnModal" 
+                            wire:loading.attr="disabled"
+                            wire:target="openReturnModal"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
+                        >
+                            <flux:icon name="arrow-uturn-left" wire:loading.remove wire:target="openReturnModal" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="openReturnModal" class="size-4 animate-spin" />
                             Return
                         </button>
                     @endif
@@ -943,7 +965,7 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
     >
-        <div class="absolute inset-0 bg-black/50" @click="showCancelModal = false"></div>
+        <div class="absolute inset-0 bg-zinc-900/60" @click="showCancelModal = false"></div>
         <div 
             class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
             x-transition:enter="transition ease-out duration-200"

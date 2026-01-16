@@ -5,8 +5,11 @@
                 type="button"
                 wire:click="save"
                 wire:loading.attr="disabled"
-                class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                wire:target="save"
+                class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
+                <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
                 <span wire:loading.remove wire:target="save">Save</span>
                 <span wire:loading wire:target="save">Saving...</span>
             </button>
@@ -24,10 +27,14 @@
                     type="button"
                     wire:click="delete"
                     wire:confirm="Delete this role? This action cannot be undone."
-                    class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/30 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                    wire:loading.attr="disabled"
+                    wire:target="delete"
+                    class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900/30 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
                 >
-                    <flux:icon name="trash" class="size-4" />
-                    Delete
+                    <flux:icon name="trash" wire:loading.remove wire:target="delete" class="size-4" />
+                    <flux:icon name="arrow-path" wire:loading wire:target="delete" class="size-4 animate-spin" />
+                    <span wire:loading.remove wire:target="delete">Delete</span>
+                    <span wire:loading wire:target="delete">Deleting...</span>
                 </button>
             @endif
         </div>

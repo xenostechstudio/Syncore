@@ -163,6 +163,10 @@ class ActivityLogService
      */
     protected static function normalizeValue($value)
     {
+        // Handle enum objects
+        if (is_object($value) && $value instanceof \BackedEnum) {
+            return $value->value;
+        }
         if ($value === null || $value === '') {
             return null;
         }
@@ -263,6 +267,11 @@ class ActivityLogService
             return '-';
         }
         
+        // Handle enum objects - convert to string value first
+        if (is_object($value) && $value instanceof \BackedEnum) {
+            $value = $value->value;
+        }
+        
         // Handle boolean values
         if (is_bool($value)) {
             return $value ? 'Yes' : 'No';
@@ -298,7 +307,7 @@ class ActivityLogService
         
         // Handle status fields - make them more readable
         if ($field === 'status') {
-            return ucfirst(str_replace('_', ' ', $value));
+            return ucfirst(str_replace('_', ' ', (string) $value));
         }
         
         // Truncate long text
@@ -318,6 +327,11 @@ class ActivityLogService
      */
     protected static function formatEnumValue(string $field, $value): ?string
     {
+        // Handle enum objects - convert to string value
+        if (is_object($value) && $value instanceof \BackedEnum) {
+            $value = $value->value;
+        }
+        
         // Payment terms mapping
         if ($field === 'payment_terms') {
             $labels = [
@@ -330,7 +344,7 @@ class ActivityLogService
                 'cod' => 'Cash on Delivery',
                 'prepaid' => 'Prepaid',
             ];
-            return $labels[$value] ?? ucfirst(str_replace('_', ' ', $value));
+            return $labels[$value] ?? ucfirst(str_replace('_', ' ', (string) $value));
         }
         
         // Invoice status mapping
@@ -354,7 +368,7 @@ class ActivityLogService
                 'in_transit' => 'In Transit',
                 'picked' => 'Picked',
             ];
-            return $labels[$value] ?? ucfirst(str_replace('_', ' ', $value));
+            return $labels[$value] ?? ucfirst(str_replace('_', ' ', (string) $value));
         }
         
         // Leave type mapping
@@ -368,7 +382,7 @@ class ActivityLogService
                 'emergency' => 'Emergency Leave',
                 'bereavement' => 'Bereavement Leave',
             ];
-            return $labels[$value] ?? ucfirst(str_replace('_', ' ', $value));
+            return $labels[$value] ?? ucfirst(str_replace('_', ' ', (string) $value));
         }
         
         // Priority mapping
@@ -380,7 +394,7 @@ class ActivityLogService
                 'urgent' => 'Urgent',
                 'critical' => 'Critical',
             ];
-            return $labels[$value] ?? ucfirst($value);
+            return $labels[$value] ?? ucfirst((string) $value);
         }
         
         return null;

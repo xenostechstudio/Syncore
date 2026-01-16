@@ -1483,7 +1483,7 @@
     <div
         x-show="showEmailModal"
         x-cloak
-        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-4"
+        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-900/60 p-4"
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -1620,7 +1620,7 @@
     <div
         x-show="showPreviewModal"
         x-cloak
-        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 p-4"
+        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-900/60 p-4"
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"

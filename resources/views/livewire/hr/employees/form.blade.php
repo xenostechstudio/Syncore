@@ -52,9 +52,17 @@
         <div class="grid grid-cols-12 items-center gap-6">
             <div class="col-span-9 flex items-center justify-between">
                 <div class="flex flex-wrap items-center gap-2">
-                    <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                        <flux:icon name="document-check" class="size-4" />
-                        Save
+                    <button 
+                        type="button" 
+                        wire:click="save" 
+                        wire:loading.attr="disabled"
+                        wire:target="save"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                        <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="save">Save</span>
+                        <span wire:loading wire:target="save">Saving...</span>
                     </button>
                     <a href="{{ route('hr.employees.index') }}" wire:navigate class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
                         <flux:icon name="x-mark" class="size-4" />
@@ -907,7 +915,7 @@
 
     {{-- Create User Modal --}}
     @if($showCreateUserModal)
-    <div class="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto bg-black/50 p-4" x-data x-on:keydown.escape.window="$wire.set('showCreateUserModal', false)">
+    <div class="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto bg-zinc-900/60 p-4" x-data x-on:keydown.escape.window="$wire.set('showCreateUserModal', false)">
         <div class="w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900" @click.outside="$wire.set('showCreateUserModal', false)">
             {{-- Modal Header --}}
             <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">

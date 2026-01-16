@@ -20,12 +20,29 @@
             </div>
             <div class="flex items-center gap-2">
                 @if($paymentId)
-                    <button type="button" wire:click="confirmDelete" class="flex h-8 items-center gap-1.5 rounded-md px-3 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950">
-                        <flux:icon name="trash" class="size-4" /><span>Delete</span>
+                    <button 
+                        type="button" 
+                        wire:click="confirmDelete" 
+                        wire:loading.attr="disabled"
+                        wire:target="confirmDelete"
+                        class="flex h-8 items-center gap-1.5 rounded-md px-3 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950"
+                    >
+                        <flux:icon name="trash" wire:loading.remove wire:target="confirmDelete" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="confirmDelete" class="size-4 animate-spin" />
+                        <span>Delete</span>
                     </button>
                 @endif
-                <button type="button" wire:click="save" class="flex h-8 items-center gap-1.5 rounded-md bg-zinc-900 px-3 text-sm text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    <flux:icon name="check" class="size-4" /><span>Save</span>
+                <button 
+                    type="button" 
+                    wire:click="save" 
+                    wire:loading.attr="disabled"
+                    wire:target="save"
+                    class="flex h-8 items-center gap-1.5 rounded-md bg-zinc-900 px-3 text-sm text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                    <flux:icon name="check" wire:loading.remove wire:target="save" class="size-4" />
+                    <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                    <span wire:loading.remove wire:target="save">Save</span>
+                    <span wire:loading wire:target="save">Saving...</span>
                 </button>
             </div>
         </div>

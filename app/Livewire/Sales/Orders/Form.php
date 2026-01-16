@@ -208,7 +208,6 @@ class Form extends Component
             $order = SalesOrder::with(['customer', 'items'])->findOrFail($this->orderId);
 
             $delivery = DeliveryOrder::create([
-                'delivery_number' => DeliveryOrder::generateDeliveryNumber(),
                 'sales_order_id' => $order->id,
                 'warehouse_id' => $this->deliveryWarehouseId,
                 'user_id' => Auth::id(),
@@ -812,7 +811,6 @@ class Form extends Component
                 }
             }
         } else {
-            $orderData['order_number'] = SalesOrder::generateOrderNumber();
             $order = SalesOrder::create($orderData);
             $this->orderId = $order->id;
 
@@ -1082,7 +1080,6 @@ Best regards,
 
             // Create new order with copied data
             $newOrder = SalesOrder::create([
-                'order_number' => SalesOrder::generateOrderNumber(),
                 'customer_id' => $order->customer_id,
                 'user_id' => Auth::id(),
                 'pricelist_id' => $order->pricelist_id,

@@ -73,7 +73,6 @@ function makeDeliveryOrderScenario(int $stockQty = 10, int $toDeliver = 5): arra
     ]);
 
     $salesOrder = SalesOrder::create([
-        'order_number' => SalesOrder::generateOrderNumber(),
         'customer_id' => $customer->id,
         'user_id' => $user->id,
         'order_date' => now()->format('Y-m-d'),
@@ -99,7 +98,6 @@ function makeDeliveryOrderScenario(int $stockQty = 10, int $toDeliver = 5): arra
     ]);
 
     $deliveryOrder = DeliveryOrder::create([
-        'delivery_number' => DeliveryOrder::generateDeliveryNumber(),
         'sales_order_id' => $salesOrder->id,
         'warehouse_id' => $warehouse->id,
         'user_id' => $user->id,

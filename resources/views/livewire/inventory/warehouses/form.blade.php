@@ -96,10 +96,14 @@
                     <button 
                         type="button"
                         wire:click="save"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        wire:loading.attr="disabled"
+                        wire:target="save"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                        <flux:icon name="document-check" class="size-4" />
-                        Save
+                        <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="save">Save</span>
+                        <span wire:loading wire:target="save">Saving...</span>
                     </button>
 
                     <button 

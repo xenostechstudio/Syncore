@@ -794,7 +794,6 @@ class Form extends Component
                 $delivery = DeliveryOrder::findOrFail($this->deliveryId);
                 $delivery->update($data);
             } else {
-                $data['delivery_number'] = DeliveryOrder::generateDeliveryNumber();
                 $delivery = DeliveryOrder::create($data);
                 $this->deliveryId = $delivery->id;
             }
@@ -879,7 +878,6 @@ class Form extends Component
 
         $newDelivery = DB::transaction(function () use ($delivery) {
             $newDelivery = DeliveryOrder::create([
-                'delivery_number' => DeliveryOrder::generateDeliveryNumber(),
                 'sales_order_id' => $delivery->sales_order_id,
                 'warehouse_id' => $delivery->warehouse_id,
                 'user_id' => Auth::id(),

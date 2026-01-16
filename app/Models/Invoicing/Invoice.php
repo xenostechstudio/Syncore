@@ -7,6 +7,7 @@ use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use Database\Factories\Invoicing\InvoiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,11 @@ use Illuminate\Support\Str;
 class Invoice extends Model
 {
     /** @use HasFactory<InvoiceFactory> */
-    use HasFactory, LogsActivity, HasNotes;
+    use HasFactory, LogsActivity, HasNotes, HasYearlySequenceNumber;
+
+    public const NUMBER_PREFIX = 'INV';
+    public const NUMBER_COLUMN = 'invoice_number';
+    public const NUMBER_DIGITS = 5;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 
@@ -57,29 +62,6 @@ class Invoice extends Model
         'paid_amount' => 'decimal:2',
         'share_token_expires_at' => 'datetime',
     ];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($invoice) {
-            if (empty($invoice->invoice_number)) {
-                $year = now()->year;
-                $prefix = "INV/{$year}/";
-
-                $lastNumber = static::where('invoice_number', 'like', $prefix . '%')
-                    ->pluck('invoice_number')
-                    ->map(function (string $number) use ($prefix) {
-                        return (int) substr($number, strlen($prefix));
-                    })
-                    ->max() ?? 0;
-
-                $nextNumber = $lastNumber + 1;
-
-                $invoice->invoice_number = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-            }
-        });
-    }
 
     public function getStateAttribute(): InvoiceState
     {

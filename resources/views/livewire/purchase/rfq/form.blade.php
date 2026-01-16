@@ -82,46 +82,66 @@
                         <button 
                             type="button"
                             wire:click="save"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                         >
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @elseif($status === 'rfq')
                         {{-- RFQ Status: Show Send RFQ button (primary) --}}
                         <button 
                             type="button"
                             wire:click="sendRfq"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            wire:loading.attr="disabled"
+                            wire:target="sendRfq"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                         >
-                            <flux:icon name="paper-airplane" class="size-4" />
-                            Send RFQ
+                            <flux:icon name="paper-airplane" wire:loading.remove wire:target="sendRfq" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="sendRfq" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="sendRfq">Send RFQ</span>
+                            <span wire:loading wire:target="sendRfq">Sending...</span>
                         </button>
                         <button 
                             type="button"
                             wire:click="save"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @elseif($status === 'sent')
                         {{-- Sent Status: Show Confirm Order button (primary) --}}
                         <button 
                             type="button"
                             wire:click="confirmOrder"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            wire:loading.attr="disabled"
+                            wire:target="confirmOrder"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                         >
-                            <flux:icon name="check" class="size-4" />
-                            Confirm Order
+                            <flux:icon name="check" wire:loading.remove wire:target="confirmOrder" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="confirmOrder" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="confirmOrder">Confirm Order</span>
+                            <span wire:loading wire:target="confirmOrder">Confirming...</span>
                         </button>
                         <button 
                             type="button"
                             wire:click="save"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @endif
                     <button 

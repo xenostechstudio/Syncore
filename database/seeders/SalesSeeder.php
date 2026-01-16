@@ -334,8 +334,11 @@ class SalesSeeder extends Seeder
             $orderDate = now()->subDays($orderData['days_ago']);
             $customer = Customer::find($orderData['customer_id']);
             
+            // Generate order number explicitly for seeding
+            $orderNumber = 'SO' . str_pad($index + 1, 5, '0', STR_PAD_LEFT);
+            
             $order = SalesOrder::create([
-                'order_number' => SalesOrder::generateOrderNumber(),
+                'order_number' => $orderNumber,
                 'customer_id' => $orderData['customer_id'],
                 'user_id' => $user->id,
                 'pricelist_id' => $customer?->pricelist_id,

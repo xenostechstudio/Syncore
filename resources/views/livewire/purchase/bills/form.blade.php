@@ -63,26 +63,53 @@
             <div class="col-span-9 flex items-center justify-between">
                 <div class="flex flex-wrap items-center gap-2">
                     @if(!$billId)
-                        <button type="button" wire:click="save"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                        <button 
+                            type="button" 
+                            wire:click="save"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        >
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @elseif($status === 'draft')
-                        <button type="button" wire:click="confirm"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            <flux:icon name="check" class="size-4" />
-                            Confirm Bill
+                        <button 
+                            type="button" 
+                            wire:click="confirm"
+                            wire:loading.attr="disabled"
+                            wire:target="confirm"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        >
+                            <flux:icon name="check" wire:loading.remove wire:target="confirm" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="confirm" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="confirm">Confirm Bill</span>
+                            <span wire:loading wire:target="confirm">Confirming...</span>
                         </button>
-                        <button type="button" wire:click="save"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                        <button 
+                            type="button" 
+                            wire:click="save"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                        >
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @elseif(in_array($status, ['pending', 'partial', 'overdue']))
-                        <button type="button" wire:click="openPaymentModal"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700">
-                            <flux:icon name="banknotes" class="size-4" />
+                        <button 
+                            type="button" 
+                            wire:click="openPaymentModal"
+                            wire:loading.attr="disabled"
+                            wire:target="openPaymentModal"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                            <flux:icon name="banknotes" wire:loading.remove wire:target="openPaymentModal" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="openPaymentModal" class="size-4 animate-spin" />
                             Register Payment
                         </button>
                     @endif
@@ -595,7 +622,7 @@
     <div x-show="showCancelModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center"
         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <div class="absolute inset-0 bg-black/50" @click="showCancelModal = false"></div>
+        <div class="absolute inset-0 bg-zinc-900/60" @click="showCancelModal = false"></div>
         <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
             x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
@@ -629,7 +656,7 @@
     <div x-show="showPaymentModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center"
         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <div class="absolute inset-0 bg-black/50" @click="showPaymentModal = false"></div>
+        <div class="absolute inset-0 bg-zinc-900/60" @click="showPaymentModal = false"></div>
         <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
             x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"

@@ -37,8 +37,11 @@ class DeliverySeeder extends Seeder
                 default => 'pending',
             };
 
+            // Generate delivery number explicitly for seeding
+            $deliveryNumber = 'DO' . str_pad($index + 1, 5, '0', STR_PAD_LEFT);
+            
             $delivery = DeliveryOrder::create([
-                'delivery_number' => 'DO' . $deliveryDate->format('Ymd') . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
+                'delivery_number' => $deliveryNumber,
                 'sales_order_id' => $salesOrder->id,
                 'warehouse_id' => $warehouse->id,
                 'user_id' => $user->id,

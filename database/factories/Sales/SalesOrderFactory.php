@@ -14,7 +14,6 @@ class SalesOrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'order_number' => 'SO-' . fake()->unique()->numerify('######'),
             'customer_id' => Customer::factory(),
             'user_id' => User::factory(),
             'order_date' => fake()->dateTimeBetween('-1 month', 'now'),

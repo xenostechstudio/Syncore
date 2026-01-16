@@ -218,23 +218,7 @@ class Form extends Component
             return;
         }
 
-        // Generate payment number
-        $year = now()->year;
-        $prefix = "PAY/{$year}/";
-
-        $castType = match (DB::connection()->getDriverName()) {
-            'pgsql', 'sqlite' => 'INTEGER',
-            default => 'UNSIGNED',
-        };
-
-        $lastPayment = Payment::where('payment_number', 'like', $prefix . '%')
-            ->orderByRaw("CAST(SUBSTRING(payment_number, LENGTH(?) + 1) AS {$castType}) DESC", [$prefix])
-            ->first();
-        $nextNumber = $lastPayment ? ((int) substr($lastPayment->payment_number, strlen($prefix))) + 1 : 1;
-        $paymentNumber = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-
         Payment::create([
-            'payment_number' => $paymentNumber,
             'invoice_id' => $this->invoiceId,
             'amount' => $this->paymentAmount,
             'payment_date' => $this->paymentDate,

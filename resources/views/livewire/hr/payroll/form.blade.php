@@ -49,15 +49,19 @@
             <div class="col-span-9 flex items-center justify-between">
                 <div class="flex flex-wrap items-center gap-2">
                     @if(!$periodId || $status === 'draft')
-                        <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                        <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @endif
                     @if($periodId && $status === 'draft')
-                        <button type="button" wire:click="generatePayroll" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                            <flux:icon name="calculator" class="size-4" />
-                            Generate
+                        <button type="button" wire:click="generatePayroll" wire:loading.attr="disabled" wire:target="generatePayroll" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                            <flux:icon name="calculator" wire:loading.remove wire:target="generatePayroll" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="generatePayroll" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="generatePayroll">Generate</span>
+                            <span wire:loading wire:target="generatePayroll">Generating...</span>
                         </button>
                         <button type="button" @click="showApproveModal = true" class="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
                             <flux:icon name="check" class="size-4" />
@@ -65,19 +69,24 @@
                         </button>
                     @endif
                     @if($periodId && $status === 'approved')
-                        <button type="button" wire:click="startProcessing" class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600">
-                            <flux:icon name="play" class="size-4" />
-                            Start Processing
+                        <button type="button" wire:click="startProcessing" wire:loading.attr="disabled" wire:target="startProcessing" class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 disabled:opacity-50">
+                            <flux:icon name="play" wire:loading.remove wire:target="startProcessing" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="startProcessing" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="startProcessing">Start Processing</span>
+                            <span wire:loading wire:target="startProcessing">Processing...</span>
                         </button>
-                        <button type="button" wire:click="resetToDraft" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                            <flux:icon name="arrow-uturn-left" class="size-4" />
+                        <button type="button" wire:click="resetToDraft" wire:loading.attr="disabled" wire:target="resetToDraft" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                            <flux:icon name="arrow-uturn-left" wire:loading.remove wire:target="resetToDraft" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="resetToDraft" class="size-4 animate-spin" />
                             Back to Draft
                         </button>
                     @endif
                     @if($periodId && $status === 'processing')
-                        <button type="button" wire:click="markAsPaid" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600">
-                            <flux:icon name="banknotes" class="size-4" />
-                            Mark as Paid
+                        <button type="button" wire:click="markAsPaid" wire:loading.attr="disabled" wire:target="markAsPaid" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50">
+                            <flux:icon name="banknotes" wire:loading.remove wire:target="markAsPaid" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="markAsPaid" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="markAsPaid">Mark as Paid</span>
+                            <span wire:loading wire:target="markAsPaid">Processing...</span>
                         </button>
                     @endif
                     @if($periodId && $status === 'paid')
@@ -87,14 +96,17 @@
                         </button>
                     @endif
                     @if($periodId && $status === 'cancelled')
-                        <button type="button" wire:click="resetToDraft" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            <flux:icon name="arrow-uturn-left" class="size-4" />
-                            Reopen
+                        <button type="button" wire:click="resetToDraft" wire:loading.attr="disabled" wire:target="resetToDraft" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                            <flux:icon name="arrow-uturn-left" wire:loading.remove wire:target="resetToDraft" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="resetToDraft" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="resetToDraft">Reopen</span>
+                            <span wire:loading wire:target="resetToDraft">Reopening...</span>
                         </button>
                     @endif
                     @if($periodId && !in_array($status, ['paid', 'cancelled']))
-                        <button type="button" wire:click="cancel" wire:confirm="Cancel this payroll run?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-700 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
-                            <flux:icon name="x-mark" class="size-4" />
+                        <button type="button" wire:click="cancel" wire:confirm="Cancel this payroll run?" wire:loading.attr="disabled" wire:target="cancel" class="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
+                            <flux:icon name="x-mark" wire:loading.remove wire:target="cancel" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="cancel" class="size-4 animate-spin" />
                             Cancel
                         </button>
                     @endif
@@ -356,7 +368,7 @@
 
     {{-- Approve Modal --}}
     <div x-show="showApproveModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <div class="absolute inset-0 bg-black/50" @click="showApproveModal = false"></div>
+        <div class="absolute inset-0 bg-zinc-900/60" @click="showApproveModal = false"></div>
         <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" @click.outside="showApproveModal = false">
             <div class="mb-4 flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
@@ -370,7 +382,12 @@
             <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">Are you sure you want to approve this payroll run? Once approved, the payroll data will be locked and ready for payment processing.</p>
             <div class="flex justify-end gap-3">
                 <button type="button" @click="showApproveModal = false" class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">Cancel</button>
-                <button type="button" wire:click="approve" @click="showApproveModal = false" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700">Approve</button>
+                <button type="button" wire:click="approve" wire:loading.attr="disabled" wire:target="approve" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50">
+                    <flux:icon name="check" wire:loading.remove wire:target="approve" class="size-4" />
+                    <flux:icon name="arrow-path" wire:loading wire:target="approve" class="size-4 animate-spin" />
+                    <span wire:loading.remove wire:target="approve">Approve</span>
+                    <span wire:loading wire:target="approve">Approving...</span>
+                </button>
             </div>
         </div>
     </div>

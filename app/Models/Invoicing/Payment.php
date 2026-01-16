@@ -3,6 +3,7 @@
 namespace App\Models\Invoicing;
 
 use App\Traits\HasNotes;
+use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
-    use HasFactory, LogsActivity, HasNotes;
+    use HasFactory, LogsActivity, HasNotes, HasYearlySequenceNumber;
+
+    public const NUMBER_PREFIX = 'PAY';
+    public const NUMBER_COLUMN = 'payment_number';
+    public const NUMBER_DIGITS = 5;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 
