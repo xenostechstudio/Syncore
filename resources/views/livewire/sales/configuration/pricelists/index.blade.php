@@ -47,7 +47,16 @@
                             <flux:icon name="x-mark" class="size-4" />
                             <span>{{ count($selected) }} Selected</span>
                         </button>
-                        <button wire:click="deleteSelected" wire:confirm="Are you sure?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400">
+                        <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600"></div>
+                        <button wire:click="activateSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                            <flux:icon name="check-circle" class="size-4" />
+                            Activate
+                        </button>
+                        <button wire:click="deactivateSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                            <flux:icon name="pause-circle" class="size-4" />
+                            Deactivate
+                        </button>
+                        <button wire:click="deleteSelected" wire:confirm="Are you sure you want to delete {{ count($selected) }} pricelist(s)?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
                             <flux:icon name="trash" class="size-4" />
                             Delete
                         </button>

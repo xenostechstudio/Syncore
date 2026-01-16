@@ -25,6 +25,8 @@ class ActivityLogService
         'share_token', 'share_token_expires_at',
         'email_verified_at', 'session_id',
         'user_id', // Don't log user assignment changes
+        'promotion_id', // Don't log promotion ID changes (use promotion_code instead)
+        'pricelist_id', // Don't log pricelist ID changes
     ];
 
     /** @var array Sensitive fields to mask in logs */

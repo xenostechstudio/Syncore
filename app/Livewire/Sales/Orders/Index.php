@@ -303,8 +303,8 @@ class Index extends Component
                 fn ($q) => $q->where('user_id', Auth::id())
             )
             ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
-                ->where('order_number', 'ilike', "%{$this->search}%")
-                ->orWhereHas('customer', fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
+                ->where('order_number', 'like', "%{$this->search}%")
+                ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%"))
             ))
             ->when($this->mode === 'orders', fn($q) => $q->where('status', 'processing'))
             ->when($this->status, fn($q) => $q->where('status', $this->status))

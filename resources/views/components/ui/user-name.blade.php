@@ -65,10 +65,12 @@
                 @endif
             </div>
             <flux:menu.separator />
-            <a href="{{ route('settings.users.edit', $user->id) }}" wire:navigate class="flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800">
-                <span>View Profile</span>
-                <flux:icon name="arrow-up-right" class="size-4 text-zinc-400" />
-            </a>
+            @if($user->id ?? null)
+                <a href="{{ route('settings.users.edit', $user->id) }}" wire:navigate class="flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-zinc-800">
+                    <span>View Profile</span>
+                    <flux:icon name="arrow-up-right" class="size-4 text-zinc-400" />
+                </a>
+            @endif
         </flux:menu>
     </flux:dropdown>
 @else

@@ -115,6 +115,39 @@ class Index extends Component
         $this->selectAll = false;
     }
 
+    public function bulkActivate(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Product::whereIn('id', $this->selected)->update(['status' => 'in_stock']);
+        $this->clearSelection();
+        session()->flash('success', "{$count} products activated.");
+    }
+
+    public function bulkDeactivate(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Product::whereIn('id', $this->selected)->update(['status' => 'out_of_stock']);
+        $this->clearSelection();
+        session()->flash('success', "{$count} products deactivated.");
+    }
+
+    public function bulkDelete(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Product::whereIn('id', $this->selected)->delete();
+        $this->clearSelection();
+        session()->flash('success', "{$count} products deleted.");
+    }
+
     public function toggleFavorite(int $id): void
     {
         $product = Product::findOrFail($id);
@@ -140,8 +173,8 @@ class Index extends Component
         return Product::query()
             ->when($this->groupBy === 'category', fn ($q) => $q->with('category'))
             ->when($this->search, fn ($q) => $q->where(fn ($qq) => $qq
-                ->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('sku', 'ilike', "%{$this->search}%")
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('sku', 'like', "%{$this->search}%")
             ))
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->when($this->sort === 'latest', fn ($q) => $q->latest())

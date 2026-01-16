@@ -40,7 +40,7 @@ class Index extends Component
     {
         if ($value) {
             $this->selected = Tax::query()
-                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
+                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
                 ->pluck('id')
                 ->map(fn($id) => (string) $id)
                 ->toArray();
@@ -105,6 +105,22 @@ class Index extends Component
         $this->clearSelection();
     }
 
+    public function activateSelected(): void
+    {
+        Tax::whereIn('id', $this->selected)->update(['is_active' => true]);
+        $this->selected = [];
+        $this->selectAll = false;
+        session()->flash('success', 'Selected taxes activated.');
+    }
+
+    public function deactivateSelected(): void
+    {
+        Tax::whereIn('id', $this->selected)->update(['is_active' => false]);
+        $this->selected = [];
+        $this->selectAll = false;
+        session()->flash('success', 'Selected taxes deactivated.');
+    }
+
     protected function getImportClass(): string
     {
         return TaxesImport::class;
@@ -121,8 +137,8 @@ class Index extends Component
     public function render()
     {
         $taxes = Tax::query()
-            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('code', 'ilike', "%{$this->search}%"))
+            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%"))
             ->orderBy('name')
             ->paginate(15, ['*'], 'page', $this->page);
 

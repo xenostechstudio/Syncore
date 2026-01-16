@@ -5,6 +5,8 @@ namespace App\Models\Sales;
 use App\Enums\SalesOrderState;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Invoicing\Invoice;
+use App\Models\Sales\Pricelist;
+use App\Models\Sales\Promotion;
 use App\Models\User;
 use App\Traits\HasNotes;
 use App\Traits\HasSoftDeletes;
@@ -30,6 +32,10 @@ class SalesOrder extends Model
         'order_number',
         'customer_id',
         'user_id',
+        'pricelist_id',
+        'promotion_id',
+        'promotion_code',
+        'promotion_discount',
         'order_date',
         'expected_delivery_date',
         'status',
@@ -51,6 +57,7 @@ class SalesOrder extends Model
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
         'discount' => 'decimal:2',
+        'promotion_discount' => 'decimal:2',
         'total' => 'decimal:2',
         'share_token_expires_at' => 'datetime',
     ];
@@ -95,6 +102,16 @@ class SalesOrder extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function pricelist(): BelongsTo
+    {
+        return $this->belongsTo(Pricelist::class);
+    }
+
+    public function promotion(): BelongsTo
+    {
+        return $this->belongsTo(Promotion::class);
     }
 
     public function user(): BelongsTo

@@ -30,6 +30,8 @@ use App\Livewire\Sales\Configuration\PaymentTerms\Index as PaymentTermsIndex;
 use App\Livewire\Sales\Configuration\PaymentTerms\Form as PaymentTermForm;
 use App\Livewire\Sales\Configuration\Pricelists\Index as PricelistsIndex;
 use App\Livewire\Sales\Configuration\Pricelists\Form as PricelistForm;
+use App\Livewire\Sales\Configuration\Promotions\Index as PromotionsIndex;
+use App\Livewire\Sales\Configuration\Promotions\Form as PromotionForm;
 use App\Livewire\Sales\Invoices\OrdersToInvoice as SalesOrdersToInvoice;
 
 use App\Livewire\Delivery\Index as DeliveryIndex;
@@ -158,6 +160,9 @@ Route::middleware(['auth', 'verified', 'permission:access.sales'])->prefix('sale
     Route::get('/products/create', SalesProductForm::class)->name('products.create');
     Route::get('/products/{id}/edit', SalesProductForm::class)->name('products.edit');
     
+    // Reports
+    Route::get('/reports', \App\Livewire\Sales\Reports\Index::class)->name('reports');
+    
     // Configuration - Taxes
     Route::get('/configuration/taxes', TaxesIndex::class)->name('configuration.taxes.index');
     Route::get('/configuration/taxes/create', TaxForm::class)->name('configuration.taxes.create');
@@ -172,6 +177,11 @@ Route::middleware(['auth', 'verified', 'permission:access.sales'])->prefix('sale
     Route::get('/configuration/pricelists', PricelistsIndex::class)->name('configuration.pricelists.index');
     Route::get('/configuration/pricelists/create', PricelistForm::class)->name('configuration.pricelists.create');
     Route::get('/configuration/pricelists/{id}/edit', PricelistForm::class)->name('configuration.pricelists.edit');
+    
+    // Configuration - Promotions
+    Route::get('/configuration/promotions', PromotionsIndex::class)->name('configuration.promotions.index');
+    Route::get('/configuration/promotions/create', PromotionForm::class)->name('configuration.promotions.create');
+    Route::get('/configuration/promotions/{id}/edit', PromotionForm::class)->name('configuration.promotions.edit');
 });
 
 Route::middleware(['auth', 'verified', 'permission:access.delivery'])->prefix('delivery')->name('delivery.')->group(function () {

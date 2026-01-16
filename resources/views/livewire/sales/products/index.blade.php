@@ -47,6 +47,32 @@
 
             {{-- Center: Search with single horizontal dropdown (Filters / Sort / Group) --}}
             <div class="flex flex-1 items-center justify-center">
+                @if(count($selected) > 0)
+                    {{-- Selection Toolbar --}}
+                    <div class="flex items-center gap-2">
+                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
+                            <flux:icon name="x-mark" class="size-4" />
+                            <span>{{ count($selected) }} Selected</span>
+                        </button>
+                        <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600"></div>
+                        <button wire:click="bulkActivate" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                            <flux:icon name="check-circle" class="size-4" />
+                            Activate
+                        </button>
+                        <button wire:click="bulkDeactivate" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                            <flux:icon name="pause-circle" class="size-4" />
+                            Deactivate
+                        </button>
+                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                            <flux:icon name="arrow-up-tray" class="size-4" />
+                            Export
+                        </button>
+                        <button wire:click="bulkDelete" wire:confirm="Are you sure you want to delete {{ count($selected) }} product(s)?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
+                            <flux:icon name="trash" class="size-4" />
+                            Delete
+                        </button>
+                    </div>
+                @else
                 {{-- Wrapper for searchbox + dropdown to center dropdown on searchbox --}}
                 <x-ui.searchbox-dropdown placeholder="Search products..." widthClass="w-[520px]" width="520px" align="center">
                     <div class="flex flex-col gap-4 p-3 md:flex-row">
@@ -146,6 +172,7 @@
                         </div>
                     </div>
                 </x-ui.searchbox-dropdown>
+                @endif
             </div>
 
             {{-- Right Group: Pagination Info + View Toggle --}}

@@ -67,26 +67,28 @@ class Index extends Component
         $avgOrderValue = $totalOrders > 0 ? $totalRevenue / max($completedOrders, 1) : 0;
         $avgOrderValueThisMonth = $ordersThisMonth > 0 ? $revenueThisMonth / $ordersThisMonth : 0;
 
-        // Monthly revenue data for chart (last 6 months)
-        $monthlyRevenue = SalesOrder::where('status', 'delivered')
-            ->where('created_at', '>=', now()->subMonths(6)->startOfMonth())
-            ->select(
-                DB::raw("EXTRACT(YEAR FROM created_at) as year"),
-                DB::raw("EXTRACT(MONTH FROM created_at) as month"),
-                DB::raw('SUM(total) as revenue'),
-                DB::raw('COUNT(*) as orders')
-            )
-            ->groupBy(DB::raw("EXTRACT(YEAR FROM created_at)"), DB::raw("EXTRACT(MONTH FROM created_at)"))
-            ->orderBy(DB::raw("EXTRACT(YEAR FROM created_at)"))
-            ->orderBy(DB::raw("EXTRACT(MONTH FROM created_at)"))
-            ->get()
-            ->map(function ($item) {
+        // Monthly revenue data for chart (last 6 months) - database agnostic
+        $orders = SalesOrder::where('status', 'delivered')
+            ->where('created_at', '>=', now()->subMonths(5)->startOfMonth())
+            ->get(['created_at', 'total']);
+
+        $monthlyRevenue = $orders->groupBy(fn($order) => $order->created_at->format('Y-m'))
+            ->map(function ($items, $key) {
                 return [
-                    'month' => date('M', mktime(0, 0, 0, (int) $item->month, 1)),
-                    'revenue' => $item->revenue,
-                    'orders' => $item->orders,
+                    'month' => \Carbon\Carbon::createFromFormat('Y-m', $key)->format('M'),
+                    'revenue' => $items->sum('total'),
+                    'orders' => $items->count(),
                 ];
-            });
+            })
+            ->sortKeys()
+            ->values();
+
+        // Prepare chart data
+        $revenueChartData = [
+            'labels' => $monthlyRevenue->pluck('month')->toArray(),
+            'revenue' => $monthlyRevenue->pluck('revenue')->toArray(),
+            'orders' => $monthlyRevenue->pluck('orders')->toArray(),
+        ];
 
         // Recent orders
         $recentOrders = SalesOrder::with('customer')
@@ -129,6 +131,7 @@ class Index extends Component
             'avgOrderValue' => $avgOrderValue,
             'avgOrderValueThisMonth' => $avgOrderValueThisMonth,
             'monthlyRevenue' => $monthlyRevenue,
+            'revenueChartData' => $revenueChartData,
             'recentOrders' => $recentOrders,
             'topCustomers' => $topCustomers,
             'newCustomersThisMonth' => $newCustomersThisMonth,

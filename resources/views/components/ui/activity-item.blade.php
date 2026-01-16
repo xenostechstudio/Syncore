@@ -32,6 +32,11 @@
     // Get action/event
     $event = $activity->event ?? $activity->action ?? null;
     
+    // Check if this is a special action with badge
+    $isInvoiceCreated = $event === 'invoice_created';
+    $isDeliveryCreated = $event === 'delivery_created';
+    $hasSpecialBadge = $isInvoiceCreated || $isDeliveryCreated;
+    
     // Helper function to format field labels
     $formatLabel = function($key) {
         $customLabels = [
@@ -144,6 +149,10 @@
         <div class="text-sm text-zinc-600 dark:text-zinc-400">
             @if($event === 'created')
                 {{ $emptyMessage }}
+            @elseif($isInvoiceCreated)
+                Created invoice
+            @elseif($isDeliveryCreated)
+                Created delivery order
             @elseif($properties->has('old') && $properties->has('new') && $event === 'updated')
                 @php
                     $old = $properties->get('old', []);
@@ -177,5 +186,23 @@
                 {{ $activity->description ?? '' }}
             @endif
         </div>
+        
+        {{-- Special Badge for Invoice/Delivery Creation --}}
+        @if($isInvoiceCreated && $properties->has('invoice_number'))
+            <a href="{{ route('invoicing.invoices.edit', $properties->get('invoice_id')) }}" wire:navigate class="mt-2 inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30">
+                <flux:icon name="document-text" class="size-4 text-blue-600 dark:text-blue-400" />
+                <span class="font-medium text-blue-700 dark:text-blue-400">{{ $properties->get('invoice_number') }}</span>
+                @if($properties->has('amount'))
+                    <span class="text-blue-600 dark:text-blue-500">Rp {{ number_format($properties->get('amount'), 0, ',', '.') }}</span>
+                @endif
+                <flux:icon name="arrow-top-right-on-square" class="size-3.5 text-blue-400" />
+            </a>
+        @elseif($isDeliveryCreated && $properties->has('delivery_number'))
+            <a href="{{ route('delivery.orders.edit', $properties->get('delivery_order_id')) }}" wire:navigate class="mt-2 inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:hover:bg-amber-900/30">
+                <flux:icon name="truck" class="size-4 text-amber-600 dark:text-amber-400" />
+                <span class="font-medium text-amber-700 dark:text-amber-400">{{ $properties->get('delivery_number') }}</span>
+                <flux:icon name="arrow-top-right-on-square" class="size-3.5 text-amber-400" />
+            </a>
+        @endif
     </div>
 </div>

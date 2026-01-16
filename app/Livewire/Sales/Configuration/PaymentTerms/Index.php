@@ -36,7 +36,7 @@ class Index extends Component
     {
         if ($value) {
             $this->selected = PaymentTerm::query()
-                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
+                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
                 ->pluck('id')
                 ->map(fn($id) => (string) $id)
                 ->toArray();
@@ -65,6 +65,22 @@ class Index extends Component
         session()->flash('success', 'Selected payment terms deleted successfully.');
     }
 
+    public function activateSelected(): void
+    {
+        PaymentTerm::whereIn('id', $this->selected)->update(['is_active' => true]);
+        $this->selected = [];
+        $this->selectAll = false;
+        session()->flash('success', 'Selected payment terms activated.');
+    }
+
+    public function deactivateSelected(): void
+    {
+        PaymentTerm::whereIn('id', $this->selected)->update(['is_active' => false]);
+        $this->selected = [];
+        $this->selectAll = false;
+        session()->flash('success', 'Selected payment terms deactivated.');
+    }
+
     protected function getImportClass(): string
     {
         return PaymentTermsImport::class;
@@ -81,8 +97,8 @@ class Index extends Component
     public function render()
     {
         $paymentTerms = PaymentTerm::query()
-            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('code', 'ilike', "%{$this->search}%"))
+            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%"))
             ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate(15, ['*'], 'page', $this->page);

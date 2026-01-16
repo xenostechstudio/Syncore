@@ -7,15 +7,25 @@
                     <flux:icon name="arrow-left" class="size-5" />
                 </a>
                 <div class="flex flex-col">
-                    {{-- Small module label --}}
+                    {{-- Small module label (dynamic based on status) --}}
                     <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                        Quotation
+                        @if($status === \App\Enums\SalesOrderState::SALES_ORDER->value)
+                            Sales Order
+                        @elseif($status === 'cancelled')
+                            Cancelled Order
+                        @else
+                            Quotation
+                        @endif
                     </span>
 
                     {{-- Order number + gear dropdown inline --}}
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            {{ $orderId ? ($orderNumber ?? 'SO-' . str_pad($orderId, 5, '0', STR_PAD_LEFT)) : 'New Quotation' }}
+                            @if($orderId)
+                                {{ $orderNumber ?? 'SO-' . str_pad($orderId, 5, '0', STR_PAD_LEFT) }}
+                            @else
+                                New {{ $status === \App\Enums\SalesOrderState::SALES_ORDER->value ? 'Order' : 'Quotation' }}
+                            @endif
                         </span>
 
                         {{-- Header actions dropdown (Duplicate, Archive, Delete) --}}
@@ -26,20 +36,29 @@
 
                             <flux:menu class="w-40">
                                 @if($orderId)
-                                <button type="button" wire:click="duplicate" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
+                                <button type="button" wire:click="downloadPdf" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="arrow-down-tray" wire:loading.remove wire:target="downloadPdf" class="size-4" />
+                                    <flux:icon name="arrow-path" wire:loading wire:target="downloadPdf" class="size-4 animate-spin" />
+                                    <span>Download PDF</span>
+                                </button>
+                                <button type="button" wire:click="duplicate" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="document-duplicate" wire:loading.remove wire:target="duplicate" class="size-4" />
+                                    <flux:icon name="arrow-path" wire:loading wire:target="duplicate" class="size-4 animate-spin" />
                                     <span>Duplicate</span>
                                 </button>
                                 @endif
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="archive-box" class="size-4" />
+                                <button type="button" wire:click="archive" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="archive-box" wire:loading.remove wire:target="archive" class="size-4" />
+                                    <flux:icon name="arrow-path" wire:loading wire:target="archive" class="size-4 animate-spin" />
                                     <span>Archive</span>
                                 </button>
+                                @if($orderId)
                                 <flux:menu.separator />
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <button type="button" wire:click="delete" wire:confirm="Are you sure you want to delete this order? This action cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>
+                                @endif
                             </flux:menu>
                         </flux:dropdown>
                     </div>
@@ -57,21 +76,7 @@
                         >
                             <flux:icon name="truck" class="size-4" />
                             <span>{{ $delivery->delivery_number }}</span>
-                            @php
-                                $deliveryStatusConfig = match($delivery->status->value) {
-                                    'pending' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                    'picked' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
-                                    'in_transit' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
-                                    'delivered' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
-                                    'failed' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
-                                    'returned' => ['bg' => 'bg-amber-200 dark:bg-amber-800', 'text' => 'text-amber-700 dark:text-amber-300'],
-                                    'cancelled' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
-                                    default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                };
-                            @endphp
-                            <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $deliveryStatusConfig['bg'] }} {{ $deliveryStatusConfig['text'] }}">
-                                {{ ucfirst(str_replace('_', ' ', $delivery->status->value)) }}
-                            </span>
+                            <x-ui.status-badge :status="$delivery->status->value" type="delivery" />
                         </a>
                     @endforeach
 
@@ -83,18 +88,7 @@
                         >
                             <flux:icon name="document-text" class="size-4" />
                             <span>{{ $invoice->invoice_number }}</span>
-                            @php
-                                $invoiceStatusConfig = match($invoice->status) {
-                                    'draft' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                    'sent' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
-                                    'partial' => ['bg' => 'bg-amber-200 dark:bg-amber-800', 'text' => 'text-amber-700 dark:text-amber-300'],
-                                    'paid' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
-                                    default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                };
-                            @endphp
-                            <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $invoiceStatusConfig['bg'] }} {{ $invoiceStatusConfig['text'] }}">
-                                {{ ucfirst($invoice->status) }}
-                            </span>
+                            <x-ui.status-badge :status="$invoice->status" type="invoice" />
                         </a>
                     @endforeach
                 </div>
@@ -151,10 +145,14 @@
                         <button 
                             type="button"
                             wire:click="save"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                         >
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @elseif($status === 'quotation' || $status === 'draft' || $status === 'confirmed')
                         {{-- Draft/Confirmed: Show Confirm button (primary) --}}
@@ -169,17 +167,21 @@
                         <button 
                             type="button"
                             wire:click="save"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @elseif($status === \App\Enums\SalesOrderState::SALES_ORDER->value)
                         {{-- Sales Order: Show Create Invoice button if there are items to invoice --}}
                         @if($order && $order->hasQuantityToInvoice())
                             <button 
                                 type="button"
-                                wire:click="openInvoiceModal"
+                                @click="showInvoiceModal = true"
                                 class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                             >
                                 <flux:icon name="document-text" class="size-4" />
@@ -192,7 +194,7 @@
                         @if($order && $order->canCreateDeliveryOrder())
                             <button 
                                 type="button"
-                                wire:click="openDeliveryModal"
+                                @click="showDeliveryModal = true"
                                 class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                             >
                                 <flux:icon name="truck" class="size-4" />
@@ -205,16 +207,20 @@
                         <button 
                             type="button"
                             wire:click="save"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
-                            <flux:icon name="document-check" class="size-4" />
-                            Save
+                            <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                            <span wire:loading.remove wire:target="save">Save</span>
+                            <span wire:loading wire:target="save">Saving...</span>
                         </button>
                     @endif
                     @if($orderId)
                         <button 
                             type="button"
-                            wire:click="openEmailModal"
+                            @click="showEmailModal = true; $wire.prepareEmailModal()"
                             class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
                             <flux:icon name="envelope" class="size-4" />
@@ -320,7 +326,7 @@
             x-transition:leave-end="opacity-0"
         >
             {{-- Backdrop --}}
-            <div class="absolute inset-0 bg-black/50" @click="showConfirmModal = false"></div>
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showConfirmModal = false"></div>
             
             {{-- Modal Content --}}
             <div 
@@ -358,10 +364,14 @@
                     <button 
                         type="button"
                         wire:click="confirm"
-                        @click="showConfirmModal = false"
-                        class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        wire:loading.attr="disabled"
+                        wire:target="confirm"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                        Confirm Order
+                        <flux:icon name="check" wire:loading.remove wire:target="confirm" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="confirm" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="confirm">Confirm Order</span>
+                        <span wire:loading wire:target="confirm">Confirming...</span>
                     </button>
                 </div>
             </div>
@@ -493,10 +503,14 @@
                     <button 
                         type="button"
                         wire:click="createInvoice"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        wire:loading.attr="disabled"
+                        wire:target="createInvoice"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                        <flux:icon name="document-text" class="size-4" />
-                        Create Invoice Draft
+                        <flux:icon name="document-text" wire:loading.remove wire:target="createInvoice" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="createInvoice" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="createInvoice">Create Invoice Draft</span>
+                        <span wire:loading wire:target="createInvoice">Creating...</span>
                     </button>
                 </div>
             </div>
@@ -596,10 +610,14 @@
                     <button 
                         type="button"
                         wire:click="createDeliveryOrder"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        wire:loading.attr="disabled"
+                        wire:target="createDeliveryOrder"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                        <flux:icon name="truck" class="size-4" />
-                        Create Delivery Draft
+                        <flux:icon name="truck" wire:loading.remove wire:target="createDeliveryOrder" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="createDeliveryOrder" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="createDeliveryOrder">Create Delivery Draft</span>
+                        <span wire:loading wire:target="createDeliveryOrder">Creating...</span>
                     </button>
                 </div>
             </div>
@@ -731,8 +749,11 @@
                                         @click="open = !open"
                                         class="flex w-full items-center justify-between rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-left text-sm transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:hover:border-zinc-700"
                                     >
-                                        <span class="{{ $pricelist ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400' }}">
-                                            {{ $pricelist ? ucfirst($pricelist) . ' Price' : 'Select pricelist...' }}
+                                        @php
+                                            $selectedPricelist = $pricelist_id ? $pricelists->firstWhere('id', $pricelist_id) : null;
+                                        @endphp
+                                        <span class="{{ $selectedPricelist ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400' }}">
+                                            {{ $selectedPricelist?->name ?? 'Default Price' }}
                                         </span>
                                         <flux:icon name="chevron-down" class="size-4 text-zinc-400" />
                                     </button>
@@ -742,9 +763,25 @@
                                         x-transition
                                         class="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
                                     >
-                                        <button type="button" wire:click="$set('pricelist', 'standard')" @click="open = false" class="block w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">Standard Price</button>
-                                        <button type="button" wire:click="$set('pricelist', 'wholesale')" @click="open = false" class="block w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">Wholesale Price</button>
-                                        <button type="button" wire:click="$set('pricelist', 'retail')" @click="open = false" class="block w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">Retail Price</button>
+                                        <button type="button" wire:click="$set('pricelist_id', null)" @click="open = false" class="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800 {{ !$pricelist_id ? 'bg-zinc-100 dark:bg-zinc-800' : '' }}">
+                                            <span>Default Price</span>
+                                            @if(!$pricelist_id)
+                                                <flux:icon name="check" class="size-4 text-emerald-500" />
+                                            @endif
+                                        </button>
+                                        @foreach($pricelists as $pl)
+                                            <button type="button" wire:click="$set('pricelist_id', {{ $pl->id }})" @click="open = false" class="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800 {{ $pricelist_id == $pl->id ? 'bg-zinc-100 dark:bg-zinc-800' : '' }}">
+                                                <div>
+                                                    <span>{{ $pl->name }}</span>
+                                                    @if($pl->code)
+                                                        <span class="ml-1 text-xs text-zinc-400">({{ $pl->code }})</span>
+                                                    @endif
+                                                </div>
+                                                @if($pricelist_id == $pl->id)
+                                                    <flux:icon name="check" class="size-4 text-emerald-500" />
+                                                @endif
+                                            </button>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
@@ -1172,7 +1209,109 @@
                             </div>
 
                             {{-- Totals (Right Side) --}}
-                            <div class="w-full space-y-2 lg:w-72">
+                            <div class="w-full space-y-2 lg:w-80">
+                                {{-- Coupon Code Section --}}
+                                <div x-data="{ showCouponInput: {{ $coupon_code || $appliedPromotion ? 'true' : 'false' }} }" class="mb-3">
+                                    {{-- Applied Promotion Badge (shown when promotion is applied) --}}
+                                    @if($appliedPromotion)
+                                        <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-900/20">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-800/50">
+                                                        <flux:icon name="tag" class="size-4 text-emerald-600 dark:text-emerald-400" />
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm font-medium text-emerald-700 dark:text-emerald-400">{{ $appliedPromotion['promotion_name'] ?? 'Promotion Applied' }}</p>
+                                                        <p class="text-xs text-emerald-600 dark:text-emerald-500">
+                                                            @if($coupon_code)
+                                                                Code: <span class="font-mono font-medium">{{ strtoupper($coupon_code) }}</span>
+                                                            @else
+                                                                Auto-applied
+                                                            @endif
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                @if($coupon_code)
+                                                    <button type="button" wire:click="removeCoupon" class="rounded-lg p-1.5 text-emerald-600 transition-colors hover:bg-emerald-100 dark:text-emerald-400 dark:hover:bg-emerald-800/50" title="Remove coupon">
+                                                        <flux:icon name="x-mark" class="size-4" />
+                                                    </button>
+                                                @endif
+                                            </div>
+                                            @if($promotion_discount > 0)
+                                                <div class="mt-2 flex items-center justify-between border-t border-emerald-200 pt-2 dark:border-emerald-700">
+                                                    <span class="text-xs text-emerald-600 dark:text-emerald-500">You save</span>
+                                                    <span class="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Rp {{ number_format($promotion_discount, 0, ',', '.') }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        {{-- Toggle Button (shown when no promotion applied) --}}
+                                        <button 
+                                            type="button" 
+                                            @click="showCouponInput = !showCouponInput"
+                                            class="flex w-full items-center justify-between rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2.5 text-sm transition-colors hover:border-zinc-400 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800/50 dark:hover:border-zinc-500 dark:hover:bg-zinc-800"
+                                            x-show="!showCouponInput"
+                                        >
+                                            <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                                                <flux:icon name="ticket" class="size-4" />
+                                                <span>Have a coupon code?</span>
+                                            </div>
+                                            <flux:icon name="plus" class="size-4 text-zinc-400" />
+                                        </button>
+
+                                        {{-- Coupon Input (shown when toggled or has error) --}}
+                                        <div 
+                                            x-show="showCouponInput" 
+                                            x-transition:enter="transition ease-out duration-200"
+                                            x-transition:enter-start="opacity-0 -translate-y-2"
+                                            x-transition:enter-end="opacity-100 translate-y-0"
+                                            class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50"
+                                        >
+                                            <div class="mb-2 flex items-center justify-between">
+                                                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Enter Coupon Code</span>
+                                                <button type="button" @click="showCouponInput = false; $wire.set('coupon_code', '')" class="rounded p-0.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
+                                                    <flux:icon name="x-mark" class="size-3.5" />
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <div class="relative flex-1">
+                                                    <input 
+                                                        type="text" 
+                                                        wire:model="coupon_code"
+                                                        wire:keydown.enter="applyCoupon"
+                                                        placeholder="e.g., SAVE20"
+                                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium uppercase tracking-wider placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-100/10 {{ $couponError ? 'border-red-300 dark:border-red-700' : '' }}"
+                                                    />
+                                                </div>
+                                                <button 
+                                                    type="button" 
+                                                    wire:click="applyCoupon" 
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="applyCoupon"
+                                                    class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                                                >
+                                                    <span wire:loading.remove wire:target="applyCoupon">Apply</span>
+                                                    <span wire:loading wire:target="applyCoupon">
+                                                        <flux:icon name="arrow-path" class="size-4 animate-spin" />
+                                                    </span>
+                                                </button>
+                                            </div>
+                                            @if($couponError)
+                                                <div class="mt-2 flex items-center gap-1.5 text-xs text-red-500">
+                                                    <flux:icon name="exclamation-circle" class="size-3.5" />
+                                                    <span>{{ $couponError }}</span>
+                                                </div>
+                                            @endif
+                                            @if($couponSuccess)
+                                                <div class="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                                                    <flux:icon name="check-circle" class="size-3.5" />
+                                                    <span>{{ $couponSuccess }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+
                                 <div class="flex items-center justify-between text-sm">
                                     <span class="text-zinc-500 dark:text-zinc-400">Untaxed Amount</span>
                                     <span class="text-zinc-900 dark:text-zinc-100">Rp {{ number_format($this->subtotal, 0, ',', '.') }}</span>
@@ -1181,6 +1320,12 @@
                                     <span class="text-zinc-500 dark:text-zinc-400">Taxes</span>
                                     <span class="text-zinc-900 dark:text-zinc-100">Rp {{ number_format($this->tax, 0, ',', '.') }}</span>
                                 </div>
+                                @if($promotion_discount > 0)
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-emerald-600 dark:text-emerald-400">Promotion Discount</span>
+                                        <span class="text-emerald-600 dark:text-emerald-400">- Rp {{ number_format($promotion_discount, 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
                                 <div class="flex items-center justify-between border-t border-zinc-200 pt-2 dark:border-zinc-700">
                                     <span class="font-medium text-zinc-900 dark:text-zinc-100">Total</span>
                                     <span class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($this->total, 0, ',', '.') }}</span>
@@ -1546,8 +1691,12 @@
                 <button 
                     type="button"
                     wire:click="refreshPreviewLink"
-                    class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    wire:loading.attr="disabled"
+                    wire:target="refreshPreviewLink"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
+                    <flux:icon name="arrow-path" wire:loading.remove wire:target="refreshPreviewLink" class="size-4" />
+                    <flux:icon name="arrow-path" wire:loading wire:target="refreshPreviewLink" class="size-4 animate-spin" />
                     Regenerate Link
                 </button>
 
@@ -1581,7 +1730,7 @@
     </div>
 
     {{-- Cancel Order Confirmation Modal --}}
-    <x-ui.confirm-modal show="showCancelModal">
+    <x-ui.confirm-modal show="showCancelModal" maxWidth="md">
         <x-slot:icon>
             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
                 <flux:icon name="exclamation-triangle" class="size-7" />
@@ -1593,8 +1742,61 @@
         </x-slot:title>
 
         <x-slot:description>
-            This action will cancel the order and cannot be undone. Are you sure you want to proceed?
+            This action will cancel the order and cannot be undone.
         </x-slot:description>
+
+        <x-slot:content>
+            {{-- Warning Box --}}
+            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                <div class="flex items-start gap-2">
+                    <flux:icon name="exclamation-circle" class="mt-0.5 size-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+                    <p class="text-left text-xs text-amber-700 dark:text-amber-300">
+                        Please review related documents before cancelling. Invoices and delivery orders may need to be handled separately.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Related Documents --}}
+            @if($orderId && ($invoices->count() > 0 || $deliveries->count() > 0))
+                <div class="mt-3 space-y-2">
+                    {{-- Invoices --}}
+                    @if($invoices->count() > 0)
+                        <div class="flex flex-wrap items-center justify-center gap-2">
+                            @foreach($invoices as $invoice)
+                                <a 
+                                    href="{{ route('invoicing.invoices.edit', $invoice->id) }}" 
+                                    wire:navigate
+                                    class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/20 dark:hover:bg-violet-900/30"
+                                >
+                                    <flux:icon name="document-text" class="size-4 text-violet-600 dark:text-violet-400" />
+                                    <span class="font-medium text-violet-700 dark:text-violet-400">{{ $invoice->invoice_number }}</span>
+                                    <x-ui.status-badge :status="$invoice->status" type="invoice" />
+                                    <flux:icon name="arrow-top-right-on-square" class="size-3.5 text-violet-400" />
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    {{-- Delivery Orders --}}
+                    @if($deliveries->count() > 0)
+                        <div class="flex flex-wrap items-center justify-center gap-2">
+                            @foreach($deliveries as $delivery)
+                                <a 
+                                    href="{{ route('delivery.orders.edit', $delivery->id) }}" 
+                                    wire:navigate
+                                    class="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30"
+                                >
+                                    <flux:icon name="truck" class="size-4 text-blue-600 dark:text-blue-400" />
+                                    <span class="font-medium text-blue-700 dark:text-blue-400">{{ $delivery->delivery_number }}</span>
+                                    <x-ui.status-badge :status="$delivery->status->value" type="delivery" />
+                                    <flux:icon name="arrow-top-right-on-square" class="size-3.5 text-blue-400" />
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </x-slot:content>
 
         <x-slot:actions>
             <button 
@@ -1608,9 +1810,13 @@
             <button 
                 type="button"
                 wire:click="cancel"
+                wire:loading.attr="disabled"
+                wire:target="cancel"
                 @click="showCancelModal = false"
-                class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50 dark:bg-red-500 dark:hover:bg-red-600"
             >
+                <flux:icon name="x-mark" wire:loading.remove wire:target="cancel" class="size-4" />
+                <flux:icon name="arrow-path" wire:loading wire:target="cancel" class="size-4 animate-spin" />
                 Cancel Order
             </button>
         </x-slot:actions>

@@ -196,7 +196,7 @@
                         <span class="text-xs text-zinc-500 dark:text-zinc-400">Last 6 months</span>
                     </div>
                     <div class="p-5">
-                        <div class="mb-4 grid grid-cols-3 gap-4">
+                        <div class="mb-6 grid grid-cols-3 gap-4">
                             <div>
                                 <p class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total Revenue</p>
                                 <p class="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($totalRevenue / 1000000, 1) }}M</p>
@@ -211,29 +211,20 @@
                             </div>
                         </div>
                         
-                        {{-- Simple Bar Chart --}}
-                        <div class="mt-6">
-                            <div class="flex items-end justify-between gap-2 h-32">
-                                @php
-                                    $maxRevenue = $monthlyRevenue->max('revenue') ?: 1;
-                                @endphp
-                                @forelse($monthlyRevenue as $data)
-                                    <div class="flex-1 flex flex-col items-center gap-1">
-                                        <div class="w-full bg-zinc-100 dark:bg-zinc-800 rounded-t relative" style="height: {{ max(($data['revenue'] / $maxRevenue) * 100, 5) }}%">
-                                            <div class="absolute inset-0 bg-emerald-500 dark:bg-emerald-400 rounded-t opacity-80"></div>
-                                        </div>
-                                        <span class="text-[10px] text-zinc-500 dark:text-zinc-400">{{ $data['month'] }}</span>
-                                    </div>
-                                @empty
-                                    @for($i = 0; $i < 6; $i++)
-                                        <div class="flex-1 flex flex-col items-center gap-1">
-                                            <div class="w-full bg-zinc-100 dark:bg-zinc-800 rounded-t h-4"></div>
-                                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400">-</span>
-                                        </div>
-                                    @endfor
-                                @endforelse
+                        {{-- Chart.js Bar Chart --}}
+                        @if(count($revenueChartData['labels']) > 0)
+                            <div 
+                                x-data="revenueChart(@js($revenueChartData))"
+                                wire:ignore
+                                class="relative h-56"
+                            >
+                                <canvas x-ref="canvas"></canvas>
                             </div>
-                        </div>
+                        @else
+                            <div class="flex h-56 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
+                                <p class="text-sm text-zinc-400 dark:text-zinc-500">No revenue data available</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -333,3 +324,111 @@
         </div>
     </div>
 </div>
+
+@script
+<script>
+    Alpine.data('revenueChart', (data) => ({
+        chart: null,
+        init() {
+            const ctx = this.$refs.canvas.getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#a1a1aa' : '#71717a';
+            const gridColor = isDark ? '#27272a' : '#f4f4f5';
+            
+            this.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: data.revenue,
+                            backgroundColor: '#10b981',
+                            borderRadius: 6,
+                            barThickness: 32,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Orders',
+                            data: data.orders,
+                            type: 'line',
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#3b82f6',
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 16,
+                                color: textColor,
+                                font: { size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? '#18181b' : '#fff',
+                            titleColor: isDark ? '#fafafa' : '#18181b',
+                            bodyColor: isDark ? '#a1a1aa' : '#71717a',
+                            borderColor: isDark ? '#27272a' : '#e4e4e7',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataset.label === 'Revenue') {
+                                        return 'Revenue: Rp ' + new Intl.NumberFormat('id-ID').format(context.raw);
+                                    }
+                                    return 'Orders: ' + context.raw;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor, font: { size: 11 } }
+                        },
+                        y: {
+                            position: 'left',
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: textColor,
+                                font: { size: 11 },
+                                callback: function(value) {
+                                    if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1) + 'M';
+                                    if (value >= 1000) return 'Rp ' + (value / 1000).toFixed(0) + 'K';
+                                    return 'Rp ' + value;
+                                }
+                            }
+                        },
+                        y1: {
+                            position: 'right',
+                            grid: { display: false },
+                            ticks: {
+                                color: '#3b82f6',
+                                font: { size: 11 },
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }));
+</script>
+@endscript

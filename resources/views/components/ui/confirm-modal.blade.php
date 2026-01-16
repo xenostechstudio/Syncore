@@ -8,6 +8,7 @@
         'sm' => 'max-w-sm',
         'md' => 'max-w-md',
         'lg' => 'max-w-lg',
+        'xl' => 'max-w-xl',
         default => 'max-w-sm',
     };
 @endphp
@@ -23,8 +24,8 @@
     x-transition:leave-start="opacity-100"
     x-transition:leave-end="opacity-0"
 >
-    {{-- Backdrop --}}
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="{{ $show }} = false"></div>
+    {{-- Backdrop (no blur) --}}
+    <div class="absolute inset-0 bg-zinc-900/60" @click="{{ $show }} = false"></div>
 
     {{-- Modal Content --}}
     <div 
@@ -56,6 +57,13 @@
                     <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                         {{ $description }}
                     </p>
+                @endisset
+
+                {{-- Optional content slot for additional content like badges --}}
+                @isset($content)
+                    <div class="mt-4 w-full">
+                        {{ $content }}
+                    </div>
                 @endisset
             </div>
         </div>

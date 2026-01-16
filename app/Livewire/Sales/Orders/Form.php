@@ -12,9 +12,13 @@ use App\Models\Inventory\Warehouse;
 use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\InvoiceItem;
 use App\Models\Sales\Customer;
+use App\Models\Sales\Pricelist;
+use App\Models\Sales\PricelistItem;
+use App\Models\Sales\Promotion;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderItem;
 use App\Models\Sales\Tax;
+use App\Services\PromotionEngine;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL as UrlFacade;
@@ -41,8 +45,16 @@ class Form extends Component
     public ?string $orderNumber = null;
     public ?string $createdAt = null;
     public ?string $updatedAt = null;
-    public string $pricelist = '';
+    public ?int $pricelist_id = null;
     public string $payment_terms = '';
+
+    // Promotion
+    public ?int $promotion_id = null;
+    public string $coupon_code = '';
+    public float $promotion_discount = 0;
+    public ?array $appliedPromotion = null;
+    public ?string $couponError = null;
+    public ?string $couponSuccess = null;
 
     // Order Items
     public array $items = [];
@@ -227,6 +239,13 @@ class Form extends Component
 
             DB::commit();
 
+            // Log activity on the sales order
+            $order->logActivity('delivery_created', "Delivery Order {$delivery->delivery_number} created", [
+                'delivery_order_id' => $delivery->id,
+                'delivery_number' => $delivery->delivery_number,
+                'warehouse_id' => $this->deliveryWarehouseId,
+            ]);
+
             $this->showDeliveryModal = false;
             session()->flash('success', 'Delivery order created successfully.');
             $this->redirect(route('delivery.orders.edit', $delivery->id), navigate: true);
@@ -238,9 +257,13 @@ class Form extends Component
 
     public function loadOrder(): void
     {
-        $order = SalesOrder::with(['customer', 'items.product', 'items.tax'])->findOrFail($this->orderId);
+        $order = SalesOrder::with(['customer', 'items.product', 'items.tax', 'promotion'])->findOrFail($this->orderId);
 
         $this->customer_id = $order->customer_id;
+        $this->pricelist_id = $order->pricelist_id;
+        $this->promotion_id = $order->promotion_id;
+        $this->coupon_code = $order->promotion_code ?? '';
+        $this->promotion_discount = (float) ($order->promotion_discount ?? 0);
         $this->order_date = $order->order_date->format('Y-m-d');
         $this->expected_delivery_date = $order->expected_delivery_date?->format('Y-m-d') ?? '';
         $this->status = $order->status;
@@ -251,6 +274,16 @@ class Form extends Component
         $this->orderNumber = $order->order_number;
         $this->createdAt = $order->created_at->format('M d, Y \a\t H:i');
         $this->updatedAt = $order->updated_at->format('M d, Y \a\t H:i');
+
+        // Load applied promotion info
+        if ($order->promotion) {
+            $this->appliedPromotion = [
+                'promotion_id' => $order->promotion_id,
+                'promotion_name' => $order->promotion->name,
+                'promotion_code' => $order->promotion_code,
+                'total_discount' => (float) $order->promotion_discount,
+            ];
+        }
 
         $this->items = $order->items->map(fn($item) => [
             'id' => $item->id,
@@ -265,6 +298,162 @@ class Form extends Component
         ])->toArray();
 
         // Activity log is now handled by Spatie Activity Log via getActivities()
+    }
+
+    /**
+     * When customer changes, auto-set their default pricelist
+     */
+    public function updatedCustomerId($value): void
+    {
+        if ($value) {
+            $customer = Customer::find($value);
+            if ($customer?->pricelist_id) {
+                $this->pricelist_id = $customer->pricelist_id;
+                // Recalculate prices for existing items
+                $this->recalculateItemPrices();
+            }
+        }
+    }
+
+    /**
+     * When pricelist changes, recalculate all item prices
+     */
+    public function updatedPricelistId($value): void
+    {
+        $this->recalculateItemPrices();
+    }
+
+    /**
+     * Get product price based on active pricelist
+     */
+    protected function getProductPrice(Product $product): float
+    {
+        if ($this->pricelist_id) {
+            $pricelistItem = PricelistItem::where('pricelist_id', $this->pricelist_id)
+                ->where('product_id', $product->id)
+                ->where(function ($query) {
+                    $query->whereNull('start_date')
+                        ->orWhereDate('start_date', '<=', now());
+                })
+                ->where(function ($query) {
+                    $query->whereNull('end_date')
+                        ->orWhereDate('end_date', '>=', now());
+                })
+                ->first();
+
+            if ($pricelistItem) {
+                return (float) $pricelistItem->price;
+            }
+        }
+
+        return (float) ($product->selling_price ?? 0);
+    }
+
+    /**
+     * Recalculate prices for all items based on current pricelist
+     */
+    protected function recalculateItemPrices(): void
+    {
+        foreach ($this->items as $index => $item) {
+            if (!empty($item['product_id'])) {
+                $product = Product::find($item['product_id']);
+                if ($product) {
+                    $this->items[$index]['unit_price'] = $this->getProductPrice($product);
+                    $this->calculateItemTotal($index);
+                }
+            }
+        }
+        
+        // Re-evaluate promotions after price change
+        $this->evaluatePromotions();
+    }
+
+    /**
+     * Apply a coupon code
+     */
+    public function applyCoupon(): void
+    {
+        $this->couponError = null;
+        $this->couponSuccess = null;
+
+        if (empty($this->coupon_code)) {
+            $this->couponError = 'Please enter a coupon code.';
+            return;
+        }
+
+        $engine = $this->getPromotionEngine();
+        $result = $engine->validateCoupon($this->coupon_code);
+
+        if (!$result['valid']) {
+            $this->couponError = $result['message'];
+            return;
+        }
+
+        $this->appliedPromotion = $result['discount'];
+        $this->promotion_id = $result['promotion']->id;
+        $this->promotion_discount = $result['discount']['total_discount'];
+        $this->couponSuccess = $result['message'];
+    }
+
+    /**
+     * Remove applied coupon
+     */
+    public function removeCoupon(): void
+    {
+        $this->coupon_code = '';
+        $this->promotion_id = null;
+        $this->promotion_discount = 0;
+        $this->appliedPromotion = null;
+        $this->couponError = null;
+        $this->couponSuccess = null;
+        
+        // Re-evaluate automatic promotions
+        $this->evaluatePromotions();
+    }
+
+    /**
+     * Evaluate and apply best automatic promotion
+     */
+    protected function evaluatePromotions(): void
+    {
+        // Skip if a coupon is already applied
+        if ($this->promotion_id && !empty($this->coupon_code)) {
+            return;
+        }
+
+        $engine = $this->getPromotionEngine();
+        $best = $engine->getBestPromotion();
+
+        if ($best) {
+            $this->appliedPromotion = $best;
+            $this->promotion_id = $best['promotion_id'];
+            $this->promotion_discount = $best['total_discount'];
+        } else {
+            $this->appliedPromotion = null;
+            $this->promotion_id = null;
+            $this->promotion_discount = 0;
+        }
+    }
+
+    /**
+     * Get configured promotion engine
+     */
+    protected function getPromotionEngine(): PromotionEngine
+    {
+        $items = collect($this->items)
+            ->filter(fn($item) => !empty($item['product_id']))
+            ->map(fn($item) => [
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+            ])
+            ->values()
+            ->toArray();
+
+        return (new PromotionEngine())
+            ->forCustomer($this->customer_id)
+            ->withItems($items)
+            ->withCoupon($this->coupon_code ?: null);
     }
 
     public function addItem(): void
@@ -295,9 +484,10 @@ class Form extends Component
             $this->items[$index]['product_id'] = $item->id;
             $this->items[$index]['name'] = $item->name;
             $this->items[$index]['sku'] = $item->sku;
-            $this->items[$index]['unit_price'] = $item->selling_price ?? 0;
+            $this->items[$index]['unit_price'] = $this->getProductPrice($item);
             $this->items[$index]['tax_id'] = $item->sales_tax_id;
             $this->calculateItemTotal($index);
+            $this->evaluatePromotions();
         }
     }
 
@@ -315,6 +505,7 @@ class Form extends Component
         if (count($parts) === 2) {
             $index = (int) $parts[0];
             $this->calculateItemTotal($index);
+            $this->evaluatePromotions();
         }
     }
 
@@ -369,7 +560,7 @@ class Form extends Component
 
     public function getTotalProperty(): float
     {
-        return $this->subtotal + $this->tax;
+        return $this->subtotal + $this->tax - $this->promotion_discount;
     }
 
     /**
@@ -556,6 +747,14 @@ class Form extends Component
 
             DB::commit();
 
+            // Log activity on the sales order
+            $order->logActivity('invoice_created', "Invoice {$invoice->invoice_number} created", [
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'invoice_type' => $this->invoiceType,
+                'amount' => $invoiceTotal,
+            ]);
+
             $this->showInvoiceModal = false;
             session()->flash('success', 'Invoice draft created successfully.');
             
@@ -573,6 +772,10 @@ class Form extends Component
         $orderData = [
             'customer_id' => $this->customer_id,
             'user_id' => Auth::id(),
+            'pricelist_id' => $this->pricelist_id,
+            'promotion_id' => $this->promotion_id,
+            'promotion_code' => $this->coupon_code ?: null,
+            'promotion_discount' => $this->promotion_discount,
             'order_date' => $this->order_date,
             'expected_delivery_date' => $this->expected_delivery_date ?: null,
             'status' => $this->status,
@@ -582,7 +785,7 @@ class Form extends Component
             'shipping_address' => $this->shipping_address,
             'subtotal' => $this->subtotal,
             'tax' => $this->tax,
-            'discount' => 0,
+            'discount' => $this->promotion_discount,
             'total' => $this->total,
         ];
 
@@ -643,6 +846,43 @@ class Form extends Component
         }
     }
 
+    public function archive(): void
+    {
+        if (!$this->orderId) {
+            session()->flash('error', 'Please save the order first.');
+            return;
+        }
+
+        $order = SalesOrder::findOrFail($this->orderId);
+        
+        // Use soft delete as archive
+        $order->delete();
+        
+        session()->flash('success', 'Order archived successfully.');
+        $this->redirect(route('sales.orders.index'), navigate: true);
+    }
+
+    public function delete(): void
+    {
+        if (!$this->orderId) {
+            return;
+        }
+
+        $order = SalesOrder::findOrFail($this->orderId);
+        
+        // Check if order has related invoices or deliveries
+        if ($order->invoices()->exists() || $order->deliveryOrders()->exists()) {
+            session()->flash('error', 'Cannot delete order with related invoices or delivery orders.');
+            return;
+        }
+
+        $order->items()->delete();
+        $order->forceDelete();
+        
+        session()->flash('success', 'Order deleted permanently.');
+        $this->redirect(route('sales.orders.index'), navigate: true);
+    }
+
     public function generatePreviewLink(): void
     {
         if (! $this->orderId) {
@@ -672,10 +912,11 @@ class Form extends Component
         ]);
     }
 
-    public function openEmailModal(): void
+    public function prepareEmailModal(): void
     {
         if (! $this->orderId) {
             session()->flash('error', 'Please save the order first.');
+            $this->showEmailModal = false;
             return;
         }
 
@@ -706,7 +947,13 @@ class Form extends Component
         
         $this->emailBody = $this->getDefaultEmailBody($order, $documentType, $previewUrl, $salespersonName);
         $this->emailAttachPdf = true;
+    }
+
+    // Keep old method for backward compatibility
+    public function openEmailModal(): void
+    {
         $this->showEmailModal = true;
+        $this->prepareEmailModal();
     }
 
     public function addEmailRecipient(): void
@@ -838,6 +1085,7 @@ Best regards,
                 'order_number' => SalesOrder::generateOrderNumber(),
                 'customer_id' => $order->customer_id,
                 'user_id' => Auth::id(),
+                'pricelist_id' => $order->pricelist_id,
                 'order_date' => now(),
                 'expected_delivery_date' => now()->addDays(7),
                 'status' => 'draft',
@@ -872,6 +1120,28 @@ Best regards,
         }
     }
 
+    public function downloadPdf()
+    {
+        if (!$this->orderId) {
+            session()->flash('error', 'Please save the order first.');
+            return;
+        }
+
+        $order = SalesOrder::with(['customer', 'items.product', 'user'])->findOrFail($this->orderId);
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-order', [
+            'order' => $order,
+        ]);
+
+        $filename = 'SO-' . $order->order_number . '.pdf';
+
+        return response()->streamDownload(
+            fn () => print($pdf->output()),
+            $filename,
+            ['Content-Type' => 'application/pdf']
+        );
+    }
+
     public function render()
     {
         $customers = Customer::where('status', 'active')->orderBy('name')->get();
@@ -893,6 +1163,19 @@ Best regards,
 
         $warehouses = Warehouse::query()->orderBy('name')->get();
 
+        // Get active pricelists
+        $pricelists = Pricelist::where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('start_date')
+                    ->orWhereDate('start_date', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', now());
+            })
+            ->orderBy('name')
+            ->get();
+
         // Get invoices linked to this sales order
         $invoices = $this->orderId 
             ? Invoice::where('sales_order_id', $this->orderId)
@@ -911,16 +1194,25 @@ Best regards,
             ? SalesOrder::with('items')->find($this->orderId)
             : null;
 
+        // Get available automatic promotions for display
+        $availablePromotions = Promotion::valid()
+            ->automatic()
+            ->orderBy('priority')
+            ->limit(5)
+            ->get();
+
         return view('livewire.sales.orders.form', [
             'customers' => $customers,
             'products' => $products,
             'selectedCustomer' => $selectedCustomer,
             'taxes' => $taxes,
             'warehouses' => $warehouses,
+            'pricelists' => $pricelists,
             'invoices' => $invoices,
             'deliveries' => $deliveries,
             'order' => $order,
             'activities' => $this->activitiesAndNotes,
+            'availablePromotions' => $availablePromotions,
         ]);
     }
 }

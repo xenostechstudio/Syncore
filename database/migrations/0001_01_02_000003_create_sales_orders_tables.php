@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('order_number')->unique();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('pricelist_id')->nullable()->constrained('pricelists')->nullOnDelete();
             $table->date('order_date');
             $table->date('expected_delivery_date')->nullable();
             $table->enum('status', ['draft', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'])->default('draft');

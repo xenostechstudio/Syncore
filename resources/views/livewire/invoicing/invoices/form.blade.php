@@ -38,8 +38,9 @@
                             </button>
                             <flux:menu class="w-40">
                                 @if($invoiceId)
-                                <button type="button" wire:click="duplicate" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
+                                <button type="button" wire:click="duplicate" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="document-duplicate" wire:loading.remove wire:target="duplicate" class="size-4" />
+                                    <flux:icon name="arrow-path" wire:loading wire:target="duplicate" class="size-4 animate-spin" />
                                     <span>Duplicate</span>
                                 </button>
                                 <a href="{{ route('pdf.invoice', $invoiceId) }}" target="_blank" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
@@ -48,8 +49,9 @@
                                 </a>
                                 @endif
                                 <flux:menu.separator />
-                                <button type="button" wire:click="delete" wire:confirm="Are you sure?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
+                                <button type="button" wire:click="delete" wire:confirm="Are you sure?" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <flux:icon name="trash" wire:loading.remove wire:target="delete" class="size-4" />
+                                    <flux:icon name="arrow-path" wire:loading wire:target="delete" class="size-4 animate-spin" />
                                     <span>Delete</span>
                                 </button>
                             </flux:menu>
@@ -70,18 +72,8 @@
                         <span>{{ $invoice->salesOrder->order_number }}</span>
                         @php
                             $soStatus = $invoice->salesOrder->status;
-                            $soStatusConfig = match($soStatus) {
-                                'quotation', 'draft' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                'confirmed', 'sales_order', 'processing' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
-                                'shipped', 'in_progress' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
-                                'delivered', 'done', 'paid' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
-                                'cancelled', 'canceled' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
-                                default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                            };
                         @endphp
-                        <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $soStatusConfig['bg'] }} {{ $soStatusConfig['text'] }}">
-                            {{ ucfirst(str_replace('_', ' ', $soStatus)) }}
-                        </span>
+                        <x-ui.status-badge :status="$soStatus" type="order" />
                     </a>
                 </div>
             @endif
@@ -114,14 +106,16 @@
             <div class="col-span-9 flex items-center justify-between">
                 <div class="flex flex-wrap items-center gap-2">
                     @if($invoiceId && $status !== 'paid' && $status !== 'cancelled')
-                        <button type="button" wire:click="openPaymentModal" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+                        <button type="button" @click="$wire.set('showPaymentModal', true)" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                             <flux:icon name="banknotes" class="size-4" />
                             Add Payment
                         </button>
                     @endif
-                    <button type="button" wire:click="save" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                        <flux:icon name="document-check" class="size-4" />
-                        Save
+                    <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                        <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="save">Save</span>
+                        <span wire:loading wire:target="save">Saving...</span>
                     </button>
                     @if($invoiceId)
                         <a href="{{ route('pdf.invoice', $invoiceId) }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
@@ -130,7 +124,7 @@
                         </a>
                     @endif
                     @if($invoiceId)
-                        <button type="button" wire:click="openShareModal" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                        <button type="button" @click="showShareModal = true; $wire.prepareShareModal()" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
                             <flux:icon name="paper-airplane" class="size-4" />
                             Send
                         </button>
@@ -258,8 +252,12 @@
                     <button 
                         type="button"
                         wire:click="regenerateShareLink"
-                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                        wire:loading.attr="disabled"
+                        wire:target="regenerateShareLink"
+                        class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >
+                        <flux:icon name="arrow-path" wire:loading.remove wire:target="regenerateShareLink" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="regenerateShareLink" class="size-4 animate-spin" />
                         Regenerate Link
                     </button>
 
@@ -768,7 +766,7 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
     >
-        <div class="absolute inset-0 bg-black/50" @click="showCancelModal = false"></div>
+        <div class="absolute inset-0 bg-zinc-900/60" @click="showCancelModal = false"></div>
         <div 
             class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
             x-transition:enter="transition ease-out duration-200"
@@ -804,9 +802,12 @@
                 <button 
                     type="button"
                     wire:click="cancel"
-                    @click="showCancelModal = false"
-                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                    wire:loading.attr="disabled"
+                    wire:target="cancel"
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
                 >
+                    <flux:icon name="x-mark" wire:loading.remove wire:target="cancel" class="size-4" />
+                    <flux:icon name="arrow-path" wire:loading wire:target="cancel" class="size-4 animate-spin" />
                     Cancel Invoice
                 </button>
             </div>
@@ -868,8 +869,8 @@
                             <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
                                 <input type="radio" wire:model="paymentType" value="xendit" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
                                 <div class="min-w-0 whitespace-nowrap leading-snug">
-                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Xendit</span>
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Generate payment link + QR and wait for webhook update.</span>
+                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Online Payment</span>
+                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Generate payment link + QR for customer to pay online.</span>
                                 </div>
                             </label>
                         </div>
@@ -923,45 +924,108 @@
 
                         <div x-show="$wire.paymentType === 'xendit'" x-transition>
                             @if(!$this->xenditConfigured)
-                                <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
-                                    Xendit is not configured. Please add your API keys in Settings &gt; Payment Gateway.
+                                <div class="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                                    <flux:icon name="exclamation-triangle" class="size-5 flex-shrink-0 text-amber-500 dark:text-amber-400" />
+                                    <div>
+                                        <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Payment gateway not configured</p>
+                                        <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Please add your API keys in Settings → Payment Gateway to enable online payments.</p>
+                                    </div>
                                 </div>
                             @elseif($invoice && $invoice->xendit_invoice_url && !in_array(strtolower((string) ($invoice->xendit_status ?? 'pending')), ['paid', 'expired'], true))
-                                <div class="grid gap-4 sm:grid-cols-2">
-                                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Payment URL</span>
-                                            <span class="rounded px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{{ strtoupper((string) ($invoice->xendit_status ?? 'pending')) }}</span>
+                                {{-- Active Payment Link --}}
+                                <div class="overflow-hidden rounded-xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-zinc-100/50 dark:border-zinc-700 dark:from-zinc-800/50 dark:to-zinc-900/50">
+                                    {{-- Status Header --}}
+                                    <div class="flex items-center justify-between border-b border-zinc-200 bg-white/50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
+                                                <flux:icon name="link" class="size-4 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Payment Link Active</p>
+                                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Share with customer to collect payment</p>
+                                            </div>
                                         </div>
-                                        <div class="mt-2">
-                                            <input 
-                                                type="text" 
-                                                readonly
-                                                value="{{ $invoice->xendit_invoice_url }}"
-                                                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                            />
-                                        </div>
-                                        <div class="mt-3 flex justify-end">
-                                            <a href="{{ $invoice->xendit_invoice_url }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                                                <flux:icon name="arrow-top-right-on-square" class="size-4" />
-                                                Open
-                                            </a>
-                                        </div>
+                                        @php
+                                            $xenditStatus = strtolower((string) ($invoice->xendit_status ?? 'pending'));
+                                            $statusColors = [
+                                                'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+                                                'paid' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+                                                'expired' => 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+                                            ];
+                                        @endphp
+                                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium {{ $statusColors[$xenditStatus] ?? $statusColors['pending'] }}">
+                                            @if($xenditStatus === 'pending')
+                                                <span class="relative flex h-2 w-2">
+                                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                                                    <span class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                                                </span>
+                                            @endif
+                                            {{ ucfirst($xenditStatus) }}
+                                        </span>
                                     </div>
-                                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">QR Code</span>
-                                        <div class="mt-3 flex items-center justify-center">
-                                            <img 
-                                                alt="Xendit payment QR"
-                                                class="h-48 w-48 rounded-lg bg-white p-2"
-                                                src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ urlencode($invoice->xendit_invoice_url) }}"
-                                            />
+
+                                    <div class="grid gap-4 p-4 sm:grid-cols-5">
+                                        {{-- QR Code Section --}}
+                                        <div class="flex flex-col items-center justify-center sm:col-span-2">
+                                            <div class="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-600 dark:bg-zinc-800">
+                                                <img 
+                                                    alt="Payment QR Code"
+                                                    class="h-40 w-40"
+                                                    src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($invoice->xendit_invoice_url) }}&margin=0"
+                                                />
+                                            </div>
+                                            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Scan to pay</p>
+                                        </div>
+
+                                        {{-- Payment Details --}}
+                                        <div class="flex flex-col justify-center space-y-4 sm:col-span-3">
+                                            {{-- Amount --}}
+                                            <div class="rounded-lg bg-white/80 p-3 dark:bg-zinc-800/80">
+                                                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Amount Due</p>
+                                                <p class="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($remainingAmount, 0, ',', '.') }}</p>
+                                            </div>
+
+                                            {{-- Payment URL --}}
+                                            <div>
+                                                <label class="mb-1.5 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Payment URL</label>
+                                                <div class="flex gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        readonly
+                                                        value="{{ $invoice->xendit_invoice_url }}"
+                                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                                                    />
+                                                    <button 
+                                                        type="button" 
+                                                        x-data 
+                                                        x-on:click="navigator.clipboard.writeText('{{ $invoice->xendit_invoice_url }}')" 
+                                                        class="flex-shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                                                        title="Copy URL"
+                                                    >
+                                                        <flux:icon name="clipboard" class="size-4" />
+                                                    </button>
+                                                    <a 
+                                                        href="{{ $invoice->xendit_invoice_url }}" 
+                                                        target="_blank" 
+                                                        rel="noopener" 
+                                                        class="flex-shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                                                        title="Open Link"
+                                                    >
+                                                        <flux:icon name="arrow-top-right-on-square" class="size-4" />
+                                                    </a>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             @else
-                                <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
-                                    No pending Xendit payment found. Generate a new payment link to continue.
+                                {{-- No Active Payment --}}
+                                <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50/50 px-6 py-8 text-center dark:border-zinc-700 dark:bg-zinc-800/30">
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                        <flux:icon name="credit-card" class="size-6 text-zinc-400" />
+                                    </div>
+                                    <p class="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">No active payment link</p>
+                                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Generate a payment link to allow your customer to pay online.</p>
                                 </div>
                             @endif
                         </div>
@@ -981,25 +1045,29 @@
                     <button 
                         type="button"
                         wire:click="addPayment"
+                        wire:loading.attr="disabled"
+                        wire:target="addPayment"
                         x-show="$wire.paymentType === 'manual'"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                        <flux:icon name="banknotes" class="size-4" />
-                        Record Payment
+                        <flux:icon name="banknotes" wire:loading.remove wire:target="addPayment" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="addPayment" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="addPayment">Record Payment</span>
+                        <span wire:loading wire:target="addPayment">Recording...</span>
                     </button>
 
                     <button 
                         type="button"
                         wire:click="createXenditPayment"
                         wire:loading.attr="disabled"
+                        wire:target="createXenditPayment"
                         x-show="$wire.paymentType === 'xendit'"
                         class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                        <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                        </svg>
-                        <span wire:loading.remove wire:target="createXenditPayment">Generate / Reuse Xendit</span>
-                        <span wire:loading wire:target="createXenditPayment">Processing...</span>
+                        <flux:icon name="link" wire:loading.remove wire:target="createXenditPayment" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="createXenditPayment" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="createXenditPayment">Generate Payment Link</span>
+                        <span wire:loading wire:target="createXenditPayment">Generating...</span>
                     </button>
                 </div>
             </div>

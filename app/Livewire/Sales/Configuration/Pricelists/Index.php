@@ -36,7 +36,7 @@ class Index extends Component
     {
         if ($value) {
             $this->selected = Pricelist::query()
-                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
+                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
                 ->pluck('id')
                 ->map(fn($id) => (string) $id)
                 ->toArray();
@@ -65,6 +65,22 @@ class Index extends Component
         session()->flash('success', 'Selected pricelists deleted successfully.');
     }
 
+    public function activateSelected(): void
+    {
+        Pricelist::whereIn('id', $this->selected)->update(['is_active' => true]);
+        $this->selected = [];
+        $this->selectAll = false;
+        session()->flash('success', 'Selected pricelists activated.');
+    }
+
+    public function deactivateSelected(): void
+    {
+        Pricelist::whereIn('id', $this->selected)->update(['is_active' => false]);
+        $this->selected = [];
+        $this->selectAll = false;
+        session()->flash('success', 'Selected pricelists deactivated.');
+    }
+
     protected function getImportClass(): string
     {
         return PricelistsImport::class;
@@ -82,8 +98,8 @@ class Index extends Component
     {
         $pricelists = Pricelist::query()
             ->withCount('items')
-            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('code', 'ilike', "%{$this->search}%"))
+            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%"))
             ->orderBy('name')
             ->paginate(15, ['*'], 'page', $this->page);
 

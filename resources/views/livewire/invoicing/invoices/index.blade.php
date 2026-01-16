@@ -1,4 +1,4 @@
-<div>
+invoic<div>
     {{-- Flash Messages --}}
     <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
         @if(session('success'))

@@ -318,6 +318,23 @@ class Form extends Component
         $this->showShareModal = true;
     }
 
+    /**
+     * Prepare share modal data without opening it (modal opens via Alpine.js)
+     */
+    public function prepareShareModal(): void
+    {
+        if (!$this->invoiceId) {
+            return;
+        }
+
+        $invoice = Invoice::findOrFail($this->invoiceId);
+        $invoice->ensureShareToken();
+
+        $this->shareLink = URL::signedRoute('public.invoices.show', [
+            'token' => $invoice->share_token,
+        ]);
+    }
+
     public function regenerateShareLink(): void
     {
         if (!$this->invoiceId) {

@@ -18,7 +18,6 @@ class Form extends Component
     
     public string $name = '';
     public string $code = '';
-    public string $currency = 'IDR';
     public string $type = 'percentage';
     public float $discount = 0;
     public ?string $start_date = null;
@@ -43,7 +42,6 @@ class Form extends Component
             
             $this->name = $pricelist->name;
             $this->code = $pricelist->code;
-            $this->currency = $pricelist->currency;
             $this->type = $pricelist->type;
             $this->discount = $pricelist->discount;
             $this->start_date = $pricelist->start_date?->format('Y-m-d');
@@ -60,7 +58,6 @@ class Form extends Component
         $this->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:pricelists,code,' . $this->pricelistId,
-            'currency' => 'required|string|size:3',
             'type' => 'required|in:percentage,fixed',
             'discount' => 'required|numeric|min:0',
             'start_date' => 'nullable|date',
@@ -70,7 +67,6 @@ class Form extends Component
         $data = [
             'name' => $this->name,
             'code' => strtoupper($this->code),
-            'currency' => strtoupper($this->currency),
             'type' => $this->type,
             'discount' => $this->discount,
             'start_date' => $this->start_date ?: null,
