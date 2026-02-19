@@ -19,9 +19,9 @@
             {{-- Left Group: New Button, Title, Gear --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('sales.customers.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
+                    {{ __('common.new') }}
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Customers</span>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ __('sales.customers') }}</span>
                 
                 {{-- Actions Menu (Gear) --}}
                 <flux:dropdown position="bottom" align="start">
@@ -32,11 +32,11 @@
                     <flux:menu class="w-48">
                         <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import records</span>
+                            <span>{{ __('common.import_records') }}</span>
                         </button>
                         <a href="{{ route('export.customers') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export All</span>
+                            <span>{{ __('common.export_all') }}</span>
                         </a>
                     </flux:menu>
                 </flux:dropdown>
@@ -49,7 +49,7 @@
                     <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                         {{-- Count Selected Button --}}
                         <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            <span>{{ count($selected) }} selected</span>
+                            <span>{{ count($selected) }} {{ __('common.selected') }}</span>
                             <flux:icon name="x-mark" class="size-3.5" />
                         </button>
 
@@ -58,13 +58,13 @@
                         {{-- Export --}}
                         <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
                             <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Export</span>
+                            <span>{{ __('common.export') }}</span>
                         </button>
 
                         {{-- Print --}}
                         <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
                             <flux:icon name="printer" class="size-4" />
-                            <span>Print</span>
+                            <span>{{ __('common.print') }}</span>
                         </button>
 
                         {{-- Actions Dropdown --}}
@@ -76,59 +76,59 @@
                             <flux:menu class="w-56">
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
+                                    <span>{{ __('common.duplicate') }}</span>
                                 </button>
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-text" class="size-4" />
-                                    <span>Create Invoice(s)</span>
+                                    <span>{{ __('common.create_invoices') }}</span>
                                 </button>
                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="envelope" class="size-4" />
-                                    <span>Send an Email</span>
+                                    <span>{{ __('common.send_email') }}</span>
                                 </button>
                                 <flux:menu.separator />
                                 <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
+                                    <span>{{ __('common.delete') }}</span>
                                 </button>
                             </flux:menu>
                         </flux:dropdown>
                     </div>
                 @else
-                    <x-ui.searchbox-dropdown placeholder="Search customers..." widthClass="w-[520px]" width="520px">
+                    <x-ui.searchbox-dropdown placeholder="{{ __('sales.search_customers') }}" widthClass="w-[520px]" width="520px">
                         <div class="flex flex-col gap-4 p-3 md:flex-row">
                             {{-- Filters Section --}}
                             <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
                                 <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                                     <flux:icon name="funnel" class="size-3.5" />
-                                    <span>Filters</span>
+                                    <span>{{ __('common.filters') }}</span>
                                 </div>
                                 <div class="space-y-1">
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
                                             <input type="checkbox" wire:model.live="filterActive" class="sr-only" />
-                                            <span>Active Customers</span>
+                                            <span>{{ __('common.active_customers') }}</span>
                                         </div>
                                         @if(!empty($filterActive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
                                             <input type="checkbox" wire:model.live="filterInactive" class="sr-only" />
-                                            <span>Inactive Customers</span>
+                                            <span>{{ __('common.inactive_customers') }}</span>
                                         </div>
                                         @if(!empty($filterInactive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
                                             <input type="checkbox" wire:model.live="filterWithOrders" class="sr-only" />
-                                            <span>With Orders</span>
+                                            <span>{{ __('common.with_orders') }}</span>
                                         </div>
         @if(!empty($filterWithOrders))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
                                             <input type="checkbox" wire:model.live="filterMine" class="sr-only" />
-                                            <span>My Customers</span>
+                                            <span>{{ __('common.my_customers') }}</span>
                                         </div>
                                         @if(!empty($filterMine))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
@@ -139,34 +139,34 @@
                             <div class="flex-1 md:px-3">
                                 <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                                     <flux:icon name="rectangle-group" class="size-3.5" />
-                                    <span>Group By</span>
+                                    <span>{{ __('common.group_by') }}</span>
                                 </div>
                                 <div class="space-y-1">
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
                                             <input type="radio" name="groupBy" value="salesperson" wire:model.live="groupBy" class="sr-only" />
-                                            <span>Salesperson</span>
+                                            <span>{{ __('common.salesperson') }}</span>
                                         </div>
                                         @if(($groupBy ?? '') === 'salesperson')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
                                             <input type="radio" name="groupBy" value="country" wire:model.live="groupBy" class="sr-only" />
-                                            <span>Country</span>
+                                            <span>{{ __('common.country') }}</span>
                                         </div>
                                         @if(($groupBy ?? '') === 'country')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
                                             <input type="radio" name="groupBy" value="city" wire:model.live="groupBy" class="sr-only" />
-                                            <span>City</span>
+                                            <span>{{ __('common.city') }}</span>
                                         </div>
                                         @if(($groupBy ?? '') === 'city')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
                                             <input type="radio" name="groupBy" value="status" wire:model.live="groupBy" class="sr-only" />
-                                            <span>Status</span>
+                                            <span>{{ __('common.status') }}</span>
                                         </div>
                                         @if(($groupBy ?? '') === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
@@ -225,22 +225,22 @@
                                 >
                             </th>
                             @if($visibleColumns['customer'])
-                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Customer</th>
+                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_customer') }}</th>
                             @endif
                             @if($visibleColumns['contact'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Contact</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_contact') }}</th>
                             @endif
                             @if($visibleColumns['location'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Location</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_location') }}</th>
                             @endif
                             @if($visibleColumns['orders'])
-                                <th scope="col" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Orders</th>
+                                <th scope="col" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_orders') }}</th>
                             @endif
                             @if($visibleColumns['total'])
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total Spent</th>
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_total_spent') }}</th>
                             @endif
                             @if($visibleColumns['status'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.status') }}</th>
                             @endif
                             <th scope="col" class="w-10 py-3 pr-4 sm:pr-6 lg:pr-8">
                                 {{-- Column Config --}}
@@ -250,31 +250,31 @@
                                     </button>
 
                                     <flux:menu class="w-48">
-                                        <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Toggle Columns</div>
+                                        <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('common.toggle_columns') }}</div>
                                         <flux:menu.separator />
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.customer" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Customer</span>
+                                            <span>{{ __('common.col_customer') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.contact" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Contact</span>
+                                            <span>{{ __('common.col_contact') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.location" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Location</span>
+                                            <span>{{ __('common.col_location') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.orders" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Orders</span>
+                                            <span>{{ __('common.col_orders') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.total" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Total Spent</span>
+                                            <span>{{ __('common.col_total_spent') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.status" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Status</span>
+                                            <span>{{ __('common.status') }}</span>
                                         </label>
                                     </flux:menu>
                                 </flux:dropdown>
@@ -331,9 +331,9 @@
                                 @if($visibleColumns['status'])
                                     <td class="px-4 py-4">
                                         @if($customer->status === 'active')
-                                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Active</span>
+                                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{{ __('common.active') }}</span>
                                         @else
-                                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
+                                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">{{ __('common.inactive') }}</span>
                                         @endif
                                     </td>
                                 @endif
@@ -347,8 +347,8 @@
                                             <flux:icon name="users" class="size-6 text-zinc-400" />
                                         </div>
                                         <div>
-                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No customers found</p>
-                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Add your first customer to get started</p>
+                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">{{ __('common.no_customers_found') }}</p>
+                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ __('common.add_first_customer') }}</p>
                                         </div>
                                     </div>
                                 </td>

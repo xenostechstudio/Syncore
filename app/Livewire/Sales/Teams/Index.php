@@ -28,14 +28,13 @@ class Index extends Component
     #[Url]
     public string $sort = 'latest';
 
+    #[Url]
+    public string $filter = 'active'; // 'active', 'archived', 'all'
+
     public string $view = 'list';
 
     public array $selected = [];
     public bool $selectAll = false;
-
-    // Filters
-    public bool $filterActive = false;
-    public bool $filterInactive = false;
 
     // Group By
     public string $groupBy = '';
@@ -52,6 +51,13 @@ class Index extends Component
     public function setView(string $view): void
     {
         $this->view = $view;
+    }
+
+    public function setFilter(string $filter): void
+    {
+        $this->filter = $filter;
+        $this->resetPage();
+        $this->clearSelection();
     }
 
     public function updatingSearch(): void
@@ -83,7 +89,8 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'sort', 'filterActive', 'filterInactive', 'groupBy']);
+        $this->reset(['search', 'status', 'sort', 'groupBy']);
+        $this->filter = 'active';
         $this->resetPage();
     }
 
@@ -91,22 +98,62 @@ class Index extends Component
     public bool $showDeleteConfirm = false;
     public array $deleteValidation = [];
 
+    // Archive confirmation
+    public bool $showArchiveConfirm = false;
+
     // Bulk Actions
+    public function confirmBulkArchive(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+        $this->showArchiveConfirm = true;
+    }
+
+    public function bulkArchive(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = SalesTeam::whereIn('id', $this->selected)->update(['is_active' => false]);
+
+        $this->showArchiveConfirm = false;
+        $this->clearSelection();
+        session()->flash('success', "{$count} teams archived successfully.");
+    }
+
+    public function cancelArchive(): void
+    {
+        $this->showArchiveConfirm = false;
+    }
+
+    public function bulkRestore(): void
+    {
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = SalesTeam::whereIn('id', $this->selected)->update(['is_active' => true]);
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} teams restored successfully.");
+    }
+
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
             return;
         }
 
-        $teams = SalesTeam::whereIn('id', $this->selected)
-            ->withCount('members')
-            ->get();
+        // Only allow deletion of archived teams
+        $teams = SalesTeam::whereIn('id', $this->selected)->get();
 
         $canDelete = [];
         $cannotDelete = [];
 
         foreach ($teams as $team) {
-            if ($team->members_count === 0) {
+            if (!$team->is_active) {
                 $canDelete[] = [
                     'id' => $team->id,
                     'name' => $team->name,
@@ -115,7 +162,7 @@ class Index extends Component
                 $cannotDelete[] = [
                     'id' => $team->id,
                     'name' => $team->name,
-                    'reason' => "Has {$team->members_count} members",
+                    'reason' => 'Must be archived first',
                 ];
             }
         }
@@ -135,15 +182,14 @@ class Index extends Component
             return;
         }
 
-        $teamsWithMembers = SalesTeam::whereIn('id', $this->selected)
-            ->whereHas('members')
+        // Only delete archived teams
+        $deletableIds = SalesTeam::whereIn('id', $this->selected)
+            ->where('is_active', false)
             ->pluck('id')
             ->toArray();
 
-        $deletableIds = array_diff($this->selected, array_map('strval', $teamsWithMembers));
-
         if (empty($deletableIds)) {
-            session()->flash('error', 'No teams can be deleted. All selected teams have members.');
+            session()->flash('error', 'No teams can be deleted. Teams must be archived first.');
             $this->cancelDelete();
             return;
         }
@@ -151,7 +197,7 @@ class Index extends Component
         $count = SalesTeam::whereIn('id', $deletableIds)->delete();
 
         $this->cancelDelete();
-        session()->flash('success', "{$count} teams deleted successfully.");
+        session()->flash('success', "{$count} teams deleted permanently.");
     }
 
     public function cancelDelete(): void
@@ -159,30 +205,6 @@ class Index extends Component
         $this->showDeleteConfirm = false;
         $this->deleteValidation = [];
         $this->clearSelection();
-    }
-
-    public function bulkActivate(): void
-    {
-        if (empty($this->selected)) {
-            return;
-        }
-
-        $count = SalesTeam::whereIn('id', $this->selected)->update(['is_active' => true]);
-
-        $this->clearSelection();
-        session()->flash('success', "{$count} teams activated.");
-    }
-
-    public function bulkDeactivate(): void
-    {
-        if (empty($this->selected)) {
-            return;
-        }
-
-        $count = SalesTeam::whereIn('id', $this->selected)->update(['is_active' => false]);
-
-        $this->clearSelection();
-        session()->flash('success', "{$count} teams deactivated.");
     }
 
     public function exportSelected()
@@ -214,12 +236,22 @@ class Index extends Component
             ->withCount('members')
             ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('description', 'like', "%{$this->search}%"))
-            ->when($this->filterActive, fn($q) => $q->where('is_active', true))
-            ->when($this->filterInactive, fn($q) => $q->where('is_active', false))
+            ->when($this->filter === 'active', fn($q) => $q->where('is_active', true))
+            ->when($this->filter === 'archived', fn($q) => $q->where('is_active', false))
             ->when($this->sort === 'latest', fn($q) => $q->latest())
             ->when($this->sort === 'oldest', fn($q) => $q->oldest())
             ->when($this->sort === 'name_asc', fn($q) => $q->orderBy('name'))
             ->when($this->sort === 'name_desc', fn($q) => $q->orderByDesc('name'));
+    }
+
+    public function getActiveCountProperty(): int
+    {
+        return SalesTeam::where('is_active', true)->count();
+    }
+
+    public function getArchivedCountProperty(): int
+    {
+        return SalesTeam::where('is_active', false)->count();
     }
 
     public function render()

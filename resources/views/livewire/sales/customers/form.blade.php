@@ -13,11 +13,11 @@
                 </a>
                 <div class="flex flex-col">
                     <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                        Customer
+                        {{ __('common.customer') }}
                     </span>
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            {{ $customerId ? $name : 'New Customer' }}
+                            {{ $customerId ? $name : __('common.new_customer') }}
                         </span>
 
                         <flux:dropdown position="bottom" align="start">
@@ -30,15 +30,15 @@
                                     <button
                                         type="button"
                                         wire:click="delete"
-                                        wire:confirm="Are you sure you want to delete this customer?"
+                                        wire:confirm="{{ __('common.confirm_delete') }}"
                                         class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                                     >
                                         <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
+                                        <span>{{ __('common.delete') }}</span>
                                     </button>
                                 @else
                                     <div class="px-2 py-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-                                        No actions
+                                        {{ __('common.no_actions') }}
                                     </div>
                                 @endif
                             </flux:menu>
@@ -65,7 +65,7 @@
 
         @if($errors->any())
             <x-ui.alert type="error" :duration="10000">
-                <span class="font-medium">Please fix the following errors:</span>
+                <span class="font-medium">{{ __('common.please_fix_errors') }}</span>
                 <ul class="mt-1 list-inside list-disc text-xs">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -90,8 +90,8 @@
                     >
                         <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
                         <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
-                        <span wire:loading.remove wire:target="save">Save</span>
-                        <span wire:loading wire:target="save">Saving...</span>
+                        <span wire:loading.remove wire:target="save">{{ __('common.save') }}</span>
+                        <span wire:loading wire:target="save">{{ __('common.saving') }}</span>
                     </button>
 
                     <button 
@@ -100,18 +100,18 @@
                         class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >
                         <flux:icon name="x-mark" class="size-4" />
-                        Cancel
+                        {{ __('common.cancel') }}
                     </button>
 
                     @if($customerId)
                         <button 
                             type="button"
                             wire:click="delete"
-                            wire:confirm="Are you sure you want to delete this customer?"
+                            wire:confirm="{{ __('common.confirm_delete') }}"
                             class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
                         >
                             <flux:icon name="trash" class="size-4" />
-                            Delete
+                            {{ __('common.delete') }}
                         </button>
                     @endif
                 </div>
@@ -132,11 +132,11 @@
         </x-slot:icon>
 
         <x-slot:title>
-            Discard changes?
+            {{ __('common.discard_changes') }}
         </x-slot:title>
 
         <x-slot:description>
-            If you leave this page, any unsaved changes to this customer will be lost.
+            {{ __('common.unsaved_changes_warning') }}
         </x-slot:description>
 
         <x-slot:actions>
@@ -145,7 +145,7 @@
                 @click="showCancelModal = false"
                 class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
             >
-                Keep editing
+                {{ __('common.keep_editing') }}
             </button>
 
             <a 
@@ -154,7 +154,7 @@
                 @click="showCancelModal = false"
                 class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
             >
-                Discard & leave
+                {{ __('common.discard_leave') }}
             </a>
         </x-slot:actions>
     </x-ui.confirm-modal>
@@ -194,7 +194,7 @@
                                                 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
                                                 : 'border border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500' }}"
                                         >
-                                            <span>Person</span>
+                                            <span>{{ __('common.person') }}</span>
                                         </button>
                                         <button 
                                             type="button"
@@ -203,7 +203,7 @@
                                                 ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
                                                 : 'border border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500' }}"
                                         >
-                                            <span>Company</span>
+                                            <span>{{ __('common.company') }}</span>
                                         </button>
                                     </div>
 
@@ -211,7 +211,7 @@
                                         <input 
                                             type="text"
                                             wire:model="name"
-                                            placeholder="Customer Name"
+                                            placeholder="{{ __('common.customer_name') }}"
                                             class="w-full rounded-lg border border-transparent bg-transparent px-3 py-2 text-3xl font-bold text-zinc-900 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-200 focus:outline-none dark:text-zinc-100 dark:placeholder-zinc-500 dark:hover:border-zinc-700 dark:focus:border-zinc-700"
                                         />
                                         @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
@@ -222,7 +222,7 @@
                                         <input 
                                             type="email"
                                             wire:model="email"
-                                            placeholder="Email"
+                                            placeholder="{{ __('common.email') }}"
                                             class="flex-1 border-0 border-b border-transparent bg-transparent px-0 py-1 text-sm text-zinc-700 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-300 dark:placeholder-zinc-500 dark:hover:border-zinc-700"
                                         />
                                     </div>
@@ -232,7 +232,7 @@
                                         <input 
                                             type="text"
                                             wire:model="phone"
-                                            placeholder="Phone"
+                                            placeholder="{{ __('common.phone') }}"
                                             class="flex-1 border-0 border-b border-transparent bg-transparent px-0 py-1 text-sm text-zinc-700 placeholder-zinc-400 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-300 dark:placeholder-zinc-500 dark:hover:border-zinc-700"
                                         />
                                     </div>
@@ -252,7 +252,7 @@
                                     ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100' 
                                     : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
                             >
-                                Contact
+                                {{ __('common.tab_contact') }}
                             </button>
                             <button 
                                 type="button"
@@ -262,7 +262,7 @@
                                     ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100' 
                                     : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
                             >
-                                Sales &amp; Purchase
+                                {{ __('common.tab_sales_purchase') }}
                             </button>
                             <button 
                                 type="button"
@@ -272,7 +272,7 @@
                                     ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100' 
                                     : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
                             >
-                                Invoicing
+                                {{ __('common.tab_invoicing') }}
                             </button>
                             <button 
                                 type="button"
@@ -282,7 +282,7 @@
                                     ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100' 
                                     : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
                             >
-                                Notes
+                                {{ __('common.tab_notes') }}
                             </button>
                         </nav>
                     </div>
@@ -293,31 +293,31 @@
                             <div class="space-y-6">
                                 <div class="grid gap-4 lg:grid-cols-2">
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">City</label>
+                                        <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.city') }}</label>
                                         <input 
                                             type="text"
                                             wire:model="city"
-                                            placeholder="Enter city..."
+                                            placeholder="{{ __('common.city') }}..."
                                             class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                                         />
                                     </div>
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Country</label>
+                                        <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.country') }}</label>
                                         <input 
                                             type="text"
                                             wire:model="country"
-                                            placeholder="Enter country..."
+                                            placeholder="{{ __('common.country') }}..."
                                             class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Full Address</label>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.full_address') }}</label>
                                     <textarea 
                                         wire:model="address"
                                         rows="4"
-                                        placeholder="Enter full address..."
+                                        placeholder="{{ __('common.full_address') }}..."
                                         class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                                     ></textarea>
                                 </div>
@@ -329,17 +329,17 @@
                         <div class="px-5 pb-5">
                             <div class="grid gap-8 lg:grid-cols-2">
                                 <div class="space-y-4">
-                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sales</h3>
+                                    <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('sales.title') }}</h3>
 
                                     <div class="space-y-4">
                                         <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Salesperson</label>
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.salesperson') }}</label>
                                             <div class="flex-1 relative">
                                                 <select
                                                     wire:model="salesperson_id"
                                                     class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
                                                 >
-                                                    <option value="">None</option>
+                                                    <option value="">{{ __('common.none') }}</option>
                                                     @foreach($salespeople as $salesperson)
                                                         <option value="{{ $salesperson->id }}">{{ $salesperson->name }}</option>
                                                     @endforeach
@@ -350,13 +350,13 @@
                                         @error('salesperson_id') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
 
                                         <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Terms</label>
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.payment_terms') }}</label>
                                             <div class="flex-1 relative">
                                                 <select
                                                     wire:model="payment_term_id"
                                                     class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
                                                 >
-                                                    <option value="">None</option>
+                                                    <option value="">{{ __('common.none') }}</option>
                                                     @foreach($paymentTerms as $term)
                                                         <option value="{{ $term->id }}">{{ $term->name }} ({{ $term->formatted_days }})</option>
                                                     @endforeach
@@ -367,17 +367,17 @@
                                         @error('payment_term_id') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
 
                                         <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Method</label>
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.payment_method') }}</label>
                                             <div class="flex-1 relative">
                                                 <select
                                                     wire:model="payment_method"
                                                     class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
                                                 >
-                                                    <option value="">None</option>
-                                                    <option value="bank_transfer">Bank Transfer</option>
-                                                    <option value="cash">Cash</option>
-                                                    <option value="credit_card">Credit Card</option>
-                                                    <option value="check">Check</option>
+                                                    <option value="">{{ __('common.none') }}</option>
+                                                    <option value="bank_transfer">{{ __('common.bank_transfer') }}</option>
+                                                    <option value="cash">{{ __('common.cash') }}</option>
+                                                    <option value="credit_card">{{ __('common.credit_card') }}</option>
+                                                    <option value="check">{{ __('common.check') }}</option>
                                                 </select>
                                                 <flux:icon name="chevron-down" class="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
                                             </div>
@@ -385,13 +385,13 @@
                                         @error('payment_method') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
 
                                         <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Pricelist</label>
+                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.pricelist') }}</label>
                                             <div class="flex-1 relative">
                                                 <select
                                                     wire:model="pricelist_id"
                                                     class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500"
                                                 >
-                                                    <option value="">None</option>
+                                                    <option value="">{{ __('common.none') }}</option>
                                                     @foreach($pricelists as $pricelist)
                                                         <option value="{{ $pricelist->id }}">{{ $pricelist->name }}</option>
                                                     @endforeach
@@ -409,14 +409,14 @@
                     <div x-show="activeTab === 'invoicing'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                         <div class="px-5 pb-5">
                             <div class="space-y-4">
-                                <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">General</h3>
+                                <h3 class="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.tab_general') }}</h3>
 
                                 <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Banks</label>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.banks') }}</label>
                                     <textarea
                                         wire:model="banks"
                                         rows="4"
-                                        placeholder="Bank accounts / preferred banks..."
+                                        placeholder="{{ __('common.banks') }}..."
                                         class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                                     ></textarea>
                                     @error('banks') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
@@ -428,11 +428,11 @@
                     <div x-show="activeTab === 'notes'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                         <div class="px-5 pb-5">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Notes</label>
+                                <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.internal_notes') }}</label>
                                 <textarea 
                                     wire:model="notes"
                                     rows="6"
-                                    placeholder="Add notes about this customer..."
+                                    placeholder="{{ __('common.internal_notes') }}..."
                                     class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                                 ></textarea>
                             </div>

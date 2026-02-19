@@ -54,7 +54,11 @@ return new class extends Migration
             $table->text('receipt_note')->nullable();
             $table->text('delivery_note')->nullable();
             $table->text('internal_notes')->nullable();
+            $table->softDeletes();
             $table->timestamps();
+            $table->index('status');
+            $table->index('sku');
+            $table->index('category_id');
         });
 
         // Pricelist Items
@@ -104,7 +108,11 @@ return new class extends Migration
             $table->date('expected_arrival_date')->nullable();
             $table->enum('status', ['draft', 'pending', 'in_transit', 'completed', 'cancelled'])->default('draft');
             $table->text('notes')->nullable();
+            $table->softDeletes();
             $table->timestamps();
+            $table->index('status');
+            $table->index('source_warehouse_id');
+            $table->index('destination_warehouse_id');
         });
 
         Schema::create('inventory_transfer_items', function (Blueprint $table) {
@@ -129,7 +137,10 @@ return new class extends Migration
             $table->timestamp('posted_at')->nullable();
             $table->string('reason')->nullable();
             $table->text('notes')->nullable();
+            $table->softDeletes();
             $table->timestamps();
+            $table->index('status');
+            $table->index('warehouse_id');
         });
 
         Schema::create('inventory_adjustment_items', function (Blueprint $table) {

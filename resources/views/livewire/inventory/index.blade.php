@@ -5,7 +5,7 @@
             {{-- Left Group: Title, Gear --}}
             <div class="flex items-center gap-3">
                 <span class="text-md font-ligth text-zinc-600 dark:text-zinc-400">
-                    Inventory
+                    {{ __('inventory.overview') }}
                 </span>
                 
                 {{-- Actions Menu (Gear) --}}
@@ -17,7 +17,7 @@
                     <flux:menu class="w-48">
                         <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import records</span>
+                            <span>{{ __('inventory.import_records') }}</span>
                         </button>
                     </flux:menu>
                 </flux:dropdown>
@@ -39,13 +39,13 @@
         {{-- Left Column: Usage/Stats --}}
         <div class="space-y-6 lg:col-span-4 lg:sticky lg:top-20 lg:h-fit">
             {{-- Recent Items (Simple List) --}}
-            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Recent Items</h3>
+            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('inventory.recent_items') }}</h3>
             <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                 {{-- Inner Header with Add Button --}}
                 <div class="flex items-center justify-between px-4 py-3">
-                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Last 30 Days</span>
+                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('inventory.last_30_days') }}</span>
                     <button wire:click="create" class="rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                        Add Item
+                        {{ __('inventory.add_item') }}
                     </button>
                 </div>
                 <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -55,42 +55,42 @@
                             <span class="text-sm font-normal {{ $item->quantity < 10 ? 'text-red-600 dark:text-red-400' : 'text-zinc-900 dark:text-zinc-100' }}">{{ number_format($item->quantity) }}</span>
                         </a>
                     @empty
-                        <div class="px-5 py-6 text-center text-sm font-light text-zinc-400">No items yet</div>
+                        <div class="px-5 py-6 text-center text-sm font-light text-zinc-400">{{ __('inventory.no_items_yet') }}</div>
                     @endforelse
                 </div>
                 <div class="border-t border-zinc-100 px-5 py-3 dark:border-zinc-800">
                     <a href="{{ route('inventory.products.index') }}" wire:navigate class="text-xs font-light text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-                        View all items →
+                        {{ __('inventory.view_all_items') }} →
                     </a>
                 </div>
             </div>
 
             {{-- Statistics Card (Merged Usage & Activity) --}}
-            <h3 class="mb-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">Statistics</h3>
+            <h3 class="mb-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('inventory.statistics') }}</h3>
             <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                 {{-- Card Heading --}}
                 <div class="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Inventory Overview</span>
+                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('inventory.inventory_overview') }}</span>
                 </div>
                 <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
                     {{-- Total Items --}}
                     <div class="flex items-center justify-between px-4 py-2.5">
-                        <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Total Items</span>
+                        <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">{{ __('inventory.total_items') }}</span>
                         <span class="text-sm font-normal text-zinc-900 dark:text-zinc-100">{{ number_format($totalItems) }}</span>
                     </div>
                     {{-- In Stock --}}
                     <div class="flex items-center justify-between px-4 py-2.5">
-                        <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">In Stock</span>
+                        <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">{{ __('inventory.in_stock') }}</span>
                         <span class="text-sm font-normal text-emerald-600 dark:text-emerald-400">{{ number_format($inStockItems) }}</span>
                     </div>
                     {{-- Low Stock --}}
                     <div class="flex items-center justify-between px-4 py-2.5">
-                        <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Low Stock</span>
+                        <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">{{ __('inventory.low_stock') }}</span>
                         <span class="text-sm font-normal text-amber-600 dark:text-amber-400">{{ number_format($lowStockItems) }}</span>
                     </div>
                     {{-- Out of Stock --}}
                     <div class="flex items-center justify-between px-4 py-2.5">
-                        <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Out of Stock</span>
+                        <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">{{ __('inventory.out_of_stock') }}</span>
                         <span class="text-sm font-normal text-red-600 dark:text-red-400">{{ number_format($outOfStockItems) }}</span>
                     </div>
                 </div>

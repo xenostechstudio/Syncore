@@ -28,7 +28,12 @@ return new class extends Migration
             $table->text('shipping_address')->nullable();
             $table->string('share_token', 64)->nullable()->unique();
             $table->timestamp('share_token_expires_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
+            $table->index('status');
+            $table->index('customer_id');
+            $table->index('created_at');
+            $table->index('order_date');
         });
 
         Schema::create('sales_order_items', function (Blueprint $table) {
@@ -42,6 +47,7 @@ return new class extends Migration
             $table->decimal('unit_price', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('total', 15, 2);
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -61,7 +67,10 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->string('tracking_number')->nullable();
             $table->string('courier')->nullable();
+            $table->softDeletes();
             $table->timestamps();
+            $table->index('status');
+            $table->index('sales_order_id');
         });
 
         Schema::create('delivery_order_items', function (Blueprint $table) {
@@ -70,6 +79,7 @@ return new class extends Migration
             $table->foreignId('sales_order_item_id')->constrained('sales_order_items')->cascadeOnDelete();
             $table->integer('quantity_to_deliver');
             $table->integer('quantity_delivered')->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -84,6 +94,8 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamp('received_at')->nullable();
             $table->timestamps();
+            $table->index('status');
+            $table->index('delivery_order_id');
         });
 
         Schema::create('delivery_return_items', function (Blueprint $table) {
@@ -106,6 +118,7 @@ return new class extends Migration
             $table->string('invoice_number')->unique();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
             $table->foreignId('sales_order_id')->nullable()->constrained('sales_orders')->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->date('invoice_date');
             $table->date('due_date')->nullable();
             $table->enum('status', ['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])->default('draft');
@@ -123,7 +136,11 @@ return new class extends Migration
             $table->date('paid_date')->nullable();
             $table->text('notes')->nullable();
             $table->text('terms')->nullable();
+            $table->softDeletes();
             $table->timestamps();
+            $table->index('status');
+            $table->index('customer_id');
+            $table->index('due_date');
         });
 
         Schema::create('invoice_items', function (Blueprint $table) {
@@ -136,6 +153,7 @@ return new class extends Migration
             $table->decimal('unit_price', 15, 2)->default(0);
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('total', 15, 2)->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -150,6 +168,8 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->string('status')->default('completed');
             $table->timestamps();
+            $table->index('invoice_id');
+            $table->index('payment_date');
         });
     }
 

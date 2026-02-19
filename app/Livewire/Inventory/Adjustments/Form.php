@@ -248,7 +248,6 @@ class Form extends Component
                 $adjustment->update($data);
                 $adjustment->items()->delete();
             } else {
-                $data['adjustment_number'] = InventoryAdjustment::generateAdjustmentNumber($this->adjustment_type);
                 $adjustment = InventoryAdjustment::create($data);
                 $this->adjustmentId = $adjustment->id;
             }
@@ -287,7 +286,6 @@ class Form extends Component
 
         DB::transaction(function () use ($adjustment) {
             $newAdjustment = InventoryAdjustment::create([
-                'adjustment_number' => InventoryAdjustment::generateAdjustmentNumber($adjustment->adjustment_type),
                 'warehouse_id' => $adjustment->warehouse_id,
                 'user_id' => Auth::id(),
                 'adjustment_date' => now()->format('Y-m-d'),

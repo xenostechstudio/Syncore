@@ -4,6 +4,7 @@ namespace App\Models\HR;
 
 use App\Enums\EmployeeStatus;
 use App\Models\User;
+use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
-    use LogsActivity, HasNotes, Searchable;
+    use LogsActivity, HasNotes, Searchable, HasAttachments;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     

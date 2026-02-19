@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('city')->nullable();
             $table->string('country')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('name');
@@ -38,9 +39,11 @@ return new class extends Migration
             $table->decimal('tax', 15, 2)->default(0);
             $table->decimal('total', 15, 2)->default(0);
             $table->text('notes')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('status');
+            $table->index('supplier_id');
             $table->index('order_date');
         });
 
@@ -53,6 +56,7 @@ return new class extends Migration
             $table->decimal('quantity', 15, 2)->default(1);
             $table->decimal('unit_price', 15, 2)->default(0);
             $table->decimal('subtotal', 15, 2)->default(0);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('purchase_rfq_id');
@@ -75,9 +79,11 @@ return new class extends Migration
             $table->date('paid_date')->nullable();
             $table->text('notes')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('status');
+            $table->index('supplier_id');
             $table->index('bill_date');
             $table->index('due_date');
         });
@@ -92,6 +98,7 @@ return new class extends Migration
             $table->decimal('unit_price', 15, 2)->default(0);
             $table->decimal('tax_amount', 15, 2)->default(0);
             $table->decimal('total', 15, 2)->default(0);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('vendor_bill_id');

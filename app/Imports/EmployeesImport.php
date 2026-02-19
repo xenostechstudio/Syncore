@@ -2,19 +2,19 @@
 
 namespace App\Imports;
 
+use App\Imports\Concerns\HasImportTracking;
 use App\Models\HR\Department;
 use App\Models\HR\Employee;
 use App\Models\HR\Position;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class EmployeesImport implements ToCollection, WithHeadingRow, WithValidation
+class EmployeesImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading
 {
-    public int $imported = 0;
-    public int $updated = 0;
-    public array $errors = [];
+    use HasImportTracking;
 
     public function collection(Collection $rows)
     {
@@ -89,28 +89,8 @@ class EmployeesImport implements ToCollection, WithHeadingRow, WithValidation
         ];
     }
 
-    private function parseNumber($value): float
+    public function chunkSize(): int
     {
-        if (is_numeric($value)) {
-            return (float) $value;
-        }
-        
-        $cleaned = preg_replace('/[^0-9.,]/', '', $value);
-        $cleaned = str_replace(',', '.', $cleaned);
-        
-        return (float) $cleaned;
-    }
-
-    private function parseDate($value): ?string
-    {
-        if (empty($value)) {
-            return null;
-        }
-
-        try {
-            return \Carbon\Carbon::parse($value)->format('Y-m-d');
-        } catch (\Exception $e) {
-            return null;
-        }
+        return 100;
     }
 }

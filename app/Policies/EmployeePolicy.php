@@ -4,11 +4,12 @@ namespace App\Policies;
 
 use App\Models\HR\Employee;
 use App\Models\User;
+use App\Policies\Concerns\HandlesDocumentAuthorization;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class EmployeePolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, HandlesDocumentAuthorization;
 
     public function viewAny(User $user): bool
     {

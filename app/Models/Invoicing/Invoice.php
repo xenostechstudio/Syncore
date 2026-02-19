@@ -6,9 +6,13 @@ use App\Enums\InvoiceState;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\User;
+use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
+use App\Traits\HasSoftDeletes;
+use App\Traits\HasStateMachine;
 use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
+use App\Traits\Searchable;
 use Database\Factories\Invoicing\InvoiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,13 +23,17 @@ use Illuminate\Support\Str;
 class Invoice extends Model
 {
     /** @use HasFactory<InvoiceFactory> */
-    use HasFactory, LogsActivity, HasNotes, HasYearlySequenceNumber;
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, HasYearlySequenceNumber, Searchable, HasAttachments, HasStateMachine;
+
+    protected string $stateEnum = InvoiceState::class;
 
     public const NUMBER_PREFIX = 'INV';
     public const NUMBER_COLUMN = 'invoice_number';
     public const NUMBER_DIGITS = 5;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
+    
+    protected array $searchable = ['invoice_number', 'notes', 'terms'];
 
     protected $fillable = [
         'invoice_number',
@@ -63,9 +71,44 @@ class Invoice extends Model
         'share_token_expires_at' => 'datetime',
     ];
 
-    public function getStateAttribute(): InvoiceState
+    public function send(): bool
     {
-        return InvoiceState::tryFrom($this->status) ?? InvoiceState::DRAFT;
+        if (!$this->state->canSend()) {
+            return false;
+        }
+        return $this->transitionTo(InvoiceState::SENT);
+    }
+
+    public function markAsPaid(): bool
+    {
+        if ($this->state->isTerminal()) {
+            return false;
+        }
+        return $this->transitionTo(InvoiceState::PAID);
+    }
+
+    public function markAsPartial(): bool
+    {
+        if (!$this->state->canRegisterPayment()) {
+            return false;
+        }
+        return $this->transitionTo(InvoiceState::PARTIAL);
+    }
+
+    public function markAsOverdue(): bool
+    {
+        if ($this->state->isTerminal()) {
+            return false;
+        }
+        return $this->transitionTo(InvoiceState::OVERDUE);
+    }
+
+    public function cancelInvoice(): bool
+    {
+        if (!$this->state->canCancel()) {
+            return false;
+        }
+        return $this->transitionTo(InvoiceState::CANCELLED);
     }
 
     public function customer(): BelongsTo

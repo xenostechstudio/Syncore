@@ -4,11 +4,12 @@ namespace App\Policies;
 
 use App\Models\Sales\Customer;
 use App\Models\User;
+use App\Policies\Concerns\HandlesDocumentAuthorization;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CustomerPolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, HandlesDocumentAuthorization;
 
     /**
      * Determine whether the user can view any customers.

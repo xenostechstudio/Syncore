@@ -110,25 +110,18 @@ class InvoiceService
             ]);
 
             $newPaidAmount = $invoice->paid_amount + $amount;
-            $oldStatus = $invoice->status;
+            $invoice->paid_amount = $newPaidAmount;
 
-            $updateData = [
-                'paid_amount' => $newPaidAmount,
-            ];
-
-            // Determine new status
+            // Determine new status and transition
             if ($newPaidAmount >= $invoice->total) {
-                $updateData['status'] = 'paid';
-                $updateData['paid_date'] = now();
+                $invoice->paid_date = now();
+                $invoice->save();
+                $invoice->markAsPaid();
             } elseif ($newPaidAmount > 0) {
-                $updateData['status'] = 'partial';
-            }
-
-            $invoice->update($updateData);
-
-            // Log status change if changed
-            if ($oldStatus !== $invoice->status) {
-                $invoice->logStatusChange($oldStatus, $invoice->status);
+                $invoice->save();
+                $invoice->markAsPartial();
+            } else {
+                $invoice->save();
             }
 
             // Dispatch event if fully paid
@@ -148,17 +141,11 @@ class InvoiceService
      */
     public function send(Invoice $invoice): bool
     {
-        if (!$invoice->state->canSend()) {
-            return false;
-        }
-
-        $oldStatus = $invoice->status;
-        $invoice->update(['status' => 'sent']);
-        $invoice->logStatusChange($oldStatus, 'sent', 'Invoice sent to customer');
+        $result = $invoice->send();
 
         // TODO: Send email notification to customer
 
-        return true;
+        return $result;
     }
 
     /**
@@ -175,8 +162,6 @@ class InvoiceService
         }
 
         return DB::transaction(function () use ($invoice, $reason) {
-            $oldStatus = $invoice->status;
-
             // Reverse invoiced quantities on sales order items
             foreach ($invoice->items as $item) {
                 if ($item->sales_order_item_id) {
@@ -184,10 +169,7 @@ class InvoiceService
                 }
             }
 
-            $invoice->update(['status' => 'cancelled']);
-            $invoice->logStatusChange($oldStatus, 'cancelled', $reason ?? 'Invoice cancelled');
-
-            return true;
+            return $invoice->cancelInvoice();
         });
     }
 

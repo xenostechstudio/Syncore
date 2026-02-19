@@ -4,8 +4,12 @@ namespace App\Models\Purchase;
 
 use App\Enums\VendorBillState;
 use App\Models\User;
+use App\Traits\HasAttachments;
+use App\Traits\HasCreatedBy;
 use App\Traits\HasNotes;
 use App\Traits\HasSoftDeletes;
+use App\Traits\HasStateMachine;
+use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +18,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VendorBill extends Model
 {
-    use LogsActivity, HasNotes, HasSoftDeletes, Searchable;
+    use LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasAttachments, HasStateMachine, HasCreatedBy, HasYearlySequenceNumber;
+
+    protected string $stateEnum = VendorBillState::class;
+
+    public const NUMBER_PREFIX = 'BILL';
+    public const NUMBER_COLUMN = 'bill_number';
+    public const NUMBER_DIGITS = 5;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     
@@ -47,33 +57,45 @@ class VendorBill extends Model
         'paid_amount' => 'decimal:2',
     ];
 
-    protected static function boot()
+    public function confirm(): bool
     {
-        parent::boot();
-
-        static::creating(function ($bill) {
-            if (empty($bill->bill_number)) {
-                $bill->bill_number = self::generateBillNumber();
-            }
-        });
+        if (!$this->state->canConfirm()) {
+            return false;
+        }
+        return $this->transitionTo(VendorBillState::PENDING);
     }
 
-    public static function generateBillNumber(): string
+    public function markAsPaid(): bool
     {
-        $prefix = 'BILL';
-        $year = now()->year;
-        
-        $lastNumber = self::where('bill_number', 'like', "{$prefix}/{$year}/%")
-            ->pluck('bill_number')
-            ->map(fn($num) => (int) substr($num, strlen("{$prefix}/{$year}/")))
-            ->max() ?? 0;
-
-        return "{$prefix}/{$year}/" . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+        if ($this->state->isTerminal()) {
+            return false;
+        }
+        $this->paid_date = now();
+        return $this->transitionTo(VendorBillState::PAID);
     }
 
-    public function getStateAttribute(): VendorBillState
+    public function markAsPartial(): bool
     {
-        return VendorBillState::tryFrom($this->status) ?? VendorBillState::DRAFT;
+        if (!$this->state->canRegisterPayment()) {
+            return false;
+        }
+        return $this->transitionTo(VendorBillState::PARTIAL);
+    }
+
+    public function markAsOverdue(): bool
+    {
+        if ($this->state->isTerminal()) {
+            return false;
+        }
+        return $this->transitionTo(VendorBillState::OVERDUE);
+    }
+
+    public function cancelBill(): bool
+    {
+        if (!$this->state->canCancel()) {
+            return false;
+        }
+        return $this->transitionTo(VendorBillState::CANCELLED);
     }
 
     public function supplier(): BelongsTo
@@ -94,11 +116,6 @@ class VendorBill extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(VendorBillPayment::class);
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function getBalanceDueAttribute(): float

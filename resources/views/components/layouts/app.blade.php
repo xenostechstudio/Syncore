@@ -28,9 +28,12 @@
                         class="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
                     >
                         <flux:icon name="magnifying-glass" class="size-4" />
-                        <span class="hidden sm:inline">Search</span>
+                        <span class="hidden sm:inline">{{ __('common.search') }}</span>
                         <kbd class="hidden rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-400 sm:inline-block dark:bg-zinc-700 dark:text-zinc-500">⌘K</kbd>
                     </button>
+
+                    {{-- Language Switcher --}}
+                    <livewire:components.language-switcher />
 
                     {{-- Company Name --}}
                     <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">

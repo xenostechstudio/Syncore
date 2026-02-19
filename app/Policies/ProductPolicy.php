@@ -4,11 +4,12 @@ namespace App\Policies;
 
 use App\Models\Inventory\Product;
 use App\Models\User;
+use App\Policies\Concerns\HandlesDocumentAuthorization;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProductPolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, HandlesDocumentAuthorization;
 
     /**
      * Determine whether the user can view any products.

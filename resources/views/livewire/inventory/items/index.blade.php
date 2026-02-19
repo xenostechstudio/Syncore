@@ -20,10 +20,10 @@
             {{-- Left Group: New Button, Title, Gear --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('inventory.products.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
+                    {{ __('common.new') }}
                 </a>
                 <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    Products
+                    {{ __('inventory.products') }}
                 </span>
 
                 @if(isset($warehouses))
@@ -43,11 +43,11 @@
                     <flux:menu class="w-48">
                         <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import records</span>
+                            <span>{{ __('common.import_records') }}</span>
                         </button>
                         <a href="{{ route('export.products') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export All</span>
+                            <span>{{ __('common.export_all') }}</span>
                         </a>
                     </flux:menu>
                 </flux:dropdown>
@@ -60,7 +60,7 @@
                     <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                         {{-- Count Selected Button --}}
                         <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            <span>{{ count($selected) }} selected</span>
+                            <span>{{ count($selected) }} {{ __('common.selected') }}</span>
                             <flux:icon name="x-mark" class="size-3.5" />
                         </button>
 
@@ -69,7 +69,7 @@
                         {{-- Export --}}
                         <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
                             <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Export</span>
+                            <span>{{ __('common.export') }}</span>
                         </button>
 
                         {{-- Actions Dropdown --}}
@@ -81,11 +81,11 @@
                             <flux:menu class="w-56">
                                 <button type="button" wire:click="bulkActivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="check-circle" class="size-4 text-emerald-500" />
-                                    <span>Activate</span>
+                                    <span>{{ __('common.activate') }}</span>
                                 </button>
                                 <button type="button" wire:click="bulkDeactivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <flux:icon name="pause-circle" class="size-4 text-zinc-400" />
-                                    <span>Deactivate</span>
+                                    <span>{{ __('common.deactivate') }}</span>
                                 </button>
                                 <flux:menu.separator />
                                 <button 
@@ -94,7 +94,7 @@
                                     class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                                 >
                                     <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
+                                    <span>{{ __('common.delete') }}</span>
                                 </button>
                             </flux:menu>
                         </flux:dropdown>
@@ -107,7 +107,7 @@
                             <input 
                                 type="text" 
                                 wire:model.live.debounce.300ms="search"
-                                placeholder="Search products..." 
+                                placeholder="{{ __('inventory.search_products') }}" 
                                 class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
                             />
                             <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
@@ -123,26 +123,26 @@
                                         <div class="mb-2 flex items-center justify-between">
                                             <div class="flex items-center gap-1.5">
                                                 <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Filters</span>
+                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.filters') }}</span>
                                             </div>
-                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">+ Add Custom</button>
+                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">{{ __('common.add_custom') }}</button>
                                         </div>
                                         <div class="space-y-1">
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" wire:model.live="status" value="in_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>In Stock</span>
+                                                <span>{{ __('common.in_stock') }}</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" wire:model.live="status" value="low_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Low Stock</span>
+                                                <span>{{ __('common.low_stock') }}</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" wire:model.live="status" value="out_of_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Out of Stock</span>
+                                                <span>{{ __('common.out_of_stock') }}</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Favorites</span>
+                                                <span>{{ __('common.favorites') }}</span>
                                             </label>
                                         </div>
                                     </div>
@@ -152,22 +152,22 @@
                                         <div class="mb-2 flex items-center justify-between">
                                             <div class="flex items-center gap-1.5">
                                                 <flux:icon name="rectangle-group" class="size-4 text-zinc-400" />
-                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Group By</span>
+                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.group_by') }}</span>
                                             </div>
-                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">+ Add Custom</button>
+                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">{{ __('common.add_custom') }}</button>
                                         </div>
                                         <div class="space-y-1">
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Category</span>
+                                                <span>{{ __('common.category') }}</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Status</span>
+                                                <span>{{ __('common.status') }}</span>
                                             </label>
                                             <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>Warehouse</span>
+                                                <span>{{ __('inventory.warehouse') }}</span>
                                             </label>
                                         </div>
                                     </div>
@@ -229,22 +229,22 @@
                                 {{-- Favorite --}}
                             </th>
                             @if($visibleColumns['name'])
-                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Product</th>
+                                <th scope="col" class="py-3 pl-2 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_product') }}</th>
                             @endif
                             @if($visibleColumns['sku'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">SKU</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_sku') }}</th>
                             @endif
                             @if($visibleColumns['category'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Category</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_category') }}</th>
                             @endif
                             @if($visibleColumns['stock'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Stock</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_stock') }}</th>
                             @endif
                             @if($visibleColumns['price'])
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Price</th>
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.col_price') }}</th>
                             @endif
                             @if($visibleColumns['status'])
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.status') }}</th>
                             @endif
                             <th scope="col" class="w-10 py-3 pr-4 sm:pr-6 lg:pr-8">
                                 {{-- Column Config --}}
@@ -254,31 +254,31 @@
                                     </button>
 
                                     <flux:menu class="w-48">
-                                        <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">Toggle Columns</div>
+                                        <div class="px-2 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('common.toggle_columns') }}</div>
                                         <flux:menu.separator />
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.name" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Product</span>
+                                            <span>{{ __('common.col_product') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.sku" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>SKU</span>
+                                            <span>{{ __('common.col_sku') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.category" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Category</span>
+                                            <span>{{ __('common.col_category') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Stock</span>
+                                            <span>{{ __('common.col_stock') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.price" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Price</span>
+                                            <span>{{ __('common.col_price') }}</span>
                                         </label>
                                         <label class="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <input type="checkbox" wire:model.live="visibleColumns.status" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                            <span>Status</span>
+                                            <span>{{ __('common.status') }}</span>
                                         </label>
                                     </flux:menu>
                                 </flux:dropdown>
@@ -371,11 +371,11 @@
 
                                         @if($showForecast)
                                             <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                                On Hand: {{ number_format((int) $onHand) }}
+                                                {{ __('common.on_hand') }}: {{ number_format((int) $onHand) }}
                                                 <span class="mx-1">|</span>
-                                                In: {{ number_format((int) $forecastIn) }}
+                                                {{ __('common.in') }}: {{ number_format((int) $forecastIn) }}
                                                 <span class="mx-1">|</span>
-                                                Out: {{ number_format((int) $forecastOut) }}
+                                                {{ __('common.out') }}: {{ number_format((int) $forecastOut) }}
                                             </div>
                                         @endif
                                     </td>
@@ -389,9 +389,9 @@
                                     <td class="px-4 py-4">
                                         @php
                                             $statusConfig = match($item->status) {
-                                                'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'In Stock'],
-                                                'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Low Stock'],
-                                                'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Out of Stock'],
+                                                'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => __('common.in_stock')],
+                                                'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => __('common.low_stock')],
+                                                'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => __('common.out_of_stock')],
                                                 default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($item->status)],
                                             };
                                         @endphp
@@ -410,8 +410,8 @@
                                             <flux:icon name="archive-box" class="size-6 text-zinc-400" />
                                         </div>
                                         <div>
-                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No products found</p>
-                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
+                                            <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">{{ __('common.no_products_found') }}</p>
+                                            <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ __('common.add_first_product') }}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -473,8 +473,8 @@
                                 <flux:icon name="archive-box" class="size-6 text-zinc-400" />
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">No products found</p>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
+                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('common.no_products_found') }}</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('common.add_first_product') }}</p>
                             </div>
                         </div>
                     </div>
@@ -485,9 +485,9 @@
             {{-- Kanban View --}}
             @php
                 $statuses = [
-                    'in_stock' => ['label' => 'In Stock', 'color' => 'emerald', 'headerBg' => 'bg-emerald-50 dark:bg-emerald-900/20'],
-                    'low_stock' => ['label' => 'Low Stock', 'color' => 'amber', 'headerBg' => 'bg-amber-50 dark:bg-amber-900/20'],
-                    'out_of_stock' => ['label' => 'Out of Stock', 'color' => 'red', 'headerBg' => 'bg-red-50 dark:bg-red-900/20'],
+                    'in_stock' => ['label' => __('common.in_stock'), 'color' => 'emerald', 'headerBg' => 'bg-emerald-50 dark:bg-emerald-900/20'],
+                    'low_stock' => ['label' => __('common.low_stock'), 'color' => 'amber', 'headerBg' => 'bg-amber-50 dark:bg-amber-900/20'],
+                    'out_of_stock' => ['label' => __('common.out_of_stock'), 'color' => 'red', 'headerBg' => 'bg-red-50 dark:bg-red-900/20'],
                 ];
             @endphp
             <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
@@ -536,7 +536,7 @@
                                 </a>
                             @empty
                                 <div class="flex flex-1 items-center justify-center py-8">
-                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">No products</p>
+                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">{{ __('common.no_products_found') }}</p>
                                 </div>
                             @endforelse
                         </div>

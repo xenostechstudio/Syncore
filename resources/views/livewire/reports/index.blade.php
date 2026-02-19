@@ -4,7 +4,7 @@
         <div class="flex w-full items-center justify-between gap-4">
             {{-- Left Group --}}
             <div class="flex items-center gap-3">
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Reports Overview</span>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ __('reports.overview') }}</span>
             </div>
 
             {{-- Right Group: Period Filter --}}

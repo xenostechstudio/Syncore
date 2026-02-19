@@ -56,6 +56,7 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->index('status');
         });
 
         // Payroll Items (individual employee payslips)
@@ -76,6 +77,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['payroll_period_id', 'employee_id']);
+            $table->index('payroll_period_id');
+            $table->index('employee_id');
         });
 
         // Payroll Item Details (breakdown of each component)

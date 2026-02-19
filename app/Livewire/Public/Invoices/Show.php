@@ -79,10 +79,11 @@ class Show extends Component
             return;
         }
 
-        $result = $xenditService->createInvoice($this->invoice->fresh());
+        $result = $xenditService->createInvoice($this->invoice->fresh(['customer', 'items.product']));
 
         if ($result['success']) {
             $this->invoice->refresh();
+            $this->invoice->load(['customer', 'items.product', 'payments']);
             $this->paymentLink = $result['invoice_url'];
             $this->statusIsError = false;
             $this->statusMessage = 'Payment link generated. You will be redirected shortly.';

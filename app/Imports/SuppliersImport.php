@@ -2,17 +2,17 @@
 
 namespace App\Imports;
 
+use App\Imports\Concerns\HasImportTracking;
 use App\Models\Purchase\Supplier;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class SuppliersImport implements ToCollection, WithHeadingRow, WithValidation
+class SuppliersImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading
 {
-    public int $imported = 0;
-    public int $updated = 0;
-    public array $errors = [];
+    use HasImportTracking;
 
     public function collection(Collection $rows)
     {
@@ -65,5 +65,10 @@ class SuppliersImport implements ToCollection, WithHeadingRow, WithValidation
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
         ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 100;
     }
 }

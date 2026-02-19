@@ -37,14 +37,14 @@
             <div class="flex items-center gap-3">
                 @unless($isOrdersToInvoicePage)
                     <a href="{{ route('sales.orders.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                        New
+                        {{ __('common.new') }}
                     </a>
                 @endunless
                 <span class="text-md font-ligth text-zinc-600 dark:text-zinc-400">
                     @if($isOrdersToInvoicePage)
-                        Orders to Invoice
+                        {{ __('sales.to_invoice') }}
                     @else
-                        {{ $mode === 'orders' ? 'Orders' : 'Quotations' }}
+                        {{ $mode === 'orders' ? __('sales.orders') : __('sales.quotations') }}
                     @endif
                 </span>
                 

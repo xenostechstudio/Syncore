@@ -26,6 +26,8 @@ use App\Listeners\Notification\SendPaymentReceivedNotification;
 use App\Listeners\Purchase\SendPurchaseReceivedNotification;
 use App\Listeners\Purchase\SendVendorBillPaidNotification;
 use App\Listeners\Purchase\UpdateInventoryOnPurchaseReceived;
+use App\Listeners\Sales\ReserveInventoryOnConfirm;
+use App\Listeners\Sales\SendSalesOrderConfirmationNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -63,7 +65,8 @@ class EventServiceProvider extends ServiceProvider
         
         // Sales Events
         SalesOrderConfirmed::class => [
-            // Add listeners as needed
+            ReserveInventoryOnConfirm::class,
+            SendSalesOrderConfirmationNotification::class,
         ],
 
         // CRM Events

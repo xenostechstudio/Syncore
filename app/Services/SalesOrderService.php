@@ -6,6 +6,7 @@ use App\Enums\SalesOrderState;
 use App\Events\SalesOrderConfirmed;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderItem;
+use App\Services\Concerns\HasDocumentItems;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
  */
 class SalesOrderService
 {
+    use HasDocumentItems;
     /**
      * Create a new sales order.
      *
@@ -28,7 +30,6 @@ class SalesOrderService
     {
         return DB::transaction(function () use ($data, $items) {
             $salesOrder = SalesOrder::create([
-                'order_number' => SalesOrder::generateOrderNumber(),
                 'customer_id' => $data['customer_id'],
                 'user_id' => auth()->id(),
                 'order_date' => $data['order_date'] ?? now(),
@@ -90,15 +91,9 @@ class SalesOrderService
      */
     public function confirm(SalesOrder $salesOrder): bool
     {
-        if (!$salesOrder->state->canConfirm()) {
-            return false;
-        }
-
-        $oldStatus = $salesOrder->status;
-        $result = $salesOrder->transitionTo(SalesOrderState::SALES_ORDER);
+        $result = $salesOrder->confirm();
 
         if ($result) {
-            $salesOrder->logStatusChange($oldStatus, $salesOrder->status, 'Quotation confirmed as Sales Order');
             SalesOrderConfirmed::dispatch($salesOrder);
         }
 
@@ -117,13 +112,9 @@ class SalesOrderService
             return false;
         }
 
-        $oldStatus = $salesOrder->status;
         $result = $salesOrder->transitionTo(SalesOrderState::QUOTATION_SENT);
 
-        if ($result) {
-            $salesOrder->logStatusChange($oldStatus, $salesOrder->status, 'Quotation sent to customer');
-            // TODO: Send email to customer
-        }
+        // TODO: Send email to customer
 
         return $result;
     }
@@ -137,18 +128,7 @@ class SalesOrderService
      */
     public function cancel(SalesOrder $salesOrder, ?string $reason = null): bool
     {
-        if (!$salesOrder->state->canCancel()) {
-            return false;
-        }
-
-        $oldStatus = $salesOrder->status;
-        $result = $salesOrder->transitionTo(SalesOrderState::CANCELLED);
-
-        if ($result) {
-            $salesOrder->logStatusChange($oldStatus, $salesOrder->status, $reason ?? 'Sales order cancelled');
-        }
-
-        return $result;
+        return $salesOrder->cancelOrder();
     }
 
     /**
@@ -159,23 +139,7 @@ class SalesOrderService
      */
     public function markAsDone(SalesOrder $salesOrder): bool
     {
-        if ($salesOrder->state !== SalesOrderState::SALES_ORDER) {
-            return false;
-        }
-
-        // Check if fully invoiced and delivered
-        if (!$salesOrder->isFullyInvoiced() || !$salesOrder->isFullyDelivered()) {
-            return false;
-        }
-
-        $oldStatus = $salesOrder->status;
-        $result = $salesOrder->transitionTo(SalesOrderState::DONE);
-
-        if ($result) {
-            $salesOrder->logStatusChange($oldStatus, $salesOrder->status, 'Sales order completed');
-        }
-
-        return $result;
+        return $salesOrder->lock();
     }
 
     /**

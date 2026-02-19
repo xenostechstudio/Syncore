@@ -27,7 +27,6 @@ class DeliveryService
 
         return DB::transaction(function () use ($salesOrder, $warehouseId) {
             $deliveryOrder = DeliveryOrder::create([
-                'delivery_number' => DeliveryOrder::generateDeliveryNumber(),
                 'sales_order_id' => $salesOrder->id,
                 'warehouse_id' => $warehouseId,
                 'user_id' => auth()->id(),
@@ -77,17 +76,14 @@ class DeliveryService
      */
     public function transitionTo(DeliveryOrder $deliveryOrder, DeliveryOrderState $state): bool
     {
-        $oldStatus = $deliveryOrder->status;
-        
-        $deliveryOrder->update(['status' => $state->value]);
-        $deliveryOrder->logStatusChange($oldStatus->value, $state->value);
+        $result = $deliveryOrder->transitionTo($state);
 
         // If delivered, update sales order items and dispatch event
-        if ($state === DeliveryOrderState::DELIVERED) {
+        if ($result && $state === DeliveryOrderState::DELIVERED) {
             $this->handleDeliveryCompleted($deliveryOrder);
         }
 
-        return true;
+        return $result;
     }
 
     /**
@@ -95,11 +91,7 @@ class DeliveryService
      */
     public function markPicked(DeliveryOrder $deliveryOrder): bool
     {
-        if ($deliveryOrder->status !== DeliveryOrderState::PENDING) {
-            return false;
-        }
-
-        return $this->transitionTo($deliveryOrder, DeliveryOrderState::PICKED);
+        return $deliveryOrder->markAsPicked();
     }
 
     /**
@@ -107,7 +99,7 @@ class DeliveryService
      */
     public function markInTransit(DeliveryOrder $deliveryOrder, ?string $trackingNumber = null, ?string $courier = null): bool
     {
-        if ($deliveryOrder->status !== DeliveryOrderState::PICKED) {
+        if ($deliveryOrder->state !== DeliveryOrderState::PICKED) {
             return false;
         }
 
@@ -116,7 +108,7 @@ class DeliveryService
             'courier' => $courier,
         ]);
 
-        return $this->transitionTo($deliveryOrder, DeliveryOrderState::IN_TRANSIT);
+        return $deliveryOrder->markInTransit();
     }
 
     /**
@@ -124,13 +116,13 @@ class DeliveryService
      */
     public function markDelivered(DeliveryOrder $deliveryOrder): bool
     {
-        if ($deliveryOrder->status !== DeliveryOrderState::IN_TRANSIT) {
-            return false;
+        $result = $deliveryOrder->markAsDelivered();
+        
+        if ($result) {
+            $this->handleDeliveryCompleted($deliveryOrder);
         }
 
-        $deliveryOrder->update(['actual_delivery_date' => now()]);
-
-        return $this->transitionTo($deliveryOrder, DeliveryOrderState::DELIVERED);
+        return $result;
     }
 
     /**
@@ -138,18 +130,15 @@ class DeliveryService
      */
     public function markFailed(DeliveryOrder $deliveryOrder, ?string $reason = null): bool
     {
-        if ($deliveryOrder->status->isTerminal()) {
+        if ($deliveryOrder->state->isTerminal()) {
             return false;
         }
 
-        $oldStatus = $deliveryOrder->status;
-        $deliveryOrder->update([
-            'status' => DeliveryOrderState::FAILED->value,
-            'notes' => $reason ? ($deliveryOrder->notes . "\nFailed: " . $reason) : $deliveryOrder->notes,
-        ]);
-        $deliveryOrder->logStatusChange($oldStatus->value, DeliveryOrderState::FAILED->value, $reason);
+        if ($reason) {
+            $deliveryOrder->notes = ($deliveryOrder->notes ? $deliveryOrder->notes . "\n" : '') . "Failed: " . $reason;
+        }
 
-        return true;
+        return $deliveryOrder->transitionTo(DeliveryOrderState::FAILED);
     }
 
     /**
@@ -157,15 +146,7 @@ class DeliveryService
      */
     public function cancel(DeliveryOrder $deliveryOrder, ?string $reason = null): bool
     {
-        if ($deliveryOrder->status->isTerminal()) {
-            return false;
-        }
-
-        $oldStatus = $deliveryOrder->status;
-        $deliveryOrder->update(['status' => DeliveryOrderState::CANCELLED->value]);
-        $deliveryOrder->logStatusChange($oldStatus->value, DeliveryOrderState::CANCELLED->value, $reason ?? 'Cancelled');
-
-        return true;
+        return $deliveryOrder->cancelDelivery();
     }
 
     /**

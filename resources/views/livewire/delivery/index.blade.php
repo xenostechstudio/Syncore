@@ -5,9 +5,9 @@
             {{-- Left Group: Title, Gear --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('delivery.orders.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New Delivery
+                    {{ __('delivery.new_delivery') }}
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Delivery Overview</span>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ __('delivery.overview') }}</span>
                 
                 {{-- Actions Menu (Gear) --}}
                 <flux:dropdown position="bottom" align="start">
@@ -18,7 +18,7 @@
                     <flux:menu class="w-48">
                         <a href="{{ route('export.delivery-orders') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export Report</span>
+                            <span>{{ __('delivery.export_report') }}</span>
                         </a>
                     </flux:menu>
                 </flux:dropdown>

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\LeadState;
 use App\Events\OpportunityLost;
 use App\Events\OpportunityWon;
 use App\Models\CRM\Activity;
@@ -43,15 +44,12 @@ class CRMService
      */
     public function updateLeadStatus(Lead $lead, string $status): bool
     {
-        if ($lead->status === 'converted' || $lead->status === 'lost') {
+        $state = LeadState::tryFrom($status);
+        if (!$state) {
             return false;
         }
 
-        $oldStatus = $lead->status;
-        $lead->update(['status' => $status]);
-        $lead->logStatusChange($oldStatus, $status);
-
-        return true;
+        return $lead->transitionTo($state);
     }
 
     /**
@@ -59,27 +57,12 @@ class CRMService
      */
     public function convertLeadToCustomer(Lead $lead): ?Customer
     {
-        if ($lead->status === 'converted') {
-            return $lead->convertedCustomer;
-        }
-
         return DB::transaction(function () use ($lead) {
-            $customer = Customer::create([
-                'name' => $lead->company_name ?: $lead->name,
-                'email' => $lead->email,
-                'phone' => $lead->phone,
-                'address' => $lead->address,
-                'website' => $lead->website,
-                'contact_person' => $lead->name,
-            ]);
-
-            $lead->update([
-                'status' => 'converted',
-                'converted_customer_id' => $customer->id,
-                'converted_at' => now(),
-            ]);
-
-            $lead->logActivity('converted', "Lead converted to customer: {$customer->name}");
+            $customer = $lead->convertToCustomer();
+            
+            if ($customer) {
+                $lead->logActivity('converted', "Lead converted to customer: {$customer->name}");
+            }
 
             return $customer;
         });
@@ -90,18 +73,7 @@ class CRMService
      */
     public function markLeadAsLost(Lead $lead, ?string $reason = null): bool
     {
-        if ($lead->status === 'converted' || $lead->status === 'lost') {
-            return false;
-        }
-
-        $oldStatus = $lead->status;
-        $lead->update([
-            'status' => 'lost',
-            'notes' => $reason ? ($lead->notes . "\nLost reason: " . $reason) : $lead->notes,
-        ]);
-        $lead->logStatusChange($oldStatus, 'lost', $reason);
-
-        return true;
+        return $lead->markAsLost($reason);
     }
 
     /**
@@ -164,14 +136,7 @@ class CRMService
             return false;
         }
 
-        $opportunity->update([
-            'pipeline_id' => $nextPipeline->id,
-            'probability' => $nextPipeline->probability,
-        ]);
-
-        $opportunity->logActivity('stage_changed', "Moved to stage: {$nextPipeline->name}");
-
-        return true;
+        return $opportunity->moveToPipeline($nextPipeline);
     }
 
     /**
@@ -179,17 +144,14 @@ class CRMService
      */
     public function markOpportunityAsWon(Opportunity $opportunity, ?int $salesOrderId = null): bool
     {
-        if ($opportunity->isWon() || $opportunity->isLost()) {
-            return false;
+        $result = $opportunity->markAsWon($salesOrderId);
+
+        if ($result) {
+            // Dispatch event for notifications
+            event(new OpportunityWon($opportunity));
         }
 
-        $opportunity->markAsWon($salesOrderId);
-        $opportunity->logActivity('won', 'Opportunity marked as won');
-
-        // Dispatch event for notifications
-        event(new OpportunityWon($opportunity));
-
-        return true;
+        return $result;
     }
 
     /**
@@ -197,17 +159,14 @@ class CRMService
      */
     public function markOpportunityAsLost(Opportunity $opportunity, string $reason = ''): bool
     {
-        if ($opportunity->isWon() || $opportunity->isLost()) {
-            return false;
+        $result = $opportunity->markAsLost($reason);
+
+        if ($result) {
+            // Dispatch event for notifications
+            event(new OpportunityLost($opportunity, $reason));
         }
 
-        $opportunity->markAsLost($reason);
-        $opportunity->logActivity('lost', "Opportunity marked as lost. Reason: {$reason}");
-
-        // Dispatch event for notifications
-        event(new OpportunityLost($opportunity, $reason));
-
-        return true;
+        return $result;
     }
 
     /**

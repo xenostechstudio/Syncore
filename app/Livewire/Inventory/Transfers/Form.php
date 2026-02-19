@@ -133,7 +133,6 @@ class Form extends Component
             $transfer->update($data);
             $transfer->items()->delete();
         } else {
-            $data['transfer_number'] = InventoryTransfer::generateTransferNumber();
             $transfer = InventoryTransfer::create($data);
             $this->transferId = $transfer->id;
         }
@@ -161,7 +160,6 @@ class Form extends Component
         $transfer = InventoryTransfer::with('items')->findOrFail($this->transferId);
 
         $newTransfer = InventoryTransfer::create([
-            'transfer_number' => InventoryTransfer::generateTransferNumber(),
             'source_warehouse_id' => $transfer->source_warehouse_id,
             'destination_warehouse_id' => $transfer->destination_warehouse_id,
             'user_id' => Auth::id(),

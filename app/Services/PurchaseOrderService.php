@@ -8,6 +8,7 @@ use App\Models\Purchase\PurchaseRfq;
 use App\Models\Purchase\PurchaseRfqItem;
 use App\Models\Purchase\Supplier;
 use App\Models\Purchase\VendorBill;
+use App\Services\Concerns\HasDocumentItems;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\DB;
  */
 class PurchaseOrderService
 {
+    use HasDocumentItems;
     /**
      * Create a new purchase RFQ.
      *
@@ -31,7 +33,6 @@ class PurchaseOrderService
     {
         return DB::transaction(function () use ($data, $items) {
             $purchaseRfq = PurchaseRfq::create([
-                'reference' => PurchaseRfq::generateReference(),
                 'supplier_id' => $data['supplier_id'],
                 'supplier_name' => Supplier::find($data['supplier_id'])?->name,
                 'user_id' => auth()->id(),
@@ -88,15 +89,7 @@ class PurchaseOrderService
      */
     public function confirm(PurchaseRfq $purchaseRfq): bool
     {
-        if (!$purchaseRfq->state->canConfirm()) {
-            return false;
-        }
-
-        $oldStatus = $purchaseRfq->status;
-        $purchaseRfq->update(['status' => PurchaseOrderState::PURCHASE_ORDER->value]);
-        $purchaseRfq->logStatusChange($oldStatus, $purchaseRfq->status, 'RFQ confirmed as Purchase Order');
-
-        return true;
+        return $purchaseRfq->confirmOrder();
     }
 
     /**
@@ -113,8 +106,6 @@ class PurchaseOrderService
         }
 
         return DB::transaction(function () use ($purchaseRfq, $receivedQuantities) {
-            $oldStatus = $purchaseRfq->status;
-
             foreach ($purchaseRfq->items as $item) {
                 $quantity = $receivedQuantities[$item->id] ?? $item->quantity;
                 $item->update(['quantity_received' => $quantity]);
@@ -126,11 +117,9 @@ class PurchaseOrderService
             );
 
             if ($fullyReceived) {
-                $purchaseRfq->update([
-                    'status' => PurchaseOrderState::RECEIVED->value,
-                    'received_at' => now(),
-                ]);
-                $purchaseRfq->logStatusChange($oldStatus, $purchaseRfq->status, 'Purchase order received');
+                $purchaseRfq->received_at = now();
+                $purchaseRfq->save();
+                $purchaseRfq->markAsReceived();
                 PurchaseOrderReceived::dispatch($purchaseRfq);
             }
 
@@ -202,7 +191,7 @@ class PurchaseOrderService
 
             // Update PO status if fully billed
             if ($purchaseRfq->isFullyBilled()) {
-                $purchaseRfq->update(['status' => PurchaseOrderState::BILLED->value]);
+                $purchaseRfq->markAsBilled();
             }
 
             return $bill->fresh(['items', 'supplier']);
@@ -218,15 +207,7 @@ class PurchaseOrderService
      */
     public function cancel(PurchaseRfq $purchaseRfq, ?string $reason = null): bool
     {
-        if (!$purchaseRfq->state->canCancel()) {
-            return false;
-        }
-
-        $oldStatus = $purchaseRfq->status;
-        $purchaseRfq->update(['status' => PurchaseOrderState::CANCELLED->value]);
-        $purchaseRfq->logStatusChange($oldStatus, $purchaseRfq->status, $reason ?? 'Purchase order cancelled');
-
-        return true;
+        return $purchaseRfq->cancelOrder();
     }
 
     /**

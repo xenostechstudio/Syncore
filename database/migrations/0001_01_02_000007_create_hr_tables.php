@@ -82,6 +82,10 @@ return new class extends Migration
 
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->index('department_id');
+            $table->index('position_id');
+            $table->index('status');
+            $table->index('user_id');
         });
 
         // Leave Types
@@ -111,6 +115,9 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->timestamps();
+            $table->index('employee_id');
+            $table->index('status');
+            $table->index('leave_type_id');
         });
 
         // Leave Balances (per employee per year)

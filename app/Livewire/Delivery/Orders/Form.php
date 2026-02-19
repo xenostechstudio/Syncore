@@ -647,7 +647,6 @@ class Form extends Component
 
                 if (! $adjustment) {
                     $adjustment = InventoryAdjustment::create([
-                        'adjustment_number' => InventoryAdjustment::generateAdjustmentNumber('increase'),
                         'warehouse_id' => $ret->warehouse_id,
                         'user_id' => Auth::id(),
                         'adjustment_date' => $ret->return_date,
@@ -816,7 +815,6 @@ class Form extends Component
 
         if (! $adjustment) {
             $adjustment = InventoryAdjustment::create([
-                'adjustment_number' => InventoryAdjustment::generateAdjustmentNumber('decrease'),
                 'warehouse_id' => $delivery->warehouse_id,
                 'user_id' => Auth::id(),
                 'adjustment_date' => $delivery->delivery_date,

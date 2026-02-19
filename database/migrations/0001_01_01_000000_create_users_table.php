@@ -12,18 +12,33 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('phone', 30)->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
             $table->string('locale', 10)->default('en');
-            $table->timestamps();
+            
+            // Calendar / Working Hours
+            $table->string('working_hours_start', 5)->default('09:00');
+            $table->string('working_hours_end', 5)->default('17:00');
+            $table->json('working_days')->nullable();
+            $table->date('out_of_office_start')->nullable();
+            $table->date('out_of_office_end')->nullable();
+            $table->text('out_of_office_message')->nullable();
+            
+            // Localization
+            $table->string('language', 10)->default('id');
+            $table->string('timezone', 50)->default('Asia/Jakarta');
+            $table->text('signature')->nullable();
             
             // Two Factor Authentication
             $table->text('two_factor_secret')->nullable();
             $table->text('two_factor_recovery_codes')->nullable();
             $table->timestamp('two_factor_confirmed_at')->nullable();
+            
+            $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

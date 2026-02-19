@@ -5,9 +5,9 @@
             {{-- Left Group --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('accounting.journal-entries.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New Entry
+                    {{ __('accounting.new_entry') }}
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Accounting Overview</span>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ __('accounting.overview') }}</span>
             </div>
 
             {{-- Right Group --}}

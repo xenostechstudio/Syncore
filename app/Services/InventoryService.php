@@ -50,7 +50,6 @@ class InventoryService
     ): InventoryAdjustment {
         return DB::transaction(function () use ($productId, $warehouseId, $quantity, $type, $reason) {
             $adjustment = InventoryAdjustment::create([
-                'adjustment_number' => InventoryAdjustment::generateAdjustmentNumber($type),
                 'warehouse_id' => $warehouseId,
                 'user_id' => auth()->id(),
                 'adjustment_date' => now(),
@@ -83,7 +82,6 @@ class InventoryService
     ): InventoryTransfer {
         return DB::transaction(function () use ($sourceWarehouseId, $destinationWarehouseId, $items, $notes) {
             $transfer = InventoryTransfer::create([
-                'transfer_number' => InventoryTransfer::generateTransferNumber(),
                 'source_warehouse_id' => $sourceWarehouseId,
                 'destination_warehouse_id' => $destinationWarehouseId,
                 'user_id' => auth()->id(),
@@ -139,8 +137,7 @@ class InventoryService
             }
 
             $oldStatus = $transfer->status;
-            $transfer->update(['status' => TransferState::COMPLETED->value]);
-            $transfer->logStatusChange($oldStatus, $transfer->status, 'Transfer completed');
+            $transfer->transitionTo(TransferState::COMPLETED);
 
             return true;
         });
@@ -151,15 +148,7 @@ class InventoryService
      */
     public function cancelTransfer(InventoryTransfer $transfer, ?string $reason = null): bool
     {
-        if (!$transfer->state->canCancel()) {
-            return false;
-        }
-
-        $oldStatus = $transfer->status;
-        $transfer->update(['status' => TransferState::CANCELLED->value]);
-        $transfer->logStatusChange($oldStatus, $transfer->status, $reason ?? 'Cancelled');
-
-        return true;
+        return $transfer->cancelTransfer();
     }
 
     /**

@@ -14,13 +14,15 @@ class InvoiceNotification extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public Invoice $invoice
+        public Invoice $invoice,
+        public ?string $customSubject = null,
+        public ?string $customMessage = null
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Invoice #{$this->invoice->invoice_number}",
+            subject: $this->customSubject ?? "Invoice #{$this->invoice->invoice_number}",
         );
     }
 
@@ -32,6 +34,7 @@ class InvoiceNotification extends Mailable
                 'invoice' => $this->invoice,
                 'customer' => $this->invoice->customer,
                 'publicUrl' => $this->invoice->public_url ?? null,
+                'customMessage' => $this->customMessage,
             ],
         );
     }

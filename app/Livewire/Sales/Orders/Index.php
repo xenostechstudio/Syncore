@@ -133,6 +133,7 @@ class Index extends Component
         }
 
         $this->view = $view;
+        $this->resetPage();
     }
 
     public function updatingSearch(): void
@@ -316,8 +317,16 @@ class Index extends Component
 
     public function render()
     {
-        $orders = $this->getOrdersQuery()
-            ->with(['customer:id,name', 'user:id,name'])
+        $query = $this->getOrdersQuery();
+        
+        // Eager load items for kanban view (needed for progress calculations)
+        $eagerLoads = ['customer:id,name', 'user:id,name'];
+        if ($this->view === 'kanban') {
+            $eagerLoads[] = 'items:id,sales_order_id,quantity,quantity_invoiced,quantity_delivered';
+        }
+
+        $orders = $query
+            ->with($eagerLoads)
             ->withCount(['items', 'invoices', 'deliveryOrders'])
             ->paginate(12, ['*'], 'page', $this->page);
 

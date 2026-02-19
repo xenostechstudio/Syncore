@@ -315,7 +315,6 @@ class Form extends Component
 
             // Create new RFQ with copied data
             $newRfq = PurchaseRfq::create([
-                'reference' => PurchaseRfq::generateReference(),
                 'supplier_id' => $rfq->supplier_id,
                 'supplier_reference' => null,
                 'order_date' => now(),

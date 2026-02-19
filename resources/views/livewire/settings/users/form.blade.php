@@ -7,11 +7,11 @@
                 </a>
                 <div class="flex flex-col">
                     <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                        User
+                        {{ __('settings.users') }}
                     </span>
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            {{ $userId ? $name : 'New User' }}
+                            {{ $userId ? $name : __('common.new') . ' ' . __('settings.users') }}
                         </span>
 
                         <flux:dropdown position="bottom" align="start">
@@ -24,15 +24,15 @@
                                     <button
                                         type="button"
                                         wire:click="delete"
-                                        wire:confirm="Are you sure you want to delete this user?"
+                                        wire:confirm="{{ __('common.confirm_delete') }}"
                                         class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                                     >
                                         <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
+                                        <span>{{ __('common.delete') }}</span>
                                     </button>
                                 @else
                                     <div class="px-2 py-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-                                        No actions
+                                        {{ __('common.no_data') }}
                                     </div>
                                 @endif
                             </flux:menu>
@@ -81,8 +81,8 @@
                     >
                         <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
                         <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
-                        <span wire:loading.remove wire:target="save">Save</span>
-                        <span wire:loading wire:target="save">Saving...</span>
+                        <span wire:loading.remove wire:target="save">{{ __('common.save') }}</span>
+                        <span wire:loading wire:target="save">{{ __('common.loading') }}</span>
                     </button>
 
                     <button 
@@ -91,17 +91,17 @@
                         class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >
                         <flux:icon name="x-mark" class="size-4" />
-                        Cancel
+                        {{ __('common.cancel') }}
                     </button>
                     @if($userId)
                         <button 
                             type="button"
                             wire:click="delete"
-                            wire:confirm="Are you sure you want to delete this user?"
+                            wire:confirm="{{ __('common.confirm_delete') }}"
                             class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
                         >
                             <flux:icon name="trash" class="size-4" />
-                            Delete
+                            {{ __('common.delete') }}
                         </button>
                     @endif
                 </div>
@@ -751,6 +751,7 @@
     <div 
         x-show="showChangePasswordModal" 
         x-cloak
+        x-data="{ showPassword: false, showConfirmPassword: false }"
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0"
@@ -782,13 +783,43 @@
                 <div class="mt-4 space-y-3">
                     <div>
                         <label class="mb-1 block text-sm text-zinc-600 dark:text-zinc-400">{{ $userId ? 'New Password' : 'Password' }}</label>
-                        <input type="password" wire:model="password" placeholder="Minimum 8 characters" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                        <div class="relative">
+                            <input 
+                                :type="showPassword ? 'text' : 'password'" 
+                                wire:model="password" 
+                                placeholder="Minimum 8 characters" 
+                                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 pr-10 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" 
+                            />
+                            <button 
+                                type="button" 
+                                @click="showPassword = !showPassword"
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                            >
+                                <flux:icon x-show="!showPassword" name="eye" class="size-4" />
+                                <flux:icon x-show="showPassword" name="eye-slash" class="size-4" x-cloak />
+                            </button>
+                        </div>
                         @error('password') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="mb-1 block text-sm text-zinc-600 dark:text-zinc-400">Confirm Password</label>
-                        <input type="password" wire:model="password_confirmation" placeholder="Confirm password" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                        <div class="relative">
+                            <input 
+                                :type="showConfirmPassword ? 'text' : 'password'" 
+                                wire:model="password_confirmation" 
+                                placeholder="Confirm password" 
+                                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 pr-10 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" 
+                            />
+                            <button 
+                                type="button" 
+                                @click="showConfirmPassword = !showConfirmPassword"
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                            >
+                                <flux:icon x-show="!showConfirmPassword" name="eye" class="size-4" />
+                                <flux:icon x-show="showConfirmPassword" name="eye-slash" class="size-4" x-cloak />
+                            </button>
+                        </div>
                         @error('password_confirmation') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>

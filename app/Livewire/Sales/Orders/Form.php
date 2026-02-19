@@ -632,6 +632,15 @@ class Form extends Component
 
         $this->validate($this->orderRules(), $this->orderMessages());
 
+        // Ensure we are in a valid state to confirm
+        if ($this->orderId) {
+            $order = SalesOrder::find($this->orderId);
+            if ($order && !$order->state->canConfirm()) {
+                session()->flash('error', 'Only quotations can be confirmed.');
+                return;
+            }
+        }
+
         // Only change status after validation passes - set to 'sales_order'
         $this->status = SalesOrderState::SALES_ORDER->value;
         $this->saveOrder();
@@ -680,15 +689,28 @@ class Form extends Component
                 $invoiceTotal = (float) $order->total;
             } elseif ($this->invoiceType === 'down_payment_percentage') {
                 $percentage = max(0, min(100, $this->downPaymentPercentage));
-                $invoiceSubtotal = (float) $order->subtotal * ($percentage / 100);
-                $invoiceTax = (float) $order->tax * ($percentage / 100);
-                $invoiceTotal = (float) $order->total * ($percentage / 100);
+                
+                if ($percentage <= 0) {
+                    throw new \Exception('Down payment percentage must be greater than 0.');
+                }
+
+                $invoiceSubtotal = round((float) $order->subtotal * ($percentage / 100), 2);
+                $invoiceTax = round((float) $order->tax * ($percentage / 100), 2);
+                $invoiceTotal = round((float) $order->total * ($percentage / 100), 2);
             } elseif ($this->invoiceType === 'down_payment_fixed') {
-                $invoiceTotal = max(0, min((float) $order->total, $this->downPaymentAmount));
+                if ($this->downPaymentAmount <= 0) {
+                    throw new \Exception('Down payment amount must be greater than 0.');
+                }
+                
+                if ($this->downPaymentAmount > $order->total) {
+                    throw new \Exception('Down payment amount cannot exceed order total.');
+                }
+
+                $invoiceTotal = round(max(0, min((float) $order->total, $this->downPaymentAmount)), 2);
                 // Proportionally calculate subtotal and tax
                 $ratio = $invoiceTotal / max(1, (float) $order->total);
-                $invoiceSubtotal = (float) $order->subtotal * $ratio;
-                $invoiceTax = (float) $order->tax * $ratio;
+                $invoiceSubtotal = round((float) $order->subtotal * $ratio, 2);
+                $invoiceTax = round((float) $order->tax * $ratio, 2);
             }
 
             // Create invoice
@@ -837,7 +859,14 @@ class Form extends Component
     {
         if ($this->orderId) {
             $order = SalesOrder::findOrFail($this->orderId);
-            $order->update(['status' => SalesOrderState::CANCELLED->value]);
+
+            $reason = null;
+            if (!$order->canBeCancelled($reason)) {
+                session()->flash('error', $reason ?? 'Cannot cancel order.');
+                return;
+            }
+
+            $order->cancelOrder();
             
             session()->flash('success', 'Order cancelled successfully.');
             $this->redirect(route('sales.orders.index'), navigate: true);

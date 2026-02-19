@@ -10,6 +10,8 @@ use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderItem;
 use App\Services\XenditService;
+use App\Mail\InvoiceNotification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +54,9 @@ class Form extends Component
     public string $paymentReference = '';
     public bool $showShareModal = false;
     public ?string $shareLink = null;
+    public string $emailTo = '';
+    public string $emailSubject = '';
+    public string $emailMessage = '';
 
     protected function getNotableModel()
     {
@@ -311,12 +316,16 @@ class Form extends Component
             return;
         }
 
-        $invoice = Invoice::findOrFail($this->invoiceId);
+        $invoice = Invoice::with('customer')->findOrFail($this->invoiceId);
         $invoice->ensureShareToken();
 
         $this->shareLink = URL::signedRoute('public.invoices.show', [
             'token' => $invoice->share_token,
         ]);
+
+        $this->emailTo = $invoice->customer->email ?? '';
+        $this->emailSubject = "Invoice #{$invoice->invoice_number} from " . config('app.name');
+        $this->emailMessage = "Dear " . ($invoice->customer->name ?? 'Customer') . ",\n\nPlease find attached invoice #{$invoice->invoice_number} for your review.\n\nYou can also view it online here: {$this->shareLink}\n\nThank you for your business.";
     }
 
     public function regenerateShareLink(): void
@@ -331,6 +340,39 @@ class Form extends Component
         $this->shareLink = URL::signedRoute('public.invoices.show', [
             'token' => $invoice->share_token,
         ]);
+        
+        // Update message with new link
+        $this->emailMessage = "Dear " . ($invoice->customer->name ?? 'Customer') . ",\n\nPlease find attached invoice #{$invoice->invoice_number} for your review.\n\nYou can also view it online here: {$this->shareLink}\n\nThank you for your business.";
+    }
+
+    public function sendInvoiceEmail(): void
+    {
+        $this->validate([
+            'emailTo' => 'required|email',
+            'emailSubject' => 'required|string|max:255',
+            'emailMessage' => 'required|string',
+        ]);
+
+        try {
+            $invoice = Invoice::findOrFail($this->invoiceId);
+            
+            Mail::to($this->emailTo)->send(new InvoiceNotification(
+                $invoice,
+                $this->emailSubject,
+                $this->emailMessage
+            ));
+
+            if ($invoice->status === 'draft') {
+                $invoice->update(['status' => 'sent']);
+                $this->status = 'sent';
+            }
+
+            session()->flash('success', 'Invoice sent successfully.');
+            $this->showShareModal = false;
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to send email: ' . $e->getMessage());
+        }
     }
 
     public function duplicate(): void

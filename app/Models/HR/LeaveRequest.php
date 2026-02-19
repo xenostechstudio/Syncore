@@ -7,13 +7,16 @@ use App\Events\LeaveRequestApproved;
 use App\Events\LeaveRequestRejected;
 use App\Models\User;
 use App\Traits\HasNotes;
+use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveRequest extends Model
 {
-    use LogsActivity, HasNotes;
+    use LogsActivity, HasNotes, HasStateMachine;
+
+    protected string $stateEnum = LeaveRequestState::class;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 
@@ -50,17 +53,6 @@ class LeaveRequest extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
-    }
-
-    public function getStateAttribute(): LeaveRequestState
-    {
-        return LeaveRequestState::tryFrom($this->status) ?? LeaveRequestState::DRAFT;
-    }
-
-    public function transitionTo(LeaveRequestState $state): bool
-    {
-        $this->status = $state->value;
-        return $this->save();
     }
 
     public function submit(): bool

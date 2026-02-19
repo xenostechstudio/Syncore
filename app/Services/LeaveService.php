@@ -82,17 +82,13 @@ class LeaveService
         }
 
         return DB::transaction(function () use ($leaveRequest, $approverId, $notes) {
-            $oldStatus = $leaveRequest->status;
+            $leaveRequest->approval_notes = $notes;
+            $leaveRequest->save();
 
-            $leaveRequest->update([
-                'status' => LeaveRequestState::APPROVED->value,
-                'approver_id' => $approverId,
-                'approved_at' => now(),
-                'approval_notes' => $notes,
-            ]);
+            $result = $leaveRequest->approve($approverId);
 
-            // Deduct from balance if required
-            if ($leaveRequest->leaveType->requires_balance) {
+            // Deduct from balance if required (model handles event dispatch)
+            if ($result && $leaveRequest->leaveType->requires_balance) {
                 $this->deductBalance(
                     $leaveRequest->employee,
                     $leaveRequest->leaveType,
@@ -100,10 +96,7 @@ class LeaveService
                 );
             }
 
-            $leaveRequest->logStatusChange($oldStatus, $leaveRequest->status, 'Leave request approved');
-            LeaveRequestApproved::dispatch($leaveRequest);
-
-            return true;
+            return $result;
         });
     }
 
@@ -117,23 +110,7 @@ class LeaveService
      */
     public function reject(LeaveRequest $leaveRequest, int $approverId, ?string $reason = null): bool
     {
-        if ($leaveRequest->status !== LeaveRequestState::PENDING->value) {
-            return false;
-        }
-
-        $oldStatus = $leaveRequest->status;
-
-        $leaveRequest->update([
-            'status' => LeaveRequestState::REJECTED->value,
-            'approver_id' => $approverId,
-            'approved_at' => now(),
-            'rejection_reason' => $reason,
-        ]);
-
-        $leaveRequest->logStatusChange($oldStatus, $leaveRequest->status, $reason ?? 'Leave request rejected');
-        LeaveRequestRejected::dispatch($leaveRequest);
-
-        return true;
+        return $leaveRequest->reject($approverId, $reason ?? '');
     }
 
     /**
@@ -151,15 +128,14 @@ class LeaveService
 
         return DB::transaction(function () use ($leaveRequest, $reason) {
             $wasApproved = $leaveRequest->status === LeaveRequestState::APPROVED->value;
-            $oldStatus = $leaveRequest->status;
 
-            $leaveRequest->update([
-                'status' => LeaveRequestState::CANCELLED->value,
-                'cancellation_reason' => $reason,
-            ]);
+            $leaveRequest->cancellation_reason = $reason;
+            $leaveRequest->save();
+
+            $result = $leaveRequest->cancel();
 
             // Restore balance if was approved
-            if ($wasApproved && $leaveRequest->leaveType->requires_balance) {
+            if ($result && $wasApproved && $leaveRequest->leaveType->requires_balance) {
                 $this->restoreBalance(
                     $leaveRequest->employee,
                     $leaveRequest->leaveType,
@@ -167,9 +143,7 @@ class LeaveService
                 );
             }
 
-            $leaveRequest->logStatusChange($oldStatus, $leaveRequest->status, $reason ?? 'Leave request cancelled');
-
-            return true;
+            return $result;
         });
     }
 

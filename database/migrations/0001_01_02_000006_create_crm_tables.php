@@ -38,6 +38,9 @@ return new class extends Migration
             $table->foreignId('converted_customer_id')->nullable()->constrained('customers')->nullOnDelete();
             $table->timestamp('converted_at')->nullable();
             $table->timestamps();
+            $table->index('status');
+            $table->index('assigned_to');
+            $table->index('source');
         });
 
         // Opportunities
@@ -57,6 +60,9 @@ return new class extends Migration
             $table->timestamp('lost_at')->nullable();
             $table->string('lost_reason')->nullable();
             $table->timestamps();
+            $table->index('pipeline_id');
+            $table->index('assigned_to');
+            $table->index('customer_id');
         });
 
         // Activities

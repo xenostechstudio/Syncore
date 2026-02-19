@@ -6,8 +6,8 @@
                 <flux:icon name="arrow-left" class="size-5" />
             </a>
             <div>
-                <h1 class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Dashboard</h1>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Welcome back! Here's what's happening with your business.</p>
+                <h1 class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.dashboard') }}</h1>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('dashboard.welcome_message') }}</p>
             </div>
         </div>
         <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
@@ -23,26 +23,26 @@
             <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400">
                 <flux:icon name="bell-alert" class="size-4" />
             </div>
-            <span class="text-sm font-medium text-amber-800 dark:text-amber-200">Pending Actions:</span>
+            <span class="text-sm font-medium text-amber-800 dark:text-amber-200">{{ __('dashboard.pending_actions') }}:</span>
             <div class="flex flex-wrap items-center gap-2">
                 @if($pendingActions['pending_quotations'] > 0)
                     <a href="{{ route('sales.orders.index') }}" wire:navigate class="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                        {{ $pendingActions['pending_quotations'] }} Quotations
+                        {{ $pendingActions['pending_quotations'] }} {{ __('sales.quotations') }}
                     </a>
                 @endif
                 @if($pendingActions['orders_to_invoice'] > 0)
                     <a href="{{ route('sales.invoices.pending') }}" wire:navigate class="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                        {{ $pendingActions['orders_to_invoice'] }} To Invoice
+                        {{ $pendingActions['orders_to_invoice'] }} {{ __('sales.to_invoice') }}
                     </a>
                 @endif
                 @if($pendingActions['orders_to_deliver'] > 0)
                     <a href="{{ route('delivery.orders.index') }}" wire:navigate class="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                        {{ $pendingActions['orders_to_deliver'] }} To Deliver
+                        {{ $pendingActions['orders_to_deliver'] }} {{ __('sales.to_deliver') }}
                     </a>
                 @endif
                 @if($pendingActions['overdue_invoices'] > 0)
                     <a href="{{ route('invoicing.invoices.index') }}?status=overdue" wire:navigate class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 shadow-sm transition-colors hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-900/70">
-                        {{ $pendingActions['overdue_invoices'] }} Overdue
+                        {{ $pendingActions['overdue_invoices'] }} {{ __('invoicing.status.overdue') }}
                     </a>
                 @endif
             </div>
@@ -67,7 +67,7 @@
             </div>
             <div class="mt-3">
                 <p class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($salesMetrics['total_sales'] / 1000000, 1) }}M</p>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Sales This Month</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('dashboard.sales_this_month') }}</p>
             </div>
         </div>
 
@@ -86,7 +86,7 @@
             </div>
             <div class="mt-3">
                 <p class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($salesMetrics['total_orders']) }}</p>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Orders This Month</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('dashboard.orders_this_month') }}</p>
             </div>
         </div>
 
@@ -98,13 +98,13 @@
                 </div>
                 @if($invoiceMetrics['overdue_count'] > 0)
                     <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                        {{ $invoiceMetrics['overdue_count'] }} overdue
+                        {{ $invoiceMetrics['overdue_count'] }} {{ __('dashboard.overdue') }}
                     </span>
                 @endif
             </div>
             <div class="mt-3">
                 <p class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($invoiceMetrics['total_outstanding'] / 1000000, 1) }}M</p>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Outstanding Invoices</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('dashboard.outstanding_invoices') }}</p>
             </div>
         </div>
 
@@ -116,13 +116,13 @@
                 </div>
                 @if($inventoryMetrics['low_stock_count'] > 0)
                     <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                        {{ $inventoryMetrics['low_stock_count'] }} low stock
+                        {{ $inventoryMetrics['low_stock_count'] }} {{ __('dashboard.low_stock') }}
                     </span>
                 @endif
             </div>
             <div class="mt-3">
                 <p class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($inventoryMetrics['total_inventory_value'] / 1000000, 1) }}M</p>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Inventory Value</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('dashboard.inventory_value') }}</p>
             </div>
         </div>
     </div>
@@ -132,28 +132,28 @@
         <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <div class="flex items-center gap-2">
                 <flux:icon name="arrow-down-circle" class="size-4 text-emerald-500" />
-                <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Receivables</span>
+                <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('dashboard.receivables') }}</span>
             </div>
             <p class="mt-2 text-xl font-semibold text-emerald-600 dark:text-emerald-400">Rp {{ number_format($cashFlow['receivables'] / 1000000, 1) }}M</p>
         </div>
         <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <div class="flex items-center gap-2">
                 <flux:icon name="arrow-up-circle" class="size-4 text-red-500" />
-                <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Payables</span>
+                <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('dashboard.payables') }}</span>
             </div>
             <p class="mt-2 text-xl font-semibold text-red-600 dark:text-red-400">Rp {{ number_format($cashFlow['payables'] / 1000000, 1) }}M</p>
         </div>
         <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <div class="flex items-center gap-2">
                 <flux:icon name="check-circle" class="size-4 text-blue-500" />
-                <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Received</span>
+                <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('dashboard.received') }}</span>
             </div>
             <p class="mt-2 text-xl font-semibold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($cashFlow['received_this_month'] / 1000000, 1) }}M</p>
         </div>
         <div class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <div class="flex items-center gap-2">
                 <flux:icon name="arrow-path" class="size-4 text-violet-500" />
-                <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Net Flow</span>
+                <span class="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('dashboard.net_flow') }}</span>
             </div>
             <p class="mt-2 text-xl font-semibold {{ $cashFlow['net_cash_flow'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
                 {{ $cashFlow['net_cash_flow'] >= 0 ? '+' : '' }}Rp {{ number_format($cashFlow['net_cash_flow'] / 1000000, 1) }}M
@@ -165,7 +165,7 @@
     <div class="mb-6 grid gap-6 lg:grid-cols-3">
         {{-- Sales Chart --}}
         <div class="lg:col-span-2 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 class="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Sales Overview</h3>
+            <h3 class="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ __('dashboard.sales_overview') }}</h3>
             <div class="h-64" x-data="{
                 chartData: @js($salesChartData),
                 init() {

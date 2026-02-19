@@ -4,11 +4,12 @@ namespace App\Policies;
 
 use App\Models\HR\LeaveRequest;
 use App\Models\User;
+use App\Policies\Concerns\HandlesDocumentAuthorization;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class LeaveRequestPolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, HandlesDocumentAuthorization;
 
     public function viewAny(User $user): bool
     {

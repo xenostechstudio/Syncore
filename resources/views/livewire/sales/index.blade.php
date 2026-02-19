@@ -5,9 +5,9 @@
             {{-- Left Group: Title, Gear --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('sales.orders.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New Order
+                    {{ __('sales.new_order') }}
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Sales Overview</span>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ __('sales.overview') }}</span>
                 
                 {{-- Actions Menu (Gear) --}}
                 <flux:dropdown position="bottom" align="start">
@@ -18,7 +18,7 @@
                     <flux:menu class="w-48">
                         <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Export Report</span>
+                            <span>{{ __('sales.export_report') }}</span>
                         </button>
                     </flux:menu>
                 </flux:dropdown>
@@ -38,12 +38,12 @@
             {{-- Left Column: Stats --}}
             <div class="space-y-6 lg:col-span-4 lg:sticky lg:top-20 lg:h-fit">
                 {{-- Recent Orders (Simple List) --}}
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Recent Orders</h3>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('sales.recent_orders') }}</h3>
                 <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                     <div class="flex items-center justify-between px-4 py-3">
-                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Last 5 Orders</span>
+                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('sales.last_5_orders') }}</span>
                         <a href="{{ route('sales.orders.create') }}" wire:navigate class="rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            New Order
+                            {{ __('sales.new_order') }}
                         </a>
                     </div>
                     <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -56,18 +56,18 @@
                                 <span class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
                             </a>
                         @empty
-                            <div class="px-5 py-6 text-center text-sm font-light text-zinc-400">No orders yet</div>
+                            <div class="px-5 py-6 text-center text-sm font-light text-zinc-400">{{ __('sales.no_orders_yet') }}</div>
                         @endforelse
                     </div>
                     <div class="border-t border-zinc-100 px-5 py-3 dark:border-zinc-800">
                         <a href="{{ route('sales.orders.index') }}" wire:navigate class="text-xs font-light text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-                            View all orders →
+                            {{ __('sales.view_all_orders') }} →
                         </a>
                     </div>
                 </div>
 
                 {{-- Statistics Card --}}
-                <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Statistics</h3>
+                <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('sales.statistics') }}</h3>
                 <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                     <div class="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Sales Overview</span>

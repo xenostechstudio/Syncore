@@ -2,18 +2,18 @@
 
 namespace App\Imports;
 
+use App\Imports\Concerns\HasImportTracking;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class SalesOrdersImport implements ToCollection, WithHeadingRow, WithValidation
+class SalesOrdersImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading
 {
-    public int $imported = 0;
-    public int $updated = 0;
-    public array $errors = [];
+    use HasImportTracking;
 
     public function collection(Collection $rows)
     {
@@ -75,3 +75,8 @@ class SalesOrdersImport implements ToCollection, WithHeadingRow, WithValidation
         ];
     }
 }
+
+    public function chunkSize(): int
+    {
+        return 100;
+    }

@@ -25,7 +25,6 @@ class PurchaseService
     {
         return DB::transaction(function () use ($data, $items) {
             $rfq = PurchaseRfq::create([
-                'reference' => PurchaseRfq::generateReference(),
                 'supplier_id' => $data['supplier_id'],
                 'order_date' => $data['order_date'] ?? now(),
                 'expected_arrival' => $data['expected_arrival'] ?? null,
@@ -45,15 +44,7 @@ class PurchaseService
      */
     public function sendRfq(PurchaseRfq $rfq): bool
     {
-        if (!$rfq->state->canSendRfq()) {
-            return false;
-        }
-
-        $oldStatus = $rfq->status;
-        $rfq->update(['status' => PurchaseOrderState::RFQ_SENT->value]);
-        $rfq->logStatusChange($oldStatus, $rfq->status, 'RFQ sent to supplier');
-
-        return true;
+        return $rfq->sendRfq();
     }
 
     /**
@@ -61,15 +52,7 @@ class PurchaseService
      */
     public function confirmOrder(PurchaseRfq $rfq): bool
     {
-        if (!$rfq->state->canConfirmOrder()) {
-            return false;
-        }
-
-        $oldStatus = $rfq->status;
-        $rfq->update(['status' => PurchaseOrderState::PURCHASE_ORDER->value]);
-        $rfq->logStatusChange($oldStatus, $rfq->status, 'Confirmed as Purchase Order');
-
-        return true;
+        return $rfq->confirmOrder();
     }
 
     /**
@@ -77,18 +60,14 @@ class PurchaseService
      */
     public function markReceived(PurchaseRfq $rfq): bool
     {
-        if (!$rfq->state->canReceive()) {
-            return false;
+        $result = $rfq->markAsReceived();
+
+        if ($result) {
+            // Dispatch event for inventory update and notifications
+            event(new PurchaseOrderReceived($rfq));
         }
 
-        $oldStatus = $rfq->status;
-        $rfq->update(['status' => PurchaseOrderState::RECEIVED->value]);
-        $rfq->logStatusChange($oldStatus, $rfq->status, 'Goods received');
-
-        // Dispatch event for inventory update and notifications
-        event(new PurchaseOrderReceived($rfq));
-
-        return true;
+        return $result;
     }
 
     /**
@@ -126,9 +105,7 @@ class PurchaseService
             }
 
             // Update RFQ status
-            $oldStatus = $rfq->status;
-            $rfq->update(['status' => PurchaseOrderState::BILLED->value]);
-            $rfq->logStatusChange($oldStatus, $rfq->status, 'Vendor bill created');
+            $rfq->markAsBilled();
 
             return $bill->fresh(['items', 'supplier']);
         });
@@ -139,15 +116,7 @@ class PurchaseService
      */
     public function cancel(PurchaseRfq $rfq, ?string $reason = null): bool
     {
-        if (!$rfq->state->canCancel()) {
-            return false;
-        }
-
-        $oldStatus = $rfq->status;
-        $rfq->update(['status' => PurchaseOrderState::CANCELLED->value]);
-        $rfq->logStatusChange($oldStatus, $rfq->status, $reason ?? 'Cancelled');
-
-        return true;
+        return $rfq->cancelOrder();
     }
 
     /**

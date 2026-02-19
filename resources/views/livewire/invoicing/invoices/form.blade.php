@@ -4,10 +4,11 @@
     showLogNote: false,
     showScheduleActivity: false,
     showCancelModal: false,
-    showShareModal: $wire.entangle('showShareModal')
+    showShareModal: $wire.entangle('showShareModal'),
+    showPaymentModal: $wire.entangle('showPaymentModal')
 }">
     <x-slot:header>
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {{-- Left Group: Back Button, Title with SO Link, Gear Dropdown --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('invoicing.invoices.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
@@ -101,10 +102,10 @@
 
     {{-- Action Buttons Bar --}}
     <div class="-mx-4 -mt-6 bg-zinc-50 px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:bg-zinc-900/50">
-        <div class="grid grid-cols-12 items-center gap-6">
+        <div class="flex flex-col-reverse gap-4 lg:grid lg:grid-cols-12 lg:items-center lg:gap-6">
             {{-- Left: Action Buttons (col-span-9) --}}
-            <div class="col-span-9 flex items-center justify-between">
-                <div class="flex flex-wrap items-center gap-2">
+            <div class="col-span-9 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-wrap items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     @if($invoiceId && $status !== 'paid' && $status !== 'cancelled')
                         <button type="button" @click="$wire.set('showPaymentModal', true)" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                             <flux:icon name="banknotes" class="size-4" />
@@ -155,7 +156,8 @@
                 @elseif($isOverdue)
                     <span class="inline-flex h-[38px] items-center rounded-lg bg-red-100 px-4 text-sm font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">Overdue</span>
                 @else
-                    <div class="flex items-center">
+                    {{-- Desktop Stepper --}}
+                    <div class="hidden items-center lg:flex">
                         @foreach($steps as $index => $step)
                             @php
                                 $isActive = $index === $currentIndex;
@@ -173,122 +175,32 @@
                             </div>
                         @endforeach
                     </div>
+
+                    {{-- Mobile Badge --}}
+                    <div class="flex items-center lg:hidden">
+                        <span class="inline-flex h-[32px] items-center rounded-lg px-3 text-sm font-medium
+                            {{ match($status) {
+                                'draft' => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+                                'sent' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                                'partial' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+                                'paid' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                                'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                                'overdue' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                                default => 'bg-zinc-100 text-zinc-700'
+                            } }}">
+                            {{ ucfirst($status) }}
+                        </span>
+                    </div>
                 @endif
             </div>
 
             {{-- Right: Chatter Icons (col-span-3) --}}
-            <div class="col-span-3">
+            <div class="col-span-3 flex items-center justify-end gap-1">
                 <x-ui.chatter-buttons />
             </div>
         </div>
 
-        <div 
-            x-show="showShareModal" 
-            x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-        >
-            <div class="absolute inset-0 bg-zinc-900/60" @click="showShareModal = false"></div>
-
-            <div 
-                class="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900 dark:ring-white/10"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-                @click.outside="showShareModal = false"
-            >
-                <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
-                    <div>
-                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Send Invoice</h3>
-                        <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Share the public link with your customer.</p>
-                    </div>
-
-                    <button 
-                        type="button"
-                        @click="showShareModal = false"
-                        class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        aria-label="Close"
-                    >
-                        <flux:icon name="x-mark" class="size-5" />
-                    </button>
-                </div>
-
-                <div class="px-6 py-5">
-                    <div class="space-y-4">
-                        @if($shareLink)
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Public link</label>
-                                <div class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-                                    <input type="text" readonly value="{{ $shareLink }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                    <button type="button" x-data x-on:click="navigator.clipboard.writeText('{{ $shareLink }}')" class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:w-auto dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
-                                        <flux:icon name="clipboard" class="size-4" />
-                                        Copy
-                                    </button>
-                                </div>
-                                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Link expires {{ optional(optional($invoice)->share_token_expires_at)->diffForHumans() ?? 'in 30 days' }}.</p>
-                            </div>
-                        @else
-                            <div class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-                                <flux:icon name="exclamation-triangle" class="size-5 flex-shrink-0 text-amber-500 dark:text-amber-400" />
-                                <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Please generate a link to share this invoice.</p>
-                            </div>
-                        @endif
-
-                        <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
-                            Your customer can view invoice details and choose payment method.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                    <button 
-                        type="button"
-                        wire:click="regenerateShareLink"
-                        wire:loading.attr="disabled"
-                        wire:target="regenerateShareLink"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        <flux:icon name="arrow-path" wire:loading.remove wire:target="regenerateShareLink" class="size-4" />
-                        <flux:icon name="arrow-path" wire:loading wire:target="regenerateShareLink" class="size-4 animate-spin" />
-                        Regenerate Link
-                    </button>
-
-                    <button 
-                        type="button"
-                        @click="showShareModal = false"
-                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        Close
-                    </button>
-
-                    @if($shareLink)
-                        <button 
-                            type="button"
-                            onclick="window.open('{{ $shareLink }}', '_blank')"
-                            class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                        >
-                            View as Customer
-                        </button>
-                    @else
-                        <button 
-                            type="button"
-                            disabled
-                            class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white opacity-50"
-                        >
-                            View as Customer
-                        </button>
-                    @endif
-                </div>
-            </div>
-        </div>
+        @include('livewire.invoicing.invoices.modals.share')
     </div>
 
     {{-- Main Content --}}
@@ -398,8 +310,8 @@
                             {{-- Right Column: Dates --}}
                             <div class="space-y-3">
                                 {{-- Invoice Date --}}
-                                <div class="flex items-center gap-4">
-                                    <label class="w-28 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Invoice Date <span class="text-red-500">*</span></label>
+                                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
+                                    <label class="text-sm font-light text-zinc-600 sm:w-28 sm:flex-shrink-0 dark:text-zinc-400">Invoice Date <span class="text-red-500">*</span></label>
                                     <div class="relative flex-1">
                                         <input 
                                             type="date" 
@@ -410,8 +322,8 @@
                                 </div>
 
                                 {{-- Due Date --}}
-                                <div class="flex items-center gap-4">
-                                    <label class="w-28 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Due Date</label>
+                                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
+                                    <label class="text-sm font-light text-zinc-600 sm:w-28 sm:flex-shrink-0 dark:text-zinc-400">Due Date</label>
                                     <div class="relative flex-1">
                                         <input 
                                             type="date" 
@@ -609,8 +521,8 @@
                                     <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Invoice Details</h3>
                                     <div class="space-y-3">
                                         {{-- Reference --}}
-                                        <div class="flex items-center gap-3">
-                                            <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Reference</label>
+                                        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                            <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Reference</label>
                                             <div class="flex-1">
                                                 <input 
                                                     type="text" 
@@ -621,8 +533,8 @@
                                         </div>
 
                                         {{-- Payment Method --}}
-                                        <div class="flex items-center gap-3">
-                                            <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Method</label>
+                                        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                            <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Payment Method</label>
                                             <div class="relative flex-1">
                                                 <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
                                                     <option value="">Select payment method...</option>
@@ -642,8 +554,8 @@
                                     <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Accounting</h3>
                                     <div class="space-y-3">
                                         {{-- Journal --}}
-                                        <div class="flex items-center gap-3">
-                                            <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Journal</label>
+                                        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                            <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Journal</label>
                                             <div class="relative flex-1">
                                                 <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
                                                     <option value="">Select journal...</option>
@@ -755,321 +667,8 @@
     </div>
 
     {{-- Cancel Modal --}}
-    <div 
-        x-show="showCancelModal" 
-        x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-    >
-        <div class="absolute inset-0 bg-zinc-900/60" @click="showCancelModal = false"></div>
-        <div 
-            class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100 scale-100"
-            x-transition:leave-end="opacity-0 scale-95"
-            @click.outside="showCancelModal = false"
-        >
-            <div class="mb-4 flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                    <flux:icon name="x-circle" class="size-5 text-red-600 dark:text-red-400" />
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Cancel Invoice</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">This action cannot be undone.</p>
-                </div>
-            </div>
-            
-            <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
-                Are you sure you want to cancel this invoice? The invoice will be marked as cancelled and cannot be modified.
-            </p>
-            
-            <div class="flex justify-end gap-3">
-                <button 
-                    type="button"
-                    @click="showCancelModal = false"
-                    class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                >
-                    Keep Invoice
-                </button>
-                <button 
-                    type="button"
-                    wire:click="cancel"
-                    wire:loading.attr="disabled"
-                    wire:target="cancel"
-                    class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
-                >
-                    <flux:icon name="x-mark" wire:loading.remove wire:target="cancel" class="size-4" />
-                    <flux:icon name="arrow-path" wire:loading wire:target="cancel" class="size-4 animate-spin" />
-                    Cancel Invoice
-                </button>
-            </div>
-        </div>
-    </div>
+    @include('livewire.invoicing.invoices.modals.cancel')
 
     {{-- Payment Modal --}}
-    @if($showPaymentModal)
-        <div 
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-        >
-            <div class="absolute inset-0 bg-zinc-900/60" wire:click="closePaymentModal"></div>
-
-            <div 
-                class="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900 dark:ring-white/10"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-            >
-                {{-- Header with gradient --}}
-                <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
-                    <div>
-                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Record Payment</h3>
-                        <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Choose payment method for this invoice</p>
-                    </div>
-
-                    <button 
-                        type="button"
-                        wire:click="closePaymentModal"
-                        class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        aria-label="Close"
-                    >
-                        <flux:icon name="x-mark" class="size-5" />
-                    </button>
-                </div>
-
-                {{-- Payment Summary Cards --}}
-                <div class="px-6 py-5">
-                    <div class="flex items-start justify-between gap-6">
-                        <span class="pt-1 text-sm font-medium text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Payment Method</span>
-                        <div class="flex-1 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
-                                <input type="radio" wire:model="paymentType" value="manual" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
-                                <div class="min-w-0 whitespace-nowrap leading-snug">
-                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Manual Payment</span>
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Record payment received offline (cash/bank transfer).</span>
-                                </div>
-                            </label>
-
-                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
-                                <input type="radio" wire:model="paymentType" value="xendit" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
-                                <div class="min-w-0 whitespace-nowrap leading-snug">
-                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Online Payment</span>
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Generate payment link + QR for customer to pay online.</span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 space-y-4">
-                        <div x-show="$wire.paymentType === 'manual'" x-transition>
-                            <div class="grid gap-4 sm:grid-cols-2">
-                                <div class="sm:col-span-2">
-                                    <label class="mb-2 flex items-center justify-between">
-                                        <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Amount <span class="text-red-500">*</span></span>
-                                        <button 
-                                            type="button"
-                                            wire:click="$set('paymentAmount', {{ $remainingAmount }})"
-                                            class="text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
-                                        >
-                                            Pay Full Amount
-                                        </button>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Rp</span>
-                                        <input 
-                                            type="number" 
-                                            step="0.01"
-                                            wire:model="paymentAmount"
-                                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 pl-10 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                        />
-                                    </div>
-                                    @error('paymentAmount') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                                </div>
-                                <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Date <span class="text-red-500">*</span></label>
-                                    <input type="date" wire:model="paymentDate" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                </div>
-                                <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Payment Method <span class="text-red-500">*</span></label>
-                                    <select wire:model="paymentMethod" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="cash">Cash</option>
-                                        <option value="credit_card">Credit Card</option>
-                                        <option value="check">Check</option>
-                                        <option value="e_wallet">E-Wallet</option>
-                                    </select>
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Reference / Transaction ID</label>
-                                    <input type="text" wire:model="paymentReference" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div x-show="$wire.paymentType === 'xendit'" x-transition>
-                            @if(!$this->xenditConfigured)
-                                <div class="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-                                    <flux:icon name="exclamation-triangle" class="size-5 flex-shrink-0 text-amber-500 dark:text-amber-400" />
-                                    <div>
-                                        <p class="text-sm font-medium text-amber-800 dark:text-amber-300">Payment gateway not configured</p>
-                                        <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Please add your API keys in Settings → Payment Gateway to enable online payments.</p>
-                                    </div>
-                                </div>
-                            @elseif($invoice && $invoice->xendit_invoice_url && !in_array(strtolower((string) ($invoice->xendit_status ?? 'pending')), ['paid', 'expired'], true))
-                                {{-- Active Payment Link --}}
-                                <div class="overflow-hidden rounded-xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-zinc-100/50 dark:border-zinc-700 dark:from-zinc-800/50 dark:to-zinc-900/50">
-                                    {{-- Status Header --}}
-                                    <div class="flex items-center justify-between border-b border-zinc-200 bg-white/50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
-                                                <flux:icon name="link" class="size-4 text-blue-600 dark:text-blue-400" />
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Payment Link Active</p>
-                                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Share with customer to collect payment</p>
-                                            </div>
-                                        </div>
-                                        @php
-                                            $xenditStatus = strtolower((string) ($invoice->xendit_status ?? 'pending'));
-                                            $statusColors = [
-                                                'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-                                                'paid' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-                                                'expired' => 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-                                            ];
-                                        @endphp
-                                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium {{ $statusColors[$xenditStatus] ?? $statusColors['pending'] }}">
-                                            @if($xenditStatus === 'pending')
-                                                <span class="relative flex h-2 w-2">
-                                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                                                    <span class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
-                                                </span>
-                                            @endif
-                                            {{ ucfirst($xenditStatus) }}
-                                        </span>
-                                    </div>
-
-                                    <div class="grid gap-4 p-4 sm:grid-cols-5">
-                                        {{-- QR Code Section --}}
-                                        <div class="flex flex-col items-center justify-center sm:col-span-2">
-                                            <div class="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-600 dark:bg-zinc-800">
-                                                <img 
-                                                    alt="Payment QR Code"
-                                                    class="h-40 w-40"
-                                                    src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($invoice->xendit_invoice_url) }}&margin=0"
-                                                />
-                                            </div>
-                                            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Scan to pay</p>
-                                        </div>
-
-                                        {{-- Payment Details --}}
-                                        <div class="flex flex-col justify-center space-y-4 sm:col-span-3">
-                                            {{-- Amount --}}
-                                            <div class="rounded-lg bg-white/80 p-3 dark:bg-zinc-800/80">
-                                                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Amount Due</p>
-                                                <p class="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-100">Rp {{ number_format($remainingAmount, 0, ',', '.') }}</p>
-                                            </div>
-
-                                            {{-- Payment URL --}}
-                                            <div>
-                                                <label class="mb-1.5 block text-sm font-medium text-zinc-500 dark:text-zinc-400">Payment URL</label>
-                                                <div class="flex gap-2">
-                                                    <input 
-                                                        type="text" 
-                                                        readonly
-                                                        value="{{ $invoice->xendit_invoice_url }}"
-                                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
-                                                    />
-                                                    <button 
-                                                        type="button" 
-                                                        x-data 
-                                                        x-on:click="navigator.clipboard.writeText('{{ $invoice->xendit_invoice_url }}')" 
-                                                        class="flex-shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                                                        title="Copy URL"
-                                                    >
-                                                        <flux:icon name="clipboard" class="size-4" />
-                                                    </button>
-                                                    <a 
-                                                        href="{{ $invoice->xendit_invoice_url }}" 
-                                                        target="_blank" 
-                                                        rel="noopener" 
-                                                        class="flex-shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                                                        title="Open Link"
-                                                    >
-                                                        <flux:icon name="arrow-top-right-on-square" class="size-4" />
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @else
-                                {{-- No Active Payment --}}
-                                <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50/50 px-6 py-8 text-center dark:border-zinc-700 dark:bg-zinc-800/30">
-                                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                                        <flux:icon name="credit-card" class="size-6 text-zinc-400" />
-                                    </div>
-                                    <p class="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">No active payment link</p>
-                                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Generate a payment link to allow your customer to pay online.</p>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Footer Actions --}}
-                <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                    <button 
-                        type="button"
-                        wire:click="closePaymentModal"
-                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        Cancel
-                    </button>
-
-                    <button 
-                        type="button"
-                        wire:click="addPayment"
-                        wire:loading.attr="disabled"
-                        wire:target="addPayment"
-                        x-show="$wire.paymentType === 'manual'"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                    >
-                        <flux:icon name="banknotes" wire:loading.remove wire:target="addPayment" class="size-4" />
-                        <flux:icon name="arrow-path" wire:loading wire:target="addPayment" class="size-4 animate-spin" />
-                        <span wire:loading.remove wire:target="addPayment">Record Payment</span>
-                        <span wire:loading wire:target="addPayment">Recording...</span>
-                    </button>
-
-                    <button 
-                        type="button"
-                        wire:click="createXenditPayment"
-                        wire:loading.attr="disabled"
-                        wire:target="createXenditPayment"
-                        x-show="$wire.paymentType === 'xendit'"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                    >
-                        <flux:icon name="link" wire:loading.remove wire:target="createXenditPayment" class="size-4" />
-                        <flux:icon name="arrow-path" wire:loading wire:target="createXenditPayment" class="size-4 animate-spin" />
-                        <span wire:loading.remove wire:target="createXenditPayment">Generate Payment Link</span>
-                        <span wire:loading wire:target="createXenditPayment">Generating...</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
+    @include('livewire.invoicing.invoices.modals.payment')
+</div>

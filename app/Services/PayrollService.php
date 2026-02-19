@@ -159,19 +159,7 @@ class PayrollService
      */
     public function approve(PayrollPeriod $period): bool
     {
-        if (!$period->canBeApproved()) {
-            return false;
-        }
-
-        $oldStatus = $period->status;
-        $period->update([
-            'status' => PayrollState::APPROVED->value,
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-        ]);
-        $period->logStatusChange($oldStatus, $period->status, 'Payroll approved');
-
-        return true;
+        return $period->approve(auth()->id());
     }
 
     /**
@@ -179,15 +167,7 @@ class PayrollService
      */
     public function startProcessing(PayrollPeriod $period): bool
     {
-        if (!$period->canStartProcessing()) {
-            return false;
-        }
-
-        $oldStatus = $period->status;
-        $period->update(['status' => PayrollState::PROCESSING->value]);
-        $period->logStatusChange($oldStatus, $period->status, 'Payroll processing started');
-
-        return true;
+        return $period->startProcessing();
     }
 
     /**
@@ -195,21 +175,19 @@ class PayrollService
      */
     public function markPaid(PayrollPeriod $period): bool
     {
-        if (!$period->canBeMarkedAsPaid()) {
-            return false;
+        if (!$period->payment_date) {
+            $period->payment_date = now();
+            $period->save();
         }
 
-        $oldStatus = $period->status;
-        $period->update([
-            'status' => PayrollState::PAID->value,
-            'payment_date' => $period->payment_date ?? now(),
-        ]);
-        $period->logStatusChange($oldStatus, $period->status, 'Payroll marked as paid');
+        $result = $period->markAsPaid();
 
-        // Dispatch event for notifications
-        event(new PayrollProcessed($period));
+        if ($result) {
+            // Dispatch event for notifications
+            event(new PayrollProcessed($period));
+        }
 
-        return true;
+        return $result;
     }
 
     /**
@@ -217,15 +195,7 @@ class PayrollService
      */
     public function cancel(PayrollPeriod $period, ?string $reason = null): bool
     {
-        if (!$period->canBeCancelled()) {
-            return false;
-        }
-
-        $oldStatus = $period->status;
-        $period->update(['status' => PayrollState::CANCELLED->value]);
-        $period->logStatusChange($oldStatus, $period->status, $reason ?? 'Cancelled');
-
-        return true;
+        return $period->cancelPayroll();
     }
 
     /**
@@ -233,19 +203,7 @@ class PayrollService
      */
     public function resetToDraft(PayrollPeriod $period): bool
     {
-        if (!$period->canBeResetToDraft()) {
-            return false;
-        }
-
-        $oldStatus = $period->status;
-        $period->update([
-            'status' => PayrollState::DRAFT->value,
-            'approved_by' => null,
-            'approved_at' => null,
-        ]);
-        $period->logStatusChange($oldStatus, $period->status, 'Reset to draft');
-
-        return true;
+        return $period->resetToDraft();
     }
 
     /**

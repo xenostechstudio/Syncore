@@ -92,7 +92,7 @@ class Form extends Component
             return collect();
         }
 
-        return \Spatie\Permission\Models\Role::orderBy('name')->get();
+        return \Spatie\Permission\Models\Role::with('permissions')->orderBy('name')->get();
     }
 
     protected function loadSessions(): void
@@ -266,8 +266,8 @@ class Form extends Component
                 
                 if (!empty($addedRoles)) {
                     \App\Services\ActivityLogService::logAction(
-                        $user,
                         'role_assigned',
+                        $user,
                         __('activity.role_assigned', ['role' => implode(', ', $addedRoles)]),
                         ['role' => implode(', ', $addedRoles)]
                     );
@@ -275,8 +275,8 @@ class Form extends Component
                 
                 if (!empty($removedRoles)) {
                     \App\Services\ActivityLogService::logAction(
-                        $user,
                         'role_removed',
+                        $user,
                         __('activity.role_removed', ['role' => implode(', ', $removedRoles)]),
                         ['role' => implode(', ', $removedRoles)]
                     );

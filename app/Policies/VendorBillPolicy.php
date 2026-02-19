@@ -4,11 +4,12 @@ namespace App\Policies;
 
 use App\Models\Purchase\VendorBill;
 use App\Models\User;
+use App\Policies\Concerns\HandlesDocumentAuthorization;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class VendorBillPolicy
 {
-    use HandlesAuthorization;
+    use HandlesAuthorization, HandlesDocumentAuthorization;
 
     public function viewAny(User $user): bool
     {

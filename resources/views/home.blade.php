@@ -17,9 +17,9 @@
     {{-- Welcome Section --}}
     <div class="relative mb-8 pt-4">
         <h1 class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-            Welcome back, {{ auth()->user()->name }}
+            {{ __('home.welcome_back', ['name' => auth()->user()->name]) }}
         </h1>
-        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Select a module to get started</p>
+        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.select_module') }}</p>
     </div>
 
     {{-- Module Grid --}}
@@ -32,8 +32,8 @@
                 </svg>
             </div>
             <div class="flex-1">
-                <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Dashboard</h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Analytics & KPIs</p>
+                <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.dashboard') }}</h3>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.dashboard_desc') }}</p>
             </div>
             <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
         </a>
@@ -47,8 +47,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Sales</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Orders & Customers</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.sales') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.sales_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -63,8 +63,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Invoicing</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Invoices & Payments</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.invoicing') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.invoicing_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -79,8 +79,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Inventory</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Stock & Warehouses</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.inventory') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.inventory_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -95,8 +95,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Purchase</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">RFQ & Purchase Orders</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.purchase') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.purchase_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -111,8 +111,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Delivery</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Shipments & Tracking</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.delivery') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.delivery_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -127,8 +127,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Accounting</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Financial Management</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.accounting') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.accounting_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -143,8 +143,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">CRM</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Leads & Opportunities</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.crm') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.crm_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -159,8 +159,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">HR</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Employees & Leave</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.hr') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.hr_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -175,8 +175,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Reports</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Analytics & Insights</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.reports') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.reports_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>
@@ -191,8 +191,8 @@
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Settings</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Configuration</p>
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ __('modules.settings') }}</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('home.settings_desc') }}</p>
                 </div>
                 <flux:icon name="chevron-right" class="size-5 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-zinc-500 dark:text-zinc-500 dark:group-hover:text-zinc-300" />
             </a>

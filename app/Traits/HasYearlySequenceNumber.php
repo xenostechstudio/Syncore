@@ -20,14 +20,14 @@ trait HasYearlySequenceNumber
         static::creating(function ($model) {
             $column = $model->getNumberColumn();
             if (empty($model->{$column})) {
-                $model->{$column} = static::generateYearlySequenceNumber();
+                $model->{$column} = static::generateYearlySequenceNumber($model);
             }
         });
     }
 
-    public static function generateYearlySequenceNumber(): string
+    public static function generateYearlySequenceNumber($model = null): string
     {
-        $model = new static;
+        $model = $model ?? new static;
         $prefix = $model->getNumberPrefix();
         $column = $model->getNumberColumn();
         $digits = $model->getNumberDigits();
@@ -35,6 +35,7 @@ trait HasYearlySequenceNumber
         $driver = DB::connection()->getDriverName();
 
         $pattern = "{$prefix}/{$year}/";
+        $start = strlen($pattern) + 1;
         
         // Include soft-deleted records to avoid number conflicts
         $usesSoftDeletes = in_array(
@@ -46,21 +47,13 @@ trait HasYearlySequenceNumber
         $query->where($column, 'like', $pattern . '%');
         
         if ($driver === 'pgsql') {
-            $last = $query
-                ->orderByRaw("CAST(SUBSTRING({$column}, ?) AS INTEGER) DESC", [strlen($pattern) + 1])
-                ->value($column);
+            $maxNumber = $query->selectRaw("MAX(CAST(SUBSTRING({$column} FROM {$start}) AS INTEGER)) as max_num")->value('max_num');
         } else {
             // SQLite uses SUBSTR instead of SUBSTRING
-            $last = $query
-                ->orderByRaw("CAST(SUBSTR({$column}, ?) AS INTEGER) DESC", [strlen($pattern) + 1])
-                ->value($column);
+            $maxNumber = $query->selectRaw("MAX(CAST(SUBSTR({$column}, {$start}) AS INTEGER)) as max_num")->value('max_num');
         }
 
-        $next = 1;
-        if ($last) {
-            $numericPart = substr($last, strlen($pattern));
-            $next = ((int) $numericPart) + 1;
-        }
+        $next = ($maxNumber ?? 0) + 1;
 
         return $pattern . str_pad($next, $digits, '0', STR_PAD_LEFT);
     }

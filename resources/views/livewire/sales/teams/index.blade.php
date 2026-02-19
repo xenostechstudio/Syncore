@@ -91,93 +91,90 @@
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <flux:icon name="user-plus" class="size-4" />
-                                    <span>Add Members</span>
-                                </button>
-                                <flux:menu.separator />
-                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
-                                </button>
+                                @if($filter === 'active' || $filter === 'all')
+                                    <button type="button" wire:click="confirmBulkArchive" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20">
+                                        <flux:icon name="archive-box" class="size-4" />
+                                        <span>Archive</span>
+                                    </button>
+                                @endif
+                                @if($filter === 'archived' || $filter === 'all')
+                                    <button type="button" wire:click="bulkRestore" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                                        <flux:icon name="archive-box-arrow-down" class="size-4" />
+                                        <span>Restore</span>
+                                    </button>
+                                    <flux:menu.separator />
+                                    <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <flux:icon name="trash" class="size-4" />
+                                        <span>Delete Permanently</span>
+                                    </button>
+                                @endif
                             </flux:menu>
                         </flux:dropdown>
                     </div>
                 @else
                     <x-ui.searchbox-dropdown placeholder="Search..." widthClass="w-[520px]" width="520px">
                         <div class="flex flex-col gap-4 p-3 md:flex-row">
-                            {{-- Filters Section --}}
+                            {{-- Filter Section --}}
                             <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
                                 <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                                     <flux:icon name="funnel" class="size-3.5" />
-                                    <span>Filters</span>
+                                    <span>Filter</span>
                                 </div>
                                 <div class="space-y-1">
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
-                                            <input type="checkbox" wire:model.live="filterActive" class="sr-only" />
-                                            <span>Active Teams</span>
+                                            <input type="radio" name="filter" value="active" wire:model.live="filter" class="sr-only" />
+                                            <span>Active</span>
+                                            <span class="rounded-full bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{{ $this->activeCount }}</span>
                                         </div>
-                                        @if(!empty($filterActive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                        @if($filter === 'active')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
-                                            <input type="checkbox" wire:model.live="filterInactive" class="sr-only" />
-                                            <span>Inactive Teams</span>
+                                            <input type="radio" name="filter" value="archived" wire:model.live="filter" class="sr-only" />
+                                            <span>Archived</span>
+                                            @if($this->archivedCount > 0)
+                                                <span class="rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">{{ $this->archivedCount }}</span>
+                                            @endif
                                         </div>
-                                        @if(!empty($filterInactive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                        @if($filter === 'archived')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                         <div class="flex items-center gap-2">
-                                            <input type="checkbox" wire:model.live="filterMine" class="sr-only" />
-                                            <span>My Teams</span>
+                                            <input type="radio" name="filter" value="all" wire:model.live="filter" class="sr-only" />
+                                            <span>All</span>
                                         </div>
-                                        @if(!empty($filterMine))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="checkbox" wire:model.live="filterHasTarget" class="sr-only" />
-                                            <span>Has Target</span>
-                                        </div>
-                                        @if(!empty($filterHasTarget))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                        @if($filter === 'all')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                 </div>
                             </div>
 
-                            {{-- Group By Section --}}
+                            {{-- Sort Section --}}
                             <div class="flex-1 md:px-3">
                                 <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                    <flux:icon name="rectangle-group" class="size-3.5" />
-                                    <span>Group By</span>
+                                    <flux:icon name="arrows-up-down" class="size-3.5" />
+                                    <span>Sort By</span>
                                 </div>
                                 <div class="space-y-1">
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="radio" name="groupBy" value="leader" wire:model.live="groupBy" class="sr-only" />
-                                            <span>Leader</span>
-                                        </div>
-                                        @if(($groupBy ?? '') === 'leader')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                        <span>Latest First</span>
+                                        <input type="radio" name="sort" value="latest" wire:model.live="sort" class="sr-only" />
+                                        @if($sort === 'latest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="radio" name="groupBy" value="status" wire:model.live="groupBy" class="sr-only" />
-                                            <span>Status</span>
-                                        </div>
-                                        @if(($groupBy ?? '') === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                        <span>Oldest First</span>
+                                        <input type="radio" name="sort" value="oldest" wire:model.live="sort" class="sr-only" />
+                                        @if($sort === 'oldest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="radio" name="groupBy" value="target_range" wire:model.live="groupBy" class="sr-only" />
-                                            <span>Target Range</span>
-                                        </div>
-                                        @if(($groupBy ?? '') === 'target_range')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                        <span>Name A-Z</span>
+                                        <input type="radio" name="sort" value="name_asc" wire:model.live="sort" class="sr-only" />
+                                        @if($sort === 'name_asc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                     <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="radio" name="groupBy" value="members" wire:model.live="groupBy" class="sr-only" />
-                                            <span>Members Count</span>
-                                        </div>
-                                        @if(($groupBy ?? '') === 'members')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                        <span>Name Z-A</span>
+                                        <input type="radio" name="sort" value="name_desc" wire:model.live="sort" class="sr-only" />
+                                        @if($sort === 'name_desc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                     </label>
                                 </div>
                             </div>
@@ -348,12 +345,14 @@
                                 @if($visibleColumns['status'])
                                     <td class="px-4 py-4">
                                         @if($team->is_active)
-                                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                                 Active
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                                                Inactive
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                                <flux:icon name="archive-box" class="size-3" />
+                                                Archived
                                             </span>
                                         @endif
                                     </td>
@@ -400,12 +399,14 @@
                                         <flux:icon name="user-group" variant="solid" class="size-5" />
                                     </div>
                                     @if($team->is_active)
-                                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                             Active
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-                                            Inactive
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                            <flux:icon name="archive-box" class="size-3" />
+                                            Archived
                                         </span>
                                     @endif
                                 </div>
@@ -449,10 +450,67 @@
         <x-ui.delete-confirm-modal 
             wire:model="showDeleteConfirm"
             :validation="$deleteValidation ?? []"
-            title="Confirm Delete"
+            title="Delete Permanently"
             itemLabel="teams"
+            description="Only archived teams can be deleted. This action cannot be undone."
         />
     @endisset
+
+    {{-- Archive Confirmation Modal --}}
+    @if($showArchiveConfirm)
+        <div class="fixed inset-0 z-50 flex items-center justify-center">
+            <div class="absolute inset-0 bg-zinc-900/60" wire:click="cancelArchive"></div>
+            <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+                <div class="mb-4 flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                        <flux:icon name="archive-box" class="size-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Archive {{ count($selected) }} Teams</h3>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">These teams will be hidden from active lists.</p>
+                    </div>
+                </div>
+                <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                    Archiving will:
+                </p>
+                <ul class="mb-6 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    <li class="flex items-start gap-2">
+                        <flux:icon name="check" class="mt-0.5 size-4 text-zinc-400" />
+                        <span>Hide from selection dropdowns and active lists</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <flux:icon name="check" class="mt-0.5 size-4 text-zinc-400" />
+                        <span>Preserve historical data and references</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <flux:icon name="check" class="mt-0.5 size-4 text-zinc-400" />
+                        <span>Allow restoration at any time</span>
+                    </li>
+                </ul>
+                <div class="flex justify-end gap-3">
+                    <button 
+                        type="button"
+                        wire:click="cancelArchive"
+                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="button"
+                        wire:click="bulkArchive"
+                        wire:loading.attr="disabled"
+                        wire:target="bulkArchive"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
+                    >
+                        <flux:icon name="archive-box" wire:loading.remove wire:target="bulkArchive" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="bulkArchive" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="bulkArchive">Archive</span>
+                        <span wire:loading wire:target="bulkArchive">Archiving...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- Import Modal --}}
     <x-ui.import-modal

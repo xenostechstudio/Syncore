@@ -4,9 +4,9 @@
         <div class="flex w-full items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <a href="{{ route('hr.employees.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New Employee
+                    {{ __('hr.new_employee') }}
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">HR Overview</span>
+                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ __('hr.overview') }}</span>
             </div>
             <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
                 <flux:icon name="calendar" class="size-4" />

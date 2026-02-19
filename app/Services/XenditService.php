@@ -40,6 +40,9 @@ class XenditService
             ];
         }
 
+        // Load relationships to avoid lazy loading
+        $invoice->loadMissing(['customer', 'items.product']);
+
         // Ensure share token exists for redirect URL
         $invoice->ensureShareToken();
 

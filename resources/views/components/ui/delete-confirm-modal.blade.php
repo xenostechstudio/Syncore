@@ -1,14 +1,16 @@
 @props([
     'show' => false,
     'validation' => [],
-    'title' => 'Confirm Delete',
-    'itemLabel' => 'items',
+    'title' => null,
+    'itemLabel' => null,
 ])
 
 @php
     $canDelete = $validation['canDelete'] ?? [];
     $cannotDelete = $validation['cannotDelete'] ?? [];
     $totalSelected = $validation['totalSelected'] ?? 0;
+    $title = $title ?? __('common.confirm_delete');
+    $itemLabel = $itemLabel ?? __('common.selected');
 @endphp
 
 <div
@@ -46,7 +48,7 @@
                     </div>
                     <div>
                         <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{{ $title }}</h3>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $totalSelected }} {{ $itemLabel }} selected</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $totalSelected }} {{ $itemLabel }}</p>
                     </div>
                 </div>
                 <button 
@@ -65,7 +67,7 @@
                         <div class="mb-2 flex items-center gap-2">
                             <flux:icon name="check-circle" class="size-4 text-emerald-500" />
                             <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ count($canDelete) }} {{ $itemLabel }} can be deleted
+                                {{ count($canDelete) }} {{ $itemLabel }} {{ __('common.can_be_deleted') }}
                             </span>
                         </div>
                         <div class="space-y-1 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-900/20">
@@ -87,7 +89,7 @@
                         <div class="mb-2 flex items-center gap-2">
                             <flux:icon name="x-circle" class="size-4 text-red-500" />
                             <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ count($cannotDelete) }} {{ $itemLabel }} cannot be deleted
+                                {{ count($cannotDelete) }} {{ $itemLabel }} {{ __('common.cannot_be_deleted') }}
                             </span>
                         </div>
                         <div class="space-y-2 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
@@ -109,11 +111,11 @@
                         <div class="flex items-center gap-2">
                             <flux:icon name="exclamation-triangle" class="size-5 text-amber-600 dark:text-amber-400" />
                             <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
-                                No {{ $itemLabel }} can be deleted
+                                {{ __('common.no_items_can_be_deleted') }}
                             </p>
                         </div>
                         <p class="mt-1 text-sm text-amber-600 dark:text-amber-400">
-                            All selected {{ $itemLabel }} have restrictions that prevent deletion.
+                            {{ __('common.all_items_have_restrictions') }}
                         </p>
                     </div>
                 @endif
@@ -126,7 +128,7 @@
                     @click="open = false; $wire.cancelDelete()"
                     class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
-                    Cancel
+                    {{ __('common.cancel') }}
                 </button>
                 @if(count($canDelete) > 0)
                     <button
@@ -134,7 +136,7 @@
                         wire:click="bulkDelete"
                         class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
                     >
-                        Delete {{ count($canDelete) }} {{ $itemLabel }}
+                        {{ __('common.delete') }} {{ count($canDelete) }} {{ $itemLabel }}
                     </button>
                 @endif
             </div>

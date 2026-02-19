@@ -6,6 +6,8 @@ use App\Enums\TransferState;
 use App\Models\User;
 use App\Traits\HasNotes;
 use App\Traits\HasSoftDeletes;
+use App\Traits\HasStateMachine;
+use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +16,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InventoryTransfer extends Model
 {
-    use LogsActivity, HasNotes, HasSoftDeletes, Searchable;
+    use LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasStateMachine, HasYearlySequenceNumber;
+
+    protected string $stateEnum = TransferState::class;
+
+    public const NUMBER_PREFIX = 'TRF';
+    public const NUMBER_COLUMN = 'transfer_number';
+    public const NUMBER_DIGITS = 5;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     
@@ -36,9 +44,48 @@ class InventoryTransfer extends Model
         'expected_arrival_date' => 'date',
     ];
 
-    public function getStateAttribute(): TransferState
+    public function markReady(): bool
     {
-        return TransferState::tryFrom($this->status) ?? TransferState::DRAFT;
+        if ($this->state !== TransferState::DRAFT) {
+            return false;
+        }
+        return $this->transitionTo(TransferState::READY);
+    }
+
+    public function markInTransit(): bool
+    {
+        if ($this->state !== TransferState::READY) {
+            return false;
+        }
+        return $this->transitionTo(TransferState::IN_TRANSIT);
+    }
+
+    public function complete(): bool
+    {
+        if ($this->state !== TransferState::IN_TRANSIT) {
+            return false;
+        }
+        return $this->transitionTo(TransferState::COMPLETED);
+    }
+
+    public function cancelTransfer(): bool
+    {
+        if (!$this->state->canCancel()) {
+            return false;
+        }
+        return $this->transitionTo(TransferState::CANCELLED);
+    }
+
+    /**
+     * Advance to the next state in the workflow.
+     */
+    public function advanceState(): bool
+    {
+        $nextState = $this->state->next();
+        if (!$nextState) {
+            return false;
+        }
+        return $this->transitionTo($nextState);
     }
 
     public function sourceWarehouse(): BelongsTo
@@ -59,18 +106,5 @@ class InventoryTransfer extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InventoryTransferItem::class);
-    }
-
-    public static function generateTransferNumber(): string
-    {
-        $prefix = 'TRF';
-        $year = now()->year;
-        
-        $lastNumber = self::where('transfer_number', 'like', "{$prefix}/{$year}/%")
-            ->pluck('transfer_number')
-            ->map(fn($num) => (int) substr($num, strlen("{$prefix}/{$year}/")))
-            ->max() ?? 0;
-
-        return "{$prefix}/{$year}/" . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
     }
 }

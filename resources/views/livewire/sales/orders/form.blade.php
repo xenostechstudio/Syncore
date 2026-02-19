@@ -1,6 +1,6 @@
 <div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showPreviewModal: false, showEmailModal: $wire.entangle('showEmailModal'), showInvoiceModal: $wire.entangle('showInvoiceModal'), showDeliveryModal: $wire.entangle('showDeliveryModal') }">
     <x-slot:header>
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
             <div class="flex items-center gap-3">
                 <a href="{{ route('sales.orders.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
@@ -67,12 +67,12 @@
 
             {{-- Right Group: Related Documents (Delivery first, then Invoice) --}}
             @if($orderId && $status === \App\Enums\SalesOrderState::SALES_ORDER->value)
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     @foreach($deliveries as $delivery)
                         <a 
                             href="{{ route('delivery.orders.edit', $delivery->id) }}" 
                             wire:navigate
-                            class="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
+                            class="inline-flex flex-shrink-0 items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
                         >
                             <flux:icon name="truck" class="size-4" />
                             <span>{{ $delivery->delivery_number }}</span>
@@ -84,7 +84,7 @@
                         <a 
                             href="{{ route('invoicing.invoices.edit', $invoice->id) }}" 
                             wire:navigate
-                            class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-400 dark:hover:bg-violet-900/50"
+                            class="inline-flex flex-shrink-0 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-400 dark:hover:bg-violet-900/50"
                         >
                             <flux:icon name="document-text" class="size-4" />
                             <span>{{ $invoice->invoice_number }}</span>
@@ -136,10 +136,10 @@
 
     {{-- Action Buttons Bar --}}
     <div class="-mx-4 -mt-6 bg-zinc-50 px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:bg-zinc-900/50" x-data="{ showConfirmModal: false }">
-        <div class="grid grid-cols-12 items-center gap-6">
+        <div class="flex flex-col-reverse gap-4 lg:grid lg:grid-cols-12 lg:items-center lg:gap-6">
             {{-- Left: Action Buttons (col-span-9 to align with card below) --}}
-            <div class="col-span-9 flex items-center justify-between">
-                <div class="flex flex-wrap items-center gap-2">
+            <div class="col-span-9 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-wrap items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     @if(!$orderId)
                         {{-- New Order: Show Save button (primary) --}}
                         <button 
@@ -279,7 +279,7 @@
                         Cancelled
                     </span>
                 @else
-                    <div class="flex items-center">
+                    <div class="hidden items-center lg:flex">
                         @foreach($steps as $index => $step)
                             @php
                                 $isActive = $index === $currentIndex;
@@ -303,6 +303,21 @@
                                 </div>
                             </div>
                         @endforeach
+                    </div>
+                    
+                    {{-- Mobile Status Badge (Visible only on mobile) --}}
+                    <div class="flex items-center lg:hidden">
+                        <span class="inline-flex h-[32px] items-center rounded-lg px-3 text-sm font-medium
+                            {{ match($status) {
+                                'draft' => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+                                'sent' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+                                'confirmed' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                                'sales_order' => 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+                                'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                                default => 'bg-zinc-100 text-zinc-700'
+                            } }}">
+                            {{ ucfirst(str_replace('_', ' ', $status)) }}
+                        </span>
                     </div>
                 @endif
             </div>
@@ -329,299 +344,13 @@
             <div class="absolute inset-0 bg-zinc-900/60" @click="showConfirmModal = false"></div>
             
             {{-- Modal Content --}}
-            <div 
-                class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-                @click.outside="showConfirmModal = false"
-            >
-                <div class="mb-4 flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                        <flux:icon name="check-circle" class="size-5 text-zinc-600 dark:text-zinc-400" />
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Confirm Sales Order</h3>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">This will convert the quotation to a sales order.</p>
-                    </div>
-                </div>
-                
-                <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
-                    Are you sure you want to confirm this order? This action will change the status to "Sales Order" and the order will be ready for processing.
-                </p>
-                
-                <div class="flex justify-end gap-3">
-                    <button 
-                        type="button"
-                        @click="showConfirmModal = false"
-                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        type="button"
-                        wire:click="confirm"
-                        wire:loading.attr="disabled"
-                        wire:target="confirm"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                    >
-                        <flux:icon name="check" wire:loading.remove wire:target="confirm" class="size-4" />
-                        <flux:icon name="arrow-path" wire:loading wire:target="confirm" class="size-4 animate-spin" />
-                        <span wire:loading.remove wire:target="confirm">Confirm Order</span>
-                        <span wire:loading wire:target="confirm">Confirming...</span>
-                    </button>
-                </div>
-            </div>
+            @include('livewire.sales.orders.modals.confirm')
         </div>
 
         {{-- Invoice Creation Modal --}}
-        <div 
-            x-show="showInvoiceModal" 
-            x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-        >
-            {{-- Backdrop --}}
-            <div class="absolute inset-0 bg-zinc-900/60" @click="showInvoiceModal = false"></div>
-            
-            {{-- Modal Content --}}
-            <div 
-                class="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900 dark:ring-white/10"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-                @click.outside="showInvoiceModal = false"
-            >
-                <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
-                    <div>
-                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Create Invoice</h3>
-                        <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Choose payment type for this invoice</p>
-                    </div>
+        @include('livewire.sales.orders.modals.invoice')
 
-                    <button 
-                        type="button"
-                        @click="showInvoiceModal = false"
-                        class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        aria-label="Close"
-                    >
-                        <flux:icon name="x-mark" class="size-5" />
-                    </button>
-                </div>
-                
-                {{-- Payment Type Options --}}
-                <div class="px-6 py-5">
-                    <div class="flex items-start justify-between gap-6">
-                        <span class="pt-1 text-sm font-medium text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Payment Type</span>
-                        <div class="flex-1 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-                            {{-- Regular Payment --}}
-                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
-                                <input type="radio" wire:model="invoiceType" value="regular" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
-                                <div class="min-w-0 whitespace-nowrap leading-snug">
-                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Regular (Full Amount)</span>
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Create an invoice for the full order total.</span>
-                                </div>
-                            </label>
-
-                            {{-- Down Payment (Percentage) --}}
-                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
-                                <input type="radio" wire:model="invoiceType" value="down_payment_percentage" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
-                                <div class="min-w-0 whitespace-nowrap leading-snug">
-                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Down Payment (Percentage)</span>
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Invoice a percentage of the order (e.g. 30%).</span>
-                                </div>
-                            </label>
-
-                            {{-- Down Payment (Fixed Amount) --}}
-                            <label class="flex cursor-pointer items-start gap-3 rounded-lg px-1 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
-                                <input type="radio" wire:model="invoiceType" value="down_payment_fixed" class="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700" />
-                                <div class="min-w-0 whitespace-nowrap leading-snug">
-                                    <span class="font-medium text-zinc-900 dark:text-zinc-100">Down Payment (Fixed Amount)</span>
-                                    <span class="text-xs text-zinc-500 dark:text-zinc-400"> — Invoice a specific amount now (e.g. Rp 5.000.000).</span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 space-y-3">
-                        <div x-show="$wire.invoiceType === 'down_payment_percentage'" x-transition>
-                            <div class="flex items-center gap-4">
-                                <span class="pt-1 pr-6 text-sm font-medium text-zinc-700 dark:text-zinc-300">Percentage</span>
-                                <div class="flex items-center gap-2">
-                                    <input type="number" wire:model.live="downPaymentPercentage" min="1" max="100" step="1" class="w-24 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="%" />
-                                    <span class="text-sm text-zinc-500">%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div x-show="$wire.invoiceType === 'down_payment_fixed'" x-transition>
-                            <div class="flex items-center gap-4">
-                                <span class="pt-1 pr-6 text-sm font-medium text-zinc-700 dark:text-zinc-300">Amount</span>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm text-zinc-500">Rp</span>
-                                    <input type="number" wire:model.live="downPaymentAmount" min="0" step="1000" class="w-40 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Amount" />
-                                </div>
-                            </div>
-                        </div>
-
-                        @php
-                            $invoiceAmount = $this->total;
-                            if ($invoiceType === 'down_payment_percentage') {
-                                $invoiceAmount = $this->total * (($downPaymentPercentage ?? 0) / 100);
-                            } elseif ($invoiceType === 'down_payment_fixed') {
-                                $invoiceAmount = min($this->total, (float) ($downPaymentAmount ?? 0));
-                            }
-                        @endphp
-
-                        <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                            <div class="flex items-center">
-                                <span class="text-sm pr-4 text-zinc-600 dark:text-zinc-400">Invoice Amount</span>
-                                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($invoiceAmount, 0, ',', '.') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                    <button 
-                        type="button"
-                        @click="showInvoiceModal = false"
-                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        type="button"
-                        wire:click="createInvoice"
-                        wire:loading.attr="disabled"
-                        wire:target="createInvoice"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                    >
-                        <flux:icon name="document-text" wire:loading.remove wire:target="createInvoice" class="size-4" />
-                        <flux:icon name="arrow-path" wire:loading wire:target="createInvoice" class="size-4 animate-spin" />
-                        <span wire:loading.remove wire:target="createInvoice">Create Invoice Draft</span>
-                        <span wire:loading wire:target="createInvoice">Creating...</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div 
-            x-show="showDeliveryModal" 
-            x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-        >
-            <div class="absolute inset-0 bg-zinc-900/60" @click="showDeliveryModal = false"></div>
-
-            <div 
-                class="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900 dark:ring-white/10"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-                @click.outside="showDeliveryModal = false"
-            >
-                <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
-                    <div>
-                        <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Create Delivery Order</h3>
-                        <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Confirm delivery information before creating the delivery order</p>
-                    </div>
-
-                    <button 
-                        type="button"
-                        @click="showDeliveryModal = false"
-                        class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        aria-label="Close"
-                    >
-                        <flux:icon name="x-mark" class="size-5" />
-                    </button>
-                </div>
-
-                <div class="px-6 py-5">
-                    <div class="grid gap-5 sm:grid-cols-2">
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Warehouse</label>
-                            <select wire:model.live="deliveryWarehouseId" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                                <option value="">Select warehouse...</option>
-                                @foreach($warehouses as $warehouse)
-                                    <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Delivery Date</label>
-                            <input type="date" wire:model.live="deliveryDate" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                        </div>
-
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Recipient Name</label>
-                            <input type="text" wire:model.live="deliveryRecipientName" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Recipient name" />
-                        </div>
-
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Recipient Phone</label>
-                            <input type="text" wire:model.live="deliveryRecipientPhone" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Recipient phone" />
-                        </div>
-
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Courier</label>
-                            <input type="text" wire:model.live="deliveryCourier" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Courier" />
-                        </div>
-
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Tracking Number</label>
-                            <input type="text" wire:model.live="deliveryTrackingNumber" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Tracking number" />
-                        </div>
-
-                        <div class="sm:col-span-2">
-                            <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Notes</label>
-                            <textarea rows="3" wire:model.live="deliveryNotes" class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" placeholder="Notes..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                    <button 
-                        type="button"
-                        @click="showDeliveryModal = false"
-                        class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        type="button"
-                        wire:click="createDeliveryOrder"
-                        wire:loading.attr="disabled"
-                        wire:target="createDeliveryOrder"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                    >
-                        <flux:icon name="truck" wire:loading.remove wire:target="createDeliveryOrder" class="size-4" />
-                        <flux:icon name="arrow-path" wire:loading wire:target="createDeliveryOrder" class="size-4 animate-spin" />
-                        <span wire:loading.remove wire:target="createDeliveryOrder">Create Delivery Draft</span>
-                        <span wire:loading wire:target="createDeliveryOrder">Creating...</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+        @include('livewire.sales.orders.modals.delivery')
     </div>
 
     {{-- Main Content --}}
@@ -727,10 +456,10 @@
                         </div>
 
                         {{-- Right Column: Expiration, Pricelist, Payment Terms --}}
-                        <div class="space-y-3">
+                        <div class="space-y-4 sm:space-y-3">
                             {{-- Expiration --}}
-                            <div class="flex items-center gap-4">
-                                <label class="w-28 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Expiration</label>
+                            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
+                                <label class="text-sm font-light text-zinc-600 sm:w-28 sm:flex-shrink-0 dark:text-zinc-400">Expiration</label>
                                 <div class="relative flex-1">
                                     <input 
                                         type="date" 
@@ -741,8 +470,8 @@
                             </div>
 
                             {{-- Pricelist --}}
-                            <div class="flex items-center gap-4" x-data="{ open: false }">
-                                <label class="w-28 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Pricelist</label>
+                            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4" x-data="{ open: false }">
+                                <label class="text-sm font-light text-zinc-600 sm:w-28 sm:flex-shrink-0 dark:text-zinc-400">Pricelist</label>
                                 <div class="relative flex-1">
                                     <button 
                                         type="button"
@@ -787,8 +516,8 @@
                             </div>
 
                             {{-- Payment Terms --}}
-                            <div class="flex items-center gap-4" x-data="{ open: false }">
-                                <label class="w-28 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Payment Terms</label>
+                            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4" x-data="{ open: false }">
+                                <label class="text-sm font-light text-zinc-600 sm:w-28 sm:flex-shrink-0 dark:text-zinc-400">Payment Terms</label>
                                 <div class="relative flex-1">
                                     <button 
                                         type="button"
@@ -879,7 +608,7 @@
                     }"
                 >
                     {{-- Items Table --}}
-                    <div class="overflow-visible">
+                    <div class="relative min-h-[300px] overflow-x-auto lg:overflow-visible">
                         <table class="w-full">
                             <thead>
                                 <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
@@ -1342,10 +1071,10 @@
                             {{-- Sales Section --}}
                             <div class="pb-2 pr-4">
                                 <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sales</h3>
-                                <div class="space-y-3">
+                                <div class="space-y-4 sm:space-y-3">
                                     {{-- Salesperson --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Salesperson</label>
+                                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                        <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Salesperson</label>
                                         <div class="relative flex-1">
                                             <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
                                                 <option value="{{ auth()->id() }}">{{ auth()->user()->name ?? 'Current User' }}</option>
@@ -1355,8 +1084,8 @@
                                     </div>
 
                                     {{-- Customer Reference --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Customer Ref</label>
+                                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                        <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Customer Ref</label>
                                         <div class="flex-1">
                                             <input 
                                                 type="text" 
@@ -1367,8 +1096,8 @@
                                     </div>
 
                                     {{-- Tags --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Tags</label>
+                                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                        <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Tags</label>
                                         <div class="flex-1">
                                             <input 
                                                 type="text" 
@@ -1383,10 +1112,10 @@
                             {{-- Delivery Section --}}
                             <div class="pb-2 pr-4">
                                 <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Delivery</h3>
-                                <div class="space-y-3">
+                                <div class="space-y-4 sm:space-y-3">
                                     {{-- Shipping Policy --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Shipping Policy</label>
+                                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                        <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Shipping Policy</label>
                                         <div class="relative flex-1">
                                             <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
                                                 <option value="1">As soon as possible</option>
@@ -1397,8 +1126,8 @@
                                     </div>
 
                                     {{-- Delivery Method --}}
-                                    <div class="flex items-center gap-3">
-                                        <label class="w-36 text-sm font-medium text-zinc-700 dark:text-zinc-300">Delivery Method</label>
+                                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                        <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Delivery Method</label>
                                         <div class="relative flex-1">
                                             <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
                                                 <option value="">Select delivery method...</option>
@@ -1480,345 +1209,11 @@
     </div>
 
     {{-- Send Email Modal (Odoo-style) --}}
-    <div
-        x-show="showEmailModal"
-        x-cloak
-        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-900/60 p-4"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-    >
-        <div
-            class="relative w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900"
-            x-show="showEmailModal"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100 scale-100"
-            x-transition:leave-end="opacity-0 scale-95"
-            @click.outside="showEmailModal = false"
-        >
-            {{-- Modal Header --}}
-            <div class="flex items-center justify-between border-b border-zinc-100 px-5 py-3 dark:border-zinc-800">
-                <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Compose Email</h3>
-                <button 
-                    type="button"
-                    @click="showEmailModal = false"
-                    class="rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                >
-                    <flux:icon name="x-mark" class="size-5" />
-                </button>
-            </div>
-
-            {{-- Modal Body --}}
-            <div class="px-5 py-3">
-                {{-- Recipients Row --}}
-                <div class="flex items-start gap-3 py-2">
-                    <label class="w-20 shrink-0 pt-1.5 text-sm text-zinc-500 dark:text-zinc-400">Recipients</label>
-                    <div class="flex-1">
-                        <div class="flex flex-wrap items-center gap-1.5">
-                            @foreach($emailRecipients as $index => $recipient)
-                                <span class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                                    {{ $recipient }}
-                                    <button 
-                                        type="button" 
-                                        wire:click="removeEmailRecipient({{ $index }})"
-                                        class="rounded-full p-0.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
-                                    >
-                                        <flux:icon name="x-mark" class="size-3.5" />
-                                    </button>
-                                </span>
-                            @endforeach
-                            <input 
-                                type="email" 
-                                wire:model="emailRecipientInput"
-                                wire:keydown.enter.prevent="addEmailRecipient"
-                                wire:keydown.tab.prevent="addEmailRecipient"
-                                placeholder="{{ empty($emailRecipients) ? 'Add recipient email...' : 'Add more...' }}"
-                                class="min-w-[150px] flex-1 border-0 bg-transparent px-0 py-1 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-100 dark:placeholder-zinc-500"
-                            />
-                        </div>
-                        @if($emailRecipientError)
-                            <p class="mt-1 text-xs text-red-500">{{ $emailRecipientError }}</p>
-                        @endif
-                        @error('emailRecipients')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                {{-- Subject Row --}}
-                <div class="flex items-center gap-3 border-t border-zinc-100 py-2 dark:border-zinc-800">
-                    <label class="w-20 shrink-0 text-sm text-zinc-500 dark:text-zinc-400">Subject</label>
-                    <input 
-                        type="text" 
-                        wire:model="emailSubject"
-                        placeholder="Email subject"
-                        class="flex-1 border-0 bg-transparent px-0 py-1 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-100 dark:placeholder-zinc-500"
-                    />
-                </div>
-                @error('emailSubject')
-                    <p class="ml-[92px] text-xs text-red-500">{{ $message }}</p>
-                @enderror
-
-                {{-- Message Body --}}
-                <div class="border-t border-zinc-100 pt-3 dark:border-zinc-800">
-                    <textarea 
-                        wire:model="emailBody"
-                        rows="12"
-                        placeholder="Write your message here..."
-                        class="w-full resize-none border-0 bg-transparent px-0 py-1 text-sm leading-relaxed text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-0 dark:text-zinc-100 dark:placeholder-zinc-500"
-                    ></textarea>
-                </div>
-                @error('emailBody')
-                    <p class="text-xs text-red-500">{{ $message }}</p>
-                @enderror
-
-                {{-- Attachments --}}
-                <div class="flex items-center gap-3 border-t border-zinc-100 py-3 dark:border-zinc-800">
-                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700">
-                        <input 
-                            type="checkbox" 
-                            wire:model="emailAttachPdf"
-                            class="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-600 dark:bg-zinc-700"
-                        />
-                        <flux:icon name="paper-clip" class="size-4 text-zinc-500" />
-                        <span class="text-sm text-zinc-700 dark:text-zinc-300">{{ in_array($status, ['draft', 'confirmed']) ? 'Quotation' : 'Sales Order' }} - {{ $orderNumber ?? 'Order' }}.pdf</span>
-                    </label>
-                </div>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="flex items-center justify-end gap-2 border-t border-zinc-100 px-5 py-3 dark:border-zinc-800">
-                <button 
-                    type="button"
-                    @click="showEmailModal = false"
-                    class="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                >
-                    Discard
-                </button>
-
-                <button 
-                    type="button"
-                    wire:click="sendEmail"
-                    wire:loading.attr="disabled"
-                    class="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                >
-                    <flux:icon name="paper-airplane" class="size-4" wire:loading.remove wire:target="sendEmail" />
-                    <flux:icon name="arrow-path" class="size-4 animate-spin" wire:loading wire:target="sendEmail" />
-                    <span>Send</span>
-                </button>
-            </div>
-        </div>
-    </div>
+    @include('livewire.sales.orders.modals.email')
 
     {{-- Preview Modal --}}
-    <div
-        x-show="showPreviewModal"
-        x-cloak
-        class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-900/60 p-4"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-    >
-        <div
-            class="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-zinc-900"
-            x-show="showPreviewModal"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100 scale-100"
-            x-transition:leave-end="opacity-0 scale-95"
-            @click.outside="showPreviewModal = false"
-        >
-            <div class="flex items-start justify-between gap-4 border-b border-zinc-100 bg-zinc-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900/60">
-                <div>
-                    <h3 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">Customer Preview</h3>
-                    <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Share this link with your customer to view and confirm the order.</p>
-                </div>
-
-                <button 
-                    type="button"
-                    @click="showPreviewModal = false"
-                    class="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                    aria-label="Close"
-                >
-                    <flux:icon name="x-mark" class="size-5" />
-                </button>
-            </div>
-
-            <div class="px-6 py-5">
-                <div class="space-y-4">
-                    @if($previewLink)
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Public link</label>
-                            <div class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-                                <input type="text" readonly value="{{ $previewLink }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-900 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                                <button type="button" x-data x-on:click="navigator.clipboard.writeText('{{ $previewLink }}')" class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:w-auto dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
-                                    <flux:icon name="clipboard" class="size-4" />
-                                    Copy
-                                </button>
-                            </div>
-                            @if($orderId)
-                                @php
-                                    $orderForExpiry = \App\Models\Sales\SalesOrder::find($orderId);
-                                @endphp
-                                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Link expires {{ optional($orderForExpiry?->share_token_expires_at)->diffForHumans() ?? 'in 30 days' }}.</p>
-                            @endif
-                        </div>
-                    @else
-                        <div class="flex items-center justify-center py-4">
-                            <flux:icon name="arrow-path" class="size-5 animate-spin text-zinc-400" />
-                            <span class="ml-2 text-sm text-zinc-500">Generating link...</span>
-                        </div>
-                    @endif
-
-                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300">
-                        Your customer can view order details and confirm the quotation from this link.
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-3 border-t border-zinc-100 bg-zinc-50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                <button 
-                    type="button"
-                    wire:click="refreshPreviewLink"
-                    wire:loading.attr="disabled"
-                    wire:target="refreshPreviewLink"
-                    class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                >
-                    <flux:icon name="arrow-path" wire:loading.remove wire:target="refreshPreviewLink" class="size-4" />
-                    <flux:icon name="arrow-path" wire:loading wire:target="refreshPreviewLink" class="size-4 animate-spin" />
-                    Regenerate Link
-                </button>
-
-                <button 
-                    type="button"
-                    @click="showPreviewModal = false"
-                    class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                >
-                    Close
-                </button>
-
-                @if($previewLink)
-                    <button 
-                        type="button"
-                        onclick="window.open('{{ $previewLink }}', '_blank')"
-                        class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                    >
-                        View as Customer
-                    </button>
-                @else
-                    <button 
-                        type="button"
-                        disabled
-                        class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white opacity-50"
-                    >
-                        View as Customer
-                    </button>
-                @endif
-            </div>
-        </div>
-    </div>
+    @include('livewire.sales.orders.modals.preview')
 
     {{-- Cancel Order Confirmation Modal --}}
-    <x-ui.confirm-modal show="showCancelModal" maxWidth="md">
-        <x-slot:icon>
-            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                <flux:icon name="exclamation-triangle" class="size-7" />
-            </div>
-        </x-slot:icon>
-
-        <x-slot:title>
-            Cancel this order?
-        </x-slot:title>
-
-        <x-slot:description>
-            This action will cancel the order and cannot be undone.
-        </x-slot:description>
-
-        <x-slot:content>
-            {{-- Warning Box --}}
-            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
-                <div class="flex items-start gap-2">
-                    <flux:icon name="exclamation-circle" class="mt-0.5 size-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
-                    <p class="text-left text-xs text-amber-700 dark:text-amber-300">
-                        Please review related documents before cancelling. Invoices and delivery orders may need to be handled separately.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Related Documents --}}
-            @if($orderId && ($invoices->count() > 0 || $deliveries->count() > 0))
-                <div class="mt-3 space-y-2">
-                    {{-- Invoices --}}
-                    @if($invoices->count() > 0)
-                        <div class="flex flex-wrap items-center justify-center gap-2">
-                            @foreach($invoices as $invoice)
-                                <a 
-                                    href="{{ route('invoicing.invoices.edit', $invoice->id) }}" 
-                                    wire:navigate
-                                    class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/20 dark:hover:bg-violet-900/30"
-                                >
-                                    <flux:icon name="document-text" class="size-4 text-violet-600 dark:text-violet-400" />
-                                    <span class="font-medium text-violet-700 dark:text-violet-400">{{ $invoice->invoice_number }}</span>
-                                    <x-ui.status-badge :status="$invoice->status" type="invoice" />
-                                    <flux:icon name="arrow-top-right-on-square" class="size-3.5 text-violet-400" />
-                                </a>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    {{-- Delivery Orders --}}
-                    @if($deliveries->count() > 0)
-                        <div class="flex flex-wrap items-center justify-center gap-2">
-                            @foreach($deliveries as $delivery)
-                                <a 
-                                    href="{{ route('delivery.orders.edit', $delivery->id) }}" 
-                                    wire:navigate
-                                    class="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30"
-                                >
-                                    <flux:icon name="truck" class="size-4 text-blue-600 dark:text-blue-400" />
-                                    <span class="font-medium text-blue-700 dark:text-blue-400">{{ $delivery->delivery_number }}</span>
-                                    <x-ui.status-badge :status="$delivery->status->value" type="delivery" />
-                                    <flux:icon name="arrow-top-right-on-square" class="size-3.5 text-blue-400" />
-                                </a>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            @endif
-        </x-slot:content>
-
-        <x-slot:actions>
-            <button 
-                type="button"
-                @click="showCancelModal = false"
-                class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
-                Keep Order
-            </button>
-
-            <button 
-                type="button"
-                wire:click="cancel"
-                wire:loading.attr="disabled"
-                wire:target="cancel"
-                @click="showCancelModal = false"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50 dark:bg-red-500 dark:hover:bg-red-600"
-            >
-                <flux:icon name="x-mark" wire:loading.remove wire:target="cancel" class="size-4" />
-                <flux:icon name="arrow-path" wire:loading wire:target="cancel" class="size-4 animate-spin" />
-                Cancel Order
-            </button>
-        </x-slot:actions>
-    </x-ui.confirm-modal>
+    @include('livewire.sales.orders.modals.cancel')
 </div>

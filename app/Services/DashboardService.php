@@ -36,33 +36,37 @@ class DashboardService
     {
         $startDate = $startDate ?? now()->startOfMonth();
         $endDate = $endDate ?? now()->endOfMonth();
+        
+        $cacheKey = 'dashboard_sales_metrics_' . $startDate->format('Y-m-d') . '_' . $endDate->format('Y-m-d');
 
-        $previousStart = $startDate->copy()->subMonth();
-        $previousEnd = $endDate->copy()->subMonth();
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($startDate, $endDate) {
+            $previousStart = $startDate->copy()->subMonth();
+            $previousEnd = $endDate->copy()->subMonth();
 
-        $currentSales = SalesOrder::whereBetween('created_at', [$startDate, $endDate])
-            ->whereNotIn('status', ['cancelled'])
-            ->sum('total');
+            $currentSales = SalesOrder::whereBetween('created_at', [$startDate, $endDate])
+                ->whereNotIn('status', ['cancelled'])
+                ->sum('total');
 
-        $previousSales = SalesOrder::whereBetween('created_at', [$previousStart, $previousEnd])
-            ->whereNotIn('status', ['cancelled'])
-            ->sum('total');
+            $previousSales = SalesOrder::whereBetween('created_at', [$previousStart, $previousEnd])
+                ->whereNotIn('status', ['cancelled'])
+                ->sum('total');
 
-        $currentOrders = SalesOrder::whereBetween('created_at', [$startDate, $endDate])
-            ->whereNotIn('status', ['cancelled'])
-            ->count();
+            $currentOrders = SalesOrder::whereBetween('created_at', [$startDate, $endDate])
+                ->whereNotIn('status', ['cancelled'])
+                ->count();
 
-        $previousOrders = SalesOrder::whereBetween('created_at', [$previousStart, $previousEnd])
-            ->whereNotIn('status', ['cancelled'])
-            ->count();
+            $previousOrders = SalesOrder::whereBetween('created_at', [$previousStart, $previousEnd])
+                ->whereNotIn('status', ['cancelled'])
+                ->count();
 
-        return [
-            'total_sales' => $currentSales,
-            'total_orders' => $currentOrders,
-            'average_order_value' => $currentOrders > 0 ? $currentSales / $currentOrders : 0,
-            'sales_change' => $previousSales > 0 ? (($currentSales - $previousSales) / $previousSales) * 100 : 0,
-            'orders_change' => $previousOrders > 0 ? (($currentOrders - $previousOrders) / $previousOrders) * 100 : 0,
-        ];
+            return [
+                'total_sales' => $currentSales,
+                'total_orders' => $currentOrders,
+                'average_order_value' => $currentOrders > 0 ? $currentSales / $currentOrders : 0,
+                'sales_change' => $previousSales > 0 ? (($currentSales - $previousSales) / $previousSales) * 100 : 0,
+                'orders_change' => $previousOrders > 0 ? (($currentOrders - $previousOrders) / $previousOrders) * 100 : 0,
+            ];
+        });
     }
 
     /**
@@ -72,27 +76,29 @@ class DashboardService
      */
     public static function getInvoiceMetrics(): array
     {
-        $totalOutstanding = Invoice::whereIn('status', ['sent', 'partial', 'overdue'])
-            ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as outstanding')
-            ->value('outstanding') ?? 0;
+        return Cache::remember('dashboard_invoice_metrics', self::CACHE_TTL, function () {
+            $totalOutstanding = Invoice::whereIn('status', ['sent', 'partial', 'overdue'])
+                ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as outstanding')
+                ->value('outstanding') ?? 0;
 
-        $overdueAmount = Invoice::where('status', 'overdue')
-            ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as overdue')
-            ->value('overdue') ?? 0;
+            $overdueAmount = Invoice::where('status', 'overdue')
+                ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as overdue')
+                ->value('overdue') ?? 0;
 
-        $overdueCount = Invoice::where('status', 'overdue')->count();
+            $overdueCount = Invoice::where('status', 'overdue')->count();
 
-        $paidThisMonth = Invoice::where('status', 'paid')
-            ->whereMonth('paid_date', now()->month)
-            ->whereYear('paid_date', now()->year)
-            ->sum('total');
+            $paidThisMonth = Invoice::where('status', 'paid')
+                ->whereMonth('paid_date', now()->month)
+                ->whereYear('paid_date', now()->year)
+                ->sum('total');
 
-        return [
-            'total_outstanding' => $totalOutstanding,
-            'overdue_amount' => $overdueAmount,
-            'overdue_count' => $overdueCount,
-            'paid_this_month' => $paidThisMonth,
-        ];
+            return [
+                'total_outstanding' => $totalOutstanding,
+                'overdue_amount' => $overdueAmount,
+                'overdue_count' => $overdueCount,
+                'paid_this_month' => $paidThisMonth,
+            ];
+        });
     }
 
     /**
@@ -102,28 +108,30 @@ class DashboardService
      */
     public static function getInventoryMetrics(): array
     {
-        $totalProducts = Product::where('status', 'active')->count();
-        
-        $lowStockThreshold = config('inventory.low_stock_threshold', 10);
-        $lowStockCount = Product::where('status', 'active')
-            ->where('quantity', '<=', $lowStockThreshold)
-            ->where('quantity', '>', 0)
-            ->count();
+        return Cache::remember('dashboard_inventory_metrics', self::CACHE_TTL, function () {
+            $totalProducts = Product::where('status', 'active')->count();
             
-        $outOfStockCount = Product::where('status', 'active')
-            ->where('quantity', '<=', 0)
-            ->count();
-            
-        $totalValue = Product::where('status', 'active')
-            ->selectRaw('COALESCE(SUM(quantity * cost_price), 0) as value')
-            ->value('value') ?? 0;
+            $lowStockThreshold = config('inventory.low_stock_threshold', 10);
+            $lowStockCount = Product::where('status', 'active')
+                ->where('quantity', '<=', $lowStockThreshold)
+                ->where('quantity', '>', 0)
+                ->count();
+                
+            $outOfStockCount = Product::where('status', 'active')
+                ->where('quantity', '<=', 0)
+                ->count();
+                
+            $totalValue = Product::where('status', 'active')
+                ->selectRaw('COALESCE(SUM(quantity * cost_price), 0) as value')
+                ->value('value') ?? 0;
 
-        return [
-            'total_products' => $totalProducts,
-            'low_stock_count' => $lowStockCount,
-            'out_of_stock_count' => $outOfStockCount,
-            'total_inventory_value' => $totalValue,
-        ];
+            return [
+                'total_products' => $totalProducts,
+                'low_stock_count' => $lowStockCount,
+                'out_of_stock_count' => $outOfStockCount,
+                'total_inventory_value' => $totalValue,
+            ];
+        });
     }
 
     /**
@@ -133,24 +141,26 @@ class DashboardService
      */
     public static function getPurchaseMetrics(): array
     {
-        $pendingBills = VendorBill::whereIn('status', ['pending', 'partial'])
-            ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as pending')
-            ->value('pending') ?? 0;
+        return Cache::remember('dashboard_purchase_metrics', self::CACHE_TTL, function () {
+            $pendingBills = VendorBill::whereIn('status', ['pending', 'partial'])
+                ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as pending')
+                ->value('pending') ?? 0;
 
-        $overdueBills = VendorBill::where('status', 'overdue')
-            ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as overdue')
-            ->value('overdue') ?? 0;
+            $overdueBills = VendorBill::where('status', 'overdue')
+                ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as overdue')
+                ->value('overdue') ?? 0;
 
-        $paidThisMonth = VendorBill::where('status', 'paid')
-            ->whereMonth('paid_date', now()->month)
-            ->whereYear('paid_date', now()->year)
-            ->sum('total');
+            $paidThisMonth = VendorBill::where('status', 'paid')
+                ->whereMonth('paid_date', now()->month)
+                ->whereYear('paid_date', now()->year)
+                ->sum('total');
 
-        return [
-            'pending_bills' => $pendingBills,
-            'overdue_bills' => $overdueBills,
-            'paid_this_month' => $paidThisMonth,
-        ];
+            return [
+                'pending_bills' => $pendingBills,
+                'overdue_bills' => $overdueBills,
+                'paid_this_month' => $paidThisMonth,
+            ];
+        });
     }
 
     /**
@@ -161,17 +171,19 @@ class DashboardService
      */
     public static function getTopCustomers(int $limit = 5): array
     {
-        return Customer::select('customers.*')
-            ->selectRaw('SUM(sales_orders.total) as total_sales')
-            ->selectRaw('COUNT(sales_orders.id) as order_count')
-            ->leftJoin('sales_orders', 'customers.id', '=', 'sales_orders.customer_id')
-            ->whereNotNull('sales_orders.id')
-            ->whereNotIn('sales_orders.status', ['cancelled'])
-            ->groupBy('customers.id')
-            ->orderByDesc('total_sales')
-            ->limit($limit)
-            ->get()
-            ->toArray();
+        return Cache::remember('dashboard_top_customers_' . $limit, self::CACHE_TTL, function () use ($limit) {
+            return Customer::select('customers.*')
+                ->selectRaw('SUM(sales_orders.total) as total_sales')
+                ->selectRaw('COUNT(sales_orders.id) as order_count')
+                ->leftJoin('sales_orders', 'customers.id', '=', 'sales_orders.customer_id')
+                ->whereNotNull('sales_orders.id')
+                ->whereNotIn('sales_orders.status', ['cancelled'])
+                ->groupBy('customers.id')
+                ->orderByDesc('total_sales')
+                ->limit($limit)
+                ->get()
+                ->toArray();
+        });
     }
 
     /**
@@ -182,18 +194,20 @@ class DashboardService
      */
     public static function getTopProducts(int $limit = 5): array
     {
-        return Product::select('products.*')
-            ->selectRaw('SUM(sales_order_items.quantity) as total_sold')
-            ->selectRaw('SUM(sales_order_items.total) as total_revenue')
-            ->leftJoin('sales_order_items', 'products.id', '=', 'sales_order_items.product_id')
-            ->leftJoin('sales_orders', 'sales_order_items.sales_order_id', '=', 'sales_orders.id')
-            ->whereNotNull('sales_order_items.id')
-            ->whereNotIn('sales_orders.status', ['cancelled'])
-            ->groupBy('products.id')
-            ->orderByDesc('total_revenue')
-            ->limit($limit)
-            ->get()
-            ->toArray();
+        return Cache::remember('dashboard_top_products_' . $limit, self::CACHE_TTL, function () use ($limit) {
+            return Product::select('products.*')
+                ->selectRaw('SUM(sales_order_items.quantity) as total_sold')
+                ->selectRaw('SUM(sales_order_items.total) as total_revenue')
+                ->leftJoin('sales_order_items', 'products.id', '=', 'sales_order_items.product_id')
+                ->leftJoin('sales_orders', 'sales_order_items.sales_order_id', '=', 'sales_orders.id')
+                ->whereNotNull('sales_order_items.id')
+                ->whereNotIn('sales_orders.status', ['cancelled'])
+                ->groupBy('products.id')
+                ->orderByDesc('total_revenue')
+                ->limit($limit)
+                ->get()
+                ->toArray();
+        });
     }
 
     /**
@@ -204,22 +218,24 @@ class DashboardService
      */
     public static function getSalesChartData(int $months = 6): array
     {
-        $data = [];
-        
-        for ($i = $months - 1; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $sales = SalesOrder::whereMonth('created_at', $date->month)
-                ->whereYear('created_at', $date->year)
-                ->whereNotIn('status', ['cancelled'])
-                ->sum('total');
+        return Cache::remember('dashboard_sales_chart_' . $months, self::CACHE_TTL, function () use ($months) {
+            $data = [];
+            
+            for ($i = $months - 1; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $sales = SalesOrder::whereMonth('created_at', $date->month)
+                    ->whereYear('created_at', $date->year)
+                    ->whereNotIn('status', ['cancelled'])
+                    ->sum('total');
 
-            $data[] = [
-                'month' => $date->format('M Y'),
-                'sales' => $sales,
-            ];
-        }
+                $data[] = [
+                    'month' => $date->format('M Y'),
+                    'sales' => $sales,
+                ];
+            }
 
-        return $data;
+            return $data;
+        });
     }
 
     /**
@@ -230,14 +246,16 @@ class DashboardService
      */
     public static function getLowStockProducts(int $limit = 10): array
     {
-        $lowStockThreshold = config('inventory.low_stock_threshold', 10);
-        
-        return Product::where('status', 'active')
-            ->where('quantity', '<=', $lowStockThreshold)
-            ->orderBy('quantity')
-            ->limit($limit)
-            ->get()
-            ->toArray();
+        return Cache::remember('dashboard_low_stock_' . $limit, self::CACHE_TTL, function () use ($limit) {
+            $lowStockThreshold = config('inventory.low_stock_threshold', 10);
+            
+            return Product::where('status', 'active')
+                ->where('quantity', '<=', $lowStockThreshold)
+                ->orderBy('quantity')
+                ->limit($limit)
+                ->get()
+                ->toArray();
+        });
     }
 
     /**
@@ -248,22 +266,25 @@ class DashboardService
      */
     public static function getRecentActivities(int $limit = 10): array
     {
-        return DB::table('activity_logs')
-            ->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
-            ->select('activity_logs.*', 'users.name as causer_name')
-            ->orderByDesc('activity_logs.created_at')
-            ->limit($limit)
-            ->get()
-            ->map(function ($activity) {
-                return [
-                    'id' => $activity->id,
-                    'description' => $activity->description,
-                    'subject_type' => class_basename($activity->model_type ?? ''),
-                    'causer_name' => $activity->causer_name ?? $activity->user_name ?? 'System',
-                    'created_at' => $activity->created_at,
-                ];
-            })
-            ->toArray();
+        // Cache activities for shorter duration as they are real-time
+        return Cache::remember('dashboard_recent_activities_' . $limit, 60, function () use ($limit) {
+            return DB::table('activity_logs')
+                ->leftJoin('users', 'activity_logs.user_id', '=', 'users.id')
+                ->select('activity_logs.*', 'users.name as causer_name')
+                ->orderByDesc('activity_logs.created_at')
+                ->limit($limit)
+                ->get()
+                ->map(function ($activity) {
+                    return [
+                        'id' => $activity->id,
+                        'description' => $activity->description,
+                        'subject_type' => class_basename($activity->model_type ?? ''),
+                        'causer_name' => $activity->causer_name ?? $activity->user_name ?? 'System',
+                        'created_at' => \Carbon\Carbon::parse($activity->created_at),
+                    ];
+                })
+                ->toArray();
+        });
     }
 
     /**
@@ -273,25 +294,27 @@ class DashboardService
      */
     public static function getPendingActions(): array
     {
-        $pendingQuotations = SalesOrder::whereIn('status', ['draft', 'confirmed'])->count();
-        $ordersToInvoice = SalesOrder::where('status', 'sales_order')
-            ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_invoiced'))
-            ->count();
-        $ordersToDeliver = SalesOrder::where('status', 'sales_order')
-            ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_delivered'))
-            ->count();
-        $draftInvoices = Invoice::where('status', 'draft')->count();
-        $overdueInvoices = Invoice::where('status', 'overdue')->count();
-        $pendingBills = VendorBill::whereIn('status', ['draft', 'pending'])->count();
+        return Cache::remember('dashboard_pending_actions', self::CACHE_TTL, function () {
+            $pendingQuotations = SalesOrder::whereIn('status', ['draft', 'confirmed'])->count();
+            $ordersToInvoice = SalesOrder::where('status', 'sales_order')
+                ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_invoiced'))
+                ->count();
+            $ordersToDeliver = SalesOrder::where('status', 'sales_order')
+                ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_delivered'))
+                ->count();
+            $draftInvoices = Invoice::where('status', 'draft')->count();
+            $overdueInvoices = Invoice::where('status', 'overdue')->count();
+            $pendingBills = VendorBill::whereIn('status', ['draft', 'pending'])->count();
 
-        return [
-            'pending_quotations' => $pendingQuotations,
-            'orders_to_invoice' => $ordersToInvoice,
-            'orders_to_deliver' => $ordersToDeliver,
-            'draft_invoices' => $draftInvoices,
-            'overdue_invoices' => $overdueInvoices,
-            'pending_bills' => $pendingBills,
-        ];
+            return [
+                'pending_quotations' => $pendingQuotations,
+                'orders_to_invoice' => $ordersToInvoice,
+                'orders_to_deliver' => $ordersToDeliver,
+                'draft_invoices' => $draftInvoices,
+                'overdue_invoices' => $overdueInvoices,
+                'pending_bills' => $pendingBills,
+            ];
+        });
     }
 
     /**
@@ -301,31 +324,33 @@ class DashboardService
      */
     public static function getCashFlowSummary(): array
     {
-        $receivables = Invoice::whereIn('status', ['sent', 'partial', 'overdue'])
-            ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as total')
-            ->value('total') ?? 0;
+        return Cache::remember('dashboard_cash_flow', self::CACHE_TTL, function () {
+            $receivables = Invoice::whereIn('status', ['sent', 'partial', 'overdue'])
+                ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as total')
+                ->value('total') ?? 0;
 
-        $payables = VendorBill::whereIn('status', ['pending', 'partial', 'overdue'])
-            ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as total')
-            ->value('total') ?? 0;
+            $payables = VendorBill::whereIn('status', ['pending', 'partial', 'overdue'])
+                ->selectRaw('COALESCE(SUM(total - COALESCE(paid_amount, 0)), 0) as total')
+                ->value('total') ?? 0;
 
-        $receivedThisMonth = Invoice::where('status', 'paid')
-            ->whereMonth('paid_date', now()->month)
-            ->whereYear('paid_date', now()->year)
-            ->sum('total');
+            $receivedThisMonth = Invoice::where('status', 'paid')
+                ->whereMonth('paid_date', now()->month)
+                ->whereYear('paid_date', now()->year)
+                ->sum('total');
 
-        $paidThisMonth = VendorBill::where('status', 'paid')
-            ->whereMonth('paid_date', now()->month)
-            ->whereYear('paid_date', now()->year)
-            ->sum('total');
+            $paidThisMonth = VendorBill::where('status', 'paid')
+                ->whereMonth('paid_date', now()->month)
+                ->whereYear('paid_date', now()->year)
+                ->sum('total');
 
-        return [
-            'receivables' => $receivables,
-            'payables' => $payables,
-            'received_this_month' => $receivedThisMonth,
-            'paid_this_month' => $paidThisMonth,
-            'net_cash_flow' => $receivedThisMonth - $paidThisMonth,
-        ];
+            return [
+                'receivables' => $receivables,
+                'payables' => $payables,
+                'received_this_month' => $receivedThisMonth,
+                'paid_this_month' => $paidThisMonth,
+                'net_cash_flow' => $receivedThisMonth - $paidThisMonth,
+            ];
+        });
     }
 
     /**
@@ -336,19 +361,21 @@ class DashboardService
      */
     public static function getRecentOrders(int $limit = 5): array
     {
-        return SalesOrder::with('customer')
-            ->latest()
-            ->limit($limit)
-            ->get()
-            ->map(fn ($order) => [
-                'id' => $order->id,
-                'order_number' => $order->order_number,
-                'customer_name' => $order->customer?->name ?? 'N/A',
-                'total' => $order->total,
-                'status' => $order->status,
-                'created_at' => $order->created_at,
-            ])
-            ->toArray();
+        return Cache::remember('dashboard_recent_orders_' . $limit, self::CACHE_TTL, function () use ($limit) {
+            return SalesOrder::with('customer')
+                ->latest()
+                ->limit($limit)
+                ->get()
+                ->map(fn ($order) => [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'customer_name' => $order->customer?->name ?? 'N/A',
+                    'total' => $order->total,
+                    'status' => $order->status,
+                    'created_at' => $order->created_at,
+                ])
+                ->toArray();
+        });
     }
 
     /**
@@ -359,19 +386,21 @@ class DashboardService
      */
     public static function getRecentInvoices(int $limit = 5): array
     {
-        return Invoice::with('customer')
-            ->latest()
-            ->limit($limit)
-            ->get()
-            ->map(fn ($invoice) => [
-                'id' => $invoice->id,
-                'invoice_number' => $invoice->invoice_number,
-                'customer_name' => $invoice->customer?->name ?? 'N/A',
-                'total' => $invoice->total,
-                'status' => $invoice->status,
-                'due_date' => $invoice->due_date,
-            ])
-            ->toArray();
+        return Cache::remember('dashboard_recent_invoices_' . $limit, self::CACHE_TTL, function () use ($limit) {
+            return Invoice::with('customer')
+                ->latest()
+                ->limit($limit)
+                ->get()
+                ->map(fn ($invoice) => [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'customer_name' => $invoice->customer?->name ?? 'N/A',
+                    'total' => $invoice->total,
+                    'status' => $invoice->status,
+                    'due_date' => $invoice->due_date,
+                ])
+                ->toArray();
+        });
     }
 
     /**
@@ -452,7 +481,28 @@ class DashboardService
      */
     public static function clearCache(): void
     {
+        // Clear main data wrapper
         Cache::forget('dashboard_data_' . now()->format('Y-m-d-H'));
+
+        // Clear individual metrics
+        Cache::forget('dashboard_invoice_metrics');
+        Cache::forget('dashboard_inventory_metrics');
+        Cache::forget('dashboard_purchase_metrics');
+        Cache::forget('dashboard_pending_actions');
+        Cache::forget('dashboard_cash_flow');
+
+        // Clear common variations for parametrized cache keys
+        // Note: This covers standard dashboard usage. Custom reports might need their own clearing or shorter TTL.
+        Cache::forget('dashboard_sales_metrics_' . now()->startOfMonth()->format('Y-m-d') . '_' . now()->endOfMonth()->format('Y-m-d'));
+        Cache::forget('dashboard_top_customers_5');
+        Cache::forget('dashboard_top_products_5');
+        Cache::forget('dashboard_sales_chart_6');
+        Cache::forget('dashboard_low_stock_5');
+        Cache::forget('dashboard_low_stock_10');
+        Cache::forget('dashboard_recent_activities_10');
+        Cache::forget('dashboard_recent_orders_5');
+        Cache::forget('dashboard_recent_invoices_5');
+
         ReportService::clearCache();
     }
 }

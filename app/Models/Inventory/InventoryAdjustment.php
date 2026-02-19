@@ -6,6 +6,8 @@ use App\Enums\AdjustmentState;
 use App\Models\User;
 use App\Traits\HasNotes;
 use App\Traits\HasSoftDeletes;
+use App\Traits\HasStateMachine;
+use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +19,12 @@ use App\Models\Inventory\InventoryStock;
 
 class InventoryAdjustment extends Model
 {
-    use LogsActivity, HasNotes, HasSoftDeletes, Searchable;
+    use LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasStateMachine, HasYearlySequenceNumber;
+
+    protected string $stateEnum = AdjustmentState::class;
+
+    public const NUMBER_COLUMN = 'adjustment_number';
+    public const NUMBER_DIGITS = 5;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     
@@ -42,9 +49,24 @@ class InventoryAdjustment extends Model
         'posted_at' => 'datetime',
     ];
 
-    public function getStateAttribute(): AdjustmentState
+    /**
+     * Get the number prefix based on adjustment type.
+     */
+    public function getNumberPrefix(): string
     {
-        return AdjustmentState::tryFrom($this->status) ?? AdjustmentState::DRAFT;
+        return match ($this->adjustment_type) {
+            'increase' => 'WH/IN',
+            'decrease' => 'WH/OUT',
+            default => 'ADJ',
+        };
+    }
+
+    public function cancelAdjustment(): bool
+    {
+        if (!$this->state->canCancel()) {
+            return false;
+        }
+        return $this->transitionTo(AdjustmentState::CANCELLED);
     }
 
     public function warehouse(): BelongsTo
@@ -60,23 +82,6 @@ class InventoryAdjustment extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InventoryAdjustmentItem::class);
-    }
-
-    public static function generateAdjustmentNumber(?string $adjustmentType = null): string
-    {
-        $year = now()->year;
-        $prefix = match ($adjustmentType) {
-            'increase' => "WH/IN/{$year}/",
-            'decrease' => "WH/OUT/{$year}/",
-            default => "ADJ/{$year}/",
-        };
-
-        $lastNumber = self::where('adjustment_number', 'like', $prefix . '%')
-            ->pluck('adjustment_number')
-            ->map(fn($num) => (int) substr($num, strlen($prefix)))
-            ->max() ?? 0;
-
-        return $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
     }
 
     public function isPosted(): bool
@@ -164,7 +169,7 @@ class InventoryAdjustment extends Model
                 $product->save();
             }
 
-            $this->status = AdjustmentState::COMPLETED->value;
+            $this->transitionTo(AdjustmentState::COMPLETED);
             $this->posted_at = now();
             $this->save();
         });

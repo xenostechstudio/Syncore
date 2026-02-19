@@ -2,19 +2,19 @@
 
 namespace App\Imports;
 
+use App\Imports\Concerns\HasImportTracking;
 use App\Models\Inventory\Category;
 use App\Models\Inventory\Product;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class ProductsImport implements ToCollection, WithHeadingRow, WithValidation
+class ProductsImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading
 {
-    public int $imported = 0;
-    public int $updated = 0;
-    public array $errors = [];
+    use HasImportTracking;
 
     public function collection(Collection $rows)
     {
@@ -80,16 +80,8 @@ class ProductsImport implements ToCollection, WithHeadingRow, WithValidation
         ];
     }
 
-    private function parseNumber($value): float
+    public function chunkSize(): int
     {
-        if (is_numeric($value)) {
-            return (float) $value;
-        }
-        
-        // Remove currency symbols and thousands separators
-        $cleaned = preg_replace('/[^0-9.,]/', '', $value);
-        $cleaned = str_replace(',', '.', $cleaned);
-        
-        return (float) $cleaned;
+        return 100;
     }
 }

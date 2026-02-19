@@ -68,9 +68,15 @@ Route::post('/locale', function (Request $request) {
         abort(400);
     }
 
-    $request->session()->put('locale', $locale);
+    session(['locale' => $locale]);
+    app()->setLocale($locale);
+    
+    // Update user preference if logged in
+    if (auth()->check()) {
+        auth()->user()->update(['language' => $locale]);
+    }
 
-    return back();
+    return redirect()->back();
 })->name('locale.switch');
 
 Route::view('/', 'home')

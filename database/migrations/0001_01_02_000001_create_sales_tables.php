@@ -66,7 +66,10 @@ return new class extends Migration
             $table->text('banks')->nullable();
             $table->text('notes')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->softDeletes();
             $table->timestamps();
+            $table->index('email');
+            $table->index('name');
         });
 
         // Sales Teams

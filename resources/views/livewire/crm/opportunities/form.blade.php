@@ -1,6 +1,6 @@
 <div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false }">
     <x-slot:header>
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
                 <a href="{{ route('crm.opportunities.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                     <flux:icon name="arrow-left" class="size-5" />
@@ -61,9 +61,9 @@
 
     {{-- Action Buttons Bar --}}
     <div class="-mx-4 -mt-6 bg-zinc-50 px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:bg-zinc-900/50">
-        <div class="grid grid-cols-12 items-center gap-6">
-            <div class="col-span-9 flex items-center justify-between">
-                <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-col-reverse gap-4 lg:grid lg:grid-cols-12 lg:items-center lg:gap-6">
+            <div class="col-span-9 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-wrap items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     <button 
                         type="button" 
                         wire:click="save" 
@@ -112,25 +112,44 @@
 
                 {{-- Status Badge --}}
                 @if($opportunityId && $opportunity)
-                    @if($opportunity->isWon())
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                            <flux:icon name="trophy" class="size-3.5" />
-                            Won
-                        </span>
-                    @elseif($opportunity->isLost())
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                            <flux:icon name="x-circle" class="size-3.5" />
-                            Lost
-                        </span>
-                    @else
-                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium" style="background-color: {{ $opportunity->pipeline->color ?? '#6b7280' }}20; color: {{ $opportunity->pipeline->color ?? '#6b7280' }}">
-                            {{ $opportunity->pipeline->name }}
-                        </span>
-                    @endif
+                    <div class="flex items-center lg:hidden">
+                        @if($opportunity->isWon())
+                            <span class="inline-flex h-[32px] items-center gap-1.5 rounded-lg bg-emerald-100 px-3 text-sm font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                <flux:icon name="trophy" class="size-4" />
+                                Won
+                            </span>
+                        @elseif($opportunity->isLost())
+                            <span class="inline-flex h-[32px] items-center gap-1.5 rounded-lg bg-red-100 px-3 text-sm font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                <flux:icon name="x-circle" class="size-4" />
+                                Lost
+                            </span>
+                        @else
+                            <span class="inline-flex h-[32px] items-center rounded-lg px-3 text-sm font-medium" style="background-color: {{ $opportunity->pipeline->color ?? '#6b7280' }}20; color: {{ $opportunity->pipeline->color ?? '#6b7280' }}">
+                                {{ $opportunity->pipeline->name }}
+                            </span>
+                        @endif
+                    </div>
+                    <div class="hidden items-center lg:flex">
+                        @if($opportunity->isWon())
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                <flux:icon name="trophy" class="size-3.5" />
+                                Won
+                            </span>
+                        @elseif($opportunity->isLost())
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                <flux:icon name="x-circle" class="size-3.5" />
+                                Lost
+                            </span>
+                        @else
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium" style="background-color: {{ $opportunity->pipeline->color ?? '#6b7280' }}20; color: {{ $opportunity->pipeline->color ?? '#6b7280' }}">
+                                {{ $opportunity->pipeline->name }}
+                            </span>
+                        @endif
+                    </div>
                 @endif
             </div>
 
-            <div class="col-span-3">
+            <div class="col-span-3 flex items-center justify-end gap-1">
                 <x-ui.chatter-buttons />
             </div>
         </div>
@@ -312,53 +331,48 @@
                                 <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Probability (%)</label>
                                 <input type="number" wire:model="probability" min="0" max="100" placeholder="0-100" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors [appearance:textfield] hover:border-zinc-300 focus:border-zinc-400 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
                             </div>
+                            @if($opportunityId && $opportunity)
+                                <div>
+                                    <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Weighted Revenue</label>
+                                    <div class="flex w-full items-center rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100">
+                                        Rp {{ number_format($opportunity->getWeightedRevenue(), 0, ',', '.') }}
+                                    </div>
+                                </div>
+                            @endif
                             <div class="sm:col-span-2">
                                 <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Description</label>
                                 <textarea wire:model="description" rows="4" placeholder="Additional details about this opportunity..." class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
                             </div>
                         </div>
+                        
+                        @if($opportunityId && $opportunity)
+                            <div class="mt-8 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+                                <h4 class="mb-4 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Tracking Information</h4>
+                                <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                                    <div>
+                                        <span class="block text-xs text-zinc-500 dark:text-zinc-400">Created</span>
+                                        <span class="mt-1 block text-sm text-zinc-900 dark:text-zinc-100">{{ $opportunity->created_at->format('M d, Y') }}</span>
+                                    </div>
+                                    @if($opportunity->isWon())
+                                        <div>
+                                            <span class="block text-xs text-zinc-500 dark:text-zinc-400">Won Date</span>
+                                            <span class="mt-1 block text-sm text-emerald-600 dark:text-emerald-400">{{ $opportunity->won_at->format('M d, Y') }}</span>
+                                        </div>
+                                    @elseif($opportunity->isLost())
+                                        <div>
+                                            <span class="block text-xs text-zinc-500 dark:text-zinc-400">Lost Date</span>
+                                            <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $opportunity->lost_at->format('M d, Y') }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
 
             {{-- Right Column: Sidebar --}}
             <div class="lg:col-span-3 space-y-6">
-                {{-- Opportunity Info (only for existing) --}}
-                @if($opportunityId && $opportunity)
-                    <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-                        <div class="border-b border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Info</h3>
-                        </div>
-                        <div class="p-4 space-y-3">
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-zinc-500 dark:text-zinc-400">Weighted Revenue</span>
-                                <span class="font-medium text-zinc-900 dark:text-zinc-100">Rp {{ number_format($opportunity->getWeightedRevenue(), 0, ',', '.') }}</span>
-                            </div>
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-zinc-500 dark:text-zinc-400">Created</span>
-                                <span class="text-zinc-900 dark:text-zinc-100">{{ $opportunity->created_at->format('M d, Y') }}</span>
-                            </div>
-                            @if($opportunity->isWon())
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-zinc-500 dark:text-zinc-400">Won Date</span>
-                                    <span class="text-emerald-600 dark:text-emerald-400">{{ $opportunity->won_at->format('M d, Y') }}</span>
-                                </div>
-                            @elseif($opportunity->isLost())
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-zinc-500 dark:text-zinc-400">Lost Date</span>
-                                    <span class="text-red-600 dark:text-red-400">{{ $opportunity->lost_at->format('M d, Y') }}</span>
-                                </div>
-                            @endif
-                            @if($opportunity->assignedTo)
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-zinc-500 dark:text-zinc-400">Assigned</span>
-                                    <span class="text-zinc-900 dark:text-zinc-100">{{ $opportunity->assignedTo->name }}</span>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
                 {{-- Chatter Forms --}}
                 <x-ui.chatter-forms />
 

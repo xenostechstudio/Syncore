@@ -2,7 +2,7 @@
     'title' => 'Items',
     'createRoute' => null,
     'showNew' => true,
-    'searchPlaceholder' => 'Search...',
+    'searchPlaceholder' => null,
     'views' => ['list', 'grid'],
     'view' => 'list',
     'paginator' => null,
@@ -10,13 +10,17 @@
     'selected' => [],
 ])
 
+@php
+    $searchPlaceholder = $searchPlaceholder ?? __('common.search') . '...';
+@endphp
+
 <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
     <div class="flex w-full items-center justify-between gap-4">
         {{-- Left Group: New Button, Title, Gear --}}
         <div class="flex items-center gap-3">
             @if($showNew && $createRoute)
                 <a href="{{ $createRoute }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
+                    {{ __('common.new') }}
                 </a>
             @endif
             <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
@@ -34,11 +38,11 @@
                     @if(!isset($actions))
                         <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import records</span>
+                            <span>{{ __('common.import_records') }}</span>
                         </button>
                         <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export all</span>
+                            <span>{{ __('common.export_all') }}</span>
                         </button>
                     @endif
                 </flux:menu>
@@ -52,7 +56,7 @@
                 <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                     <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600">
                         <flux:icon name="x-mark" class="size-4" />
-                        <span>{{ count($selected) }} Selected</span>
+                        <span>{{ count($selected) }} {{ __('common.selected') }}</span>
                     </button>
                     {{ $selectionActions ?? '' }}
                 </div>

@@ -4,7 +4,9 @@ namespace App\Models\HR;
 
 use App\Enums\PayrollState;
 use App\Models\User;
+use App\Traits\HasCreatedBy;
 use App\Traits\HasNotes;
+use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +14,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollPeriod extends Model
 {
-    use LogsActivity, HasNotes;
+    use LogsActivity, HasNotes, HasStateMachine, HasCreatedBy;
+
+    protected string $stateEnum = PayrollState::class;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 
@@ -32,19 +36,9 @@ class PayrollPeriod extends Model
         'total_net' => 'decimal:2',
     ];
 
-    public function getStateAttribute(): PayrollState
-    {
-        return PayrollState::tryFrom($this->status) ?? PayrollState::DRAFT;
-    }
-
     public function items(): HasMany
     {
         return $this->hasMany(PayrollItem::class);
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function approver(): BelongsTo
@@ -59,6 +53,50 @@ class PayrollPeriod extends Model
         $this->total_net = $this->items()->sum('net_salary');
         $this->employee_count = $this->items()->count();
         $this->save();
+    }
+
+    public function approve(int $userId): bool
+    {
+        if (!$this->canBeApproved()) {
+            return false;
+        }
+        $this->approved_by = $userId;
+        $this->approved_at = now();
+        return $this->transitionTo(PayrollState::APPROVED);
+    }
+
+    public function startProcessing(): bool
+    {
+        if (!$this->canStartProcessing()) {
+            return false;
+        }
+        return $this->transitionTo(PayrollState::PROCESSING);
+    }
+
+    public function markAsPaid(): bool
+    {
+        if (!$this->canBeMarkedAsPaid()) {
+            return false;
+        }
+        return $this->transitionTo(PayrollState::PAID);
+    }
+
+    public function cancelPayroll(): bool
+    {
+        if (!$this->canBeCancelled()) {
+            return false;
+        }
+        return $this->transitionTo(PayrollState::CANCELLED);
+    }
+
+    public function resetToDraft(): bool
+    {
+        if (!$this->canBeResetToDraft()) {
+            return false;
+        }
+        $this->approved_by = null;
+        $this->approved_at = null;
+        return $this->transitionTo(PayrollState::DRAFT);
     }
 
     public function isLocked(): bool

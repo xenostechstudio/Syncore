@@ -1,10 +1,14 @@
 @props([
     'icon' => 'inbox',
-    'title' => 'No data found',
+    'title' => null,
     'description' => null,
     'actionLabel' => null,
     'actionUrl' => null,
 ])
+
+@php
+    $title = $title ?? __('common.no_data');
+@endphp
 
 <div {{ $attributes->merge(['class' => 'flex flex-col items-center justify-center py-12 px-4']) }}>
     <div class="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">

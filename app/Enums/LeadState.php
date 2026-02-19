@@ -7,8 +7,7 @@ enum LeadState: string
     case NEW = 'new';
     case CONTACTED = 'contacted';
     case QUALIFIED = 'qualified';
-    case PROPOSAL = 'proposal';
-    case WON = 'won';
+    case CONVERTED = 'converted';
     case LOST = 'lost';
 
     public function label(): string
@@ -17,8 +16,7 @@ enum LeadState: string
             self::NEW => 'New',
             self::CONTACTED => 'Contacted',
             self::QUALIFIED => 'Qualified',
-            self::PROPOSAL => 'Proposal',
-            self::WON => 'Won',
+            self::CONVERTED => 'Converted',
             self::LOST => 'Lost',
         };
     }
@@ -26,11 +24,10 @@ enum LeadState: string
     public function color(): string
     {
         return match ($this) {
-            self::NEW => 'zinc',
-            self::CONTACTED => 'blue',
+            self::NEW => 'blue',
+            self::CONTACTED => 'amber',
             self::QUALIFIED => 'violet',
-            self::PROPOSAL => 'amber',
-            self::WON => 'emerald',
+            self::CONVERTED => 'emerald',
             self::LOST => 'red',
         };
     }
@@ -41,15 +38,29 @@ enum LeadState: string
             self::NEW => 'sparkles',
             self::CONTACTED => 'phone',
             self::QUALIFIED => 'star',
-            self::PROPOSAL => 'document-text',
-            self::WON => 'trophy',
+            self::CONVERTED => 'check-circle',
             self::LOST => 'x-circle',
         };
     }
 
+    public function canContact(): bool
+    {
+        return $this === self::NEW;
+    }
+
+    public function canQualify(): bool
+    {
+        return $this === self::CONTACTED;
+    }
+
     public function canConvert(): bool
     {
-        return in_array($this, [self::QUALIFIED, self::PROPOSAL]);
+        return $this === self::QUALIFIED;
+    }
+
+    public function canMarkLost(): bool
+    {
+        return !$this->isTerminal();
     }
 
     public function canEdit(): bool
@@ -59,7 +70,7 @@ enum LeadState: string
 
     public function isTerminal(): bool
     {
-        return in_array($this, [self::WON, self::LOST]);
+        return in_array($this, [self::CONVERTED, self::LOST]);
     }
 
     public static function steps(): array
@@ -68,8 +79,7 @@ enum LeadState: string
             ['key' => self::NEW->value, 'label' => self::NEW->label()],
             ['key' => self::CONTACTED->value, 'label' => self::CONTACTED->label()],
             ['key' => self::QUALIFIED->value, 'label' => self::QUALIFIED->label()],
-            ['key' => self::PROPOSAL->value, 'label' => self::PROPOSAL->label()],
-            ['key' => self::WON->value, 'label' => self::WON->label()],
+            ['key' => self::CONVERTED->value, 'label' => self::CONVERTED->label()],
         ];
     }
 }

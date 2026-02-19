@@ -20,6 +20,9 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->boolean('is_system')->default(false);
             $table->timestamps();
+            $table->index('type');
+            $table->index('code');
+            $table->index('is_active');
         });
 
         // Fiscal Periods
@@ -47,6 +50,8 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('fiscal_period_id')->nullable()->constrained('fiscal_periods')->nullOnDelete();
             $table->timestamps();
+            $table->index('status');
+            $table->index('entry_date');
         });
 
         // Journal Lines
@@ -58,6 +63,8 @@ return new class extends Migration
             $table->decimal('debit', 15, 2)->default(0);
             $table->decimal('credit', 15, 2)->default(0);
             $table->timestamps();
+            $table->index('account_id');
+            $table->index('journal_entry_id');
         });
     }
 

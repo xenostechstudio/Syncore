@@ -8,9 +8,11 @@ use App\Models\Invoicing\Invoice;
 use App\Models\Sales\Pricelist;
 use App\Models\Sales\Promotion;
 use App\Models\User;
+use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
 use App\Traits\HasSequenceNumber;
 use App\Traits\HasSoftDeletes;
+use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
 use Database\Factories\Sales\SalesOrderFactory;
@@ -24,7 +26,9 @@ use Illuminate\Support\Str;
 class SalesOrder extends Model
 {
     /** @use HasFactory<SalesOrderFactory> */
-    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasSequenceNumber;
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasSequenceNumber, HasAttachments, HasStateMachine;
+
+    protected string $stateEnum = SalesOrderState::class;
 
     public const NUMBER_PREFIX = 'SO';
     public const NUMBER_COLUMN = 'order_number';
@@ -67,17 +71,6 @@ class SalesOrder extends Model
         'share_token_expires_at' => 'datetime',
     ];
 
-    public function getStateAttribute(): SalesOrderState
-    {
-        return SalesOrderState::tryFrom($this->status) ?? SalesOrderState::QUOTATION;
-    }
-
-    public function transitionTo(SalesOrderState $state): bool
-    {
-        $this->status = $state->value;
-        return $this->save();
-    }
-
     public function confirm(): bool
     {
         if (!$this->state->canConfirm()) {
@@ -98,10 +91,30 @@ class SalesOrder extends Model
 
     public function cancelOrder(): bool
     {
-        if (!$this->state->canCancel()) {
+        if (!$this->canBeCancelled()) {
             return false;
         }
         return $this->transitionTo(SalesOrderState::CANCELLED);
+    }
+
+    public function canBeCancelled(?string &$reason = null): bool
+    {
+        if (!$this->state->canCancel()) {
+            $reason = 'Current status does not allow cancellation.';
+            return false;
+        }
+
+        if ($this->invoices()->where('status', '!=', 'cancelled')->exists()) {
+            $reason = 'Cannot cancel order with active invoices.';
+            return false;
+        }
+
+        if ($this->deliveryOrders()->where('status', '!=', 'cancelled')->exists()) {
+            $reason = 'Cannot cancel order with active delivery orders.';
+            return false;
+        }
+
+        return true;
     }
 
     public function customer(): BelongsTo
@@ -240,14 +253,6 @@ class SalesOrder extends Model
         }
 
         return !$this->isLocked();
-    }
-
-    /**
-     * @deprecated Use HasSequenceNumber trait instead - number is auto-generated on create
-     */
-    public static function generateOrderNumber(): string
-    {
-        return static::generateSequenceNumber();
     }
 
     /**

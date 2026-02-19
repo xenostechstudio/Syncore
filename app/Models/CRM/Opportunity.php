@@ -5,7 +5,9 @@ namespace App\Models\CRM;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\User;
+use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
+use App\Traits\HasSoftDeletes;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Opportunity extends Model
 {
-    use LogsActivity, HasNotes, Searchable;
+    use LogsActivity, HasNotes, Searchable, HasSoftDeletes, HasAttachments;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     
@@ -79,9 +81,14 @@ class Opportunity extends Model
         return $this->expected_revenue * ($this->probability / 100);
     }
 
-    public function markAsWon(?int $salesOrderId = null): void
+    public function markAsWon(?int $salesOrderId = null): bool
     {
+        if ($this->isWon() || $this->isLost()) {
+            return false;
+        }
+
         $wonStage = Pipeline::where('is_won', true)->first();
+        $oldPipelineId = $this->pipeline_id;
         
         $this->update([
             'pipeline_id' => $wonStage?->id ?? $this->pipeline_id,
@@ -89,11 +96,24 @@ class Opportunity extends Model
             'won_at' => now(),
             'sales_order_id' => $salesOrderId,
         ]);
+
+        $this->logStatusChange(
+            "pipeline:{$oldPipelineId}",
+            "won",
+            'Opportunity marked as won'
+        );
+
+        return true;
     }
 
-    public function markAsLost(string $reason = ''): void
+    public function markAsLost(string $reason = ''): bool
     {
+        if ($this->isWon() || $this->isLost()) {
+            return false;
+        }
+
         $lostStage = Pipeline::where('is_lost', true)->first();
+        $oldPipelineId = $this->pipeline_id;
         
         $this->update([
             'pipeline_id' => $lostStage?->id ?? $this->pipeline_id,
@@ -101,6 +121,36 @@ class Opportunity extends Model
             'lost_at' => now(),
             'lost_reason' => $reason,
         ]);
+
+        $this->logStatusChange(
+            "pipeline:{$oldPipelineId}",
+            "lost",
+            $reason ?: 'Opportunity marked as lost'
+        );
+
+        return true;
+    }
+
+    public function moveToPipeline(Pipeline $pipeline): bool
+    {
+        if ($this->isWon() || $this->isLost()) {
+            return false;
+        }
+
+        $oldPipelineId = $this->pipeline_id;
+        
+        $this->update([
+            'pipeline_id' => $pipeline->id,
+            'probability' => $pipeline->probability,
+        ]);
+
+        $this->logStatusChange(
+            "pipeline:{$oldPipelineId}",
+            "pipeline:{$pipeline->id}",
+            "Moved to stage: {$pipeline->name}"
+        );
+
+        return true;
     }
 
     public function isWon(): bool
