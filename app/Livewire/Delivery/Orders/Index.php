@@ -129,34 +129,6 @@ class Index extends Component
         $this->clearSelection();
     }
 
-    public function bulkMarkShipped(): void
-    {
-        if (empty($this->selected)) {
-            return;
-        }
-
-        $count = DeliveryOrder::whereIn('id', $this->selected)
-            ->whereIn('status', ['pending', 'ready'])
-            ->update(['status' => 'shipped', 'shipped_at' => now()]);
-
-        $this->clearSelection();
-        session()->flash('success', "{$count} delivery orders marked as shipped.");
-    }
-
-    public function bulkMarkDelivered(): void
-    {
-        if (empty($this->selected)) {
-            return;
-        }
-
-        $count = DeliveryOrder::whereIn('id', $this->selected)
-            ->where('status', 'shipped')
-            ->update(['status' => 'delivered', 'delivered_at' => now()]);
-
-        $this->clearSelection();
-        session()->flash('success', "{$count} delivery orders marked as delivered.");
-    }
-
     public function exportSelected()
     {
         if (empty($this->selected)) {
