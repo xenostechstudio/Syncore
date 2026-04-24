@@ -288,6 +288,6 @@
 
     {{-- Delete Confirmation Modal --}}
     @if($showDeleteConfirm)
-        <x-ui.delete-confirmation-modal :validation="$deleteValidation" />
+        <x-ui.delete-confirm-modal :validation="$deleteValidation" />
     @endif
 </div>

@@ -82,6 +82,7 @@ return new class extends Migration
 
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->softDeletes();
             $table->index('department_id');
             $table->index('position_id');
             $table->index('status');

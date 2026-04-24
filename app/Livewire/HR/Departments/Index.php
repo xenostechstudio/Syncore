@@ -5,69 +5,25 @@ namespace App\Livewire\HR\Departments;
 use App\Exports\DepartmentsExport;
 use App\Imports\DepartmentsImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\HR\Department;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Departments')]
 class Index extends Component
 {
-    use WithManualPagination, WithImport;
+    use WithIndexComponent, WithImport;
 
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $status = '';
-
-    #[Url]
-    public string $sort = 'name_asc';
-
-    #[Url]
-    public string $view = 'grid';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
-
-    public function updatedSelectAll($value): void
+    public function mount(): void
     {
-        if ($value) {
-            $this->selected = $this->getDepartmentsQuery()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
+        $this->sort = 'name_asc';
+        $this->view = 'grid';
     }
 
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedSearch(): void
-    {
-        $this->page = 1;
-    }
-
-    public function setView(string $view): void
-    {
-        $this->view = $view;
-    }
-
-    
-
-    
-
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
@@ -83,10 +39,7 @@ class Index extends Component
 
         foreach ($departments as $dept) {
             if ($dept->employees_count === 0) {
-                $canDelete[] = [
-                    'id' => $dept->id,
-                    'name' => $dept->name,
-                ];
+                $canDelete[] = ['id' => $dept->id, 'name' => $dept->name];
             } else {
                 $cannotDelete[] = [
                     'id' => $dept->id,
@@ -130,20 +83,13 @@ class Index extends Component
         session()->flash('success', "{$count} departments deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new DepartmentsExport(), 'departments-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'departments-' . now()->format('Y-m-d') . '.xlsx'
+            : 'departments-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new DepartmentsExport($this->selected), 'departments-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new DepartmentsExport($this->selected ?: null), $filename);
     }
 
     protected function getImportClass(): string
@@ -159,31 +105,32 @@ class Index extends Component
         ];
     }
 
-    protected function getDepartmentsQuery()
+    protected function getQuery()
     {
         return Department::query()
             ->with(['parent', 'manager', 'employees'])
-            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('code', 'ilike', "%{$this->search}%"))
-            ->when($this->status !== '', fn($q) => $q->where('is_active', $this->status === 'active'));
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%")))
+            ->when($this->status !== '', fn ($q) => $q->where('is_active', $this->status === 'active'));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Department::class;
     }
 
     public function render()
     {
-        $query = $this->getDepartmentsQuery();
-
-        // Apply sorting
-        $query = match($this->sort) {
-            'name_desc' => $query->orderBy('name', 'desc'),
-            'code' => $query->orderBy('code', 'asc'),
-            'latest' => $query->orderBy('created_at', 'desc'),
-            default => $query->orderBy('name', 'asc'),
+        $query = match ($this->sort) {
+            'name_desc' => $this->getQuery()->orderBy('name', 'desc'),
+            'code' => $this->getQuery()->orderBy('code', 'asc'),
+            'latest' => $this->getQuery()->orderBy('created_at', 'desc'),
+            default => $this->getQuery()->orderBy('name', 'asc'),
         };
 
-        $departments = $query->paginate(15, ['*'], 'page', $this->page);
-
         return view('livewire.hr.departments.index', [
-            'departments' => $departments,
+            'departments' => $query->paginate(15, ['*'], 'page', $this->page),
         ]);
     }
 }

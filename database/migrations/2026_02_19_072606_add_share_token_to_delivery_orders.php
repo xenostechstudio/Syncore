@@ -15,10 +15,17 @@ return new class extends Migration
             $table->timestamp('share_token_expires_at')->nullable()->after('share_token');
         });
 
-        // Generate share tokens for existing delivery orders
-        DB::table('delivery_orders')->whereNull('share_token')->update([
-            'share_token' => DB::raw("md5(random()::text || clock_timestamp()::text)"),
-        ]);
+        // Generate share tokens for existing delivery orders.
+        // Doing this row-by-row keeps the migration portable across sqlite/mysql/pgsql.
+        DB::table('delivery_orders')
+            ->whereNull('share_token')
+            ->orderBy('id')
+            ->get(['id'])
+            ->each(function ($row) {
+                DB::table('delivery_orders')
+                    ->where('id', $row->id)
+                    ->update(['share_token' => Str::random(64)]);
+            });
     }
 
     public function down(): void

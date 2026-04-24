@@ -3,32 +3,18 @@
 namespace App\Livewire\Inventory\Categories;
 
 use App\Exports\CategoriesExport;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Inventory\Category;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Categories')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $view = 'list';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
+    use WithIndexComponent;
 
     public array $visibleColumns = [
         'name' => true,
@@ -38,56 +24,20 @@ class Index extends Component
         'status' => true,
     ];
 
-    public function setView(string $view): void
-    {
-        $this->view = $view;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = Category::query()
-                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
-                ->pluck('id')
-                ->map(fn($id) => (string) $id)
-                ->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatingSearch(): void
-    {
-        $this->page = 1;
-    }
-
     public function delete(int $id): void
     {
         Category::findOrFail($id)->delete();
-        $this->selected = array_filter($this->selected, fn($s) => $s != $id);
+        $this->selected = array_filter($this->selected, fn ($s) => $s != $id);
     }
 
-    public function deleteSelected(): void
-    {
-        $this->confirmBulkDelete();
-    }
-
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
             return;
         }
 
-        // Validate which categories can be deleted (no products)
         $categories = Category::whereIn('id', $this->selected)
-            ->withCount('items')
+            ->withCount('products as items_count')
             ->get();
 
         $canDelete = [];
@@ -95,10 +45,7 @@ class Index extends Component
 
         foreach ($categories as $category) {
             if ($category->items_count === 0) {
-                $canDelete[] = [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                ];
+                $canDelete[] = ['id' => $category->id, 'name' => $category->name];
             } else {
                 $cannotDelete[] = [
                     'id' => $category->id,
@@ -123,9 +70,8 @@ class Index extends Component
             return;
         }
 
-        // Only delete categories without products
         $categoriesWithProducts = Category::whereIn('id', $this->selected)
-            ->whereHas('items')
+            ->whereHas('products')
             ->pluck('id')
             ->toArray();
 
@@ -143,21 +89,13 @@ class Index extends Component
         session()->flash('success', "{$count} categories deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function bulkActivate(): void
     {
         if (empty($this->selected)) {
             return;
         }
 
-        $count = Category::whereIn('id', $this->selected)
-            ->update(['is_active' => true]);
+        $count = Category::whereIn('id', $this->selected)->update(['is_active' => true]);
 
         $this->clearSelection();
         session()->flash('success', "{$count} categories activated.");
@@ -169,8 +107,7 @@ class Index extends Component
             return;
         }
 
-        $count = Category::whereIn('id', $this->selected)
-            ->update(['is_active' => false]);
+        $count = Category::whereIn('id', $this->selected)->update(['is_active' => false]);
 
         $this->clearSelection();
         session()->flash('success', "{$count} categories deactivated.");
@@ -178,26 +115,37 @@ class Index extends Component
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new CategoriesExport(), 'categories-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'categories-' . now()->format('Y-m-d') . '.xlsx'
+            : 'categories-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new CategoriesExport($this->selected), 'categories-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new CategoriesExport($this->selected ?: null), $filename);
     }
 
     public function toggleStatus(int $id): void
     {
         $category = Category::findOrFail($id);
-        $category->update(['is_active' => !$category->is_active]);
+        $category->update(['is_active' => ! $category->is_active]);
+    }
+
+    protected function getQuery()
+    {
+        return Category::query()
+            ->withCount('products as items_count')
+            ->with('parent')
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%")));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Category::class;
     }
 
     public function render()
     {
-        $categories = Category::query()
-            ->withCount('items')
-            ->with('parent')
-            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('code', 'ilike', "%{$this->search}%"))
+        $categories = $this->getQuery()
             ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate(15, ['*'], 'page', $this->page);
