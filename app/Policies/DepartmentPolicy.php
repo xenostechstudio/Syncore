@@ -4,44 +4,23 @@ namespace App\Policies;
 
 use App\Models\HR\Department;
 use App\Models\User;
-use App\Policies\Concerns\HandlesDocumentAuthorization;
+use App\Policies\Concerns\StandardCrudPolicy;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class DepartmentPolicy
 {
-    use HandlesAuthorization, HandlesDocumentAuthorization;
+    use HandlesAuthorization, StandardCrudPolicy;
 
-    public function viewAny(User $user): bool
-    {
-        return $this->checkViewAny($user, 'view departments');
-    }
-
-    public function view(User $user, Department $department): bool
-    {
-        return $this->checkView($user, 'view departments');
-    }
-
-    public function create(User $user): bool
-    {
-        return $this->checkCreate($user, 'create departments');
-    }
-
-    public function update(User $user, Department $department): bool
-    {
-        return $this->hasPermission($user, 'edit departments');
-    }
+    protected string $resource = 'departments';
 
     public function delete(User $user, Department $department): bool
     {
-        if (!$this->hasPermission($user, 'delete departments')) {
+        if (! $user->can("delete {$this->resource}")) {
             return false;
         }
 
-        // Cannot delete department with employees or children
-        if ($department->employees()->count() > 0) {
-            return false;
-        }
-
-        return $department->children()->count() === 0;
+        // Cannot delete department with employees or child departments.
+        return $department->employees()->count() === 0
+            && $department->children()->count() === 0;
     }
 }

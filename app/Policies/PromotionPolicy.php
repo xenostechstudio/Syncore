@@ -4,40 +4,22 @@ namespace App\Policies;
 
 use App\Models\Sales\Promotion;
 use App\Models\User;
-use App\Policies\Concerns\HandlesDocumentAuthorization;
+use App\Policies\Concerns\StandardCrudPolicy;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PromotionPolicy
 {
-    use HandlesAuthorization, HandlesDocumentAuthorization;
+    use HandlesAuthorization, StandardCrudPolicy;
 
-    public function viewAny(User $user): bool
-    {
-        return $this->checkViewAny($user, 'view promotions');
-    }
-
-    public function view(User $user, Promotion $promotion): bool
-    {
-        return $this->checkView($user, 'view promotions');
-    }
-
-    public function create(User $user): bool
-    {
-        return $this->checkCreate($user, 'create promotions');
-    }
-
-    public function update(User $user, Promotion $promotion): bool
-    {
-        return $this->hasPermission($user, 'edit promotions');
-    }
+    protected string $resource = 'promotions';
 
     public function delete(User $user, Promotion $promotion): bool
     {
-        if (!$this->hasPermission($user, 'delete promotions')) {
+        if (! $user->can("delete {$this->resource}")) {
             return false;
         }
 
-        // Cannot delete promotion that has been used
+        // Cannot delete promotion that has been used.
         return $promotion->usage_count === 0;
     }
 }

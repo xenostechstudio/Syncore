@@ -4,44 +4,23 @@ namespace App\Policies;
 
 use App\Models\Inventory\Category;
 use App\Models\User;
-use App\Policies\Concerns\HandlesDocumentAuthorization;
+use App\Policies\Concerns\StandardCrudPolicy;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CategoryPolicy
 {
-    use HandlesAuthorization, HandlesDocumentAuthorization;
+    use HandlesAuthorization, StandardCrudPolicy;
 
-    public function viewAny(User $user): bool
-    {
-        return $this->checkViewAny($user, 'view categories');
-    }
-
-    public function view(User $user, Category $category): bool
-    {
-        return $this->checkView($user, 'view categories');
-    }
-
-    public function create(User $user): bool
-    {
-        return $this->checkCreate($user, 'create categories');
-    }
-
-    public function update(User $user, Category $category): bool
-    {
-        return $this->hasPermission($user, 'edit categories');
-    }
+    protected string $resource = 'categories';
 
     public function delete(User $user, Category $category): bool
     {
-        if (!$this->hasPermission($user, 'delete categories')) {
+        if (! $user->can("delete {$this->resource}")) {
             return false;
         }
 
-        // Cannot delete category with products or children
-        if ($category->products()->count() > 0) {
-            return false;
-        }
-
-        return $category->children()->count() === 0;
+        // Cannot delete category with products or children.
+        return $category->products()->count() === 0
+            && $category->children()->count() === 0;
     }
 }
