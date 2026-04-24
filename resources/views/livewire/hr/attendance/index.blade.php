@@ -1,36 +1,29 @@
 <div>
     <x-ui.flash />
 
-    {{-- Header Bar --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group --}}
-            <div class="flex items-center gap-3">
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ __('attendance.attendances') }}</span>
-
-                {{-- Date Range --}}
-                <div class="flex items-center gap-1.5">
-                    <input type="date" wire:model.live="dateFrom" class="rounded-md border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                    <span class="text-xs text-zinc-400">—</span>
-                    <input type="date" wire:model.live="dateTo" class="rounded-md border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                </div>
-
-                {{-- Actions Menu (Gear) --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-                    <flux:menu class="w-48">
-                        <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>{{ __('common.export') }}</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
+    <x-ui.index-header
+        :title="__('attendance.attendances')"
+        :showNew="false"
+        :paginator="$attendances"
+        :view="$view"
+        :views="['list']"
+    >
+        <x-slot:leftExtra>
+            <div class="flex items-center gap-1.5">
+                <input type="date" wire:model.live="dateFrom" class="rounded-md border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                <span class="text-xs text-zinc-400">—</span>
+                <input type="date" wire:model.live="dateTo" class="rounded-md border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
             </div>
+        </x-slot:leftExtra>
 
-            {{-- Center Group: Search or Selection Toolbar --}}
-            <div class="flex flex-1 items-center justify-center">
+        <x-slot:actions>
+            <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                <flux:icon name="arrow-up-tray" class="size-4" />
+                <span>{{ __('common.export') }}</span>
+            </button>
+        </x-slot:actions>
+
+        <x-slot:search>
                 @if(count($selected) > 0)
                     <x-ui.selection-toolbar :count="count($selected)">
     <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
@@ -113,33 +106,31 @@
                             </div>
                         </div>
                     </x-ui.searchbox-dropdown>
-                @endif
-            </div>
+            @endif
+        </x-slot:search>
 
-            {{-- Right Group --}}
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $attendances->firstItem() ?? 0 }}-{{ $attendances->lastItem() ?? 0 }}/{{ $attendances->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button type="button" wire:click="goToPreviousPage" @disabled($attendances->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button type="button" wire:click="goToNextPage" @disabled(!$attendances->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-                <div class="flex h-9 items-center rounded-lg border border-zinc-200 p-0.5 dark:border-zinc-700">
-                    <button type="button" wire:click="toggleStats" class="{{ $showStats ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }} rounded-md p-1.5 transition-colors">
-                        <flux:icon name="chart-bar" class="size-[18px]" />
+        <x-slot:right>
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                    {{ $attendances->firstItem() ?? 0 }}-{{ $attendances->lastItem() ?? 0 }}/{{ $attendances->total() }}
+                </span>
+                <div class="flex items-center gap-0.5">
+                    <button type="button" wire:click="goToPreviousPage" @disabled($attendances->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <flux:icon name="chevron-left" class="size-4" />
+                    </button>
+                    <button type="button" wire:click="goToNextPage" @disabled(!$attendances->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <flux:icon name="chevron-right" class="size-4" />
                     </button>
                 </div>
-                <x-ui.view-toggle :view="$view" :views="['list']" />
             </div>
-        </div>
-    </div>
+            <div class="flex h-9 items-center rounded-lg border border-zinc-200 p-0.5 dark:border-zinc-700">
+                <button type="button" wire:click="toggleStats" class="{{ $showStats ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }} rounded-md p-1.5 transition-colors">
+                    <flux:icon name="chart-bar" class="size-[18px]" />
+                </button>
+            </div>
+            <x-ui.view-toggle :view="$view" :views="['list']" />
+        </x-slot:right>
+    </x-ui.index-header>
 
     {{-- Statistics Cards --}}
     @if($showStats && $statistics && !$attendances->isEmpty())
