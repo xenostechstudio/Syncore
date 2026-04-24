@@ -750,7 +750,7 @@ class Form extends Component
         $this->user_id = $delivery->user_id;
         $this->delivery_date = $delivery->delivery_date?->format('Y-m-d') ?? now()->format('Y-m-d');
         $this->actual_delivery_date = $delivery->actual_delivery_date?->format('Y-m-d');
-        $this->status = $delivery->status->value;
+        $this->status = is_object($delivery->status) ? $delivery->status->value : $delivery->status;
         $this->shipping_address = $delivery->shipping_address ?? '';
         $this->recipient_name = $delivery->recipient_name ?? '';
         $this->recipient_phone = $delivery->recipient_phone ?? '';
