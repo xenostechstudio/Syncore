@@ -151,16 +151,6 @@
             <div class="-mx-4 -mt-6 -mb-6 bg-white p-4 sm:-mx-6 sm:p-6 lg:-mx-8 lg:p-8 dark:bg-zinc-900">
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     @foreach($leads as $lead)
-                        @php
-                            $statusColors = [
-                                'new' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400'],
-                                'contacted' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400'],
-                                'qualified' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                                'converted' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400'],
-                                'lost' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
-                            ];
-                            $colors = $statusColors[$lead->status] ?? ['bg' => 'bg-zinc-100', 'text' => 'text-zinc-700'];
-                        @endphp
                         <a href="{{ route('crm.leads.edit', $lead->id) }}" wire:navigate class="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1 min-w-0">
@@ -176,9 +166,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <span class="ml-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $colors['bg'] }} {{ $colors['text'] }}">
-                                    {{ ucfirst($lead->status) }}
-                                </span>
+                                <x-ui.status-badge :status="$lead->state" class="ml-2 px-2 py-0.5" />
                             </div>
                             <div class="mt-3 space-y-1">
                                 @if($lead->email)
@@ -239,18 +227,7 @@
                                     <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $sources[$lead->source] ?? '-' }}</span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    @php
-                                        $statusColors = [
-                                            'new' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-                                            'contacted' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-                                            'qualified' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-                                            'converted' => 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
-                                            'lost' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-                                        ];
-                                    @endphp
-                                    <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusColors[$lead->status] ?? 'bg-zinc-100 text-zinc-700' }}">
-                                        {{ ucfirst($lead->status) }}
-                                    </span>
+                                    <x-ui.status-badge :status="$lead->state" class="px-2 py-0.5" />
                                 </td>
                                 <td class="px-4 py-3 pr-4 sm:pr-6 lg:pr-8">
                                     <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $lead->assignedTo?->name ?? '-' }}</span>

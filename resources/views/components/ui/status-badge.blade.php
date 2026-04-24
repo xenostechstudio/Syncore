@@ -48,6 +48,15 @@
                     'cancelled' => ['color' => 'red', 'label' => 'Cancelled'],
                     default => null,
                 },
+                'purchase_order' => match ($status) {
+                    'draft', 'rfq' => ['color' => 'blue', 'label' => 'RFQ'],
+                    'sent' => ['color' => 'violet', 'label' => 'Sent'],
+                    'purchase_order' => ['color' => 'emerald', 'label' => 'Purchase Order'],
+                    'done' => ['color' => 'blue', 'label' => 'Done'],
+                    'received' => ['color' => 'blue', 'label' => 'Received'],
+                    'cancelled' => ['color' => 'zinc', 'label' => 'Cancelled'],
+                    default => null,
+                },
                 default => null,
             };
 

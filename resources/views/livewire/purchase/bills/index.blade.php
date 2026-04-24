@@ -163,19 +163,7 @@
                             </span>
                         </td>
                         <td class="px-4 py-4">
-                            @php
-                                $statusColors = [
-                                    'draft' => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300',
-                                    'pending' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
-                                    'paid' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
-                                    'partial' => 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
-                                    'overdue' => 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
-                                    'cancelled' => 'bg-zinc-100 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400',
-                                ];
-                            @endphp
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusColors[$bill->status] ?? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300' }}">
-                                {{ $bill->state->label() }}
-                            </span>
+                            <x-ui.status-badge :status="$bill->state" />
                         </td>
                         <td class="py-4 pr-4 sm:pr-6 lg:pr-8" onclick="event.stopPropagation()">
                             <a href="{{ route('purchase.bills.edit', $bill->id) }}" wire:navigate class="inline-flex rounded-md p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">

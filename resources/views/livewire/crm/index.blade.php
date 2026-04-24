@@ -144,13 +144,7 @@
                                     <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $lead->name }}</p>
                                     <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $lead->company_name ?? $lead->email ?? '-' }}</p>
                                 </div>
-                                @php
-                                    $statusColors = ['new' => 'blue', 'contacted' => 'amber', 'qualified' => 'emerald', 'converted' => 'violet', 'lost' => 'red'];
-                                    $color = $statusColors[$lead->status] ?? 'zinc';
-                                @endphp
-                                <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium bg-{{ $color }}-100 text-{{ $color }}-700 dark:bg-{{ $color }}-900/30 dark:text-{{ $color }}-400">
-                                    {{ ucfirst($lead->status) }}
-                                </span>
+                                <x-ui.status-badge :status="$lead->state" class="px-2 py-0.5" />
                             </div>
                         @empty
                             <div class="px-5 py-8 text-center text-sm text-zinc-400">No leads yet</div>

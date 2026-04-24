@@ -241,16 +241,7 @@
                                 @endif
                                 @if($visibleColumns['status'])
                                     <td class="px-4 py-4">
-                                        @php
-                                            $statusColors = [
-                                                'rfq' => 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
-                                                'sent' => 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400',
-                                                'cancelled' => 'bg-zinc-50 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400',
-                                            ];
-                                        @endphp
-                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusColors[$rfq->status] ?? 'bg-zinc-50 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400' }}">
-                                            {{ ucfirst(str_replace('_', ' ', $rfq->status)) }}
-                                        </span>
+                                        <x-ui.status-badge :status="$rfq->status" type="purchase_order" class="px-2.5 py-0.5" />
                                     </td>
                                 @endif
                                 <td class="py-4 pr-4 sm:pr-6 lg:pr-8"></td>

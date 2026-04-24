@@ -256,17 +256,7 @@
                                     <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">{{ $request->leaveType?->name ?? '-' }} · {{ $request->start_date?->format('M d') }} - {{ $request->end_date?->format('M d') }}</p>
                                 </div>
                                 <div class="text-right">
-                                    @php
-                                        $statusColors = [
-                                            'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-                                            'approved' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-                                            'rejected' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-                                            'cancelled' => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400',
-                                        ];
-                                    @endphp
-                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $statusColors[$request->status] ?? $statusColors['pending'] }}">
-                                        {{ ucfirst($request->status) }}
-                                    </span>
+                                    <x-ui.status-badge :status="$request->state" class="px-2 py-0.5" />
                                 </div>
                             </a>
                         @empty
