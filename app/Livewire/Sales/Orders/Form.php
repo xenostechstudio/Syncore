@@ -231,7 +231,8 @@ class Form extends Component
                 DeliveryOrderItem::create([
                     'delivery_order_id' => $delivery->id,
                     'sales_order_item_id' => $item->id,
-                    'quantity_to_deliver' => $qtyToDeliver,
+                    'product_id' => $item->product_id,
+                    'quantity' => $qtyToDeliver,
                     'quantity_delivered' => 0,
                 ]);
             }

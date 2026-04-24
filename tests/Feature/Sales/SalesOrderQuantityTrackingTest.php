@@ -127,7 +127,7 @@ function advanceDeliveryToStatus(DeliveryOrder $delivery, User $user, DeliveryOr
         DeliveryOrderState::DELIVERED,
     ];
 
-    $currentIndex = array_search($delivery->status, $statusOrder);
+    $currentIndex = array_search($delivery->state, $statusOrder);
     $targetIndex = array_search($targetStatus, $statusOrder);
 
     if ($currentIndex === false || $targetIndex === false || $targetIndex <= $currentIndex) {
@@ -294,7 +294,7 @@ it('creates delivery order without updating quantity_delivered', function () {
     // Verify delivery order was created with pending status
     $delivery = DeliveryOrder::where('sales_order_id', $salesOrder->id)->first();
     expect($delivery)->not->toBeNull();
-    expect($delivery->status)->toBe(DeliveryOrderState::PENDING);
+    expect($delivery->state)->toBe(DeliveryOrderState::PENDING);
 });
 
 it('updates quantity_delivered only when DO status becomes delivered', function () {

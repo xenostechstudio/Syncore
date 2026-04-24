@@ -4,9 +4,12 @@ use App\Enums\InvoiceState;
 use App\Models\Invoicing\Invoice;
 use App\Models\Sales\Customer;
 use App\Models\User;
+use App\Events\InvoicePaid;
 use App\Services\InvoiceService;
+use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
+    Event::fake([InvoicePaid::class]);
     $this->user = User::factory()->create();
     $this->customer = Customer::factory()->create();
     $this->actingAs($this->user);
@@ -94,9 +97,9 @@ describe('InvoiceService', function () {
         $service = new InvoiceService();
         $payment = $service->registerPayment($invoice, 500);
 
-        expect($payment->amount)->toBe(500.0);
+        expect((float) $payment->amount)->toBe(500.0);
         expect($invoice->fresh()->status)->toBe('partial');
-        expect($invoice->fresh()->paid_amount)->toBe(500.0);
+        expect((float) $invoice->fresh()->paid_amount)->toBe(500.0);
     });
 
     it('registers payment and updates status to paid when fully paid', function () {

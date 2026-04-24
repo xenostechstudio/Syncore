@@ -128,7 +128,7 @@ class Form extends Component
 
         $delivery = DeliveryOrder::with('items')->findOrFail($this->deliveryId);
 
-        if ($delivery->status->isTerminal() || $delivery->status === DeliveryOrderState::CANCELLED) {
+        if ($delivery->state->isTerminal() || $delivery->state === DeliveryOrderState::CANCELLED) {
             session()->flash('error', 'This delivery order cannot be cancelled.');
             return;
         }
@@ -231,7 +231,7 @@ class Form extends Component
             'courier' => (string) ($delivery->courier ?? ''),
             'tracking_number' => (string) ($delivery->tracking_number ?? ''),
             'next_status' => $nextState->label(),
-            'total_qty' => (int) ($delivery->items->sum('quantity_to_deliver') ?? 0),
+            'total_qty' => (int) ($delivery->items->sum('quantity') ?? 0),
         ];
         $this->status_modal_shortages = [];
         $this->status_modal_can_confirm = true;
@@ -271,7 +271,7 @@ class Form extends Component
                     continue;
                 }
 
-                $required = (int) ($line->quantity_to_deliver ?? 0);
+                $required = (int) ($line->quantity ?? 0);
                 $available = (int) (($stocks->get($product->id)?->quantity) ?? 0);
                 if ($required > $available) {
                     $this->status_modal_shortages[] = [
@@ -349,7 +349,7 @@ class Form extends Component
 
         $thisDoQty = (int) $delivery->items
             ->filter(fn($line) => (int) ($line->salesOrderItem?->product?->id ?? 0) === $productId)
-            ->sum(fn($line) => (int) ($line->quantity_to_deliver ?? 0));
+            ->sum(fn($line) => (int) ($line->quantity ?? 0));
 
         $forecastOut = (int) (DB::table('delivery_order_items as doi')
             ->join('delivery_orders as do', 'do.id', '=', 'doi.delivery_order_id')
@@ -363,7 +363,7 @@ class Form extends Component
                     ->whereNotNull('ia2.posted_at');
             })
             ->where('soi.product_id', $productId)
-            ->selectRaw('COALESCE(SUM(doi.quantity_to_deliver), 0) as qty')
+            ->selectRaw('COALESCE(SUM(doi.quantity), 0) as qty')
             ->value('qty') ?? 0);
 
         $reservations = DB::table('delivery_order_items as doi')
@@ -376,7 +376,7 @@ class Form extends Component
             ->where('do.warehouse_id', $warehouseId)
             ->whereNotIn('do.status', ['delivered', 'returned'])
             ->where('soi.product_id', $productId)
-            ->selectRaw('do.id as delivery_order_id, do.delivery_number, do.status, COALESCE(SUM(doi.quantity_to_deliver), 0) as qty, MAX(CASE WHEN ia.posted_at IS NULL THEN 0 ELSE 1 END) as has_posted_whout')
+            ->selectRaw('do.id as delivery_order_id, do.delivery_number, do.status, COALESCE(SUM(doi.quantity), 0) as qty, MAX(CASE WHEN ia.posted_at IS NULL THEN 0 ELSE 1 END) as has_posted_whout')
             ->groupBy('do.id', 'do.delivery_number', 'do.status')
             ->orderByDesc('do.id')
             ->limit(10)
@@ -512,7 +512,7 @@ class Form extends Component
                     if (! $product) {
                         continue;
                     }
-                    $required = (int) ($line->quantity_to_deliver ?? 0);
+                    $required = (int) ($line->quantity ?? 0);
                     $available = (int) (($stocks->get($product->id)?->quantity) ?? 0);
                     if ($required > $available) {
                         session()->flash('error', 'Insufficient stock for ' . $product->name);
@@ -538,7 +538,7 @@ class Form extends Component
                 DeliveryOrderItem::query()
                     ->where('delivery_order_id', $delivery->id)
                     ->update([
-                        'quantity_delivered' => DB::raw('quantity_to_deliver'),
+                        'quantity_delivered' => DB::raw('quantity'),
                     ]);
 
                 // Update quantity_delivered on Sales Order items
@@ -547,7 +547,7 @@ class Form extends Component
                     if ($doItem->sales_order_item_id) {
                         SalesOrderItem::query()
                             ->where('id', $doItem->sales_order_item_id)
-                            ->increment('quantity_delivered', $doItem->quantity_to_deliver);
+                            ->increment('quantity_delivered', $doItem->quantity);
                     }
                 }
             }
@@ -897,7 +897,7 @@ class Form extends Component
                 continue;
             }
 
-            $qty = (int) ($line->quantity_to_deliver ?? 0);
+            $qty = (int) ($line->quantity ?? 0);
 
             $systemQty = (int) (($stocks->get($product->id)?->quantity) ?? 0);
 
@@ -939,7 +939,8 @@ class Form extends Component
                 DeliveryOrderItem::create([
                     'delivery_order_id' => $newDelivery->id,
                     'sales_order_item_id' => $item->sales_order_item_id,
-                    'quantity_to_deliver' => $item->quantity_to_deliver,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
                     'quantity_delivered' => 0,
                 ]);
             }
