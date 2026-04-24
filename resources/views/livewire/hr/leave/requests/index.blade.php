@@ -225,19 +225,7 @@
                                     </td>
                                     <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{{ $request->days }}</td>
                                     <td class="px-4 py-3">
-                                        @php
-                                            $statusConfig = match($request->status) {
-                                                'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                                'pending' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400'],
-                                                'approved' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                                                'rejected' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
-                                                'cancelled' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                                default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                            };
-                                        @endphp
-                                        <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                            {{ ucfirst($request->status) }}
-                                        </span>
+                                        <x-ui.status-badge :status="$request->status" />
                                     </td>
                                     <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
                                 </tr>

@@ -218,19 +218,7 @@
                                 Rp {{ number_format($period->total_net, 0, ',', '.') }}
                             </td>
                             <td class="px-4 py-3">
-                                @php
-                                    $statusConfig = match($period->status) {
-                                        'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                        'processing' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400'],
-                                        'approved' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                                        'paid' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400'],
-                                        'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
-                                        default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                    };
-                                @endphp
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                    {{ ucfirst($period->status) }}
-                                </span>
+                                <x-ui.status-badge :status="$period->status" />
                             </td>
                             <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
                         </tr>

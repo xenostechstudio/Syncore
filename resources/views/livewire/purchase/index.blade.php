@@ -105,19 +105,7 @@
                             Rp {{ number_format($order->total, 0, ',', '.') }}
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-right">
-                             @php
-                                $statusConfig = match($order->status) {
-                                    'rfq' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400'],
-                                    'sent' => ['bg' => 'bg-purple-100 dark:bg-purple-900/30', 'text' => 'text-purple-700 dark:text-purple-400'],
-                                    'purchase_order' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                                    'done' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400'],
-                                    'cancelled' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                    default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                };
-                            @endphp
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                            </span>
+                             <x-ui.status-badge :status="$order->status" />
                         </td>
                     </tr>
                 @empty

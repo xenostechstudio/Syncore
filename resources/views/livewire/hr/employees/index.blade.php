@@ -270,18 +270,7 @@
                                 <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{{ $employee->department?->name ?? '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{{ $employee->hire_date?->format('M d, Y') ?? '-' }}</td>
                                 <td class="px-4 py-3">
-                                    @php
-                                        $statusConfig = match($employee->status?->value ?? $employee->status) {
-                                            'active' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                                            'inactive' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                            'terminated' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
-                                            'resigned' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400'],
-                                            default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                        };
-                                    @endphp
-                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                        {{ ucfirst($employee->status?->value ?? $employee->status) }}
-                                    </span>
+                                    <x-ui.status-badge :status="$employee->status" />
                                 </td>
                                 <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
                             </tr>
@@ -364,18 +353,7 @@
                                 <p class="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $employee->name }}</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $employee->email ?? '-' }}</p>
                             </div>
-                            @php
-                                $statusConfig = match($employee->status?->value ?? $employee->status) {
-                                    'active' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                                    'inactive' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                    'terminated' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
-                                    'resigned' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400'],
-                                    default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                };
-                            @endphp
-                            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                {{ ucfirst($employee->status?->value ?? $employee->status) }}
-                            </span>
+                            <x-ui.status-badge :status="$employee->status" class="px-2 py-0.5" />
                         </div>
                         <div class="mt-3 space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
                             <p>{{ $employee->position?->name ?? '-' }}</p>
