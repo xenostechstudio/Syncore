@@ -4,11 +4,14 @@ namespace App\Models\Sales;
 
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Database\Factories\Sales\PaymentTermFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentTerm extends Model
 {
-    use LogsActivity, HasNotes;
+    /** @use HasFactory<PaymentTermFactory> */
+    use HasFactory, LogsActivity, HasNotes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

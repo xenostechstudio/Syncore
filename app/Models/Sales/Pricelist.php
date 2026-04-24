@@ -5,13 +5,16 @@ namespace App\Models\Sales;
 use App\Models\Inventory\Product;
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Database\Factories\Sales\PricelistFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Pricelist extends Model
 {
-    use LogsActivity, HasNotes;
+    /** @use HasFactory<PricelistFactory> */
+    use HasFactory, LogsActivity, HasNotes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

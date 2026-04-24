@@ -4,6 +4,8 @@ namespace App\Models\Inventory;
 
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Database\Factories\Inventory\WarehouseFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Inventory\InventoryTransfer;
@@ -12,7 +14,8 @@ use App\Models\Inventory\InventoryStock;
 
 class Warehouse extends Model
 {
-    use LogsActivity, HasNotes;
+    /** @use HasFactory<WarehouseFactory> */
+    use HasFactory, LogsActivity, HasNotes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

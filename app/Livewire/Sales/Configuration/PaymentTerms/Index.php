@@ -5,11 +5,10 @@ namespace App\Livewire\Sales\Configuration\PaymentTerms;
 use App\Exports\PaymentTermsExport;
 use App\Imports\PaymentTermsImport;
 use App\Livewire\Concerns\WithImport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Sales\PaymentTerm;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -17,67 +16,45 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Payment Terms')]
 class Index extends Component
 {
-    use WithManualPagination, WithImport;
-
-    #[Url]
-    public string $search = '';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = PaymentTerm::query()
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
-                ->pluck('id')
-                ->map(fn($id) => (string) $id)
-                ->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
+    use WithIndexComponent, WithImport;
 
     public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        $ids = !empty($this->selected) ? $this->selected : null;
+        $ids = ! empty($this->selected) ? $this->selected : null;
+
         return Excel::download(new PaymentTermsExport($ids), 'payment-terms-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function deleteSelected(): void
     {
+        if (empty($this->selected)) {
+            return;
+        }
+
         PaymentTerm::whereIn('id', $this->selected)->delete();
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->clearSelection();
         session()->flash('success', 'Selected payment terms deleted successfully.');
     }
 
     public function activateSelected(): void
     {
+        if (empty($this->selected)) {
+            return;
+        }
+
         PaymentTerm::whereIn('id', $this->selected)->update(['is_active' => true]);
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->clearSelection();
         session()->flash('success', 'Selected payment terms activated.');
     }
 
     public function deactivateSelected(): void
     {
+        if (empty($this->selected)) {
+            return;
+        }
+
         PaymentTerm::whereIn('id', $this->selected)->update(['is_active' => false]);
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->clearSelection();
         session()->flash('success', 'Selected payment terms deactivated.');
     }
 
@@ -94,11 +71,22 @@ class Index extends Component
         ];
     }
 
+    protected function getQuery()
+    {
+        return PaymentTerm::query()
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%")));
+    }
+
+    protected function getModelClass(): string
+    {
+        return PaymentTerm::class;
+    }
+
     public function render()
     {
-        $paymentTerms = PaymentTerm::query()
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('code', 'like', "%{$this->search}%"))
+        $paymentTerms = $this->getQuery()
             ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate(15, ['*'], 'page', $this->page);

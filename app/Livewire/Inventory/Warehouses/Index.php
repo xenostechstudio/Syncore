@@ -5,68 +5,45 @@ namespace App\Livewire\Inventory\Warehouses;
 use App\Exports\WarehousesExport;
 use App\Imports\WarehousesImport;
 use App\Livewire\Concerns\WithImport;
-use App\Models\Inventory\Warehouse;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Inventory\InventoryTransfer;
+use App\Models\Inventory\Warehouse;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Warehouses')]
 class Index extends Component
 {
-    use WithManualPagination, WithImport;
+    use WithIndexComponent, WithImport;
 
-    #[Url]
-    public string $search = '';
-    
     #[Url]
     public int $perPage = 15;
 
-    public string $view = 'grid';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
-
-    public function setView(string $view): void
+    public function mount(): void
     {
-        $this->view = $view;
+        $this->view = 'grid';
     }
 
-    public function updatedSelectAll($value): void
+    public function updatedPerPage(): void
     {
-        if ($value) {
-            $this->selected = Warehouse::query()
-                ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%"))
-                ->pluck('id')
-                ->map(fn($id) => (string) $id)
-                ->toArray();
-        } else {
-            $this->selected = [];
-        }
+        $this->resetPage();
     }
 
-    public function clearSelection(): void
+    public function delete(int $id): void
     {
-        $this->selected = [];
-        $this->selectAll = false;
+        Warehouse::findOrFail($id)->delete();
     }
 
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
             return;
         }
 
-        // Validate which warehouses can be deleted (no stock)
         $warehouses = Warehouse::whereIn('id', $this->selected)
             ->withCount('products')
             ->get();
@@ -76,10 +53,7 @@ class Index extends Component
 
         foreach ($warehouses as $warehouse) {
             if ($warehouse->products_count === 0) {
-                $canDelete[] = [
-                    'id' => $warehouse->id,
-                    'name' => $warehouse->name,
-                ];
+                $canDelete[] = ['id' => $warehouse->id, 'name' => $warehouse->name];
             } else {
                 $cannotDelete[] = [
                     'id' => $warehouse->id,
@@ -104,7 +78,6 @@ class Index extends Component
             return;
         }
 
-        // Only delete warehouses without stock
         $warehousesWithStock = Warehouse::whereIn('id', $this->selected)
             ->whereHas('products')
             ->pluck('id')
@@ -124,20 +97,13 @@ class Index extends Component
         session()->flash('success', "{$count} warehouses deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new WarehousesExport(), 'warehouses-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'warehouses-' . now()->format('Y-m-d') . '.xlsx'
+            : 'warehouses-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new WarehousesExport($this->selected), 'warehouses-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new WarehousesExport($this->selected ?: null), $filename);
     }
 
     protected function getImportClass(): string
@@ -153,41 +119,33 @@ class Index extends Component
         ];
     }
 
-    public function updatedPerPage(): void
+    protected function getQuery()
     {
-        $this->page = 1;
-    }
-
-    public function updatingSearch(): void
-    {
-        $this->page = 1;
-    }
-
-    public function delete(int $id): void
-    {
-        Warehouse::findOrFail($id)->delete();
-    }
-
-    public function render()
-    {
-        $warehouses = Warehouse::query()
-            ->when($this->search, fn($q) => $q->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('location', 'ilike', "%{$this->search}%"))
+        return Warehouse::query()
             ->withCount('products')
             ->withCount(['transfers as transfers_out_count' => function ($query) {
                 $query->where('source_warehouse_id', '!=', null);
             }])
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('location', 'like', "%{$this->search}%")));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Warehouse::class;
+    }
+
+    public function render()
+    {
+        $warehouses = $this->getQuery()
             ->latest()
             ->paginate($this->perPage);
 
-        // Get total IN/OUT counts
-        $totalTransfersIn = InventoryTransfer::whereNotNull('destination_warehouse_id')->count();
-        $totalTransfersOut = InventoryTransfer::whereNotNull('source_warehouse_id')->count();
-
         return view('livewire.inventory.warehouses.index', [
             'warehouses' => $warehouses,
-            'totalTransfersIn' => $totalTransfersIn,
-            'totalTransfersOut' => $totalTransfersOut,
+            'totalTransfersIn' => InventoryTransfer::whereNotNull('destination_warehouse_id')->count(),
+            'totalTransfersOut' => InventoryTransfer::whereNotNull('source_warehouse_id')->count(),
         ]);
     }
 }
