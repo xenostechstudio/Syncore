@@ -237,17 +237,7 @@
                 {{-- Grid View (Simplified) --}}
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     @foreach($requests as $request)
-                        @php
-                            $statusConfig = match($request->status) {
-                                'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                'pending' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400'],
-                                'approved' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                                'rejected' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
-                                'cancelled' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                                default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                            };
-                        @endphp
-                        <a 
+                        <a
                             href="{{ route('hr.leave.requests.edit', $request->id) }}"
                             wire:navigate
                             class="group rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
@@ -259,9 +249,7 @@
                                     </div>
                                     <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $request->employee->name }}</span>
                                 </div>
-                                <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                    {{ ucfirst($request->status) }}
-                                </span>
+                                <x-ui.status-badge :status="$request->state" class="px-2 py-0.5" />
                             </div>
                             <div class="mt-3 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                                 <span>{{ $request->leaveType->name }}</span>

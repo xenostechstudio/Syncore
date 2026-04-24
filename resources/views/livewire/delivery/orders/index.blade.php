@@ -315,21 +315,7 @@
                                 @endif
                                 @if($visibleColumns['status'])
                                     <td class="px-4 py-4">
-                                        @php
-                                            $statusConfig = match($delivery->status->value) {
-                                                'pending' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Pending'],
-                                                'picked' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Picked'],
-                                                'in_transit' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400', 'label' => 'In Transit'],
-                                                'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Delivered'],
-                                                'failed' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Failed'],
-                                                'returned' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Returned'],
-                                                'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
-                                                default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($delivery->status->value)],
-                                            };
-                                        @endphp
-                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                            {{ $statusConfig['label'] }}
-                                        </span>
+                                        <x-ui.status-badge :status="$delivery->state" class="px-2.5 py-0.5" />
                                     </td>
                                 @endif
                                 <td class="py-4 pr-4 sm:pr-6 lg:pr-8"></td>
@@ -358,28 +344,14 @@
             {{-- Grid View --}}
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 @forelse($deliveries as $delivery)
-                    @php
-                        $statusConfig = match($delivery->status->value) {
-                            'pending' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Pending'],
-                            'picked' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Picked'],
-                            'in_transit' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400', 'label' => 'In Transit'],
-                            'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Delivered'],
-                            'failed' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Failed'],
-                            'returned' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Returned'],
-                            'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
-                            default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($delivery->status->value)],
-                        };
-                    @endphp
-                    <a 
+                    <a
                         href="{{ route('delivery.orders.edit', $delivery->id) }}"
                         wire:navigate
                         class="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
                     >
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{{ $delivery->delivery_number }}</p>
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                {{ $statusConfig['label'] }}
-                            </span>
+                            <x-ui.status-badge :status="$delivery->state" class="px-2.5 py-0.5" />
                         </div>
 
                         <div class="mt-3 space-y-1">

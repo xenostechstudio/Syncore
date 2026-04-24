@@ -34,11 +34,11 @@ enum DeliveryOrderState: string implements HasDisplayMetadata
         return match ($this) {
             self::PENDING => 'zinc',
             self::PICKED => 'blue',
-            self::IN_TRANSIT => 'amber',
+            self::IN_TRANSIT => 'violet',
             self::DELIVERED => 'emerald',
             self::FAILED => 'red',
-            self::RETURNED => 'violet',
-            self::CANCELLED => 'zinc',
+            self::RETURNED => 'amber',
+            self::CANCELLED => 'red',
         };
     }
 

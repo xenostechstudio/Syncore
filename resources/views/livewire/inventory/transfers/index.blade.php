@@ -286,19 +286,7 @@
                                 @endif
                                 @if($visibleColumns['status'])
                                     <td class="px-4 py-4">
-                                        @php
-                                            $statusConfig = match($transfer->status) {
-                                                'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Draft'],
-                                                'pending' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Pending'],
-                                                'in_transit' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'In Transit'],
-                                                'completed' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Completed'],
-                                                'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
-                                                default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($transfer->status)],
-                                            };
-                                        @endphp
-                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                            {{ $statusConfig['label'] }}
-                                        </span>
+                                        <x-ui.status-badge :status="$transfer->state" class="px-2.5 py-0.5" />
                                     </td>
                                 @endif
                                 <td class="py-4 pr-4 sm:pr-6 lg:pr-8"></td>
