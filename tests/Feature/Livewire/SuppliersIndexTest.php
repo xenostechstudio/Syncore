@@ -42,15 +42,23 @@ describe('Suppliers Index', function () {
     });
 
     it('filters by search on name/email/contact_person', function () {
-        Supplier::factory()->create(['name' => 'Acme', 'email' => 'acme@x.test']);
-        Supplier::factory()->create(['name' => 'Widgets', 'contact_person' => 'John']);
+        Supplier::factory()->create([
+            'name' => 'Zzz-Acme',
+            'email' => 'zzz-acme@x.test',
+            'contact_person' => 'Zzz-Contact1',
+        ]);
+        Supplier::factory()->create([
+            'name' => 'Zzz-Widgets',
+            'email' => 'zzz-widgets@x.test',
+            'contact_person' => 'Zzz-MatchMe',
+        ]);
 
         Livewire::test(Index::class)
-            ->set('search', 'Acme')
+            ->set('search', 'Zzz-Acme')
             ->assertViewHas('total', 1);
 
         Livewire::test(Index::class)
-            ->set('search', 'John')
+            ->set('search', 'Zzz-MatchMe')
             ->assertViewHas('total', 1);
     });
 
