@@ -5,12 +5,11 @@ namespace App\Livewire\Invoicing\Payments;
 use App\Exports\PaymentsExport;
 use App\Imports\PaymentsImport;
 use App\Livewire\Concerns\WithImport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Invoicing\Payment;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -18,55 +17,17 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Payments')]
 class Index extends Component
 {
-    use WithManualPagination, WithImport;
+    use WithIndexComponent, WithImport;
 
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $view = 'list';
-
-    #[Url]
-    public bool $showStats = true;
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    public function toggleStats(): void
+    public function mount(): void
     {
-        $this->showStats = !$this->showStats;
-    }
-
-    public function setView(string $view): void
-    {
-        if (! in_array($view, ['list'], true)) {
-            return;
-        }
-
-        $this->view = $view;
-    }
-
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = Payment::query()
-                ->when($this->search, fn($q) => $q->where('reference', 'ilike', "%{$this->search}%"))
-                ->pluck('id')
-                ->map(fn($id) => (string) $id)
-                ->toArray();
-        } else {
-            $this->selected = [];
-        }
+        $this->showStats = true;
     }
 
     public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        $ids = !empty($this->selected) ? $this->selected : null;
+        $ids = ! empty($this->selected) ? $this->selected : null;
+
         return Excel::download(new PaymentsExport($ids), 'payments-' . now()->format('Y-m-d') . '.xlsx');
     }
 
@@ -83,7 +44,7 @@ class Index extends Component
         ];
     }
 
-    private function getStatistics(): array
+    protected function getStatistics(): array
     {
         $stats = Payment::query()
             ->select(
@@ -110,14 +71,23 @@ class Index extends Component
         ];
     }
 
+    protected function getQuery()
+    {
+        return Payment::query()
+            ->with(['invoice.customer'])
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('reference', 'like', "%{$this->search}%")
+                ->orWhereHas('invoice', fn ($iq) => $iq->where('invoice_number', 'like', "%{$this->search}%"))));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Payment::class;
+    }
+
     public function render()
     {
-        $payments = Payment::query()
-            ->with(['invoice.customer'])
-            ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
-                ->where('reference', 'ilike', "%{$this->search}%")
-                ->orWhereHas('invoice', fn($q) => $q->where('invoice_number', 'ilike', "%{$this->search}%"))
-            ))
+        $payments = $this->getQuery()
             ->latest()
             ->paginate(15, ['*'], 'page', $this->page);
 

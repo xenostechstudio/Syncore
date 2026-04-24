@@ -4,13 +4,16 @@ namespace App\Models\Accounting;
 
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Database\Factories\Accounting\AccountFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Account extends Model
 {
-    use LogsActivity, HasNotes;
+    /** @use HasFactory<AccountFactory> */
+    use HasFactory, LogsActivity, HasNotes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

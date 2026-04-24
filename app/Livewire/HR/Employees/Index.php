@@ -3,7 +3,7 @@
 namespace App\Livewire\HR\Employees;
 
 use App\Exports\EmployeesExport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\HR\Department;
 use App\Models\HR\Employee;
 use App\Models\HR\Position;
@@ -17,80 +17,23 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Employees')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    #[Url]
-    public string $search = '';
+    use WithIndexComponent;
 
     #[Url]
     public string $departmentId = '';
 
-    #[Url]
-    public string $status = '';
-
-    #[Url]
-    public string $sort = 'latest';
-
-    #[Url]
-    public string $groupBy = '';
-
-    #[Url]
-    public string $view = 'list';
-
-    public bool $showStats = false;
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
-
-    public function updatedSelectAll($value): void
+    public function updatedDepartmentId(): void
     {
-        if ($value) {
-            $this->selected = $this->getEmployeesQuery()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSearch(): void
-    {
-        $this->page = 1;
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function setView(string $view): void
-    {
-        $this->view = $view;
-    }
-
-    public function toggleStats(): void
-    {
-        $this->showStats = !$this->showStats;
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->resetPage();
     }
 
     public function clearFilters(): void
     {
         $this->reset(['search', 'departmentId', 'status', 'sort', 'groupBy']);
-        $this->page = 1;
+        $this->resetPage();
         $this->clearSelection();
     }
 
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
@@ -103,17 +46,18 @@ class Index extends Component
         $cannotDelete = [];
 
         foreach ($employees as $employee) {
-            if ($employee->status === 'terminated' || $employee->status === 'resigned') {
+            $statusValue = $employee->status?->value ?? $employee->status;
+            if (in_array($statusValue, ['terminated', 'resigned'], true)) {
                 $canDelete[] = [
                     'id' => $employee->id,
                     'name' => $employee->name,
-                    'status' => $employee->status,
+                    'status' => $statusValue,
                 ];
             } else {
                 $cannotDelete[] = [
                     'id' => $employee->id,
                     'name' => $employee->name,
-                    'reason' => "Status is '{$employee->status}' - only terminated/resigned employees can be deleted",
+                    'reason' => "Status is '{$statusValue}' - only terminated/resigned employees can be deleted",
                 ];
             }
         }
@@ -141,13 +85,6 @@ class Index extends Component
         session()->flash('success', "{$count} employees deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function bulkUpdateStatus(string $status): void
     {
         if (empty($this->selected)) {
@@ -162,11 +99,11 @@ class Index extends Component
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new EmployeesExport(), 'employees-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'employees-' . now()->format('Y-m-d') . '.xlsx'
+            : 'employees-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new EmployeesExport($this->selected), 'employees-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new EmployeesExport($this->selected ?: null), $filename);
     }
 
     public function getStatisticsProperty(): array
@@ -174,41 +111,40 @@ class Index extends Component
         return [
             'total' => Employee::count(),
             'active' => Employee::where('status', 'active')->count(),
-            'inactive' => Employee::where('status', 'inactive')->count(),
+            'inactive' => Employee::where('status', 'suspended')->count(),
             'terminated' => Employee::where('status', 'terminated')->count(),
             'resigned' => Employee::where('status', 'resigned')->count(),
         ];
     }
 
-    protected function getEmployeesQuery()
+    protected function getQuery()
     {
         return Employee::query()
             ->with(['department', 'position', 'manager'])
-            ->when($this->search, fn($q) => $q->where(function($q) {
-                $q->where('name', 'ilike', "%{$this->search}%")
-                    ->orWhere('email', 'ilike', "%{$this->search}%");
-            }))
-            ->when($this->departmentId, fn($q) => $q->where('department_id', $this->departmentId))
-            ->when($this->status, fn($q) => $q->where('status', $this->status));
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('email', 'like', "%{$this->search}%")))
+            ->when($this->departmentId, fn ($q) => $q->where('department_id', $this->departmentId))
+            ->when($this->status, fn ($q) => $q->where('status', $this->status));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Employee::class;
     }
 
     public function render()
     {
-        $query = $this->getEmployeesQuery();
-
-        // Apply sorting
-        $query = match($this->sort) {
-            'oldest' => $query->orderBy('created_at', 'asc'),
-            'name_asc' => $query->orderBy('name', 'asc'),
-            'name_desc' => $query->orderBy('name', 'desc'),
-            'hire_date' => $query->orderBy('hire_date', 'desc'),
-            default => $query->orderBy('created_at', 'desc'),
+        $query = match ($this->sort) {
+            'oldest' => $this->getQuery()->orderBy('created_at', 'asc'),
+            'name_asc' => $this->getQuery()->orderBy('name', 'asc'),
+            'name_desc' => $this->getQuery()->orderBy('name', 'desc'),
+            'hire_date' => $this->getQuery()->orderBy('hire_date', 'desc'),
+            default => $this->getQuery()->orderBy('created_at', 'desc'),
         };
 
-        $employees = $query->paginate(15, ['*'], 'page', $this->page);
-
         return view('livewire.hr.employees.index', [
-            'employees' => $employees,
+            'employees' => $query->paginate(15, ['*'], 'page', $this->page),
             'departments' => Department::where('is_active', true)->orderBy('name')->get(),
             'positions' => Position::where('is_active', true)->orderBy('name')->get(),
             'statistics' => $this->statistics,

@@ -3,82 +3,35 @@
 namespace App\Livewire\CRM\Leads;
 
 use App\Exports\LeadsExport;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\CRM\Lead;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Leads')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $status = '';
+    use WithIndexComponent;
 
     #[Url]
     public string $source = '';
 
-    #[Url]
-    public string $view = 'list';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
-
-    public function setView(string $view): void
+    public function updatedSource(): void
     {
-        $this->view = $view;
-    }
-
-    public function updatedSearch(): void
-    {
-        $this->page = 1;
-        $this->clearSelection();
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getLeadsQuery()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->resetPage();
     }
 
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'source']);
-        $this->page = 1;
+        $this->resetPage();
         $this->clearSelection();
     }
 
-    
-
-    
-
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
@@ -101,7 +54,7 @@ class Index extends Component
                 $cannotDelete[] = [
                     'id' => $lead->id,
                     'name' => $lead->name,
-                    'reason' => "Lead has been converted to customer",
+                    'reason' => 'Lead has been converted to customer',
                 ];
             }
         }
@@ -127,13 +80,6 @@ class Index extends Component
 
         $this->cancelDelete();
         session()->flash('success', "{$count} leads deleted successfully.");
-    }
-
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
     }
 
     public function bulkUpdateStatus(string $status): void
@@ -164,28 +110,35 @@ class Index extends Component
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new LeadsExport(), 'leads-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'leads-' . now()->format('Y-m-d') . '.xlsx'
+            : 'leads-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new LeadsExport($this->selected), 'leads-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new LeadsExport($this->selected ?: null), $filename);
     }
 
-    protected function getLeadsQuery()
+    protected function getQuery()
     {
         return Lead::query()
             ->with('assignedTo')
-            ->when($this->search, fn ($q) => $q->where('name', 'ilike', "%{$this->search}%")
-                ->orWhere('email', 'ilike', "%{$this->search}%")
-                ->orWhere('company_name', 'ilike', "%{$this->search}%"))
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('email', 'like', "%{$this->search}%")
+                ->orWhere('company_name', 'like', "%{$this->search}%")))
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
-            ->when($this->source, fn ($q) => $q->where('source', $this->source))
-            ->orderByDesc('created_at');
+            ->when($this->source, fn ($q) => $q->where('source', $this->source));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Lead::class;
     }
 
     public function render()
     {
-        $leads = $this->getLeadsQuery()->paginate(20, ['*'], 'page', $this->page);
+        $leads = $this->getQuery()
+            ->orderByDesc('created_at')
+            ->paginate(20, ['*'], 'page', $this->page);
 
         return view('livewire.crm.leads.index', [
             'leads' => $leads,

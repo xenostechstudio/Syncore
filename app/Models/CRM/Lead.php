@@ -11,6 +11,8 @@ use App\Traits\HasSoftDeletes;
 use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
+use Database\Factories\CRM\LeadFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,7 +20,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Lead extends Model
 {
-    use LogsActivity, HasNotes, Searchable, HasStateMachine, HasSoftDeletes, HasAttachments;
+    /** @use HasFactory<LeadFactory> */
+    use HasFactory, LogsActivity, HasNotes, Searchable, HasStateMachine, HasSoftDeletes, HasAttachments;
 
     protected string $stateEnum = LeadState::class;
 

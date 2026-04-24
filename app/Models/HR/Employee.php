@@ -10,13 +10,16 @@ use App\Traits\HasSoftDeletes;
 use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
+use Database\Factories\HR\EmployeeFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
-    use LogsActivity, HasNotes, Searchable, HasAttachments, HasStateMachine, HasSoftDeletes;
+    /** @use HasFactory<EmployeeFactory> */
+    use HasFactory, LogsActivity, HasNotes, Searchable, HasAttachments, HasStateMachine, HasSoftDeletes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     
