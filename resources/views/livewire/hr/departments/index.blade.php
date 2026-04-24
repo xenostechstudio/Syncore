@@ -1,35 +1,26 @@
 <div>
     <x-ui.flash />
 
-    {{-- Header Bar --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('hr.departments.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Departments</span>
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-                    <flux:menu class="w-48">
-                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import</span>
-                        </button>
-                        <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export All</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
+    <x-ui.index-header
+        title="Departments"
+        :createRoute="route('hr.departments.create')"
+        :paginator="$departments"
+        :view="$view"
+        :views="['list', 'grid']"
+    >
+        <x-slot:actions>
+            <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                <flux:icon name="arrow-down-tray" class="size-4" />
+                <span>Import</span>
+            </button>
+            <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                <flux:icon name="arrow-up-tray" class="size-4" />
+                <span>Export All</span>
+            </button>
+        </x-slot:actions>
 
-            {{-- Center Group: Search --}}
-            <div class="flex flex-1 items-center justify-center">
-                <x-ui.searchbox-dropdown placeholder="Search departments..." widthClass="w-[400px]" width="400px">
+        <x-slot:search>
+            <x-ui.searchbox-dropdown placeholder="Search departments..." widthClass="w-[400px]" width="400px">
                     <x-slot:badge>
                         @if($status !== '')
                             <div class="flex items-center">
@@ -96,28 +87,9 @@
                             </div>
                         </div>
                     </div>
-                </x-ui.searchbox-dropdown>
-            </div>
-
-            {{-- Right Group --}}
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $departments->firstItem() ?? 0 }}-{{ $departments->lastItem() ?? 0 }}/{{ $departments->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button type="button" wire:click="goToPreviousPage" @disabled($departments->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button type="button" wire:click="goToNextPage" @disabled(!$departments->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-                <x-ui.view-toggle :view="$view" :views="['list', 'grid']" />
-            </div>
-        </div>
-    </div>
+            </x-ui.searchbox-dropdown>
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Content --}}
     <div>

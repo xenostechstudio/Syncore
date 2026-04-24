@@ -16,42 +16,43 @@
 
 <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
     <div class="flex w-full items-center justify-between gap-4">
-        {{-- Left Group: New Button, Title, Gear --}}
+        {{-- Left group: New button, title, gear menu, optional extras --}}
         <div class="flex items-center gap-3">
-            @if($showNew && $createRoute)
-                <a href="{{ $createRoute }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
+            @if ($showNew && $createRoute)
+                <a
+                    href="{{ $createRoute }}"
+                    wire:navigate
+                    class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
                     {{ __('common.new') }}
                 </a>
             @endif
+
             <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
                 {{ $title }}
             </span>
 
-            {{-- Actions Menu (Gear) --}}
-            <flux:dropdown position="bottom" align="start">
-                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                    <flux:icon name="cog-6-tooth" class="size-5" />
-                </button>
+            {{-- Gear menu (only render if an `actions` slot is provided) --}}
+            @isset($actions)
+                <flux:dropdown position="bottom" align="start">
+                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <flux:icon name="cog-6-tooth" class="size-5" />
+                    </button>
 
-                <flux:menu class="w-48">
-                    {{ $actions ?? '' }}
-                    @if(!isset($actions))
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>{{ __('common.import_records') }}</span>
-                        </button>
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>{{ __('common.export_all') }}</span>
-                        </button>
-                    @endif
-                </flux:menu>
-            </flux:dropdown>
+                    <flux:menu class="w-48">
+                        {{ $actions }}
+                    </flux:menu>
+                </flux:dropdown>
+            @endisset
+
+            {{ $leftExtra ?? '' }}
         </div>
 
-        {{-- Center: Search with dropdown or Selection Toolbar --}}
+        {{-- Center: either custom `search` slot, or the component's default selection / search block --}}
         <div class="flex flex-1 items-center justify-center">
-            @if(count($selected) > 0)
+            @isset($search)
+                {{ $search }}
+            @elseif (count($selected) > 0)
                 {{-- Selection Toolbar --}}
                 <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                     <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600">
@@ -61,18 +62,17 @@
                     {{ $selectionActions ?? '' }}
                 </div>
             @else
-                {{-- Search Input with Dropdown --}}
+                {{-- Default search input with optional filter dropdown --}}
                 <div class="relative flex h-9 w-[360px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
                     <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         wire:model.live.debounce.300ms="search"
-                        placeholder="{{ $searchPlaceholder }}" 
-                        class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
+                        placeholder="{{ $searchPlaceholder }}"
+                        class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0"
                     />
 
-                    {{-- Filters / Sort / Group dropdown --}}
-                    @if(isset($filters))
+                    @isset($filters)
                         <flux:dropdown position="bottom" align="center">
                             <button class="absolute inset-y-0 right-0 flex w-10 items-center justify-center border-l border-zinc-200 bg-white/80 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 dark:hover:text-zinc-200">
                                 <flux:icon name="chevron-down" class="size-4" />
@@ -84,44 +84,46 @@
                                 </div>
                             </flux:menu>
                         </flux:dropdown>
-                    @endif
+                    @endisset
                 </div>
             @endif
         </div>
 
-        {{-- Right Group: Pagination Info + View Toggle --}}
+        {{-- Right: pagination + view toggle (or custom `right` slot) --}}
         <div class="flex items-center gap-3">
-            @if($showPagination && $paginator)
-                {{-- Pagination Info & Navigation --}}
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $paginator->firstItem() ?? 0 }}-{{ $paginator->lastItem() ?? 0 }}/{{ $paginator->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button 
-                            type="button"
-                            wire:click="goToPreviousPage"
-                            @disabled($paginator->onFirstPage())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button 
-                            type="button"
-                            wire:click="goToNextPage"
-                            @disabled(!$paginator->hasMorePages())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
+            @isset($right)
+                {{ $right }}
+            @else
+                @if ($showPagination && $paginator)
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                            {{ $paginator->firstItem() ?? 0 }}-{{ $paginator->lastItem() ?? 0 }}/{{ $paginator->total() }}
+                        </span>
+                        <div class="flex items-center gap-0.5">
+                            <button
+                                type="button"
+                                wire:click="goToPreviousPage"
+                                @disabled($paginator->onFirstPage())
+                                class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                            >
+                                <flux:icon name="chevron-left" class="size-4" />
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="goToNextPage"
+                                @disabled(! $paginator->hasMorePages())
+                                class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                            >
+                                <flux:icon name="chevron-right" class="size-4" />
+                            </button>
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            {{-- View Toggle --}}
-            @if(count($views) > 0)
-                <x-ui.view-toggle :view="$view" :views="$views" />
-            @endif
+                @if (count($views) > 0)
+                    <x-ui.view-toggle :view="$view" :views="$views" />
+                @endif
+            @endisset
         </div>
     </div>
 </div>
