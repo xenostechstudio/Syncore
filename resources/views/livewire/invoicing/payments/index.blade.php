@@ -1,86 +1,32 @@
 <div>
     <x-ui.flash />
 
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <a href="{{ route('invoicing.payments.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Payments</span>
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-                    <flux:menu class="w-48">
-                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import</span>
-                        </button>
-                        <button type="button" wire:click="export" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
+    <x-ui.index-header
+        title="Payments"
+        :createRoute="route('invoicing.payments.create')"
+        :paginator="$payments"
+        :views="[]"
+    >
+        <x-slot:actions>
+            <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-down-tray" class="size-4" />
+                                        <span>Import</span>
+                                    </button>
+                                    <button type="button" wire:click="export" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        <span>Export</span>
+                                    </button>
+        </x-slot:actions>
 
-            <div class="flex flex-1 items-center justify-center">
-                <x-ui.searchbox-dropdown placeholder="Search payments...">
-                    <div class="p-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        Search by reference or invoice number
-                    </div>
-                </x-ui.searchbox-dropdown>
-            </div>
+        <x-slot:search>
 
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $payments->firstItem() ?? 0 }}-{{ $payments->lastItem() ?? 0 }}/{{ $payments->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button
-                            type="button"
-                            wire:click="goToPreviousPage"
-                            @disabled($payments->onFirstPage())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button
-                            type="button"
-                            wire:click="goToNextPage"
-                            @disabled(!$payments->hasMorePages())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Stats Toggle --}}
-                <button 
-                    type="button"
-                    wire:click="toggleStats"
-                    class="flex h-8 w-8 items-center justify-center rounded-md transition-colors {{ $showStats ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100' : 'text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300' }}"
-                    title="{{ $showStats ? 'Hide statistics' : 'Show statistics' }}"
-                >
-                    <flux:icon name="chart-bar" class="size-4" />
-                </button>
-
-                {{-- Export --}}
-                <button type="button" wire:click="export" class="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300" title="Export to Excel">
-                    <flux:icon name="arrow-down-tray" class="size-4" />
-                </button>
-
-                {{-- Create --}}
-                <a href="{{ route('invoicing.payments.create') }}" wire:navigate class="flex h-8 items-center gap-1.5 rounded-md bg-zinc-900 px-3 text-sm text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    <flux:icon name="plus" class="size-4" />
-                    <span>New</span>
-                </a>
-            </div>
-        </div>
-    </div>
+                            <x-ui.searchbox-dropdown placeholder="Search payments...">
+                                <div class="p-3 text-sm text-zinc-600 dark:text-zinc-400">
+                                    Search by reference or invoice number
+                                </div>
+                            </x-ui.searchbox-dropdown>
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Content --}}
     <div>

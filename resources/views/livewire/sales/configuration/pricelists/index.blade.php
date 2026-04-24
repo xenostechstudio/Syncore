@@ -1,112 +1,85 @@
 <div>
-    <x-ui.flash />
+    <x-ui.flash />    <x-ui.index-header
+        title="Pricelists"
+        :createRoute="route('sales.configuration.pricelists.create')"
+        :paginator="$pricelists"
+        :views="[]"
+    >
+        <x-slot:actions>
+            <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-down-tray" class="size-4" />
+                                        <span>Import</span>
+                                    </button>
+                                    <button type="button" wire:click="export" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        <span>Export</span>
+                                    </button>
+        </x-slot:actions>
 
-    {{-- Header Bar (inside Livewire root div so wire:click works) --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group: New Button, Title --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('sales.configuration.pricelists.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Pricelists</span>
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-                    <flux:menu class="w-48">
-                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import</span>
-                        </button>
-                        <button type="button" wire:click="export" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
+        <x-slot:search>
 
-            {{-- Center Group: Search --}}
-            <div class="flex flex-1 items-center justify-center">
-                @if(count($selected) > 0)
-                    <div class="flex items-center gap-2">
-                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
-                            <flux:icon name="x-mark" class="size-4" />
-                            <span>{{ count($selected) }} Selected</span>
-                        </button>
-                        <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600"></div>
-                        <button wire:click="activateSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
-                            <flux:icon name="check-circle" class="size-4" />
-                            Activate
-                        </button>
-                        <button wire:click="deactivateSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
-                            <flux:icon name="pause-circle" class="size-4" />
-                            Deactivate
-                        </button>
-                        <button wire:click="deleteSelected" wire:confirm="Are you sure you want to delete {{ count($selected) }} pricelist(s)?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
-                            <flux:icon name="trash" class="size-4" />
-                            Delete
-                        </button>
-                    </div>
-                @else
-                    <x-ui.searchbox-dropdown placeholder="Search pricelists..." widthClass="w-[520px]" width="520px">
-                        <div class="flex flex-col gap-4 p-3 md:flex-row">
-                            {{-- Filters Section --}}
-                            <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
-                                <div class="mb-2 flex items-center gap-1.5">
-                                    <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Filters</span>
+                            @if(count($selected) > 0)
+                                <div class="flex items-center gap-2">
+                                    <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
+                                        <flux:icon name="x-mark" class="size-4" />
+                                        <span>{{ count($selected) }} Selected</span>
+                                    </button>
+                                    <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600"></div>
+                                    <button wire:click="activateSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                                        <flux:icon name="check-circle" class="size-4" />
+                                        Activate
+                                    </button>
+                                    <button wire:click="deactivateSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                                        <flux:icon name="pause-circle" class="size-4" />
+                                        Deactivate
+                                    </button>
+                                    <button wire:click="deleteSelected" wire:confirm="Are you sure you want to delete {{ count($selected) }} pricelist(s)?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <flux:icon name="trash" class="size-4" />
+                                        Delete
+                                    </button>
                                 </div>
-                                <div class="space-y-1">
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>Active Only</span>
-                                    </label>
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>With Discount</span>
-                                    </label>
-                                </div>
-                            </div>
-                            {{-- Sort Section --}}
-                            <div class="flex-1 md:px-3">
-                                <div class="mb-2 flex items-center gap-1.5">
-                                    <flux:icon name="arrows-up-down" class="size-4 text-zinc-400" />
-                                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sort By</span>
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" name="sort" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" checked />
-                                        <span>Name</span>
-                                    </label>
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" name="sort" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>Products Count</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </x-ui.searchbox-dropdown>
-                @endif
-            </div>
-
-            {{-- Right Group: Pagination --}}
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ $pricelists->firstItem() ?? 0 }}-{{ $pricelists->lastItem() ?? 0 }}/{{ $pricelists->total() }}
-                </span>
-                <div class="flex items-center gap-0.5">
-                    <button type="button" wire:click="goToPreviousPage" @disabled($pricelists->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="chevron-left" class="size-4" />
-                    </button>
-                    <button type="button" wire:click="goToNextPage" @disabled(!$pricelists->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="chevron-right" class="size-4" />
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+                            @else
+                                <x-ui.searchbox-dropdown placeholder="Search pricelists..." widthClass="w-[520px]" width="520px">
+                                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                                        {{-- Filters Section --}}
+                                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                                            <div class="mb-2 flex items-center gap-1.5">
+                                                <flux:icon name="funnel" class="size-4 text-zinc-400" />
+                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Filters</span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>Active Only</span>
+                                                </label>
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>With Discount</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {{-- Sort Section --}}
+                                        <div class="flex-1 md:px-3">
+                                            <div class="mb-2 flex items-center gap-1.5">
+                                                <flux:icon name="arrows-up-down" class="size-4 text-zinc-400" />
+                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sort By</span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" name="sort" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" checked />
+                                                    <span>Name</span>
+                                                </label>
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" name="sort" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>Products Count</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </x-ui.searchbox-dropdown>
+                            @endif
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Content --}}
     <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">

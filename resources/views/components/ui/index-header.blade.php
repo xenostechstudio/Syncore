@@ -94,7 +94,7 @@
             @isset($right)
                 {{ $right }}
             @else
-                @if ($showPagination && $paginator)
+                @if ($showPagination && $paginator && method_exists($paginator, 'firstItem'))
                     <div class="flex items-center gap-2">
                         <span class="text-sm text-zinc-500 dark:text-zinc-400">
                             {{ $paginator->firstItem() ?? 0 }}-{{ $paginator->lastItem() ?? 0 }}/{{ $paginator->total() }}

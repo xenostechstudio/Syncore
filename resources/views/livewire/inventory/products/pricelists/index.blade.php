@@ -1,48 +1,33 @@
 <div>
     <x-ui.flash />
 
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <a href="{{ route('inventory.products.pricelists.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">New</a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Pricelists</span>
-            </div>
+    <x-ui.index-header
+        title="Pricelists"
+        :createRoute="route('inventory.products.pricelists.create')"
+        :paginator="$pricelists"
+        :views="[]"
+    >
+        <x-slot:search>
 
-            <div class="flex flex-1 items-center justify-center">
-                @if(count($selected) > 0)
-                    <div class="flex items-center gap-2">
-                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
-                            <flux:icon name="x-mark" class="size-4" />
-                            <span>{{ count($selected) }} Selected</span>
-                        </button>
-                        <button wire:click="deleteSelected" wire:confirm="Are you sure?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400">
-                            <flux:icon name="trash" class="size-4" />
-                            Delete
-                        </button>
-                    </div>
-                @else
-                    <div class="relative flex h-9 w-[420px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                        <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search pricelists..." class="h-full w-full border-0 bg-transparent pl-9 pr-3 text-sm outline-none focus:ring-0" />
-                    </div>
-                @endif
-            </div>
-
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ $pricelists->firstItem() ?? 0 }}-{{ $pricelists->lastItem() ?? 0 }}/{{ $pricelists->total() }}
-                </span>
-                <div class="flex items-center gap-0.5">
-                    <button type="button" wire:click="goToPreviousPage" @disabled($pricelists->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="chevron-left" class="size-4" />
-                    </button>
-                    <button type="button" wire:click="goToNextPage" @disabled(!$pricelists->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="chevron-right" class="size-4" />
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+                            @if(count($selected) > 0)
+                                <div class="flex items-center gap-2">
+                                    <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
+                                        <flux:icon name="x-mark" class="size-4" />
+                                        <span>{{ count($selected) }} Selected</span>
+                                    </button>
+                                    <button wire:click="deleteSelected" wire:confirm="Are you sure?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400">
+                                        <flux:icon name="trash" class="size-4" />
+                                        Delete
+                                    </button>
+                                </div>
+                            @else
+                                <div class="relative flex h-9 w-[420px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
+                                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search pricelists..." class="h-full w-full border-0 bg-transparent pl-9 pr-3 text-sm outline-none focus:ring-0" />
+                                </div>
+                            @endif
+        </x-slot:search>
+    </x-ui.index-header>
 
     <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
         <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">

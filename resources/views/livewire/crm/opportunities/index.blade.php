@@ -29,102 +29,54 @@
         }
     }"
 >
-    <x-ui.flash />
-
-    {{-- Header Bar --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('crm.opportunities.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Opportunities</span>
-                
-                {{-- Gear Menu --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-                    <flux:menu class="w-48">
-                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import opportunities</span>
-                        </button>
-                        <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export All</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Center: Search --}}
-            <div class="flex flex-1 items-center justify-center">
-                <x-ui.searchbox-dropdown placeholder="Search opportunities..." widthClass="w-[520px]" width="520px">
-                    <div class="flex flex-col gap-4 p-3 md:flex-row">
-                        {{-- Stage Filter --}}
-                        <div class="flex-1">
-                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                <flux:icon name="funnel" class="size-3.5" />
-                                <span>Stage</span>
-                            </div>
-                            <div class="space-y-1">
-                                <button type="button" wire:click="$set('stage', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>All Stages</span>
-                                    @if(empty($stage))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                @foreach($pipelines as $pipeline)
-                                    <button type="button" wire:click="$set('stage', '{{ $pipeline->id }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <span class="h-1.5 w-1.5 rounded-full" style="background-color: {{ $pipeline->color ?? '#6b7280' }}"></span>
-                                            <span>{{ $pipeline->name }}</span>
-                                        </div>
-                                        @if($stage == $pipeline->id)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+    <x-ui.flash />    <x-ui.index-header
+        title="Opportunities"
+        :createRoute="route('crm.opportunities.create')"
+        :paginator="$opportunities"
+        :view="$view"
+        :views="['list', 'kanban']"
+    >
+        <x-slot:actions>
+            <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-down-tray" class="size-4" />
+                                        <span>Import opportunities</span>
                                     </button>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                </x-ui.searchbox-dropdown>
-            </div>
+                                    <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        <span>Export All</span>
+                                    </button>
+        </x-slot:actions>
 
-            {{-- Right Group --}}
-            <div class="flex items-center gap-3">
-                @if($view === 'list')
-                    {{-- Pagination Info --}}
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                            {{ $opportunities->firstItem() ?? 0 }}-{{ $opportunities->lastItem() ?? 0 }}/{{ $opportunities->total() }}
-                        </span>
-                        <div class="flex items-center gap-0.5">
-                            <button type="button" wire:click="goToPreviousPage" @disabled($opportunities->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="chevron-left" class="size-4" />
-                            </button>
-                            <button type="button" wire:click="goToNextPage" @disabled(!$opportunities->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="chevron-right" class="size-4" />
-                            </button>
-                        </div>
-                    </div>
-                @endif
+        <x-slot:search>
 
-                {{-- Stats Toggle --}}
-                <div class="flex h-9 items-center rounded-lg border border-zinc-200 p-0.5 dark:border-zinc-700">
-                    <button 
-                        type="button"
-                        wire:click="toggleStats"
-                        class="{{ $showStats ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }} rounded-md p-1.5 transition-colors"
-                        title="{{ $showStats ? 'Hide statistics' : 'Show statistics' }}"
-                    >
-                        <flux:icon name="chart-bar" class="size-[18px]" />
-                    </button>
-                </div>
-
-                {{-- View Toggle --}}
-                <x-ui.view-toggle :view="$view" :views="['list', 'kanban']" />
-            </div>
-        </div>
-    </div>
+                            <x-ui.searchbox-dropdown placeholder="Search opportunities..." widthClass="w-[520px]" width="520px">
+                                <div class="flex flex-col gap-4 p-3 md:flex-row">
+                                    {{-- Stage Filter --}}
+                                    <div class="flex-1">
+                                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                            <flux:icon name="funnel" class="size-3.5" />
+                                            <span>Stage</span>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <button type="button" wire:click="$set('stage', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>All Stages</span>
+                                                @if(empty($stage))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            @foreach($pipelines as $pipeline)
+                                                <button type="button" wire:click="$set('stage', '{{ $pipeline->id }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="h-1.5 w-1.5 rounded-full" style="background-color: {{ $pipeline->color ?? '#6b7280' }}"></span>
+                                                        <span>{{ $pipeline->name }}</span>
+                                                    </div>
+                                                    @if($stage == $pipeline->id)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </x-ui.searchbox-dropdown>
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Statistics Cards --}}
     @if($showStats && $statistics)

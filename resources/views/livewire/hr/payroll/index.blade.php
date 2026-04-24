@@ -1,150 +1,116 @@
 <div>
-    <x-ui.flash />
-
-    {{-- Header Bar --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('hr.payroll.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Payroll Runs</span>
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-                    <flux:menu class="w-48">
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import records</span>
-                        </button>
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export All</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Center Group: Search --}}
-            <div class="flex flex-1 items-center justify-center">
-                <x-ui.searchbox-dropdown placeholder="Search payroll..." widthClass="w-[420px]" width="420px">
-                    <x-slot:badge>
-                        @if($status)
-                            <div class="flex items-center">
-                                <span class="inline-flex h-6 items-center gap-1.5 rounded-md bg-zinc-900 px-2 text-[10px] font-semibold text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900">
-                                    <span>{{ ucfirst($status) }}</span>
-                                    <button type="button" onclick="event.stopPropagation()" wire:click="$set('status', '')" class="-mr-0.5 inline-flex h-4 w-4 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
-                                        <flux:icon name="x-mark" class="size-3" />
+    <x-ui.flash />    <x-ui.index-header
+        title="Payroll"
+        :createRoute="route('hr.payroll.create')"
+        :paginator="$periods"
+        :view="$view"
+        :views="['list']"
+    >
+        <x-slot:actions>
+            <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-down-tray" class="size-4" />
+                                        <span>Import records</span>
                                     </button>
-                                </span>
-                            </div>
-                        @endif
-                    </x-slot:badge>
-                    <div class="flex flex-col gap-4 p-3 md:flex-row">
-                        {{-- Filters column --}}
-                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
-                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                <flux:icon name="funnel" class="size-3.5" />
-                                <span>Filters</span>
-                            </div>
-                            <div class="space-y-1">
-                                <button type="button" wire:click="$set('status', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>All Status</span>
-                                    @if(empty($status))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('status', 'draft')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <div class="flex items-center gap-2">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-zinc-400"></span>
-                                        <span>Draft</span>
-                                    </div>
-                                    @if($status === 'draft')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('status', 'processing')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <div class="flex items-center gap-2">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                                        <span>Processing</span>
-                                    </div>
-                                    @if($status === 'processing')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('status', 'approved')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <div class="flex items-center gap-2">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                        <span>Approved</span>
-                                    </div>
-                                    @if($status === 'approved')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('status', 'paid')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <div class="flex items-center gap-2">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-violet-500"></span>
-                                        <span>Paid</span>
-                                    </div>
-                                    @if($status === 'paid')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                            </div>
-                        </div>
-                        {{-- Sort column --}}
-                        <div class="flex-1 md:pl-3">
-                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                <flux:icon name="arrows-up-down" class="size-3.5" />
-                                <span>Sort By</span>
-                            </div>
-                            <div class="space-y-1">
-                                <button type="button" wire:click="$set('sort', 'latest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Latest</span>
-                                    @if($sort === 'latest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'oldest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Oldest</span>
-                                    @if($sort === 'oldest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'name_asc')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Name: A to Z</span>
-                                    @if($sort === 'name_asc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'name_desc')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Name: Z to A</span>
-                                    @if($sort === 'name_desc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'total_desc')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Total: High to Low</span>
-                                    @if($sort === 'total_desc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'total_asc')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Total: Low to High</span>
-                                    @if($sort === 'total_asc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </x-ui.searchbox-dropdown>
-            </div>
+                                    <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        <span>Export All</span>
+                                    </button>
+        </x-slot:actions>
 
-            {{-- Right Group --}}
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $periods->firstItem() ?? 0 }}-{{ $periods->lastItem() ?? 0 }}/{{ $periods->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button type="button" wire:click="goToPreviousPage" @disabled($periods->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button type="button" wire:click="goToNextPage" @disabled(!$periods->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-                <div class="flex h-9 items-center rounded-lg border border-zinc-200 p-0.5 dark:border-zinc-700">
-                    <button type="button" wire:click="toggleStats" class="{{ $showStats ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300' }} rounded-md p-1.5 transition-colors" title="{{ $showStats ? 'Hide statistics' : 'Show statistics' }}">
-                        <flux:icon name="chart-bar" class="size-[18px]" />
-                    </button>
-                </div>
-                <x-ui.view-toggle :view="$view" :views="['list', 'grid', 'kanban']" />
-            </div>
-        </div>
-    </div>
+        <x-slot:search>
+
+                            <x-ui.searchbox-dropdown placeholder="Search payroll..." widthClass="w-[420px]" width="420px">
+                                <x-slot:badge>
+                                    @if($status)
+                                        <div class="flex items-center">
+                                            <span class="inline-flex h-6 items-center gap-1.5 rounded-md bg-zinc-900 px-2 text-[10px] font-semibold text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900">
+                                                <span>{{ ucfirst($status) }}</span>
+                                                <button type="button" onclick="event.stopPropagation()" wire:click="$set('status', '')" class="-mr-0.5 inline-flex h-4 w-4 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+                                                    <flux:icon name="x-mark" class="size-3" />
+                                                </button>
+                                            </span>
+                                        </div>
+                                    @endif
+                                </x-slot:badge>
+                                <div class="flex flex-col gap-4 p-3 md:flex-row">
+                                    {{-- Filters column --}}
+                                    <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                            <flux:icon name="funnel" class="size-3.5" />
+                                            <span>Filters</span>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <button type="button" wire:click="$set('status', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>All Status</span>
+                                                @if(empty($status))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('status', 'draft')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-zinc-400"></span>
+                                                    <span>Draft</span>
+                                                </div>
+                                                @if($status === 'draft')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('status', 'processing')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                                                    <span>Processing</span>
+                                                </div>
+                                                @if($status === 'processing')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('status', 'approved')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                                    <span>Approved</span>
+                                                </div>
+                                                @if($status === 'approved')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('status', 'paid')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-violet-500"></span>
+                                                    <span>Paid</span>
+                                                </div>
+                                                @if($status === 'paid')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {{-- Sort column --}}
+                                    <div class="flex-1 md:pl-3">
+                                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                            <flux:icon name="arrows-up-down" class="size-3.5" />
+                                            <span>Sort By</span>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <button type="button" wire:click="$set('sort', 'latest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Latest</span>
+                                                @if($sort === 'latest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'oldest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Oldest</span>
+                                                @if($sort === 'oldest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'name_asc')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Name: A to Z</span>
+                                                @if($sort === 'name_asc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'name_desc')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Name: Z to A</span>
+                                                @if($sort === 'name_desc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'total_desc')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Total: High to Low</span>
+                                                @if($sort === 'total_desc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'total_asc')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Total: Low to High</span>
+                                                @if($sort === 'total_asc')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </x-ui.searchbox-dropdown>
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Statistics Cards --}}
     @if($showStats && $statistics && !$periods->isEmpty())

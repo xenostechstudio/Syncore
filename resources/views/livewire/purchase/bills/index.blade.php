@@ -1,153 +1,110 @@
 <div>
-    <x-ui.flash />
+    <x-ui.flash />    <x-ui.index-header
+        title="Vendor Bills"
+        :createRoute="route('purchase.bills.create')"
+        :paginator="$bills"
+        :view="$view"
+        :views="['list']"
+    >
+        <x-slot:actions>
+            <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-down-tray" class="size-4" />
+                                        <span>Import records</span>
+                                    </button>
+                                    <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        <span>Export All</span>
+                                    </button>
+        </x-slot:actions>
 
-    {{-- Header Bar --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group: New Button, Title, Gear --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('purchase.bills.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    Vendor Bills
-                </span>
+        <x-slot:search>
+
+                            @if(count($selected) > 0)
+                                {{-- Selection Toolbar --}}
+                                <x-ui.selection-toolbar :count="count($selected)">
+                <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                            <flux:icon name="arrow-up-tray" class="size-4" />
+                                            <span>Export</span>
+                                        </button>
                 
-                {{-- Actions Menu (Gear) --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-
-                    <flux:menu class="w-48">
-                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import records</span>
-                        </button>
-                        <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export All</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Center Group: Search or Selection Toolbar --}}
-            <div class="flex flex-1 items-center justify-center">
-                @if(count($selected) > 0)
-                    {{-- Selection Toolbar --}}
-                    <x-ui.selection-toolbar :count="count($selected)">
-    <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                <flux:icon name="arrow-up-tray" class="size-4" />
-                                <span>Export</span>
-                            </button>
-    
-                            <flux:dropdown position="bottom" align="center">
-                                <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                    <flux:icon name="ellipsis-horizontal" class="size-4" />
-                                </button>
-    
-                                <flux:menu class="w-56">
-                                    <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <flux:icon name="printer" class="size-4" />
-                                        <span>Print</span>
+                                        <flux:dropdown position="bottom" align="center">
+                                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                                <flux:icon name="ellipsis-horizontal" class="size-4" />
+                                            </button>
+                
+                                            <flux:menu class="w-56">
+                                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <flux:icon name="printer" class="size-4" />
+                                                    <span>Print</span>
+                                                </button>
+                                                <flux:menu.separator />
+                                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                                    <flux:icon name="trash" class="size-4" />
+                                                    <span>Delete</span>
+                                                </button>
+                                            </flux:menu>
+                                        </flux:dropdown>
+                                </x-ui.selection-toolbar>
+                            @else
+                            <flux:dropdown position="bottom" align="center" class="w-[480px]">
+                                <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
+                                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                    <input 
+                                        type="text" 
+                                        wire:model.live.debounce.300ms="search"
+                                        placeholder="Search bills..." 
+                                        class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
+                                    />
+                                    <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
+                                        <flux:icon name="chevron-down" class="size-4" />
                                     </button>
-                                    <flux:menu.separator />
-                                    <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
-                                    </button>
+                                </div>
+
+                                <flux:menu class="w-[480px]">
+                                    <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
+                                        {{-- Filters Section --}}
+                                        <div class="flex-1 p-3">
+                                            <div class="mb-2 flex items-center gap-1.5">
+                                                <flux:icon name="funnel" class="size-4 text-zinc-400" />
+                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" wire:model.live="status" value="" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>All Status</span>
+                                                </label>
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" wire:model.live="status" value="draft" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>Draft</span>
+                                                </label>
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" wire:model.live="status" value="pending" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>Pending</span>
+                                                </label>
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" wire:model.live="status" value="partial" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>Partially Paid</span>
+                                                </label>
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" wire:model.live="status" value="paid" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>Paid</span>
+                                                </label>
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" wire:model.live="status" value="overdue" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>Overdue</span>
+                                                </label>
+                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <input type="radio" wire:model.live="status" value="cancelled" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                    <span>Cancelled</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </flux:menu>
                             </flux:dropdown>
-                    </x-ui.selection-toolbar>
-                @else
-                <flux:dropdown position="bottom" align="center" class="w-[480px]">
-                    <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                        <input 
-                            type="text" 
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Search bills..." 
-                            class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
-                        />
-                        <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
-                            <flux:icon name="chevron-down" class="size-4" />
-                        </button>
-                    </div>
-
-                    <flux:menu class="w-[480px]">
-                        <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
-                            {{-- Filters Section --}}
-                            <div class="flex-1 p-3">
-                                <div class="mb-2 flex items-center gap-1.5">
-                                    <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</span>
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" wire:model.live="status" value="" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>All Status</span>
-                                    </label>
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" wire:model.live="status" value="draft" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>Draft</span>
-                                    </label>
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" wire:model.live="status" value="pending" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>Pending</span>
-                                    </label>
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" wire:model.live="status" value="partial" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>Partially Paid</span>
-                                    </label>
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" wire:model.live="status" value="paid" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>Paid</span>
-                                    </label>
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" wire:model.live="status" value="overdue" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>Overdue</span>
-                                    </label>
-                                    <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <input type="radio" wire:model.live="status" value="cancelled" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                        <span>Cancelled</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </flux:menu>
-                </flux:dropdown>
-                @endif
-            </div>
-
-            {{-- Right Group: Pagination --}}
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $bills->firstItem() ?? 0 }}-{{ $bills->lastItem() ?? 0 }}/{{ $bills->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button 
-                            type="button"
-                            wire:click="previousPage"
-                            @disabled($bills->onFirstPage())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button 
-                            type="button"
-                            wire:click="nextPage"
-                            @disabled(!$bills->hasMorePages())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                            @endif
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Content --}}
     <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
