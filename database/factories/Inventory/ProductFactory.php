@@ -24,7 +24,7 @@ class ProductFactory extends Factory
             'quantity' => fake()->numberBetween(0, 500),
             'cost_price' => $costPrice,
             'selling_price' => round($costPrice * fake()->randomFloat(2, 1.2, 2.0)),
-            'status' => 'active',
+            'status' => 'in_stock',
             'warehouse_id' => null,
             'category_id' => null,
             'responsible_id' => null,
@@ -35,24 +35,19 @@ class ProductFactory extends Factory
         ];
     }
 
-    public function active(): static
+    public function inStock(): static
     {
-        return $this->state(fn (array $attributes) => ['status' => 'active']);
-    }
-
-    public function inactive(): static
-    {
-        return $this->state(fn (array $attributes) => ['status' => 'inactive']);
+        return $this->state(fn () => ['status' => 'in_stock']);
     }
 
     public function lowStock(): static
     {
-        return $this->state(fn (array $attributes) => ['quantity' => fake()->numberBetween(1, 10)]);
+        return $this->state(fn () => ['status' => 'low_stock', 'quantity' => fake()->numberBetween(1, 10)]);
     }
 
     public function outOfStock(): static
     {
-        return $this->state(fn (array $attributes) => ['quantity' => 0]);
+        return $this->state(fn () => ['status' => 'out_of_stock', 'quantity' => 0]);
     }
 
     public function withCategory(): static

@@ -551,7 +551,7 @@
                                                                 <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No products found</p>
                                                                 <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
                                                             </div>
-                                                            <flux:button variant="secondary" size="sm" wire:click="clearFilters">
+                                                            <flux:button variant="outline" size="sm" wire:click="clearFilters">
                                                                 Clear Filters
                                                             </flux:button>
                                                         </div>
@@ -572,7 +572,7 @@
                                         <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No products found</p>
                                         <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
                                     </div>
-                                    <flux:button variant="secondary" size="sm" wire:click="clearFilters">
+                                    <flux:button variant="outline" size="sm" wire:click="clearFilters">
                                         Clear Filters
                                     </flux:button>
                                 </div>
@@ -744,7 +744,7 @@
                                                 <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">No products found</p>
                                                 <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Try adjusting your search or filters</p>
                                             </div>
-                                            <flux:button variant="secondary" size="sm" wire:click="clearFilters">
+                                            <flux:button variant="outline" size="sm" wire:click="clearFilters">
                                                 Clear Filters
                                             </flux:button>
                                         </div>

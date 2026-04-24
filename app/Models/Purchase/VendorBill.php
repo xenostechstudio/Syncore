@@ -12,13 +12,16 @@ use App\Traits\HasStateMachine;
 use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
+use Database\Factories\Purchase\VendorBillFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VendorBill extends Model
 {
-    use LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasAttachments, HasStateMachine, HasCreatedBy, HasYearlySequenceNumber;
+    /** @use HasFactory<VendorBillFactory> */
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasAttachments, HasStateMachine, HasCreatedBy, HasYearlySequenceNumber;
 
     protected string $stateEnum = VendorBillState::class;
 
