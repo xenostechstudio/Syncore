@@ -218,7 +218,7 @@
                                 Rp {{ number_format($period->total_net, 0, ',', '.') }}
                             </td>
                             <td class="px-4 py-3">
-                                <x-ui.status-badge :status="$period->status" />
+                                <x-ui.status-badge :status="$period->state" />
                             </td>
                             <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
                         </tr>
@@ -229,22 +229,10 @@
         @elseif($view === 'grid')
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             @foreach($periods as $period)
-                @php
-                    $statusConfig = match($period->status) {
-                        'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                        'processing' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400'],
-                        'approved' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400'],
-                        'paid' => ['bg' => 'bg-violet-100 dark:bg-violet-900/30', 'text' => 'text-violet-700 dark:text-violet-400'],
-                        'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400'],
-                        default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400'],
-                    };
-                @endphp
                 <a href="{{ route('hr.payroll.edit', $period->id) }}" wire:navigate class="group rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
                     <div class="flex items-center justify-between">
                         <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $period->start_date->format('d M') }} - {{ $period->end_date->format('d M Y') }}</span>
-                        <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                            {{ ucfirst($period->status) }}
-                        </span>
+                        <x-ui.status-badge :status="$period->state" class="px-2 py-0.5" />
                     </div>
                     <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $period->name }}</p>
                     <div class="mt-3 flex items-center justify-between">
@@ -256,28 +244,42 @@
         </div>
         @elseif($view === 'kanban')
         @php
-            $statuses = [
-                'draft' => ['label' => 'Draft', 'color' => 'zinc', 'headerBg' => 'bg-zinc-100 dark:bg-zinc-800'],
-                'processing' => ['label' => 'Processing', 'color' => 'blue', 'headerBg' => 'bg-blue-50 dark:bg-blue-900/20'],
-                'approved' => ['label' => 'Approved', 'color' => 'emerald', 'headerBg' => 'bg-emerald-50 dark:bg-emerald-900/20'],
-                'paid' => ['label' => 'Paid', 'color' => 'violet', 'headerBg' => 'bg-violet-50 dark:bg-violet-900/20'],
+            // Drive kanban columns from the PayrollState enum so ordering
+            // and colors stay in sync with the real state machine
+            // (DRAFT → APPROVED → PROCESSING → PAID, with CANCELLED as a
+            // branch handled elsewhere).
+            $kanbanStates = [
+                \App\Enums\PayrollState::DRAFT,
+                \App\Enums\PayrollState::APPROVED,
+                \App\Enums\PayrollState::PROCESSING,
+                \App\Enums\PayrollState::PAID,
             ];
             $periodsByStatus = $periods->groupBy('status');
         @endphp
         <div class="flex gap-4 overflow-x-auto pb-4">
-            @foreach($statuses as $statusKey => $statusInfo)
+            @foreach($kanbanStates as $state)
+                @php
+                    // Literal classes so Tailwind JIT picks them up.
+                    [$headerBg, $dotBg] = match ($state->color()) {
+                        'blue'    => ['bg-blue-50 dark:bg-blue-900/20', 'bg-blue-500'],
+                        'amber'   => ['bg-amber-50 dark:bg-amber-900/20', 'bg-amber-500'],
+                        'emerald' => ['bg-emerald-50 dark:bg-emerald-900/20', 'bg-emerald-500'],
+                        'red'     => ['bg-red-50 dark:bg-red-900/20', 'bg-red-500'],
+                        default   => ['bg-zinc-100 dark:bg-zinc-800', 'bg-zinc-500'],
+                    };
+                @endphp
                 <div class="flex w-72 flex-shrink-0 flex-col rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <div class="flex items-center justify-between rounded-t-lg {{ $statusInfo['headerBg'] }} px-3 py-2.5">
+                    <div class="flex items-center justify-between rounded-t-lg {{ $headerBg }} px-3 py-2.5">
                         <div class="flex items-center gap-2">
-                            <span class="h-2 w-2 rounded-full bg-{{ $statusInfo['color'] }}-500"></span>
-                            <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $statusInfo['label'] }}</span>
+                            <span class="h-2 w-2 rounded-full {{ $dotBg }}"></span>
+                            <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $state->label() }}</span>
                             <span class="rounded-full bg-white px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                                {{ $periodsByStatus->get($statusKey)?->count() ?? 0 }}
+                                {{ $periodsByStatus->get($state->value)?->count() ?? 0 }}
                             </span>
                         </div>
                     </div>
                     <div class="flex flex-1 flex-col gap-2 p-2">
-                        @forelse($periodsByStatus->get($statusKey, collect()) as $period)
+                        @forelse($periodsByStatus->get($state->value, collect()) as $period)
                             <a href="{{ route('hr.payroll.edit', $period->id) }}" wire:navigate class="rounded-lg border border-zinc-200 bg-white p-3 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-zinc-600">
                                 <div class="mb-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $period->name }}</div>
                                 <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $period->start_date->format('d M') }} - {{ $period->end_date->format('d M') }}</div>
@@ -292,10 +294,10 @@
                             </div>
                         @endforelse
                     </div>
-                    @if($periodsByStatus->get($statusKey)?->count() > 0)
+                    @if($periodsByStatus->get($state->value)?->count() > 0)
                         <div class="border-t border-zinc-200 px-3 py-2 dark:border-zinc-700">
                             <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                                Rp {{ number_format($periodsByStatus->get($statusKey)->sum('total_net'), 0, ',', '.') }}
+                                Rp {{ number_format($periodsByStatus->get($state->value)->sum('total_net'), 0, ',', '.') }}
                             </span>
                         </div>
                     @endif
