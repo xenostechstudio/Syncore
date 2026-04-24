@@ -20,8 +20,8 @@ class DeliverySeeder extends Seeder
             return;
         }
 
-        // Create delivery orders for shipped/delivered sales orders
-        $salesOrders = SalesOrder::whereIn('status', ['shipped', 'delivered', 'processing'])
+        // Create delivery orders for delivered/processing sales orders
+        $salesOrders = SalesOrder::whereIn('status', ['delivered', 'processing'])
             ->with('items', 'customer')
             ->get();
 
@@ -29,10 +29,9 @@ class DeliverySeeder extends Seeder
 
         foreach ($salesOrders as $index => $salesOrder) {
             $deliveryDate = $salesOrder->order_date->copy()->addDays(rand(1, 3));
-            
+
             $status = match($salesOrder->status) {
                 'delivered' => 'delivered',
-                'shipped' => 'in_transit',
                 'processing' => rand(0, 1) ? 'picked' : 'pending',
                 default => 'pending',
             };
