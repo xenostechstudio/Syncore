@@ -33,46 +33,38 @@
             <div class="flex flex-1 items-center justify-center">
                 @if(count($selected) > 0)
                     {{-- Selection Toolbar --}}
-                    <div class="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                        {{-- Count Selected Button --}}
-                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                            <span>{{ count($selected) }} selected</span>
-                            <flux:icon name="x-mark" class="size-3.5" />
-                        </button>
-
-                        <div class="h-5 w-px bg-zinc-200 dark:bg-zinc-700"></div>
-
-                        {{-- Export --}}
-                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Export</span>
-                        </button>
-
-                        {{-- Print --}}
-                        <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                            <flux:icon name="printer" class="size-4" />
-                            <span>Print</span>
-                        </button>
-
-                        {{-- Actions Dropdown --}}
-                        <flux:dropdown position="bottom" align="center">
-                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                <flux:icon name="ellipsis-horizontal" class="size-4" />
+                    <x-ui.selection-toolbar :count="count($selected)">
+    {{-- Export --}}
+                            <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                <flux:icon name="arrow-down-tray" class="size-4" />
+                                <span>Export</span>
                             </button>
-
-                            <flux:menu class="w-56">
-                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
+    
+                            {{-- Print --}}
+                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                <flux:icon name="printer" class="size-4" />
+                                <span>Print</span>
+                            </button>
+    
+                            {{-- Actions Dropdown --}}
+                            <flux:dropdown position="bottom" align="center">
+                                <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                    <flux:icon name="ellipsis-horizontal" class="size-4" />
                                 </button>
-                                <flux:menu.separator />
-                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
-                                </button>
-                            </flux:menu>
-                        </flux:dropdown>
-                    </div>
+    
+                                <flux:menu class="w-56">
+                                    <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <flux:icon name="document-duplicate" class="size-4" />
+                                        <span>Duplicate</span>
+                                    </button>
+                                    <flux:menu.separator />
+                                    <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <flux:icon name="trash" class="size-4" />
+                                        <span>Delete</span>
+                                    </button>
+                                </flux:menu>
+                            </flux:dropdown>
+                    </x-ui.selection-toolbar>
                 @else
                     {{-- Search Input with Arrow Down Dropdown --}}
                     <div class="relative flex h-9 w-[480px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">

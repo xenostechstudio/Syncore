@@ -41,7 +41,7 @@ describe('Leads Index', function () {
     it('filters by status and source', function () {
         Lead::factory()->create(['source' => 'website']);
         Lead::factory()->count(2)->create(['source' => 'referral']);
-        Lead::factory()->converted()->create();
+        Lead::factory()->converted()->create(['source' => 'event']);
 
         Livewire::test(Index::class)
             ->set('source', 'referral')
