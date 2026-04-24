@@ -4,12 +4,15 @@ namespace App\Models\HR;
 
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Database\Factories\HR\LeaveTypeFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LeaveType extends Model
 {
-    use LogsActivity, HasNotes;
+    /** @use HasFactory<LeaveTypeFactory> */
+    use HasFactory, LogsActivity, HasNotes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

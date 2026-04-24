@@ -2,11 +2,16 @@
 
 namespace App\Models\HR;
 
+use Database\Factories\HR\WorkScheduleFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkSchedule extends Model
 {
+    /** @use HasFactory<WorkScheduleFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'code',

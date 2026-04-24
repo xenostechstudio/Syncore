@@ -2,7 +2,7 @@
 
 namespace App\Livewire\HR\Payroll\Components;
 
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\HR\SalaryComponent;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -13,90 +13,33 @@ use Livewire\Component;
 #[Title('Salary Components')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    #[Url]
-    public string $search = '';
+    use WithIndexComponent;
 
     #[Url]
     public string $componentType = '';
 
-    #[Url]
-    public string $sort = 'sort_order';
+    public function mount(): void
+    {
+        $this->sort = 'sort_order';
+    }
 
-    #[Url]
-    public string $view = 'list';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-    public bool $showStats = false;
-
-    public function updatedSearch(): void
+    public function updatedComponentType(): void
     {
         $this->resetPage();
     }
 
-    public function updatedSelectAll(): void
+    protected function getQuery()
     {
-        if ($this->selectAll) {
-            $this->selected = $this->getComponentsQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
+        return SalaryComponent::query()
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%")))
+            ->when($this->componentType, fn ($q) => $q->where('type', $this->componentType));
     }
 
-    public function setView(string $view): void
+    protected function getModelClass(): string
     {
-        $this->view = $view;
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function toggleStats(): void
-    {
-        $this->showStats = !$this->showStats;
-    }
-
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
-
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
-
-    protected function getComponentsQuery()
-    {
-        $query = SalaryComponent::query();
-
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('name', 'ilike', "%{$this->search}%")
-                    ->orWhere('code', 'ilike', "%{$this->search}%");
-            });
-        }
-
-        if ($this->componentType) {
-            $query->where('type', $this->componentType);
-        }
-
-        $query = match ($this->sort) {
-            'name_asc' => $query->orderBy('name', 'asc'),
-            'name_desc' => $query->orderBy('name', 'desc'),
-            'code_asc' => $query->orderBy('code', 'asc'),
-            'code_desc' => $query->orderBy('code', 'desc'),
-            'amount_asc' => $query->orderBy('default_amount', 'asc'),
-            'amount_desc' => $query->orderBy('default_amount', 'desc'),
-            default => $query->orderBy('sort_order')->orderBy('name'),
-        };
-
-        return $query;
+        return SalaryComponent::class;
     }
 
     protected function getStatistics(): array
@@ -112,10 +55,18 @@ class Index extends Component
 
     public function render()
     {
-        $components = $this->getComponentsQuery()->paginate(15);
+        $query = match ($this->sort) {
+            'name_asc' => $this->getQuery()->orderBy('name', 'asc'),
+            'name_desc' => $this->getQuery()->orderBy('name', 'desc'),
+            'code_asc' => $this->getQuery()->orderBy('code', 'asc'),
+            'code_desc' => $this->getQuery()->orderBy('code', 'desc'),
+            'amount_asc' => $this->getQuery()->orderBy('default_amount', 'asc'),
+            'amount_desc' => $this->getQuery()->orderBy('default_amount', 'desc'),
+            default => $this->getQuery()->orderBy('sort_order')->orderBy('name'),
+        };
 
         return view('livewire.hr.payroll.components.index', [
-            'components' => $components,
+            'components' => $query->paginate(15, ['*'], 'page', $this->page),
             'statistics' => $this->showStats ? $this->getStatistics() : null,
         ]);
     }

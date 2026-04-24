@@ -4,12 +4,15 @@ namespace App\Models\HR;
 
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Database\Factories\HR\SalaryComponentFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SalaryComponent extends Model
 {
-    use LogsActivity, HasNotes;
+    /** @use HasFactory<SalaryComponentFactory> */
+    use HasFactory, LogsActivity, HasNotes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

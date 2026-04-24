@@ -5,11 +5,10 @@ namespace App\Livewire\Sales\Configuration\Taxes;
 use App\Exports\TaxesExport;
 use App\Imports\TaxesImport;
 use App\Livewire\Concerns\WithImport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Sales\Tax;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -17,47 +16,12 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Taxes')]
 class Index extends Component
 {
-    use WithManualPagination, WithImport;
-
-    #[Url]
-    public string $search = '';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
-
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = Tax::query()
-                ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
-                ->pluck('id')
-                ->map(fn($id) => (string) $id)
-                ->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
+    use WithIndexComponent, WithImport;
 
     public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        $ids = !empty($this->selected) ? $this->selected : null;
+        $ids = ! empty($this->selected) ? $this->selected : null;
+
         return Excel::download(new TaxesExport($ids), 'taxes-' . now()->format('Y-m-d') . '.xlsx');
     }
 
@@ -98,26 +62,25 @@ class Index extends Component
         session()->flash('success', "{$count} taxes deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function activateSelected(): void
     {
+        if (empty($this->selected)) {
+            return;
+        }
+
         Tax::whereIn('id', $this->selected)->update(['is_active' => true]);
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->clearSelection();
         session()->flash('success', 'Selected taxes activated.');
     }
 
     public function deactivateSelected(): void
     {
+        if (empty($this->selected)) {
+            return;
+        }
+
         Tax::whereIn('id', $this->selected)->update(['is_active' => false]);
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->clearSelection();
         session()->flash('success', 'Selected taxes deactivated.');
     }
 
@@ -134,11 +97,22 @@ class Index extends Component
         ];
     }
 
+    protected function getQuery()
+    {
+        return Tax::query()
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%")));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Tax::class;
+    }
+
     public function render()
     {
-        $taxes = Tax::query()
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('code', 'like', "%{$this->search}%"))
+        $taxes = $this->getQuery()
             ->orderBy('name')
             ->paginate(15, ['*'], 'page', $this->page);
 
