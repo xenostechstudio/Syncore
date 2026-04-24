@@ -1,12 +1,5 @@
 <div>
-    {{-- Flash Messages --}}
-    <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
-        @if(session('success'))
-            <x-ui.alert type="success" :duration="5000">
-                {{ session('success') }}
-            </x-ui.alert>
-        @endif
-    </div>
+    <x-ui.flash />
 
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">

@@ -1,30 +1,5 @@
 <div>
-    {{-- Flash Messages --}}
-    <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
-        @if(session('success'))
-            <x-ui.alert type="success" :duration="5000">
-                {{ session('success') }}
-            </x-ui.alert>
-        @endif
-
-        @if(session('error'))
-            <x-ui.alert type="error" :duration="7000">
-                {{ session('error') }}
-            </x-ui.alert>
-        @endif
-
-        @if(session('warning'))
-            <x-ui.alert type="warning" :duration="6000">
-                {{ session('warning') }}
-            </x-ui.alert>
-        @endif
-
-        @if(session('info'))
-            <x-ui.alert type="info" :duration="5000">
-                {{ session('info') }}
-            </x-ui.alert>
-        @endif
-    </div>
+    <x-ui.flash />
 
     @php
         $isOrdersToInvoicePage = $isOrdersToInvoicePage ?? request()->routeIs('sales.invoices.pending');

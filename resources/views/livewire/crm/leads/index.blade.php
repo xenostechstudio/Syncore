@@ -1,13 +1,5 @@
 <div>
-    {{-- Flash Messages --}}
-    <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
-        @if(session('success'))
-            <x-ui.alert type="success" :duration="5000">{{ session('success') }}</x-ui.alert>
-        @endif
-        @if(session('error'))
-            <x-ui.alert type="error" :duration="7000">{{ session('error') }}</x-ui.alert>
-        @endif
-    </div>
+    <x-ui.flash />
 
     {{-- Header Bar --}}
     <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
