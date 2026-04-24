@@ -3,11 +3,10 @@
 namespace App\Livewire\Settings\Users;
 
 use App\Exports\UsersExport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -15,25 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Users')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $status = '';
-
-    #[Url]
-    public string $sort = 'latest';
-
-    public string $view = 'list';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
+    use WithIndexComponent;
 
     public array $visibleColumns = [
         'user' => true,
@@ -41,63 +22,13 @@ class Index extends Component
         'joined' => true,
     ];
 
-    public function setView(string $view): void
-    {
-        $this->view = $view;
-    }
-
     public function toggleColumn(string $column): void
     {
         if (isset($this->visibleColumns[$column])) {
-            $this->visibleColumns[$column] = !$this->visibleColumns[$column];
+            $this->visibleColumns[$column] = ! $this->visibleColumns[$column];
         }
     }
 
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedStatus(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedSort(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getUsersQuery()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function clearFilters(): void
-    {
-        $this->reset(['search', 'status', 'sort']);
-        $this->resetPage();
-        $this->clearSelection();
-    }
-
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
@@ -118,10 +49,7 @@ class Index extends Component
                     'reason' => 'Cannot delete your own account',
                 ];
             } else {
-                $canDelete[] = [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ];
+                $canDelete[] = ['id' => $user->id, 'name' => $user->name];
             }
         }
 
@@ -140,9 +68,8 @@ class Index extends Component
             return;
         }
 
-        // Don't allow deleting current user
         $currentUserId = auth()->id();
-        $idsToDelete = array_filter($this->selected, fn($id) => (int) $id !== $currentUserId);
+        $idsToDelete = array_filter($this->selected, fn ($id) => (int) $id !== $currentUserId);
 
         if (empty($idsToDelete)) {
             session()->flash('error', 'Cannot delete your own account.');
@@ -156,56 +83,40 @@ class Index extends Component
         session()->flash('success', "{$count} users deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new UsersExport(), 'users-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'users-' . now()->format('Y-m-d') . '.xlsx'
+            : 'users-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new UsersExport($this->selected), 'users-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new UsersExport($this->selected ?: null), $filename);
     }
 
-    private function getUsersQuery()
+    protected function getQuery()
     {
-        $query = User::query();
+        return User::query()
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('email', 'like', "%{$this->search}%")))
+            ->when($this->status === 'active', fn ($q) => $q->whereNotNull('email_verified_at'))
+            ->when($this->status === 'pending', fn ($q) => $q->whereNull('email_verified_at'));
+    }
 
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('name', 'ilike', "%{$this->search}%")
-                    ->orWhere('email', 'ilike', "%{$this->search}%");
-            });
-        }
-
-        if ($this->status === 'active') {
-            $query->whereNotNull('email_verified_at');
-        } elseif ($this->status === 'pending') {
-            $query->whereNull('email_verified_at');
-        }
-
-        if ($this->sort === 'oldest') {
-            $query->orderBy('created_at', 'asc');
-        } elseif ($this->sort === 'name') {
-            $query->orderBy('name', 'asc');
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
-
-        return $query;
+    protected function getModelClass(): string
+    {
+        return User::class;
     }
 
     public function render()
     {
-        $users = $this->getUsersQuery()->paginate(12, ['*'], 'page', $this->page);
+        $query = match ($this->sort) {
+            'oldest' => $this->getQuery()->orderBy('created_at', 'asc'),
+            'name' => $this->getQuery()->orderBy('name', 'asc'),
+            default => $this->getQuery()->orderBy('created_at', 'desc'),
+        };
 
         return view('livewire.settings.users.index', [
-            'users' => $users,
+            'users' => $query->paginate(12, ['*'], 'page', $this->page),
         ]);
     }
 }

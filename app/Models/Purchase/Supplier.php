@@ -6,12 +6,15 @@ use App\Traits\HasNotes;
 use App\Traits\HasSoftDeletes;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
+use Database\Factories\Purchase\SupplierFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Supplier extends Model
 {
-    use LogsActivity, HasNotes, HasSoftDeletes, Searchable;
+    /** @use HasFactory<SupplierFactory> */
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     

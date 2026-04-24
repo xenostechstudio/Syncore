@@ -5,7 +5,7 @@ namespace App\Livewire\Sales\Teams;
 use App\Exports\SalesTeamsExport;
 use App\Imports\SalesTeamsImport;
 use App\Livewire\Concerns\WithImport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Sales\SalesTeam;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -17,29 +17,13 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Sales Teams')]
 class Index extends Component
 {
-    use WithManualPagination, WithImport;
+    use WithIndexComponent, WithImport;
 
     #[Url]
-    public string $search = '';
+    public string $filter = 'active';
 
-    #[Url]
-    public string $status = '';
+    public bool $showArchiveConfirm = false;
 
-    #[Url]
-    public string $sort = 'latest';
-
-    #[Url]
-    public string $filter = 'active'; // 'active', 'archived', 'all'
-
-    public string $view = 'list';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Group By
-    public string $groupBy = '';
-
-    // Column visibility
     public array $visibleColumns = [
         'name' => true,
         'leader' => true,
@@ -48,11 +32,6 @@ class Index extends Component
         'status' => true,
     ];
 
-    public function setView(string $view): void
-    {
-        $this->view = $view;
-    }
-
     public function setFilter(string $filter): void
     {
         $this->filter = $filter;
@@ -60,48 +39,14 @@ class Index extends Component
         $this->clearSelection();
     }
 
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getTeamsQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'sort', 'groupBy']);
         $this->filter = 'active';
         $this->resetPage();
+        $this->clearSelection();
     }
 
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
-
-    // Archive confirmation
-    public bool $showArchiveConfirm = false;
-
-    // Bulk Actions
     public function confirmBulkArchive(): void
     {
         if (empty($this->selected)) {
@@ -146,18 +91,14 @@ class Index extends Component
             return;
         }
 
-        // Only allow deletion of archived teams
         $teams = SalesTeam::whereIn('id', $this->selected)->get();
 
         $canDelete = [];
         $cannotDelete = [];
 
         foreach ($teams as $team) {
-            if (!$team->is_active) {
-                $canDelete[] = [
-                    'id' => $team->id,
-                    'name' => $team->name,
-                ];
+            if (! $team->is_active) {
+                $canDelete[] = ['id' => $team->id, 'name' => $team->name];
             } else {
                 $cannotDelete[] = [
                     'id' => $team->id,
@@ -182,7 +123,6 @@ class Index extends Component
             return;
         }
 
-        // Only delete archived teams
         $deletableIds = SalesTeam::whereIn('id', $this->selected)
             ->where('is_active', false)
             ->pluck('id')
@@ -200,20 +140,13 @@ class Index extends Component
         session()->flash('success', "{$count} teams deleted permanently.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new SalesTeamsExport(), 'sales-teams-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'sales-teams-' . now()->format('Y-m-d') . '.xlsx'
+            : 'sales-teams-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new SalesTeamsExport($this->selected), 'sales-teams-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new SalesTeamsExport($this->selected ?: null), $filename);
     }
 
     protected function getImportClass(): string
@@ -229,19 +162,21 @@ class Index extends Component
         ];
     }
 
-    private function getTeamsQuery()
+    protected function getQuery()
     {
         return SalesTeam::query()
             ->with(['leader'])
             ->withCount('members')
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%")
-                ->orWhere('description', 'like', "%{$this->search}%"))
-            ->when($this->filter === 'active', fn($q) => $q->where('is_active', true))
-            ->when($this->filter === 'archived', fn($q) => $q->where('is_active', false))
-            ->when($this->sort === 'latest', fn($q) => $q->latest())
-            ->when($this->sort === 'oldest', fn($q) => $q->oldest())
-            ->when($this->sort === 'name_asc', fn($q) => $q->orderBy('name'))
-            ->when($this->sort === 'name_desc', fn($q) => $q->orderByDesc('name'));
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('description', 'like', "%{$this->search}%")))
+            ->when($this->filter === 'active', fn ($q) => $q->where('is_active', true))
+            ->when($this->filter === 'archived', fn ($q) => $q->where('is_active', false));
+    }
+
+    protected function getModelClass(): string
+    {
+        return SalesTeam::class;
     }
 
     public function getActiveCountProperty(): int
@@ -256,10 +191,10 @@ class Index extends Component
 
     public function render()
     {
-        $teams = $this->getTeamsQuery()->paginate(12, ['*'], 'page', $this->page);
+        $query = $this->applySorting($this->getQuery());
 
         return view('livewire.sales.teams.index', [
-            'teams' => $teams,
+            'teams' => $query->paginate(12, ['*'], 'page', $this->page),
         ]);
     }
 }

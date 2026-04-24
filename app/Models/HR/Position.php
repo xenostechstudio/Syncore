@@ -4,13 +4,16 @@ namespace App\Models\HR;
 
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Database\Factories\HR\PositionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Position extends Model
 {
-    use LogsActivity, HasNotes;
+    /** @use HasFactory<PositionFactory> */
+    use HasFactory, LogsActivity, HasNotes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

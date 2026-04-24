@@ -3,9 +3,8 @@
 namespace App\Livewire\Purchase\Suppliers;
 
 use App\Exports\SuppliersExport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Purchase\Supplier;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -16,22 +15,12 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Suppliers')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    public string $search = '';
-    public string $status = 'all';
-    public string $sort = 'latest';
-    public string $viewType = 'list';
+    use WithIndexComponent;
 
     #[Url]
     public int $perPage = 10;
 
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
+    public string $viewType = 'list';
 
     public array $visibleColumns = [
         'supplier' => true,
@@ -40,48 +29,21 @@ class Index extends Component
         'status' => true,
     ];
 
+    public function mount(): void
+    {
+        $this->status = 'all';
+    }
+
+    public function updatedPerPage(): void
+    {
+        $this->resetPage();
+    }
+
     public function toggleColumn(string $column): void
     {
         if (isset($this->visibleColumns[$column])) {
-            $this->visibleColumns[$column] = !$this->visibleColumns[$column];
+            $this->visibleColumns[$column] = ! $this->visibleColumns[$column];
         }
-    }
-
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getSuppliersQuery()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function clearFilters(): void
-    {
-        $this->search = '';
-        $this->status = 'all';
-        $this->sort = 'latest';
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
     }
 
     public function setView(string $view): void
@@ -89,16 +51,22 @@ class Index extends Component
         $this->viewType = $view;
     }
 
-    // Bulk Actions
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'sort']);
+        $this->status = 'all';
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
             return;
         }
 
-        // Validate which suppliers can be deleted (no active POs)
         $suppliers = Supplier::whereIn('id', $this->selected)
-            ->withCount(['purchaseOrders as active_po_count' => fn($q) => $q->whereNotIn('status', ['cancelled', 'received'])])
+            ->withCount(['purchaseOrders as active_po_count' => fn ($q) => $q->whereNotIn('status', ['cancelled', 'received'])])
             ->get();
 
         $canDelete = [];
@@ -106,10 +74,7 @@ class Index extends Component
 
         foreach ($suppliers as $supplier) {
             if ($supplier->active_po_count === 0) {
-                $canDelete[] = [
-                    'id' => $supplier->id,
-                    'name' => $supplier->name,
-                ];
+                $canDelete[] = ['id' => $supplier->id, 'name' => $supplier->name];
             } else {
                 $cannotDelete[] = [
                     'id' => $supplier->id,
@@ -134,9 +99,8 @@ class Index extends Component
             return;
         }
 
-        // Only delete suppliers without active POs
         $suppliersWithPOs = Supplier::whereIn('id', $this->selected)
-            ->whereHas('purchaseOrders', fn($q) => $q->whereNotIn('status', ['cancelled', 'received']))
+            ->whereHas('purchaseOrders', fn ($q) => $q->whereNotIn('status', ['cancelled', 'received']))
             ->pluck('id')
             ->toArray();
 
@@ -154,22 +118,13 @@ class Index extends Component
         session()->flash('success', "{$count} suppliers deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function bulkActivate(): void
     {
         if (empty($this->selected)) {
             return;
         }
 
-        $count = Supplier::whereIn('id', $this->selected)
-            ->update(['is_active' => true]);
-
+        $count = Supplier::whereIn('id', $this->selected)->update(['is_active' => true]);
         $this->clearSelection();
         session()->flash('success', "{$count} suppliers activated.");
     }
@@ -180,50 +135,51 @@ class Index extends Component
             return;
         }
 
-        $count = Supplier::whereIn('id', $this->selected)
-            ->update(['is_active' => false]);
-
+        $count = Supplier::whereIn('id', $this->selected)->update(['is_active' => false]);
         $this->clearSelection();
         session()->flash('success', "{$count} suppliers deactivated.");
     }
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new SuppliersExport(), 'suppliers-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'suppliers-' . now()->format('Y-m-d') . '.xlsx'
+            : 'suppliers-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new SuppliersExport($this->selected), 'suppliers-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new SuppliersExport($this->selected ?: null), $filename);
     }
 
-    private function getSuppliersQuery()
+    protected function getQuery()
     {
-        return DB::table('suppliers')
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'ilike', "%{$this->search}%")
-                        ->orWhere('email', 'ilike', "%{$this->search}%")
-                        ->orWhere('contact_person', 'ilike', "%{$this->search}%");
-                });
-            })
-            ->when($this->status === 'active', fn($q) => $q->where('is_active', true))
-            ->when($this->status === 'inactive', fn($q) => $q->where('is_active', false))
-            ->when($this->sort === 'oldest', fn($q) => $q->orderBy('created_at', 'asc'))
-            ->when($this->sort === 'name', fn($q) => $q->orderBy('name', 'asc'))
-            ->when($this->sort === 'latest', fn($q) => $q->orderBy('created_at', 'desc'));
+        return Supplier::query()
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('email', 'like', "%{$this->search}%")
+                ->orWhere('contact_person', 'like', "%{$this->search}%")))
+            ->when($this->status === 'active', fn ($q) => $q->where('is_active', true))
+            ->when($this->status === 'inactive', fn ($q) => $q->where('is_active', false));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Supplier::class;
     }
 
     public function render()
     {
-        $query = $this->getSuppliersQuery();
+        $query = match ($this->sort) {
+            'oldest' => $this->getQuery()->orderBy('created_at', 'asc'),
+            'name' => $this->getQuery()->orderBy('name', 'asc'),
+            default => $this->getQuery()->orderBy('created_at', 'desc'),
+        };
+
         $total = $query->count();
-        
         $suppliers = $query
             ->skip(($this->page - 1) * $this->perPage)
             ->take($this->perPage)
             ->get();
 
-        $this->totalPages = (int) ceil($total / $this->perPage);
+        $this->totalPages = (int) ceil($total / max(1, $this->perPage));
 
         return view('livewire.purchase.suppliers.index', [
             'suppliers' => $suppliers,
