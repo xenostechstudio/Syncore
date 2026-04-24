@@ -256,21 +256,14 @@
 
     {{-- Content --}}
     @if($employees->isEmpty())
-        <div class="-mx-4 -mt-6 -mb-6 flex min-h-[70vh] items-center justify-center bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
-            <div class="-mt-16 flex flex-col items-center gap-4 text-center">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <flux:icon name="users" class="size-8 text-zinc-400" />
-                </div>
-                <div>
-                    <p class="text-base font-medium text-zinc-900 dark:text-zinc-100">No employees found</p>
-                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Get started by adding a new employee</p>
-                </div>
-                <a href="{{ route('hr.employees.create') }}" wire:navigate class="mt-2 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    <flux:icon name="plus" class="size-4" />
-                    New Employee
-                </a>
-            </div>
-        </div>
+        <x-ui.empty-state
+                layout="fullscreen"
+                icon="users"
+                title="No employees found"
+                description="Get started by adding a new employee"
+                :actionUrl="route('hr.employees.create')"
+                actionLabel="New Employee"
+            />
     @else
         @if($view === 'list')
             <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
