@@ -5,7 +5,7 @@ namespace App\Livewire\Invoicing\Invoices;
 use App\Exports\InvoicesExport;
 use App\Imports\InvoicesImport;
 use App\Livewire\Concerns\WithImport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Invoicing\Invoice;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,36 +19,11 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Invoices')]
 class Index extends Component
 {
-    use WithManualPagination, WithImport;
-
-    #[Url]
-    public string $search = '';
-    
-    #[Url]
-    public string $status = '';
-
-    #[Url]
-    public string $sort = 'latest';
-
-    #[Url]
-    public string $groupBy = '';
-    
-    #[Url]
-    public string $view = 'list';
+    use WithIndexComponent, WithImport;
 
     #[Url]
     public bool $myInvoice = true;
 
-    #[Url]
-    public bool $showStats = false;
-    
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
-    
     public array $visibleColumns = [
         'invoice_number' => true,
         'customer' => true,
@@ -59,37 +34,14 @@ class Index extends Component
         'status' => true,
     ];
 
-    public function toggleStats(): void
-    {
-        $this->showStats = !$this->showStats;
-    }
-
-    public function setView(string $view): void
-    {
-        if (! in_array($view, ['list', 'grid', 'kanban'], true)) {
-            return;
-        }
-
-        $this->view = $view;
-    }
-
     public function toggleColumn(string $column): void
     {
-        $this->visibleColumns[$column] = !($this->visibleColumns[$column] ?? true);
+        $this->visibleColumns[$column] = ! ($this->visibleColumns[$column] ?? true);
     }
 
-    public function updatingSearch(): void
+    public function updatedMyInvoice(): void
     {
         $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedStatus(): void
-    {
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
     }
 
     public function clearFilters(): void
@@ -97,63 +49,33 @@ class Index extends Component
         $this->reset(['search', 'status', 'sort', 'groupBy']);
         $this->myInvoice = true;
         $this->resetPage();
+        $this->clearSelection();
     }
 
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getInvoicesQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function toggleSelectAll(): void
-    {
-        $this->selectAll = !$this->selectAll;
-    }
-
-    public function deleteSelected(): void
-    {
-        $this->confirmBulkDelete();
-    }
-
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
             return;
         }
 
-        // Validate which invoices can be deleted (only draft)
         $invoices = Invoice::whereIn('id', $this->selected)->get();
 
         $canDelete = [];
         $cannotDelete = [];
 
         foreach ($invoices as $invoice) {
-            if ($invoice->status === 'draft') {
+            $statusValue = $invoice->status?->value ?? $invoice->status;
+            if ($statusValue === 'draft') {
                 $canDelete[] = [
                     'id' => $invoice->id,
                     'name' => $invoice->invoice_number,
-                    'status' => $invoice->status,
+                    'status' => $statusValue,
                 ];
             } else {
                 $cannotDelete[] = [
                     'id' => $invoice->id,
                     'name' => $invoice->invoice_number,
-                    'reason' => "Status is '{$invoice->status}' - only draft invoices can be deleted",
+                    'reason' => "Status is '{$statusValue}' - only draft invoices can be deleted",
                 ];
             }
         }
@@ -174,18 +96,11 @@ class Index extends Component
         }
 
         $count = Invoice::whereIn('id', $this->selected)
-            ->whereIn('status', ['draft'])
+            ->where('status', 'draft')
             ->delete();
 
         $this->cancelDelete();
         session()->flash('success', "{$count} invoices deleted successfully.");
-    }
-
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
     }
 
     public function bulkMarkSent(): void
@@ -210,7 +125,7 @@ class Index extends Component
 
         $count = Invoice::whereIn('id', $this->selected)
             ->whereIn('status', ['sent', 'partial', 'overdue'])
-            ->update(['status' => 'paid', 'paid_at' => now()]);
+            ->update(['status' => 'paid', 'paid_date' => now()]);
 
         $this->clearSelection();
         session()->flash('success', "{$count} invoices marked as paid.");
@@ -218,11 +133,11 @@ class Index extends Component
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new InvoicesExport(), 'invoices-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'invoices-' . now()->format('Y-m-d') . '.xlsx'
+            : 'invoices-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new InvoicesExport($this->selected), 'invoices-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new InvoicesExport($this->selected ?: null), $filename);
     }
 
     protected function getImportClass(): string
@@ -238,27 +153,10 @@ class Index extends Component
         ];
     }
 
-    private function getInvoicesQuery()
-    {
-        return Invoice::query()
-            ->with(['customer', 'salesOrder', 'user'])
-            ->when($this->myInvoice, fn($q) => $q->where('user_id', Auth::id()))
-            ->when($this->search, fn($q) => $q->where(fn ($qq) => $qq
-                ->where('invoice_number', 'like', "%{$this->search}%")
-                ->orWhereHas('customer', fn($q) => $q->where('name', 'like', "%{$this->search}%"))
-            ))
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->when($this->sort === 'latest', fn($q) => $q->latest())
-            ->when($this->sort === 'oldest', fn($q) => $q->oldest())
-            ->when($this->sort === 'total_high', fn($q) => $q->orderByDesc('total'))
-            ->when($this->sort === 'total_low', fn($q) => $q->orderBy('total'))
-            ->when($this->sort === 'due_date', fn($q) => $q->orderBy('due_date'));
-    }
-
-    private function getStatistics(): array
+    protected function getStatistics(): array
     {
         $baseQuery = Invoice::query()
-            ->when($this->myInvoice, fn($q) => $q->where('user_id', Auth::id()));
+            ->when($this->myInvoice, fn ($q) => $q->where('user_id', Auth::id()));
 
         $stats = (clone $baseQuery)
             ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(total) as total'))
@@ -279,9 +177,33 @@ class Index extends Component
         ];
     }
 
+    protected function getQuery()
+    {
+        return Invoice::query()
+            ->with(['customer', 'salesOrder', 'user'])
+            ->when($this->myInvoice, fn ($q) => $q->where('user_id', Auth::id()))
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('invoice_number', 'like', "%{$this->search}%")
+                ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$this->search}%"))))
+            ->when($this->status, fn ($q) => $q->where('status', $this->status));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Invoice::class;
+    }
+
     public function render()
     {
-        $invoices = $this->getInvoicesQuery()->paginate(15, ['*'], 'page', $this->page);
+        $query = match ($this->sort) {
+            'oldest' => $this->getQuery()->oldest(),
+            'total_high' => $this->getQuery()->orderByDesc('total'),
+            'total_low' => $this->getQuery()->orderBy('total'),
+            'due_date' => $this->getQuery()->orderBy('due_date'),
+            default => $this->getQuery()->latest(),
+        };
+
+        $invoices = $query->paginate(15, ['*'], 'page', $this->page);
         $this->totalPages = $invoices->lastPage();
 
         return view('livewire.invoicing.invoices.index', [

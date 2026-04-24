@@ -8,13 +8,16 @@ use App\Traits\HasCreatedBy;
 use App\Traits\HasNotes;
 use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
+use Database\Factories\HR\PayrollPeriodFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollPeriod extends Model
 {
-    use LogsActivity, HasNotes, HasStateMachine, HasCreatedBy;
+    /** @use HasFactory<PayrollPeriodFactory> */
+    use HasFactory, LogsActivity, HasNotes, HasStateMachine, HasCreatedBy;
 
     protected string $stateEnum = PayrollState::class;
 
