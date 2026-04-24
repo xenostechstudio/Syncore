@@ -12,13 +12,16 @@ use App\Traits\HasSoftDeletes;
 use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
+use Database\Factories\CRM\OpportunityFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Opportunity extends Model
 {
-    use LogsActivity, HasNotes, Searchable, HasSoftDeletes, HasAttachments, HasStateMachine;
+    /** @use HasFactory<OpportunityFactory> */
+    use HasFactory, LogsActivity, HasNotes, Searchable, HasSoftDeletes, HasAttachments, HasStateMachine;
 
     protected string $stateEnum = OpportunityState::class;
     protected string $statusColumn = 'status';

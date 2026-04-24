@@ -2,11 +2,16 @@
 
 namespace App\Models\CRM;
 
+use Database\Factories\CRM\PipelineFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pipeline extends Model
 {
+    /** @use HasFactory<PipelineFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'sequence',

@@ -9,12 +9,15 @@ use App\Models\User;
 use App\Traits\HasNotes;
 use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
+use Database\Factories\HR\LeaveRequestFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeaveRequest extends Model
 {
-    use LogsActivity, HasNotes, HasStateMachine;
+    /** @use HasFactory<LeaveRequestFactory> */
+    use HasFactory, LogsActivity, HasNotes, HasStateMachine;
 
     protected string $stateEnum = LeaveRequestState::class;
 

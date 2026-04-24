@@ -5,76 +5,41 @@ namespace App\Livewire\CRM\Opportunities;
 use App\Exports\OpportunitiesExport;
 use App\Imports\OpportunitiesImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\CRM\Opportunity;
 use App\Models\CRM\Pipeline;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Opportunities')]
 class Index extends Component
 {
-    use WithManualPagination, WithImport;
-
-    #[Url]
-    public string $view = 'kanban';
-
-    #[Url]
-    public string $search = '';
+    use WithIndexComponent, WithImport;
 
     #[Url]
     public string $stage = '';
 
-    public bool $showStats = false;
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    public function setView(string $view): void
+    public function mount(): void
     {
-        $this->view = $view;
+        $this->view = 'kanban';
     }
 
-    public function toggleStats(): void
+    public function updatedStage(): void
     {
-        $this->showStats = !$this->showStats;
-    }
-
-    
-
-    
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = Opportunity::query()
-                ->when($this->search, fn ($q) => $q->where('name', 'ilike', "%{$this->search}%"))
-                ->when($this->stage, fn ($q) => $q->where('pipeline_id', $this->stage))
-                ->pluck('id')
-                ->map(fn ($id) => (string) $id)
-                ->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->resetPage();
     }
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new OpportunitiesExport(), 'opportunities-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'opportunities-' . now()->format('Y-m-d') . '.xlsx'
+            : 'opportunities-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new OpportunitiesExport($this->selected), 'opportunities-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new OpportunitiesExport($this->selected ?: null), $filename);
     }
 
     protected function getImportClass(): string
@@ -107,7 +72,6 @@ class Index extends Component
             $opportunity->update(['lost_at' => now(), 'won_at' => null]);
             session()->flash('success', "'{$opportunity->name}' marked as Lost.");
         } else {
-            // Clear won/lost status if moving back to active stage
             $opportunity->update(['won_at' => null, 'lost_at' => null]);
             session()->flash('success', "'{$opportunity->name}' moved to {$pipeline->name}.");
         }
@@ -160,27 +124,28 @@ class Index extends Component
         ];
     }
 
+    protected function getQuery()
+    {
+        return Opportunity::query()
+            ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
+            ->when($this->stage, fn ($q) => $q->where('pipeline_id', $this->stage));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Opportunity::class;
+    }
+
     public function render()
     {
-        $pipelines = Pipeline::where('is_active', true)
-            ->orderBy('sequence')
-            ->get();
+        $pipelines = Pipeline::where('is_active', true)->orderBy('sequence')->get();
 
-        $opportunitiesQuery = Opportunity::query()
-            ->with(['customer', 'pipeline', 'assignedTo'])
-            ->when($this->search, fn ($q) => $q->where('name', 'ilike', "%{$this->search}%"))
-            ->when($this->stage, fn ($q) => $q->where('pipeline_id', $this->stage));
+        $opportunitiesQuery = $this->getQuery()->with(['customer', 'pipeline', 'assignedTo']);
 
         if ($this->view === 'kanban') {
-            // Include all opportunities in kanban (including won/lost)
-            $opportunities = $opportunitiesQuery
-                ->orderByDesc('expected_revenue')
-                ->get()
-                ->groupBy('pipeline_id');
+            $opportunities = $opportunitiesQuery->orderByDesc('expected_revenue')->get()->groupBy('pipeline_id');
         } else {
-            $opportunities = $opportunitiesQuery
-                ->orderByDesc('created_at')
-                ->paginate(20, ['*'], 'page', $this->page);
+            $opportunities = $opportunitiesQuery->orderByDesc('created_at')->paginate(20, ['*'], 'page', $this->page);
         }
 
         return view('livewire.crm.opportunities.index', [
