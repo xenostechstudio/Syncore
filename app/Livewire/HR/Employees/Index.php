@@ -3,6 +3,7 @@
 namespace App\Livewire\HR\Employees;
 
 use App\Exports\EmployeesExport;
+use App\Livewire\Concerns\WithManualPagination;
 use App\Models\HR\Department;
 use App\Models\HR\Employee;
 use App\Models\HR\Position;
@@ -10,14 +11,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Employees')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -62,7 +62,7 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
         $this->selected = [];
         $this->selectAll = false;
     }
@@ -77,16 +77,6 @@ class Index extends Component
         $this->showStats = !$this->showStats;
     }
 
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
-
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
-
     public function clearSelection(): void
     {
         $this->selected = [];
@@ -96,7 +86,7 @@ class Index extends Component
     public function clearFilters(): void
     {
         $this->reset(['search', 'departmentId', 'status', 'sort', 'groupBy']);
-        $this->resetPage();
+        $this->page = 1;
         $this->clearSelection();
     }
 
@@ -215,7 +205,7 @@ class Index extends Component
             default => $query->orderBy('created_at', 'desc'),
         };
 
-        $employees = $query->paginate(15);
+        $employees = $query->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.hr.employees.index', [
             'employees' => $employees,

@@ -410,6 +410,16 @@ class ModuleNavigation
                     ],
                 ],
                 [
+                    'label' => __('nav.attendance'),
+                    'route' => 'hr.attendance.index',
+                    'icon' => 'clock',
+                    'pattern' => 'hr.attendance*',
+                    'children' => [
+                        ['label' => __('nav.attendance_records'), 'route' => 'hr.attendance.index', 'pattern' => 'hr.attendance.index'],
+                        ['label' => __('nav.work_schedules'), 'route' => 'hr.attendance.schedules.index', 'pattern' => 'hr.attendance.schedules*'],
+                    ],
+                ],
+                [
                     'label' => __('nav.payroll'),
                     'route' => 'hr.payroll.index',
                     'icon' => 'banknotes',

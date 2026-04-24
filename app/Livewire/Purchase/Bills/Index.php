@@ -5,19 +5,19 @@ namespace App\Livewire\Purchase\Bills;
 use App\Exports\VendorBillsExport;
 use App\Imports\VendorBillsImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithManualPagination;
 use App\Models\Purchase\VendorBill;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Purchase'])]
 #[Title('Vendor Bills')]
 class Index extends Component
 {
-    use WithPagination, WithImport;
+    use WithManualPagination, WithImport;
 
     #[Url]
     public string $search = '';

@@ -9,14 +9,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Leave Requests')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -42,7 +42,7 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
     public function updatedSelectAll($value): void
@@ -65,15 +65,9 @@ class Index extends Component
         $this->view = $view;
     }
 
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
+    
 
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
+    
 
     public function approveSelected(): void
     {
@@ -180,7 +174,7 @@ class Index extends Component
 
     public function render()
     {
-        $requests = $this->getQuery()->paginate(15);
+        $requests = $this->getQuery()->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.hr.leave.requests.index', [
             'requests' => $requests,

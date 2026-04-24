@@ -377,6 +377,12 @@ Route::middleware(['auth', 'verified', 'permission:access.hr'])->prefix('hr')->n
     Route::get('/leave/requests/create', \App\Livewire\HR\Leave\Requests\Form::class)->name('leave.requests.create');
     Route::get('/leave/requests/{id}/edit', \App\Livewire\HR\Leave\Requests\Form::class)->name('leave.requests.edit');
     
+    // Attendance
+    Route::get('/attendance', \App\Livewire\HR\Attendance\Index::class)->name('attendance.index');
+    Route::get('/attendance/schedules', \App\Livewire\HR\Attendance\Schedules\Index::class)->name('attendance.schedules.index');
+    Route::get('/attendance/schedules/create', \App\Livewire\HR\Attendance\Schedules\Form::class)->name('attendance.schedules.create');
+    Route::get('/attendance/schedules/{id}/edit', \App\Livewire\HR\Attendance\Schedules\Form::class)->name('attendance.schedules.edit');
+    
     // Payroll
     Route::get('/payroll', \App\Livewire\HR\Payroll\Index::class)->name('payroll.index');
     Route::get('/payroll/create', \App\Livewire\HR\Payroll\Form::class)->name('payroll.create');

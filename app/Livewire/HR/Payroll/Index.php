@@ -8,14 +8,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Payroll')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -35,7 +35,7 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
     public function updatedSelectAll(): void
@@ -63,15 +63,9 @@ class Index extends Component
         $this->showStats = !$this->showStats;
     }
 
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
+    
 
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
+    
 
     public function exportSelected()
     {
@@ -120,7 +114,7 @@ class Index extends Component
 
     public function render()
     {
-        $periods = $this->getPeriodsQuery()->paginate(15);
+        $periods = $this->getPeriodsQuery()->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.hr.payroll.index', [
             'periods' => $periods,

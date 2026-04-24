@@ -11,13 +11,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Activities')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $type = '';
@@ -153,7 +153,7 @@ class Index extends Component
         };
 
         return view('livewire.crm.activities.index', [
-            'activities' => $query->paginate(20),
+            'activities' => $query->paginate(20, ['*'], 'page', $this->page),
             'users' => User::orderBy('name')->get(),
             'leads' => Lead::orderBy('name')->get(),
             'opportunities' => Opportunity::orderBy('name')->get(),

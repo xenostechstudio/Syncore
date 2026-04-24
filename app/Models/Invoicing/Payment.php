@@ -2,7 +2,9 @@
 
 namespace App\Models\Invoicing;
 
+use App\Enums\PaymentState;
 use App\Traits\HasNotes;
+use App\Traits\HasStateMachine;
 use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
-    use HasFactory, LogsActivity, HasNotes, HasYearlySequenceNumber;
+    use HasFactory, LogsActivity, HasNotes, HasYearlySequenceNumber, HasStateMachine;
 
     public const NUMBER_PREFIX = 'PAY';
     public const NUMBER_COLUMN = 'payment_number';
@@ -33,6 +35,7 @@ class Payment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'amount' => 'decimal:2',
+        'status' => PaymentState::class,
     ];
 
     public function invoice(): BelongsTo

@@ -4,20 +4,14 @@ namespace App\Enums;
 
 enum OpportunityState: string
 {
-    case PROSPECTING = 'prospecting';
-    case ANALYSIS = 'analysis';
-    case PROPOSAL = 'proposal';
-    case NEGOTIATION = 'negotiation';
+    case OPEN = 'open';
     case WON = 'won';
     case LOST = 'lost';
 
     public function label(): string
     {
-        return match ($this) {
-            self::PROSPECTING => 'Prospecting',
-            self::ANALYSIS => 'Analysis',
-            self::PROPOSAL => 'Proposal',
-            self::NEGOTIATION => 'Negotiation',
+        return match($this) {
+            self::OPEN => 'Open',
             self::WON => 'Won',
             self::LOST => 'Lost',
         };
@@ -25,58 +19,22 @@ enum OpportunityState: string
 
     public function color(): string
     {
-        return match ($this) {
-            self::PROSPECTING => 'zinc',
-            self::ANALYSIS => 'blue',
-            self::PROPOSAL => 'violet',
-            self::NEGOTIATION => 'amber',
-            self::WON => 'emerald',
+        return match($this) {
+            self::OPEN => 'blue',
+            self::WON => 'green',
             self::LOST => 'red',
         };
     }
 
-    public function icon(): string
+    public static function values(): array
     {
-        return match ($this) {
-            self::PROSPECTING => 'magnifying-glass',
-            self::ANALYSIS => 'chart-bar',
-            self::PROPOSAL => 'document-text',
-            self::NEGOTIATION => 'chat-bubble-left-right',
-            self::WON => 'trophy',
-            self::LOST => 'x-circle',
-        };
+        return array_column(self::cases(), 'value');
     }
 
-    public function probability(): int
+    public static function options(): array
     {
-        return match ($this) {
-            self::PROSPECTING => 10,
-            self::ANALYSIS => 25,
-            self::PROPOSAL => 50,
-            self::NEGOTIATION => 75,
-            self::WON => 100,
-            self::LOST => 0,
-        };
-    }
-
-    public function canEdit(): bool
-    {
-        return !$this->isTerminal();
-    }
-
-    public function isTerminal(): bool
-    {
-        return in_array($this, [self::WON, self::LOST]);
-    }
-
-    public static function steps(): array
-    {
-        return [
-            ['key' => self::PROSPECTING->value, 'label' => self::PROSPECTING->label()],
-            ['key' => self::ANALYSIS->value, 'label' => self::ANALYSIS->label()],
-            ['key' => self::PROPOSAL->value, 'label' => self::PROPOSAL->label()],
-            ['key' => self::NEGOTIATION->value, 'label' => self::NEGOTIATION->label()],
-            ['key' => self::WON->value, 'label' => self::WON->label()],
-        ];
+        return collect(self::cases())->mapWithKeys(fn($case) => [
+            $case->value => $case->label()
+        ])->toArray();
     }
 }

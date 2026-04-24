@@ -2,12 +2,14 @@
 
 namespace App\Models\CRM;
 
+use App\Enums\OpportunityState;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\User;
 use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
 use App\Traits\HasSoftDeletes;
+use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +18,10 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Opportunity extends Model
 {
-    use LogsActivity, HasNotes, Searchable, HasSoftDeletes, HasAttachments;
+    use LogsActivity, HasNotes, Searchable, HasSoftDeletes, HasAttachments, HasStateMachine;
+
+    protected string $stateEnum = OpportunityState::class;
+    protected string $statusColumn = 'status';
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     
@@ -33,6 +38,7 @@ class Opportunity extends Model
         'description',
         'assigned_to',
         'sales_order_id',
+        'status',
         'won_at',
         'lost_at',
         'lost_reason',
@@ -44,6 +50,7 @@ class Opportunity extends Model
         'expected_close_date' => 'date',
         'won_at' => 'datetime',
         'lost_at' => 'datetime',
+        'status' => OpportunityState::class,
     ];
 
     public function customer(): BelongsTo
@@ -88,7 +95,6 @@ class Opportunity extends Model
         }
 
         $wonStage = Pipeline::where('is_won', true)->first();
-        $oldPipelineId = $this->pipeline_id;
         
         $this->update([
             'pipeline_id' => $wonStage?->id ?? $this->pipeline_id,
@@ -97,11 +103,8 @@ class Opportunity extends Model
             'sales_order_id' => $salesOrderId,
         ]);
 
-        $this->logStatusChange(
-            "pipeline:{$oldPipelineId}",
-            "won",
-            'Opportunity marked as won'
-        );
+        // Use state machine for status transition
+        $this->transitionTo(OpportunityState::WON, 'Opportunity marked as won');
 
         return true;
     }
@@ -113,7 +116,6 @@ class Opportunity extends Model
         }
 
         $lostStage = Pipeline::where('is_lost', true)->first();
-        $oldPipelineId = $this->pipeline_id;
         
         $this->update([
             'pipeline_id' => $lostStage?->id ?? $this->pipeline_id,
@@ -122,11 +124,8 @@ class Opportunity extends Model
             'lost_reason' => $reason,
         ]);
 
-        $this->logStatusChange(
-            "pipeline:{$oldPipelineId}",
-            "lost",
-            $reason ?: 'Opportunity marked as lost'
-        );
+        // Use state machine for status transition
+        $this->transitionTo(OpportunityState::LOST, $reason ?: 'Opportunity marked as lost');
 
         return true;
     }
@@ -155,16 +154,16 @@ class Opportunity extends Model
 
     public function isWon(): bool
     {
-        return $this->won_at !== null;
+        return $this->status === OpportunityState::WON;
     }
 
     public function isLost(): bool
     {
-        return $this->lost_at !== null;
+        return $this->status === OpportunityState::LOST;
     }
 
     public function isOpen(): bool
     {
-        return !$this->isWon() && !$this->isLost();
+        return $this->status === OpportunityState::OPEN;
     }
 }

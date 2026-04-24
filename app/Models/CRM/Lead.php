@@ -119,14 +119,14 @@ class Lead extends Model
     public static function getSources(): array
     {
         return [
-            'website' => 'Website',
-            'referral' => 'Referral',
-            'cold_call' => 'Cold Call',
-            'social_media' => 'Social Media',
-            'advertisement' => 'Advertisement',
-            'trade_show' => 'Trade Show',
-            'email_campaign' => 'Email Campaign',
-            'other' => 'Other',
+            'website' => __('crm.source.website'),
+            'referral' => __('crm.source.referral'),
+            'cold_call' => __('crm.source.cold_call'),
+            'social_media' => __('crm.source.social_media'),
+            'advertisement' => __('crm.source.advertisement'),
+            'trade_show' => __('crm.source.trade_show'),
+            'email_campaign' => __('crm.source.email_campaign'),
+            'other' => __('crm.source.other'),
         ];
     }
 

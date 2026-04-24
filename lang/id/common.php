@@ -37,6 +37,7 @@ return [
     'remove' => 'Hapus',
     'new' => 'Baru',
     'selected' => 'dipilih',
+    'actions' => 'Aksi',
     
     // Status
     'status' => 'Status',
@@ -340,4 +341,12 @@ return [
     'send_message' => 'Kirim pesan',
     'log_note' => 'Catat',
     'schedule_activity' => 'Jadwalkan aktivitas',
+    
+    // Additional
+    'all_employees' => 'Semua Karyawan',
+    'all_statuses' => 'Semua Status',
+    'minutes' => 'menit',
+    'optional' => 'Opsional',
+    'no_records_found' => 'Tidak ada data ditemukan',
+    'employee' => 'Karyawan',
 ];

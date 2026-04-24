@@ -9,14 +9,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Stock Adjustment')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -76,7 +76,7 @@ class Index extends Component
 
     public function updatingSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
         $this->clearSelection();
     }
 
@@ -100,7 +100,7 @@ class Index extends Component
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'warehouse']);
-        $this->resetPage();
+        $this->page = 1;
         $this->clearSelection();
     }
 
@@ -207,7 +207,7 @@ class Index extends Component
         $adjustments = $this->getAdjustmentsQuery()
             ->with(['warehouse', 'user', 'items'])
             ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate(15);
+            ->paginate(15, ['*'], 'page', $this->page);
 
         $warehouses = Warehouse::orderBy('name')->get();
 

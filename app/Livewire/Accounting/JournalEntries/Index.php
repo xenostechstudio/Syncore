@@ -8,14 +8,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Accounting'])]
 #[Title('Journal Entries')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -49,15 +49,9 @@ class Index extends Component
         $this->selectAll = false;
     }
 
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
+    
 
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
+    
 
     public function post(int $id): void
     {
@@ -93,7 +87,7 @@ class Index extends Component
 
     public function render()
     {
-        $entries = $this->getEntriesQuery()->paginate(20);
+        $entries = $this->getEntriesQuery()->paginate(20, ['*'], 'page', $this->page);
 
         return view('livewire.accounting.journal-entries.index', [
             'entries' => $entries,

@@ -2,6 +2,7 @@
 
 namespace App\Models\Sales;
 
+use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
 use App\Traits\HasSoftDeletes;
 use App\Traits\LogsActivity;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Customer extends Model
 {
     /** @use HasFactory<CustomerFactory> */
-    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable;
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasAttachments;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     

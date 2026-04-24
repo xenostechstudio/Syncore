@@ -11,14 +11,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Opportunities')]
 class Index extends Component
 {
-    use WithPagination, WithImport;
+    use WithManualPagination, WithImport;
 
     #[Url]
     public string $view = 'kanban';
@@ -44,15 +44,9 @@ class Index extends Component
         $this->showStats = !$this->showStats;
     }
 
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
+    
 
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
+    
 
     public function updatedSelectAll($value): void
     {
@@ -186,7 +180,7 @@ class Index extends Component
         } else {
             $opportunities = $opportunitiesQuery
                 ->orderByDesc('created_at')
-                ->paginate(20);
+                ->paginate(20, ['*'], 'page', $this->page);
         }
 
         return view('livewire.crm.opportunities.index', [

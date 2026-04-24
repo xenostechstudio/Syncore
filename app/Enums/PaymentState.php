@@ -8,7 +8,6 @@ enum PaymentState: string
     case PROCESSING = 'processing';
     case COMPLETED = 'completed';
     case FAILED = 'failed';
-    case REFUNDED = 'refunded';
     case CANCELLED = 'cancelled';
 
     public function label(): string
@@ -18,7 +17,6 @@ enum PaymentState: string
             self::PROCESSING => 'Processing',
             self::COMPLETED => 'Completed',
             self::FAILED => 'Failed',
-            self::REFUNDED => 'Refunded',
             self::CANCELLED => 'Cancelled',
         };
     }
@@ -26,37 +24,22 @@ enum PaymentState: string
     public function color(): string
     {
         return match ($this) {
-            self::PENDING => 'zinc',
+            self::PENDING => 'yellow',
             self::PROCESSING => 'blue',
-            self::COMPLETED => 'emerald',
+            self::COMPLETED => 'green',
             self::FAILED => 'red',
-            self::REFUNDED => 'amber',
-            self::CANCELLED => 'zinc',
+            self::CANCELLED => 'gray',
         };
     }
 
-    public function canRefund(): bool
+    public static function transitions(): array
     {
-        return $this === self::COMPLETED;
-    }
-
-    public function canRetry(): bool
-    {
-        return $this === self::FAILED;
-    }
-
-    public function canCancel(): bool
-    {
-        return in_array($this, [self::PENDING, self::PROCESSING]);
-    }
-
-    public function isTerminal(): bool
-    {
-        return in_array($this, [self::COMPLETED, self::FAILED, self::REFUNDED, self::CANCELLED]);
-    }
-
-    public function isSuccessful(): bool
-    {
-        return $this === self::COMPLETED;
+        return [
+            self::PENDING->value => [self::PROCESSING->value, self::CANCELLED->value],
+            self::PROCESSING->value => [self::COMPLETED->value, self::FAILED->value],
+            self::COMPLETED->value => [],
+            self::FAILED->value => [self::PENDING->value],
+            self::CANCELLED->value => [],
+        ];
     }
 }

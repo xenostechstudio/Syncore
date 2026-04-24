@@ -59,6 +59,7 @@ return [
     'source.advertisement' => 'Advertisement',
     'source.cold_call' => 'Cold Call',
     'source.trade_show' => 'Trade Show',
+    'source.email_campaign' => 'Email Campaign',
     'source.other' => 'Other',
     
     // Lead Status

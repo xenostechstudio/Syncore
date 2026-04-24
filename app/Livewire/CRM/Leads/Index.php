@@ -8,14 +8,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Leads')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -43,7 +43,7 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
         $this->clearSelection();
     }
 
@@ -70,19 +70,13 @@ class Index extends Component
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'source']);
-        $this->resetPage();
+        $this->page = 1;
         $this->clearSelection();
     }
 
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
+    
 
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
+    
 
     // Bulk Actions
     public function confirmBulkDelete(): void
@@ -191,7 +185,7 @@ class Index extends Component
 
     public function render()
     {
-        $leads = $this->getLeadsQuery()->paginate(20);
+        $leads = $this->getLeadsQuery()->paginate(20, ['*'], 'page', $this->page);
 
         return view('livewire.crm.leads.index', [
             'leads' => $leads,

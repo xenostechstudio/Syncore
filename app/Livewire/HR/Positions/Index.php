@@ -11,14 +11,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Positions')]
 class Index extends Component
 {
-    use WithPagination, WithImport;
+    use WithManualPagination, WithImport;
 
     #[Url]
     public string $search = '';
@@ -59,7 +59,7 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
     public function setView(string $view): void
@@ -67,15 +67,9 @@ class Index extends Component
         $this->view = $view;
     }
 
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
+    
 
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
+    
 
     // Bulk Actions
     public function confirmBulkDelete(): void
@@ -189,7 +183,7 @@ class Index extends Component
             default => $query->orderBy('name', 'asc'),
         };
 
-        $positions = $query->paginate(15);
+        $positions = $query->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.hr.positions.index', [
             'positions' => $positions,

@@ -59,6 +59,7 @@ return [
     'source.advertisement' => 'Iklan',
     'source.cold_call' => 'Cold Call',
     'source.trade_show' => 'Pameran',
+    'source.email_campaign' => 'Kampanye Email',
     'source.other' => 'Lainnya',
     
     // Lead Status

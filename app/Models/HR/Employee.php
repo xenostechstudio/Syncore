@@ -2,10 +2,12 @@
 
 namespace App\Models\HR;
 
-use App\Enums\EmployeeStatus;
+use App\Enums\EmployeeStatus as EmployeeStatusEnum;
 use App\Models\User;
 use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
+use App\Traits\HasSoftDeletes;
+use App\Traits\HasStateMachine;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
-    use LogsActivity, HasNotes, Searchable, HasAttachments;
+    use LogsActivity, HasNotes, Searchable, HasAttachments, HasStateMachine, HasSoftDeletes;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     
@@ -60,11 +62,12 @@ class Employee extends Model
         'hire_date' => 'date',
         'contract_end_date' => 'date',
         'basic_salary' => 'decimal:2',
+        'status' => EmployeeStatusEnum::class,
     ];
 
-    public function getEmployeeStatusAttribute(): EmployeeStatus
+    public function getEmployeeStatusAttribute(): EmployeeStatusEnum
     {
-        return EmployeeStatus::tryFrom($this->status) ?? EmployeeStatus::ACTIVE;
+        return $this->status ?? EmployeeStatusEnum::ACTIVE;
     }
 
     public function user(): BelongsTo
@@ -105,6 +108,16 @@ class Employee extends Model
     public function employeeSalaryComponents(): HasMany
     {
         return $this->hasMany(EmployeeSalaryComponent::class);
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function employeeSchedules(): HasMany
+    {
+        return $this->hasMany(EmployeeSchedule::class);
     }
 
     public function getInitialsAttribute(): string

@@ -8,14 +8,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Categories')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -64,7 +64,7 @@ class Index extends Component
 
     public function updatingSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
     public function delete(int $id): void
@@ -200,7 +200,7 @@ class Index extends Component
                 ->orWhere('code', 'ilike', "%{$this->search}%"))
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.inventory.categories.index', [
             'categories' => $categories,

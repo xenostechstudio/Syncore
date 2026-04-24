@@ -11,14 +11,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Warehouses')]
 class Index extends Component
 {
-    use WithPagination, WithImport;
+    use WithManualPagination, WithImport;
 
     #[Url]
     public string $search = '';
@@ -155,12 +155,12 @@ class Index extends Component
 
     public function updatedPerPage(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
     public function updatingSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
     public function delete(int $id): void

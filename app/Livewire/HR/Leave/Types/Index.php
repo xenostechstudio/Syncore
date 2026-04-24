@@ -7,13 +7,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Livewire\Concerns\WithManualPagination;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Leave Types')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';
@@ -36,7 +36,7 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
     }
 
     public function updatedSelectAll($value): void
@@ -59,15 +59,9 @@ class Index extends Component
         $this->view = $view;
     }
 
-    public function goToPreviousPage(): void
-    {
-        $this->previousPage();
-    }
+    
 
-    public function goToNextPage(): void
-    {
-        $this->nextPage();
-    }
+    
 
     public function confirmBulkDelete(): void
     {
@@ -153,7 +147,7 @@ class Index extends Component
 
     public function render()
     {
-        $leaveTypes = $this->getQuery()->paginate(15);
+        $leaveTypes = $this->getQuery()->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.hr.leave.types.index', [
             'leaveTypes' => $leaveTypes,

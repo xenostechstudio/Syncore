@@ -42,6 +42,10 @@ class Form extends Component
     public bool $showReturnModal = false;
     public bool $showStatusModal = false;
     public bool $showForecastModal = false;
+    public bool $showPodModal = false;
+    public bool $showFeedbackModal = false;
+    public bool $showPartialDeliveryModal = false;
+    
     public ?int $forecast_product_id = null;
     public array $forecast_data = [];
     public ?string $pending_status = null;
@@ -69,6 +73,24 @@ class Form extends Component
     public string $tracking_number = '';
     public string $courier = '';
     public string $notes = '';
+    
+    // Enhanced fields
+    public string $delivery_instructions = '';
+    public string $preferred_time_slot = '';
+    public string $shipping_cost = '';
+    public string $insurance_amount = '';
+    
+    // POD fields
+    public ?string $signature_image = null;
+    public ?string $delivery_photo = null;
+    public string $received_by = '';
+    
+    // Feedback fields
+    public int $customer_rating = 5;
+    public string $customer_feedback = '';
+    
+    // Partial delivery fields
+    public array $partial_items = [];
 
     public ?string $delivery_number = null;
 
@@ -736,6 +758,22 @@ class Form extends Component
         $this->courier = $delivery->courier ?? '';
         $this->notes = $delivery->notes ?? '';
         $this->delivery_number = $delivery->delivery_number;
+        
+        // Enhanced fields
+        $this->delivery_instructions = $delivery->delivery_instructions ?? '';
+        $this->preferred_time_slot = $delivery->preferred_time_slot ?? '';
+        $this->shipping_cost = $delivery->shipping_cost ? (string) $delivery->shipping_cost : '';
+        $this->insurance_amount = $delivery->insurance_amount ? (string) $delivery->insurance_amount : '';
+        
+        // POD fields
+        $this->signature_image = $delivery->signature_image;
+        $this->delivery_photo = $delivery->delivery_photo;
+        $this->received_by = $delivery->received_by ?? '';
+        
+        // Feedback fields
+        $this->customer_rating = $delivery->customer_rating ?? 5;
+        $this->customer_feedback = $delivery->customer_feedback ?? '';
+        
         $this->createdAt = $delivery->created_at->format('M d, Y \a\t H:i');
         $this->updatedAt = $delivery->updated_at->format('M d, Y \a\t H:i');
     }
@@ -771,6 +809,10 @@ class Form extends Component
             'shipping_address' => 'nullable|string|max:1000',
             'courier' => 'nullable|string|max:100',
             'tracking_number' => 'nullable|string|max:100',
+            'delivery_instructions' => 'nullable|string|max:1000',
+            'preferred_time_slot' => 'nullable|string|max:100',
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'insurance_amount' => 'nullable|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($postWarehouseOut) {
@@ -787,6 +829,11 @@ class Form extends Component
                 'tracking_number' => $this->tracking_number ?: null,
                 'courier' => $this->courier ?: null,
                 'notes' => $this->notes ?: null,
+                // Enhanced fields
+                'delivery_instructions' => $this->delivery_instructions ?: null,
+                'preferred_time_slot' => $this->preferred_time_slot ?: null,
+                'shipping_cost' => $this->shipping_cost ? (float) $this->shipping_cost : null,
+                'insurance_amount' => $this->insurance_amount ? (float) $this->insurance_amount : null,
             ];
 
             if ($this->deliveryId) {
@@ -910,6 +957,166 @@ class Form extends Component
             DeliveryOrder::destroy($this->deliveryId);
             session()->flash('success', 'Delivery order deleted successfully.');
             $this->redirect(route('delivery.orders.index'), navigate: true);
+        }
+    }
+
+    // POD Methods
+    public function openPodModal(): void
+    {
+        if (!$this->deliveryId) {
+            return;
+        }
+
+        $delivery = DeliveryOrder::findOrFail($this->deliveryId);
+        
+        if ($delivery->status !== DeliveryOrderState::DELIVERED) {
+            session()->flash('error', 'POD can only be recorded for delivered orders.');
+            return;
+        }
+
+        $this->signature_image = $delivery->signature_image;
+        $this->delivery_photo = $delivery->delivery_photo;
+        $this->received_by = $delivery->received_by ?? '';
+        
+        $this->showPodModal = true;
+    }
+
+    public function closePodModal(): void
+    {
+        $this->showPodModal = false;
+    }
+
+    public function savePod(): void
+    {
+        if (!$this->deliveryId) {
+            return;
+        }
+
+        $this->validate([
+            'received_by' => 'required|string|max:255',
+        ]);
+
+        $delivery = DeliveryOrder::findOrFail($this->deliveryId);
+        
+        $delivery->update([
+            'received_by' => $this->received_by,
+            'signature_image' => $this->signature_image,
+            'delivery_photo' => $this->delivery_photo,
+        ]);
+
+        $this->showPodModal = false;
+        session()->flash('success', 'Proof of delivery recorded successfully.');
+    }
+
+    // Feedback Methods
+    public function openFeedbackModal(): void
+    {
+        if (!$this->deliveryId) {
+            return;
+        }
+
+        $delivery = DeliveryOrder::findOrFail($this->deliveryId);
+        
+        if ($delivery->status !== DeliveryOrderState::DELIVERED) {
+            session()->flash('error', 'Feedback can only be recorded for delivered orders.');
+            return;
+        }
+
+        $this->customer_rating = $delivery->customer_rating ?? 5;
+        $this->customer_feedback = $delivery->customer_feedback ?? '';
+        
+        $this->showFeedbackModal = true;
+    }
+
+    public function closeFeedbackModal(): void
+    {
+        $this->showFeedbackModal = false;
+    }
+
+    public function saveFeedback(): void
+    {
+        if (!$this->deliveryId) {
+            return;
+        }
+
+        $this->validate([
+            'customer_rating' => 'required|integer|min:1|max:5',
+            'customer_feedback' => 'nullable|string|max:1000',
+        ]);
+
+        $delivery = DeliveryOrder::findOrFail($this->deliveryId);
+        
+        $delivery->update([
+            'customer_rating' => $this->customer_rating,
+            'customer_feedback' => $this->customer_feedback,
+        ]);
+
+        $this->showFeedbackModal = false;
+        session()->flash('success', 'Customer feedback recorded successfully.');
+    }
+
+    // Partial Delivery Methods
+    public function openPartialDeliveryModal(): void
+    {
+        if (!$this->deliveryId) {
+            return;
+        }
+
+        $delivery = DeliveryOrder::with(['items.salesOrderItem.product'])->findOrFail($this->deliveryId);
+        
+        if ($delivery->status->isTerminal()) {
+            session()->flash('error', 'Cannot create partial delivery from completed order.');
+            return;
+        }
+
+        $this->partial_items = $delivery->items->map(function ($item) {
+            return [
+                'sales_order_item_id' => $item->sales_order_item_id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->salesOrderItem?->product?->name ?? '-',
+                'sku' => $item->salesOrderItem?->product?->sku ?? '',
+                'total_quantity' => $item->quantity,
+                'quantity' => 0,
+                'description' => $item->description ?? '',
+            ];
+        })->toArray();
+        
+        $this->showPartialDeliveryModal = true;
+    }
+
+    public function closePartialDeliveryModal(): void
+    {
+        $this->showPartialDeliveryModal = false;
+        $this->partial_items = [];
+    }
+
+    public function createPartialDelivery(): void
+    {
+        if (!$this->deliveryId) {
+            return;
+        }
+
+        $selectedItems = collect($this->partial_items)->filter(fn($item) => $item['quantity'] > 0)->toArray();
+        
+        if (empty($selectedItems)) {
+            session()->flash('error', 'Please select at least one item with quantity.');
+            return;
+        }
+
+        $delivery = DeliveryOrder::findOrFail($this->deliveryId);
+        
+        $partialDelivery = app(\App\Services\DeliveryService::class)->createPartialDelivery(
+            $delivery,
+            $selectedItems,
+            ['delivery_date' => now()->addDay()]
+        );
+
+        if ($partialDelivery) {
+            $this->showPartialDeliveryModal = false;
+            session()->flash('success', 'Partial delivery created successfully.');
+            $this->redirect(route('delivery.orders.edit', $partialDelivery->id), navigate: true);
+        } else {
+            session()->flash('error', 'Failed to create partial delivery.');
         }
     }
 

@@ -37,6 +37,7 @@ return [
     'remove' => 'Remove',
     'new' => 'New',
     'selected' => 'selected',
+    'actions' => 'Actions',
     
     // Status
     'status' => 'Status',
@@ -340,4 +341,12 @@ return [
     'send_message' => 'Send message',
     'log_note' => 'Log note',
     'schedule_activity' => 'Schedule activity',
+    
+    // Additional
+    'all_employees' => 'All Employees',
+    'all_statuses' => 'All Statuses',
+    'minutes' => 'minutes',
+    'optional' => 'Optional',
+    'no_records_found' => 'No records found',
+    'employee' => 'Employee',
 ];

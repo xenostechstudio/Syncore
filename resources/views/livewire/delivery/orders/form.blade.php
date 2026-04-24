@@ -191,6 +191,28 @@
                     @if($deliveryId && $status === \App\Enums\DeliveryOrderState::DELIVERED->value)
                         <button 
                             type="button" 
+                            wire:click="openPodModal" 
+                            wire:loading.attr="disabled"
+                            wire:target="openPodModal"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                            <flux:icon name="check-badge" wire:loading.remove wire:target="openPodModal" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="openPodModal" class="size-4 animate-spin" />
+                            {{ __('delivery.record_pod') }}
+                        </button>
+                        <button 
+                            type="button" 
+                            wire:click="openFeedbackModal" 
+                            wire:loading.attr="disabled"
+                            wire:target="openFeedbackModal"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            <flux:icon name="star" wire:loading.remove wire:target="openFeedbackModal" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="openFeedbackModal" class="size-4 animate-spin" />
+                            {{ __('delivery.record_feedback') }}
+                        </button>
+                        <button 
+                            type="button" 
                             wire:click="openReturnModal" 
                             wire:loading.attr="disabled"
                             wire:target="openReturnModal"
@@ -199,6 +221,19 @@
                             <flux:icon name="arrow-uturn-left" wire:loading.remove wire:target="openReturnModal" class="size-4" />
                             <flux:icon name="arrow-path" wire:loading wire:target="openReturnModal" class="size-4 animate-spin" />
                             Return
+                        </button>
+                    @endif
+                    @if($deliveryId && !in_array($status, [\App\Enums\DeliveryOrderState::DELIVERED->value, \App\Enums\DeliveryOrderState::RETURNED->value, \App\Enums\DeliveryOrderState::CANCELLED->value]))
+                        <button 
+                            type="button" 
+                            wire:click="openPartialDeliveryModal" 
+                            wire:loading.attr="disabled"
+                            wire:target="openPartialDeliveryModal"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-600 transition-colors hover:bg-violet-50 disabled:opacity-50 dark:border-violet-800 dark:bg-zinc-800 dark:text-violet-400 dark:hover:bg-violet-900/20"
+                        >
+                            <flux:icon name="document-duplicate" wire:loading.remove wire:target="openPartialDeliveryModal" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="openPartialDeliveryModal" class="size-4 animate-spin" />
+                            {{ __('delivery.create_partial') }}
                         </button>
                     @endif
                     @if($deliveryId)
@@ -496,16 +531,24 @@
                         <div class="p-6">
                             <div class="grid gap-6 sm:grid-cols-2">
                                 <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Recipient Name <span class="text-red-500">*</span></label>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.recipient_name') }} <span class="text-red-500">*</span></label>
                                     <input type="text" wire:model="recipient_name" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                                 </div>
                                 <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Recipient Phone</label>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.recipient_phone') }}</label>
                                     <input type="text" wire:model="recipient_phone" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                                 </div>
                                 <div class="sm:col-span-2">
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Shipping Address</label>
-                                    <textarea wire:model="shipping_address" rows="4" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.shipping_address') }}</label>
+                                    <textarea wire:model="shipping_address" rows="3" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.delivery_instructions') }}</label>
+                                    <textarea wire:model="delivery_instructions" rows="3" placeholder="Special delivery instructions..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
+                                </div>
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.preferred_time_slot') }}</label>
+                                    <input type="text" wire:model="preferred_time_slot" placeholder="e.g., 9AM-12PM" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                                 </div>
                             </div>
                         </div>
@@ -515,17 +558,66 @@
                         <div class="p-6">
                             <div class="grid gap-6 sm:grid-cols-2">
                                 <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Courier</label>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.courier') }}</label>
                                     <input type="text" wire:model="courier" placeholder="e.g., JNE, J&T" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                                 </div>
                                 <div>
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Tracking Number</label>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.tracking_number') }}</label>
                                     <input type="text" wire:model="tracking_number" placeholder="Tracking number" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                                 </div>
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.shipping_cost') }}</label>
+                                    <input type="number" step="0.01" wire:model="shipping_cost" placeholder="0.00" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                </div>
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.insurance_amount') }}</label>
+                                    <input type="number" step="0.01" wire:model="insurance_amount" placeholder="0.00" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                                </div>
                                 <div class="sm:col-span-2">
-                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Notes</label>
+                                    <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.notes') }}</label>
                                     <textarea wire:model="notes" rows="4" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
                                 </div>
+                                
+                                @if($deliveryId && $delivery)
+                                    <div class="sm:col-span-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                                        <h3 class="mb-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('delivery.delivery_info') }}</h3>
+                                        <div class="grid gap-4 sm:grid-cols-2">
+                                            <div>
+                                                <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('delivery.delivery_attempts') }}</span>
+                                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $delivery->delivery_attempts ?? 0 }}</p>
+                                            </div>
+                                            @if($delivery->last_attempt_at)
+                                            <div>
+                                                <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('delivery.last_attempt') }}</span>
+                                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $delivery->last_attempt_at->format('M d, Y H:i') }}</p>
+                                            </div>
+                                            @endif
+                                            @if($delivery->failure_reason)
+                                            <div class="sm:col-span-2">
+                                                <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('delivery.failure_reason') }}</span>
+                                                <p class="text-sm text-red-600 dark:text-red-400">{{ $delivery->failure_reason }}</p>
+                                            </div>
+                                            @endif
+                                            @if($delivery->customer_rating)
+                                            <div>
+                                                <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('delivery.customer_rating') }}</span>
+                                                <div class="flex items-center gap-1">
+                                                    @for($i = 1; $i <= 5; $i++)
+                                                        <flux:icon name="star" class="size-4 {{ $i <= $delivery->customer_rating ? 'text-amber-400' : 'text-zinc-300 dark:text-zinc-600' }}" />
+                                                    @endfor
+                                                    <span class="ml-1 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $delivery->customer_rating }}/5</span>
+                                                </div>
+                                            </div>
+                                            @endif
+                                            @if($delivery->customer_feedback)
+                                            <div class="sm:col-span-2">
+                                                <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('delivery.customer_feedback') }}</span>
+                                                <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $delivery->customer_feedback }}</p>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -1009,4 +1101,137 @@
             </div>
         </div>
     </div>
+
+    {{-- POD Modal --}}
+    @if($showPodModal)
+        <div class="fixed inset-0 z-[400] flex items-center justify-center bg-black/40 p-4">
+            <div class="w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
+                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{{ __('delivery.proof_of_delivery') }}</h3>
+                    <button type="button" wire:click="closePodModal" class="text-zinc-400 transition-colors hover:text-zinc-600 dark:hover:text-zinc-300">
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.received_by') }} <span class="text-red-500">*</span></label>
+                            <input type="text" wire:model="received_by" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.signature') }}</label>
+                            <div class="rounded-lg border-2 border-dashed border-zinc-300 p-4 text-center dark:border-zinc-700">
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Signature capture feature - Coming soon</p>
+                                <p class="text-xs text-zinc-400 dark:text-zinc-500">Will integrate with signature pad</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.delivery_photo') }}</label>
+                            <div class="rounded-lg border-2 border-dashed border-zinc-300 p-4 text-center dark:border-zinc-700">
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Photo upload feature - Coming soon</p>
+                                <p class="text-xs text-zinc-400 dark:text-zinc-500">Will integrate with camera/file upload</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 border-t border-zinc-200 px-5 py-3 dark:border-zinc-800">
+                    <button type="button" wire:click="closePodModal" class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                        Cancel
+                    </button>
+                    <button type="button" wire:click="savePod" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700">
+                        Save POD
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Feedback Modal --}}
+    @if($showFeedbackModal)
+        <div class="fixed inset-0 z-[400] flex items-center justify-center bg-black/40 p-4">
+            <div class="w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
+                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{{ __('delivery.customer_feedback') }}</h3>
+                    <button type="button" wire:click="closeFeedbackModal" class="text-zinc-400 transition-colors hover:text-zinc-600 dark:hover:text-zinc-300">
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.customer_rating') }} <span class="text-red-500">*</span></label>
+                            <div class="flex items-center gap-2">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <button 
+                                        type="button" 
+                                        wire:click="$set('customer_rating', {{ $i }})"
+                                        class="transition-transform hover:scale-110"
+                                    >
+                                        <flux:icon name="star" class="size-8 {{ $i <= $customer_rating ? 'text-amber-400' : 'text-zinc-300 dark:text-zinc-600' }}" />
+                                    </button>
+                                @endfor
+                                <span class="ml-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $customer_rating }}/5</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('delivery.customer_feedback') }}</label>
+                            <textarea wire:model="customer_feedback" rows="4" placeholder="Customer comments..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 border-t border-zinc-200 px-5 py-3 dark:border-zinc-800">
+                    <button type="button" wire:click="closeFeedbackModal" class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                        Cancel
+                    </button>
+                    <button type="button" wire:click="saveFeedback" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+                        Save Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Partial Delivery Modal --}}
+    @if($showPartialDeliveryModal)
+        <div class="fixed inset-0 z-[400] flex items-center justify-center bg-black/40 p-4">
+            <div class="w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-zinc-900">
+                <div class="flex items-center justify-between border-b border-zinc-200 px-5 py-3 dark:border-zinc-800">
+                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{{ __('delivery.create_partial') }}</h3>
+                    <button type="button" wire:click="closePartialDeliveryModal" class="text-zinc-400 transition-colors hover:text-zinc-600 dark:hover:text-zinc-300">
+                        <flux:icon name="x-mark" class="size-5" />
+                    </button>
+                </div>
+                <div class="max-h-[60vh] overflow-y-auto p-5">
+                    <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">Select items and quantities for the partial delivery</p>
+                    <div class="space-y-2">
+                        @foreach($partial_items as $index => $item)
+                            <div class="flex items-center gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $item['product_name'] }}</p>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $item['sku'] }} • Total: {{ $item['total_quantity'] }}</p>
+                                </div>
+                                <div class="w-32">
+                                    <input 
+                                        type="number" 
+                                        wire:model="partial_items.{{ $index }}.quantity" 
+                                        min="0" 
+                                        max="{{ $item['total_quantity'] }}"
+                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                    />
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 border-t border-zinc-200 px-5 py-3 dark:border-zinc-800">
+                    <button type="button" wire:click="closePartialDeliveryModal" class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                        Cancel
+                    </button>
+                    <button type="button" wire:click="createPartialDelivery" class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-700">
+                        Create Partial Delivery
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

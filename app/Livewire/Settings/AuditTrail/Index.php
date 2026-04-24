@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Settings\AuditTrail;
 
+use App\Livewire\Concerns\WithManualPagination;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('components.layouts.settings')]
 #[Title('Audit Trail')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';

@@ -2,18 +2,18 @@
 
 namespace App\Livewire\HR\Payroll\Components;
 
+use App\Livewire\Concerns\WithManualPagination;
 use App\Models\HR\SalaryComponent;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('components.layouts.module', ['module' => 'HR'])]
 #[Title('Salary Components')]
 class Index extends Component
 {
-    use WithPagination;
+    use WithManualPagination;
 
     #[Url]
     public string $search = '';

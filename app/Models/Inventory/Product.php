@@ -3,6 +3,7 @@
 namespace App\Models\Inventory;
 
 use App\Models\User;
+use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
 use App\Traits\HasSoftDeletes;
 use App\Traits\LogsActivity;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable;
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasAttachments;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     
