@@ -3,8 +3,7 @@
 namespace App\Livewire\Purchase\Orders;
 
 use App\Exports\PurchaseOrdersExport;
-use App\Livewire\Concerns\WithManualPagination;
-use App\Models\Purchase\PurchaseOrder;
+use App\Livewire\Concerns\WithIndexComponent;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -16,22 +15,12 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Purchase Orders')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    public string $search = '';
-    public string $status = 'all';
-    public string $sort = 'latest';
-    public string $viewType = 'list';
+    use WithIndexComponent;
 
     #[Url]
     public int $perPage = 10;
 
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
+    public string $viewType = 'list';
 
     public array $visibleColumns = [
         'order' => true,
@@ -41,48 +30,21 @@ class Index extends Component
         'status' => true,
     ];
 
+    public function mount(): void
+    {
+        $this->status = 'all';
+    }
+
+    public function updatedPerPage(): void
+    {
+        $this->resetPage();
+    }
+
     public function toggleColumn(string $column): void
     {
         if (isset($this->visibleColumns[$column])) {
-            $this->visibleColumns[$column] = !$this->visibleColumns[$column];
+            $this->visibleColumns[$column] = ! $this->visibleColumns[$column];
         }
-    }
-
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getOrdersQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function clearFilters(): void
-    {
-        $this->search = '';
-        $this->status = 'all';
-        $this->sort = 'latest';
-        $this->resetPage();
-        $this->selected = [];
-        $this->selectAll = false;
     }
 
     public function setView(string $view): void
@@ -90,28 +52,28 @@ class Index extends Component
         $this->viewType = $view;
     }
 
-    // Bulk Actions
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'sort']);
+        $this->status = 'all';
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
             return;
         }
 
-        // Validate which POs can be deleted
-        $orders = DB::table('purchase_rfqs')
-            ->whereIn('id', $this->selected)
-            ->get();
+        $orders = DB::table('purchase_rfqs')->whereIn('id', $this->selected)->get();
 
         $canDelete = [];
         $cannotDelete = [];
 
         foreach ($orders as $order) {
-            if (in_array($order->status, ['draft', 'rfq'])) {
-                $canDelete[] = [
-                    'id' => $order->id,
-                    'name' => $order->reference,
-                    'status' => $order->status,
-                ];
+            if (in_array($order->status, ['draft', 'rfq'], true)) {
+                $canDelete[] = ['id' => $order->id, 'name' => $order->reference, 'status' => $order->status];
             } else {
                 $cannotDelete[] = [
                     'id' => $order->id,
@@ -145,13 +107,6 @@ class Index extends Component
         session()->flash('success', "{$count} purchase orders deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function bulkConfirm(): void
     {
         if (empty($this->selected)) {
@@ -169,39 +124,37 @@ class Index extends Component
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new PurchaseOrdersExport(), 'purchase-orders-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'purchase-orders-' . now()->format('Y-m-d') . '.xlsx'
+            : 'purchase-orders-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new PurchaseOrdersExport($this->selected), 'purchase-orders-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new PurchaseOrdersExport($this->selected ?: null), $filename);
     }
 
-    private function getOrdersQuery()
+    protected function getQuery()
     {
         return DB::table('purchase_rfqs')
             ->where('status', 'purchase_order')
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('reference', 'ilike', "%{$this->search}%")
-                        ->orWhere('supplier_name', 'ilike', "%{$this->search}%");
-                });
-            })
-            ->when($this->sort === 'oldest', fn($q) => $q->orderBy('created_at', 'asc'))
-            ->when($this->sort === 'reference', fn($q) => $q->orderBy('reference', 'asc'))
-            ->when($this->sort === 'latest', fn($q) => $q->orderBy('created_at', 'desc'));
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('reference', 'like', "%{$this->search}%")
+                ->orWhere('supplier_name', 'like', "%{$this->search}%")));
     }
 
     public function render()
     {
-        $query = $this->getOrdersQuery();
+        $query = match ($this->sort) {
+            'oldest' => $this->getQuery()->orderBy('created_at', 'asc'),
+            'reference' => $this->getQuery()->orderBy('reference', 'asc'),
+            default => $this->getQuery()->orderBy('created_at', 'desc'),
+        };
+
         $total = $query->count();
-        
         $orders = $query
             ->skip(($this->page - 1) * $this->perPage)
             ->take($this->perPage)
             ->get();
 
-        $this->totalPages = (int) ceil($total / $this->perPage);
+        $this->totalPages = (int) ceil($total / max(1, $this->perPage));
 
         return view('livewire.purchase.orders.index', [
             'orders' => $orders,
