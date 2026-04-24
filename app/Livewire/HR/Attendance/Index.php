@@ -3,7 +3,7 @@
 namespace App\Livewire\HR\Attendance;
 
 use App\Exports\AttendancesExport;
-use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\HR\Attendance;
 use App\Models\HR\Employee;
 use Livewire\Attributes\Layout;
@@ -16,31 +16,14 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Attendance')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $status = '';
+    use WithIndexComponent;
 
     #[Url]
     public string $employeeId = '';
 
-    #[Url]
-    public string $sort = 'latest';
-
-    #[Url]
-    public string $view = 'list';
-
     public string $dateFrom = '';
+
     public string $dateTo = '';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
 
     public function mount(): void
     {
@@ -48,46 +31,9 @@ class Index extends Component
         $this->dateTo = now()->endOfMonth()->format('Y-m-d');
     }
 
-    public function updatedSearch(): void
-    {
-        $this->page = 1;
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatedStatus(): void
-    {
-        $this->page = 1;
-    }
-
     public function updatedEmployeeId(): void
     {
-        $this->page = 1;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getQuery()->pluck('id')->map(fn($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function setView(string $view): void
-    {
-        $this->view = $view;
-    }
-
-    public function clearSelection(): void
-    {
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->resetPage();
     }
 
     public function clearFilters(): void
@@ -95,7 +41,7 @@ class Index extends Component
         $this->reset(['search', 'status', 'sort', 'employeeId']);
         $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = now()->endOfMonth()->format('Y-m-d');
-        $this->page = 1;
+        $this->resetPage();
         $this->clearSelection();
     }
 
@@ -111,16 +57,14 @@ class Index extends Component
         $cannotDelete = [];
 
         foreach ($attendances as $attendance) {
+            $label = ($attendance->employee?->name ?? '—') . ' - ' . $attendance->date?->format('M d');
             if ($attendance->is_manual || $attendance->status === 'absent') {
-                $canDelete[] = [
-                    'id' => $attendance->id,
-                    'name' => $attendance->employee?->name . ' - ' . $attendance->date?->format('M d'),
-                ];
+                $canDelete[] = ['id' => $attendance->id, 'name' => $label];
             } else {
                 $cannotDelete[] = [
                     'id' => $attendance->id,
-                    'name' => $attendance->employee?->name . ' - ' . $attendance->date?->format('M d'),
-                    'reason' => "Has check-in data — only manual/absent records can be deleted",
+                    'name' => $label,
+                    'reason' => 'Has check-in data — only manual/absent records can be deleted',
                 ];
             }
         }
@@ -141,41 +85,16 @@ class Index extends Component
         }
 
         $count = Attendance::whereIn('id', $this->selected)
-            ->where(fn($q) => $q->where('is_manual', true)->orWhere('status', 'absent'))
+            ->where(fn ($q) => $q->where('is_manual', true)->orWhere('status', 'absent'))
             ->delete();
 
         $this->cancelDelete();
         session()->flash('success', "{$count} attendance records deleted.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function exportSelected()
     {
-        $ids = empty($this->selected) ? null : $this->selected;
         return Excel::download(new AttendancesExport($this->getQuery()), 'attendances-' . now()->format('Y-m-d') . '.xlsx');
-    }
-
-    protected function getQuery()
-    {
-        return Attendance::query()
-            ->with(['employee', 'workSchedule'])
-            ->whereBetween('date', [$this->dateFrom, $this->dateTo])
-            ->when($this->search, fn($q) => $q->whereHas('employee', fn($q) =>
-                $q->where('name', 'ilike', "%{$this->search}%")
-                    ->orWhere('email', 'ilike', "%{$this->search}%")
-            ))
-            ->when($this->employeeId, fn($q) => $q->where('employee_id', $this->employeeId))
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->when($this->sort === 'latest', fn($q) => $q->orderBy('date', 'desc'))
-            ->when($this->sort === 'oldest', fn($q) => $q->orderBy('date', 'asc'))
-            ->when($this->sort === 'late_high', fn($q) => $q->orderBy('late_minutes', 'desc'))
-            ->when($this->sort === 'duration_high', fn($q) => $q->orderBy('work_duration_minutes', 'desc'));
     }
 
     public function getStatisticsProperty(): array
@@ -191,22 +110,35 @@ class Index extends Component
         ];
     }
 
-    public bool $showStats = false;
-
-    public function toggleStats(): void
+    protected function getQuery()
     {
-        $this->showStats = !$this->showStats;
+        return Attendance::query()
+            ->with(['employee', 'workSchedule'])
+            ->whereBetween('date', [$this->dateFrom, $this->dateTo])
+            ->when($this->search, fn ($q) => $q->whereHas('employee', fn ($eq) => $eq
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('email', 'like', "%{$this->search}%")))
+            ->when($this->employeeId, fn ($q) => $q->where('employee_id', $this->employeeId))
+            ->when($this->status, fn ($q) => $q->where('status', $this->status));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Attendance::class;
     }
 
     public function render()
     {
-        $attendances = $this->getQuery()->paginate(15, ['*'], 'page', $this->page);
-
-        $employees = Employee::where('status', 'active')->orderBy('name')->get();
+        $query = match ($this->sort) {
+            'oldest' => $this->getQuery()->orderBy('date', 'asc'),
+            'late_high' => $this->getQuery()->orderBy('late_minutes', 'desc'),
+            'duration_high' => $this->getQuery()->orderBy('work_duration_minutes', 'desc'),
+            default => $this->getQuery()->orderBy('date', 'desc'),
+        };
 
         return view('livewire.hr.attendance.index', [
-            'attendances' => $attendances,
-            'employees' => $employees,
+            'attendances' => $query->paginate(15, ['*'], 'page', $this->page),
+            'employees' => Employee::where('status', 'active')->orderBy('name')->get(),
             'statistics' => $this->statistics,
         ]);
     }

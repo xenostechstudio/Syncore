@@ -3,26 +3,20 @@
 namespace App\Livewire\Inventory\Transfers;
 
 use App\Exports\TransfersExport;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Inventory\InventoryTransfer;
 use App\Models\Inventory\Warehouse;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Internal Transfer')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $status = '';
+    use WithIndexComponent;
 
     #[Url]
     public string $sourceWarehouse = '';
@@ -30,18 +24,9 @@ class Index extends Component
     #[Url]
     public string $destinationWarehouse = '';
 
-    #[Url]
-    public string $view = 'list';
-
     public string $sortField = 'created_at';
+
     public string $sortDirection = 'desc';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
 
     public array $visibleColumns = [
         'transfer' => true,
@@ -52,44 +37,20 @@ class Index extends Component
         'status' => true,
     ];
 
-    public function setView(string $view): void
+    public function updatedSourceWarehouse(): void
     {
-        $this->view = $view;
+        $this->resetPage();
     }
 
-    public function clearSelection(): void
+    public function updatedDestinationWarehouse(): void
     {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatingSearch(): void
-    {
-        $this->page = 1;
-        $this->clearSelection();
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getTransfersQuery()
-                ->pluck('id')
-                ->map(fn($id) => (string) $id)
-                ->toArray();
-        } else {
-            $this->selected = [];
-        }
+        $this->resetPage();
     }
 
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'sourceWarehouse', 'destinationWarehouse']);
-        $this->page = 1;
+        $this->resetPage();
         $this->clearSelection();
     }
 
@@ -103,7 +64,6 @@ class Index extends Component
         }
     }
 
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
@@ -116,17 +76,18 @@ class Index extends Component
         $cannotDelete = [];
 
         foreach ($transfers as $transfer) {
-            if (in_array($transfer->status, ['draft', 'pending'])) {
+            $statusValue = $transfer->status?->value ?? $transfer->status;
+            if (in_array($statusValue, ['draft', 'pending'], true)) {
                 $canDelete[] = [
                     'id' => $transfer->id,
                     'name' => $transfer->transfer_number,
-                    'status' => $transfer->status,
+                    'status' => $statusValue,
                 ];
             } else {
                 $cannotDelete[] = [
                     'id' => $transfer->id,
                     'name' => $transfer->transfer_number,
-                    'reason' => "Status is '{$transfer->status}' - only draft/pending can be deleted",
+                    'reason' => "Status is '{$statusValue}' - only draft/pending can be deleted",
                 ];
             }
         }
@@ -154,13 +115,6 @@ class Index extends Component
         session()->flash('success', "{$count} transfers deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function bulkUpdateStatus(string $status): void
     {
         if (empty($this->selected)) {
@@ -175,34 +129,37 @@ class Index extends Component
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new TransfersExport(), 'transfers-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'transfers-' . now()->format('Y-m-d') . '.xlsx'
+            : 'transfers-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new TransfersExport($this->selected), 'transfers-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new TransfersExport($this->selected ?: null), $filename);
     }
 
-    protected function getTransfersQuery()
+    protected function getQuery()
     {
         return InventoryTransfer::query()
-            ->when($this->search, fn($q) => $q->where('transfer_number', 'ilike', "%{$this->search}%"))
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->when($this->sourceWarehouse, fn($q) => $q->where('source_warehouse_id', $this->sourceWarehouse))
-            ->when($this->destinationWarehouse, fn($q) => $q->where('destination_warehouse_id', $this->destinationWarehouse));
+            ->when($this->search, fn ($q) => $q->where('transfer_number', 'like', "%{$this->search}%"))
+            ->when($this->status, fn ($q) => $q->where('status', $this->status))
+            ->when($this->sourceWarehouse, fn ($q) => $q->where('source_warehouse_id', $this->sourceWarehouse))
+            ->when($this->destinationWarehouse, fn ($q) => $q->where('destination_warehouse_id', $this->destinationWarehouse));
+    }
+
+    protected function getModelClass(): string
+    {
+        return InventoryTransfer::class;
     }
 
     public function render()
     {
-        $transfers = $this->getTransfersQuery()
+        $transfers = $this->getQuery()
             ->with(['sourceWarehouse', 'destinationWarehouse', 'user', 'items'])
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(15, ['*'], 'page', $this->page);
 
-        $warehouses = Warehouse::orderBy('name')->get();
-
         return view('livewire.inventory.transfers.index', [
             'transfers' => $transfers,
-            'warehouses' => $warehouses,
+            'warehouses' => Warehouse::orderBy('name')->get(),
         ]);
     }
 }

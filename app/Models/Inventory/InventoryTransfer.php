@@ -10,13 +10,16 @@ use App\Traits\HasStateMachine;
 use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
+use Database\Factories\Inventory\InventoryTransferFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InventoryTransfer extends Model
 {
-    use LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasStateMachine, HasYearlySequenceNumber;
+    /** @use HasFactory<InventoryTransferFactory> */
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasStateMachine, HasYearlySequenceNumber;
 
     protected string $stateEnum = TransferState::class;
 

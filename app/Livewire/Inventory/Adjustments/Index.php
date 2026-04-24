@@ -3,26 +3,20 @@
 namespace App\Livewire\Inventory\Adjustments;
 
 use App\Exports\AdjustmentsExport;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\Warehouse;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Livewire\Concerns\WithManualPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
 #[Layout('components.layouts.module', ['module' => 'Inventory'])]
 #[Title('Stock Adjustment')]
 class Index extends Component
 {
-    use WithManualPagination;
-
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $status = '';
+    use WithIndexComponent;
 
     #[Url]
     public string $warehouse = '';
@@ -30,18 +24,9 @@ class Index extends Component
     #[Url]
     public string $adjustmentType = '';
 
-    #[Url]
-    public string $view = 'list';
-
     public string $sortField = 'created_at';
+
     public string $sortDirection = 'desc';
-
-    public array $selected = [];
-    public bool $selectAll = false;
-
-    // Delete confirmation
-    public bool $showDeleteConfirm = false;
-    public array $deleteValidation = [];
 
     public array $visibleColumns = [
         'adjustment' => true,
@@ -63,44 +48,20 @@ class Index extends Component
         }
     }
 
-    public function setView(string $view): void
+    public function updatedWarehouse(): void
     {
-        $this->view = $view;
+        $this->resetPage();
     }
 
-    public function clearSelection(): void
+    public function updatedAdjustmentType(): void
     {
-        $this->selected = [];
-        $this->selectAll = false;
-    }
-
-    public function updatingSearch(): void
-    {
-        $this->page = 1;
-        $this->clearSelection();
-    }
-
-    public function updatedSelected(): void
-    {
-        $this->selectAll = false;
-    }
-
-    public function updatedSelectAll($value): void
-    {
-        if ($value) {
-            $this->selected = $this->getAdjustmentsQuery()
-                ->pluck('id')
-                ->map(fn($id) => (string) $id)
-                ->toArray();
-        } else {
-            $this->selected = [];
-        }
+        $this->resetPage();
     }
 
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'warehouse']);
-        $this->page = 1;
+        $this->resetPage();
         $this->clearSelection();
     }
 
@@ -114,7 +75,6 @@ class Index extends Component
         }
     }
 
-    // Bulk Actions
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {
@@ -127,17 +87,18 @@ class Index extends Component
         $cannotDelete = [];
 
         foreach ($adjustments as $adjustment) {
-            if (in_array($adjustment->status, ['draft', 'pending'])) {
+            $statusValue = $adjustment->status?->value ?? $adjustment->status;
+            if (in_array($statusValue, ['draft', 'pending'], true)) {
                 $canDelete[] = [
                     'id' => $adjustment->id,
                     'name' => $adjustment->adjustment_number,
-                    'status' => $adjustment->status,
+                    'status' => $statusValue,
                 ];
             } else {
                 $cannotDelete[] = [
                     'id' => $adjustment->id,
                     'name' => $adjustment->adjustment_number,
-                    'reason' => "Status is '{$adjustment->status}' - only draft/pending can be deleted",
+                    'reason' => "Status is '{$statusValue}' - only draft/pending can be deleted",
                 ];
             }
         }
@@ -165,13 +126,6 @@ class Index extends Component
         session()->flash('success', "{$count} adjustments deleted successfully.");
     }
 
-    public function cancelDelete(): void
-    {
-        $this->showDeleteConfirm = false;
-        $this->deleteValidation = [];
-        $this->clearSelection();
-    }
-
     public function bulkUpdateStatus(string $status): void
     {
         if (empty($this->selected)) {
@@ -186,34 +140,37 @@ class Index extends Component
 
     public function exportSelected()
     {
-        if (empty($this->selected)) {
-            return Excel::download(new AdjustmentsExport(), 'adjustments-' . now()->format('Y-m-d') . '.xlsx');
-        }
+        $filename = empty($this->selected)
+            ? 'adjustments-' . now()->format('Y-m-d') . '.xlsx'
+            : 'adjustments-selected-' . now()->format('Y-m-d') . '.xlsx';
 
-        return Excel::download(new AdjustmentsExport($this->selected), 'adjustments-selected-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new AdjustmentsExport($this->selected ?: null), $filename);
     }
 
-    protected function getAdjustmentsQuery()
+    protected function getQuery()
     {
         return InventoryAdjustment::query()
-            ->when($this->search, fn($q) => $q->where('adjustment_number', 'ilike', "%{$this->search}%"))
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->when($this->warehouse, fn($q) => $q->where('warehouse_id', $this->warehouse))
-            ->when($this->adjustmentType, fn($q) => $q->where('adjustment_type', $this->adjustmentType));
+            ->when($this->search, fn ($q) => $q->where('adjustment_number', 'like', "%{$this->search}%"))
+            ->when($this->status, fn ($q) => $q->where('status', $this->status))
+            ->when($this->warehouse, fn ($q) => $q->where('warehouse_id', $this->warehouse))
+            ->when($this->adjustmentType, fn ($q) => $q->where('adjustment_type', $this->adjustmentType));
+    }
+
+    protected function getModelClass(): string
+    {
+        return InventoryAdjustment::class;
     }
 
     public function render()
     {
-        $adjustments = $this->getAdjustmentsQuery()
+        $adjustments = $this->getQuery()
             ->with(['warehouse', 'user', 'items'])
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate(15, ['*'], 'page', $this->page);
 
-        $warehouses = Warehouse::orderBy('name')->get();
-
         return view('livewire.inventory.adjustments.index', [
             'adjustments' => $adjustments,
-            'warehouses' => $warehouses,
+            'warehouses' => Warehouse::orderBy('name')->get(),
         ]);
     }
 }

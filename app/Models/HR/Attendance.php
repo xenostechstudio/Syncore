@@ -3,11 +3,16 @@
 namespace App\Models\HR;
 
 use App\Models\User;
+use Database\Factories\HR\AttendanceFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
+    /** @use HasFactory<AttendanceFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'employee_id',
         'date',

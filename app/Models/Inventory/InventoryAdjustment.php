@@ -10,6 +10,8 @@ use App\Traits\HasStateMachine;
 use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
+use Database\Factories\Inventory\InventoryAdjustmentFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +21,8 @@ use App\Models\Inventory\InventoryStock;
 
 class InventoryAdjustment extends Model
 {
-    use LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasStateMachine, HasYearlySequenceNumber;
+    /** @use HasFactory<InventoryAdjustmentFactory> */
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasStateMachine, HasYearlySequenceNumber;
 
     protected string $stateEnum = AdjustmentState::class;
 
