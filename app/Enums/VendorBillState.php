@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum VendorBillState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum VendorBillState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case DRAFT = 'draft';
     case PENDING = 'pending';
     case PAID = 'paid';

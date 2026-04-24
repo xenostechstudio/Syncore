@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum SalesOrderState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum SalesOrderState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     // Conceptual states: quotation → quotation sent → sales order → done / cancelled
     // Underlying values stay aligned with the existing database enum on sales_orders.status
     case QUOTATION       = 'draft';      // initial quotation

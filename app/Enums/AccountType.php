@@ -2,8 +2,13 @@
 
 namespace App\Enums;
 
-enum AccountType: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+
+enum AccountType: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case ASSET = 'asset';
     case LIABILITY = 'liability';
     case EQUITY = 'equity';
@@ -29,6 +34,17 @@ enum AccountType: string
             self::EQUITY => 'violet',
             self::REVENUE => 'emerald',
             self::EXPENSE => 'amber',
+        };
+    }
+
+    public function icon(): string
+    {
+        return match ($this) {
+            self::ASSET => 'banknotes',
+            self::LIABILITY => 'scale',
+            self::EQUITY => 'building-library',
+            self::REVENUE => 'arrow-trending-up',
+            self::EXPENSE => 'arrow-trending-down',
         };
     }
 

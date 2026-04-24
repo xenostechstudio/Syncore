@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum InvoiceState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum InvoiceState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case DRAFT = 'draft';
     case SENT = 'sent';
     case PAID = 'paid';

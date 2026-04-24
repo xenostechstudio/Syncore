@@ -2,8 +2,13 @@
 
 namespace App\Enums;
 
-enum PaymentState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+
+enum PaymentState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case PENDING = 'pending';
     case PROCESSING = 'processing';
     case COMPLETED = 'completed';
@@ -29,6 +34,17 @@ enum PaymentState: string
             self::COMPLETED => 'green',
             self::FAILED => 'red',
             self::CANCELLED => 'gray',
+        };
+    }
+
+    public function icon(): string
+    {
+        return match ($this) {
+            self::PENDING => 'clock',
+            self::PROCESSING => 'arrow-path',
+            self::COMPLETED => 'check-circle',
+            self::FAILED => 'x-circle',
+            self::CANCELLED => 'minus-circle',
         };
     }
 

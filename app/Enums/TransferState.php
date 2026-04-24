@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum TransferState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum TransferState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case DRAFT = 'draft';
     case READY = 'ready';
     case IN_TRANSIT = 'in_transit';

@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum LeaveRequestState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum LeaveRequestState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case DRAFT    = 'draft';
     case PENDING  = 'pending';
     case APPROVED = 'approved';
@@ -32,7 +36,7 @@ enum LeaveRequestState: string
         };
     }
 
-    public function icon(): ?string
+    public function icon(): string
     {
         return match($this) {
             self::DRAFT     => 'pencil-square',

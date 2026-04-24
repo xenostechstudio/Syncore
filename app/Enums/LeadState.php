@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum LeadState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum LeadState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case NEW = 'new';
     case CONTACTED = 'contacted';
     case QUALIFIED = 'qualified';

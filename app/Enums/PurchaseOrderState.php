@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum PurchaseOrderState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum PurchaseOrderState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case RFQ = 'rfq';
     case RFQ_SENT = 'sent';
     case PURCHASE_ORDER = 'purchase_order';

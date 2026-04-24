@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum DeliveryOrderState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum DeliveryOrderState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case PENDING = 'pending';
     case PICKED = 'picked';
     case IN_TRANSIT = 'in_transit';

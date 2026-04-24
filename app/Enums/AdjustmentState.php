@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum AdjustmentState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum AdjustmentState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case DRAFT = 'draft';
     case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';

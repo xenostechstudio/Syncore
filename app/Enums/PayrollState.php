@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
-enum PayrollState: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+enum PayrollState: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case DRAFT = 'draft';
     case APPROVED = 'approved';
     case PROCESSING = 'processing';

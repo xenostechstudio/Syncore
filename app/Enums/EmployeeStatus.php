@@ -2,8 +2,13 @@
 
 namespace App\Enums;
 
-enum EmployeeStatus: string
+use App\Enums\Contracts\HasDisplayMetadata;
+use App\Enums\Contracts\ProvidesOptions;
+
+enum EmployeeStatus: string implements HasDisplayMetadata
 {
+    use ProvidesOptions;
+
     case ACTIVE = 'active';
     case ON_LEAVE = 'on_leave';
     case SUSPENDED = 'suspended';
@@ -29,6 +34,17 @@ enum EmployeeStatus: string
             self::SUSPENDED => 'orange',
             self::RESIGNED => 'gray',
             self::TERMINATED => 'red',
+        };
+    }
+
+    public function icon(): string
+    {
+        return match ($this) {
+            self::ACTIVE => 'check-circle',
+            self::ON_LEAVE => 'calendar-days',
+            self::SUSPENDED => 'pause-circle',
+            self::RESIGNED => 'arrow-right-on-rectangle',
+            self::TERMINATED => 'x-circle',
         };
     }
 
