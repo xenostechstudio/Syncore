@@ -1,199 +1,152 @@
 <div>
-    <x-ui.flash />
+    <x-ui.flash />    <x-ui.index-header
+        title="Products"
+        :createRoute="route('sales.products.create')"
+        :paginator="$products"
+        :view="$view"
+        :views="['list', 'kanban']"
+    >
+        <x-slot:actions>
+            <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-down-tray" class="size-4" />
+                                        <span>Import products</span>
+                                    </button>
+                                    <a href="{{ route('export.products') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        <span>Export all</span>
+                                    </a>
+        </x-slot:actions>
 
-    {{-- Header Bar (inside Livewire root div so wire:click works) --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group: New Button, Title, Gear --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('sales.products.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    Products
-                </span>
+        <x-slot:search>
 
-                {{-- Actions Menu (Gear) --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-
-                    <flux:menu class="w-48">
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import products</span>
-                        </button>
-                        <a href="{{ route('export.products') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export all</span>
-                        </a>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Center: Search with single horizontal dropdown (Filters / Sort / Group) --}}
-            <div class="flex flex-1 items-center justify-center">
-                @if(count($selected) > 0)
-                    {{-- Selection Toolbar --}}
-                    <div class="flex items-center gap-2">
-                        <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
-                            <flux:icon name="x-mark" class="size-4" />
-                            <span>{{ count($selected) }} Selected</span>
-                        </button>
-                        <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600"></div>
-                        <button wire:click="bulkActivate" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
-                            <flux:icon name="check-circle" class="size-4" />
-                            Activate
-                        </button>
-                        <button wire:click="bulkDeactivate" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
-                            <flux:icon name="pause-circle" class="size-4" />
-                            Deactivate
-                        </button>
-                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            Export
-                        </button>
-                        <button wire:click="bulkDelete" wire:confirm="Are you sure you want to delete {{ count($selected) }} product(s)?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
-                            <flux:icon name="trash" class="size-4" />
-                            Delete
-                        </button>
-                    </div>
-                @else
-                {{-- Wrapper for searchbox + dropdown to center dropdown on searchbox --}}
-                <x-ui.searchbox-dropdown placeholder="Search products..." widthClass="w-[520px]" width="520px" align="center">
-                    <div class="flex flex-col gap-4 p-3 md:flex-row">
-                        {{-- Filters column --}}
-                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
-                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                <flux:icon name="funnel" class="size-3.5" />
-                                <span>Filters</span>
-                            </div>
-                            <div class="space-y-1">
-                                <button type="button" wire:click="$set('status', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>All Status</span>
-                                    @if(empty($status))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('status', 'in_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <div class="flex items-center gap-2">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                        <span>In Stock</span>
+                            @if(count($selected) > 0)
+                                {{-- Selection Toolbar --}}
+                                <div class="flex items-center gap-2">
+                                    <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200">
+                                        <flux:icon name="x-mark" class="size-4" />
+                                        <span>{{ count($selected) }} Selected</span>
+                                    </button>
+                                    <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600"></div>
+                                    <button wire:click="bulkActivate" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                                        <flux:icon name="check-circle" class="size-4" />
+                                        Activate
+                                    </button>
+                                    <button wire:click="bulkDeactivate" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                                        <flux:icon name="pause-circle" class="size-4" />
+                                        Deactivate
+                                    </button>
+                                    <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        Export
+                                    </button>
+                                    <button wire:click="bulkDelete" wire:confirm="Are you sure you want to delete {{ count($selected) }} product(s)?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <flux:icon name="trash" class="size-4" />
+                                        Delete
+                                    </button>
+                                </div>
+                            @else
+                            {{-- Wrapper for searchbox + dropdown to center dropdown on searchbox --}}
+                            <x-ui.searchbox-dropdown placeholder="Search products..." widthClass="w-[520px]" width="520px" align="center">
+                                <div class="flex flex-col gap-4 p-3 md:flex-row">
+                                    {{-- Filters column --}}
+                                    <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                            <flux:icon name="funnel" class="size-3.5" />
+                                            <span>Filters</span>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <button type="button" wire:click="$set('status', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>All Status</span>
+                                                @if(empty($status))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('status', 'in_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                                    <span>In Stock</span>
+                                                </div>
+                                                @if($status === 'in_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('status', 'low_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                                    <span>Low Stock</span>
+                                                </div>
+                                                @if($status === 'low_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('status', 'out_of_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                                                    <span>Out of Stock</span>
+                                                </div>
+                                                @if($status === 'out_of_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                        </div>
                                     </div>
-                                    @if($status === 'in_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('status', 'low_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <div class="flex items-center gap-2">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                                        <span>Low Stock</span>
+
+                                    {{-- Sort column --}}
+                                    <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:px-3 dark:border-zinc-700">
+                                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                            <flux:icon name="arrows-up-down" class="size-3.5" />
+                                            <span>Sort By</span>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <button type="button" wire:click="$set('sort', 'latest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Latest</span>
+                                                @if($sort === 'latest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'oldest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Oldest</span>
+                                                @if($sort === 'oldest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'name')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Name A-Z</span>
+                                                @if($sort === 'name')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'price_high')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Price: High to Low</span>
+                                                @if($sort === 'price_high')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'price_low')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Price: Low to High</span>
+                                                @if($sort === 'price_low')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'stock_high')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Stock: High to Low</span>
+                                                @if($sort === 'stock_high')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('sort', 'stock_low')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Stock: Low to High</span>
+                                                @if($sort === 'stock_low')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                        </div>
                                     </div>
-                                    @if($status === 'low_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('status', 'out_of_stock')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <div class="flex items-center gap-2">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                                        <span>Out of Stock</span>
+
+                                    {{-- Group column --}}
+                                    <div class="flex-1 md:pl-3">
+                                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                            <flux:icon name="rectangle-group" class="size-3.5" />
+                                            <span>Group By</span>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <button type="button" wire:click="$set('groupBy', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>None</span>
+                                                @if(empty($groupBy))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('groupBy', 'status')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Status</span>
+                                                @if($groupBy === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('groupBy', 'category')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <span>Category</span>
+                                                @if($groupBy === 'category')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                        </div>
                                     </div>
-                                    @if($status === 'out_of_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Sort column --}}
-                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:px-3 dark:border-zinc-700">
-                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                <flux:icon name="arrows-up-down" class="size-3.5" />
-                                <span>Sort By</span>
-                            </div>
-                            <div class="space-y-1">
-                                <button type="button" wire:click="$set('sort', 'latest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Latest</span>
-                                    @if($sort === 'latest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'oldest')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Oldest</span>
-                                    @if($sort === 'oldest')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'name')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Name A-Z</span>
-                                    @if($sort === 'name')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'price_high')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Price: High to Low</span>
-                                    @if($sort === 'price_high')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'price_low')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Price: Low to High</span>
-                                    @if($sort === 'price_low')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'stock_high')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Stock: High to Low</span>
-                                    @if($sort === 'stock_high')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('sort', 'stock_low')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Stock: Low to High</span>
-                                    @if($sort === 'stock_low')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Group column --}}
-                        <div class="flex-1 md:pl-3">
-                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                <flux:icon name="rectangle-group" class="size-3.5" />
-                                <span>Group By</span>
-                            </div>
-                            <div class="space-y-1">
-                                <button type="button" wire:click="$set('groupBy', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>None</span>
-                                    @if(empty($groupBy))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('groupBy', 'status')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Status</span>
-                                    @if($groupBy === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                                <button type="button" wire:click="$set('groupBy', 'category')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                    <span>Category</span>
-                                    @if($groupBy === 'category')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </x-ui.searchbox-dropdown>
-                @endif
-            </div>
-
-            {{-- Right Group: Pagination Info + View Toggle --}}
-            <div class="flex items-center gap-3">
-                {{-- Pagination Info & Navigation --}}
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $products->firstItem() ?? 0 }}-{{ $products->lastItem() ?? 0 }}/{{ $products->currentPage() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button 
-                            type="button"
-                            wire:click="goToPreviousPage"
-                            @disabled($products->onFirstPage())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button 
-                            type="button"
-                            wire:click="goToNextPage"
-                            @disabled(!$products->hasMorePages())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {{-- View Toggle (List, Grid, Kanban) --}}
-                <x-ui.view-toggle :view="$view" :views="['list', 'grid', 'kanban']" />
-            </div>
-        </div>
-    </div>
+                                </div>
+                            </x-ui.searchbox-dropdown>
+                            @endif
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Content --}}
     <div>

@@ -1,194 +1,149 @@
 <div>
-    <x-ui.flash />
+    <x-ui.flash />    <x-ui.index-header
+        title="Customers"
+        :createRoute="route('sales.customers.create')"
+        :paginator="$customers"
+        :view="$view"
+        :views="['list', 'grid']"
+    >
+        <x-slot:actions>
+            <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-down-tray" class="size-4" />
+                                        <span>{{ __('common.import_records') }}</span>
+                                    </button>
+                                    <a href="{{ route('export.customers') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        <span>{{ __('common.export_all') }}</span>
+                                    </a>
+        </x-slot:actions>
 
-    {{-- Header Bar (inside Livewire root div so wire:click works) --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group: New Button, Title, Gear --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('sales.customers.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    {{ __('common.new') }}
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">{{ __('sales.customers') }}</span>
+        <x-slot:search>
+
+                            @if(count($selected) > 0)
+                                {{-- Selection Toolbar --}}
+                                <x-ui.selection-toolbar :count="count($selected)">
+                {{-- Export --}}
+                                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                            <flux:icon name="arrow-down-tray" class="size-4" />
+                                            <span>{{ __('common.export') }}</span>
+                                        </button>
                 
-                {{-- Actions Menu (Gear) --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
+                                        {{-- Print --}}
+                                        <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                            <flux:icon name="printer" class="size-4" />
+                                            <span>{{ __('common.print') }}</span>
+                                        </button>
+                
+                                        {{-- Actions Dropdown --}}
+                                        <flux:dropdown position="bottom" align="center">
+                                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                                <flux:icon name="ellipsis-horizontal" class="size-4" />
+                                            </button>
+                
+                                            <flux:menu class="w-56">
+                                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <flux:icon name="document-duplicate" class="size-4" />
+                                                    <span>{{ __('common.duplicate') }}</span>
+                                                </button>
+                                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <flux:icon name="document-text" class="size-4" />
+                                                    <span>{{ __('common.create_invoices') }}</span>
+                                                </button>
+                                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <flux:icon name="envelope" class="size-4" />
+                                                    <span>{{ __('common.send_email') }}</span>
+                                                </button>
+                                                <flux:menu.separator />
+                                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                                    <flux:icon name="trash" class="size-4" />
+                                                    <span>{{ __('common.delete') }}</span>
+                                                </button>
+                                            </flux:menu>
+                                        </flux:dropdown>
+                                </x-ui.selection-toolbar>
+                            @else
+                                <x-ui.searchbox-dropdown placeholder="{{ __('sales.search_customers') }}" widthClass="w-[520px]" width="520px">
+                                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                                        {{-- Filters Section --}}
+                                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                                <flux:icon name="funnel" class="size-3.5" />
+                                                <span>{{ __('common.filters') }}</span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="checkbox" wire:model.live="filterActive" class="sr-only" />
+                                                        <span>{{ __('common.active_customers') }}</span>
+                                                    </div>
+                                                    @if(!empty($filterActive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="checkbox" wire:model.live="filterInactive" class="sr-only" />
+                                                        <span>{{ __('common.inactive_customers') }}</span>
+                                                    </div>
+                                                    @if(!empty($filterInactive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="checkbox" wire:model.live="filterWithOrders" class="sr-only" />
+                                                        <span>{{ __('common.with_orders') }}</span>
+                                                    </div>
+                    @if(!empty($filterWithOrders))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="checkbox" wire:model.live="filterMine" class="sr-only" />
+                                                        <span>{{ __('common.my_customers') }}</span>
+                                                    </div>
+                                                    @if(!empty($filterMine))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                            </div>
+                                        </div>
 
-                    <flux:menu class="w-48">
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>{{ __('common.import_records') }}</span>
-                        </button>
-                        <a href="{{ route('export.customers') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>{{ __('common.export_all') }}</span>
-                        </a>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Center Group: Search or Selection Toolbar --}}
-            <div class="flex flex-1 items-center justify-center">
-                @if(count($selected) > 0)
-                    {{-- Selection Toolbar --}}
-                    <x-ui.selection-toolbar :count="count($selected)">
-    {{-- Export --}}
-                            <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                <flux:icon name="arrow-down-tray" class="size-4" />
-                                <span>{{ __('common.export') }}</span>
-                            </button>
-    
-                            {{-- Print --}}
-                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                <flux:icon name="printer" class="size-4" />
-                                <span>{{ __('common.print') }}</span>
-                            </button>
-    
-                            {{-- Actions Dropdown --}}
-                            <flux:dropdown position="bottom" align="center">
-                                <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                    <flux:icon name="ellipsis-horizontal" class="size-4" />
-                                </button>
-    
-                                <flux:menu class="w-56">
-                                    <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>{{ __('common.duplicate') }}</span>
-                                    </button>
-                                    <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-text" class="size-4" />
-                                        <span>{{ __('common.create_invoices') }}</span>
-                                    </button>
-                                    <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <flux:icon name="envelope" class="size-4" />
-                                        <span>{{ __('common.send_email') }}</span>
-                                    </button>
-                                    <flux:menu.separator />
-                                    <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>{{ __('common.delete') }}</span>
-                                    </button>
-                                </flux:menu>
-                            </flux:dropdown>
-                    </x-ui.selection-toolbar>
-                @else
-                    <x-ui.searchbox-dropdown placeholder="{{ __('sales.search_customers') }}" widthClass="w-[520px]" width="520px">
-                        <div class="flex flex-col gap-4 p-3 md:flex-row">
-                            {{-- Filters Section --}}
-                            <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
-                                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                    <flux:icon name="funnel" class="size-3.5" />
-                                    <span>{{ __('common.filters') }}</span>
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="checkbox" wire:model.live="filterActive" class="sr-only" />
-                                            <span>{{ __('common.active_customers') }}</span>
+                                        {{-- Group By Section --}}
+                                        <div class="flex-1 md:px-3">
+                                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                                <flux:icon name="rectangle-group" class="size-3.5" />
+                                                <span>{{ __('common.group_by') }}</span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="radio" name="groupBy" value="salesperson" wire:model.live="groupBy" class="sr-only" />
+                                                        <span>{{ __('common.salesperson') }}</span>
+                                                    </div>
+                                                    @if(($groupBy ?? '') === 'salesperson')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="radio" name="groupBy" value="country" wire:model.live="groupBy" class="sr-only" />
+                                                        <span>{{ __('common.country') }}</span>
+                                                    </div>
+                                                    @if(($groupBy ?? '') === 'country')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="radio" name="groupBy" value="city" wire:model.live="groupBy" class="sr-only" />
+                                                        <span>{{ __('common.city') }}</span>
+                                                    </div>
+                                                    @if(($groupBy ?? '') === 'city')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="radio" name="groupBy" value="status" wire:model.live="groupBy" class="sr-only" />
+                                                        <span>{{ __('common.status') }}</span>
+                                                    </div>
+                                                    @if(($groupBy ?? '') === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                            </div>
                                         </div>
-                                        @if(!empty($filterActive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="checkbox" wire:model.live="filterInactive" class="sr-only" />
-                                            <span>{{ __('common.inactive_customers') }}</span>
-                                        </div>
-                                        @if(!empty($filterInactive))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="checkbox" wire:model.live="filterWithOrders" class="sr-only" />
-                                            <span>{{ __('common.with_orders') }}</span>
-                                        </div>
-        @if(!empty($filterWithOrders))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="checkbox" wire:model.live="filterMine" class="sr-only" />
-                                            <span>{{ __('common.my_customers') }}</span>
-                                        </div>
-                                        @if(!empty($filterMine))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                </div>
-                            </div>
-
-                            {{-- Group By Section --}}
-                            <div class="flex-1 md:px-3">
-                                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                                    <flux:icon name="rectangle-group" class="size-3.5" />
-                                    <span>{{ __('common.group_by') }}</span>
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="radio" name="groupBy" value="salesperson" wire:model.live="groupBy" class="sr-only" />
-                                            <span>{{ __('common.salesperson') }}</span>
-                                        </div>
-                                        @if(($groupBy ?? '') === 'salesperson')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="radio" name="groupBy" value="country" wire:model.live="groupBy" class="sr-only" />
-                                            <span>{{ __('common.country') }}</span>
-                                        </div>
-                                        @if(($groupBy ?? '') === 'country')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="radio" name="groupBy" value="city" wire:model.live="groupBy" class="sr-only" />
-                                            <span>{{ __('common.city') }}</span>
-                                        </div>
-                                        @if(($groupBy ?? '') === 'city')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                    <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <div class="flex items-center gap-2">
-                                            <input type="radio" name="groupBy" value="status" wire:model.live="groupBy" class="sr-only" />
-                                            <span>{{ __('common.status') }}</span>
-                                        </div>
-                                        @if(($groupBy ?? '') === 'status')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </x-ui.searchbox-dropdown>
-                @endif
-            </div>
-
-            {{-- Right Group: Pagination Info + View Toggle --}}
-            <div class="flex items-center gap-3">
-                {{-- Pagination Info & Navigation --}}
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $customers->firstItem() ?? 0 }}-{{ $customers->lastItem() ?? 0 }}/{{ $customers->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button 
-                            type="button"
-                            wire:click="goToPreviousPage"
-                            @disabled($customers->onFirstPage())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button 
-                            type="button"
-                            wire:click="goToNextPage"
-                            @disabled(!$customers->hasMorePages())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {{-- View Toggle --}}
-                <x-ui.view-toggle :view="$view" :views="['list', 'grid']" />
-            </div>
-        </div>
-    </div>
+                                    </div>
+                                </x-ui.searchbox-dropdown>
+                            @endif
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Content --}}
     <div>

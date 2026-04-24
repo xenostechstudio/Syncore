@@ -1,193 +1,138 @@
 <div>
-    <x-ui.flash />
+    <x-ui.flash />    <x-ui.index-header
+        title="Items"
+        :createRoute="route('inventory.products.create')"
+        :paginator="$items"
+        :view="$view"
+        :views="['list', 'kanban']"
+    >
+        <x-slot:actions>
+            <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-down-tray" class="size-4" />
+                                        <span>{{ __('common.import_records') }}</span>
+                                    </button>
+                                    <a href="{{ route('export.products') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="arrow-up-tray" class="size-4" />
+                                        <span>{{ __('common.export_all') }}</span>
+                                    </a>
+        </x-slot:actions>
 
-    {{-- Header Bar (inside Livewire root div so wire:click works) --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group: New Button, Title, Gear --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('inventory.products.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    {{ __('common.new') }}
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    {{ __('inventory.products') }}
-                </span>
+        <x-slot:search>
 
-                @if(isset($warehouses))
-                    <select wire:model.live="warehouse_id" class="h-9 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm text-zinc-700 shadow-sm focus:border-zinc-400 focus:outline-none focus:ring-0 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
-                        @foreach($warehouses as $wh)
-                            <option value="{{ $wh->id }}">{{ $wh->name }}</option>
-                        @endforeach
-                    </select>
-                @endif
+                            @if(count($selected) > 0)
+                                {{-- Selection Toolbar --}}
+                                <x-ui.selection-toolbar :count="count($selected)">
+                {{-- Export --}}
+                                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                            <flux:icon name="arrow-down-tray" class="size-4" />
+                                            <span>{{ __('common.export') }}</span>
+                                        </button>
                 
-                {{-- Actions Menu (Gear) --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-
-                    <flux:menu class="w-48">
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>{{ __('common.import_records') }}</span>
-                        </button>
-                        <a href="{{ route('export.products') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>{{ __('common.export_all') }}</span>
-                        </a>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Center Group: Search or Selection Toolbar --}}
-            <div class="flex flex-1 items-center justify-center">
-                @if(count($selected) > 0)
-                    {{-- Selection Toolbar --}}
-                    <x-ui.selection-toolbar :count="count($selected)">
-    {{-- Export --}}
-                            <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                <flux:icon name="arrow-down-tray" class="size-4" />
-                                <span>{{ __('common.export') }}</span>
-                            </button>
-    
-                            {{-- Actions Dropdown --}}
-                            <flux:dropdown position="bottom" align="center">
-                                <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                    <flux:icon name="ellipsis-horizontal" class="size-4" />
-                                </button>
-    
-                                <flux:menu class="w-56">
-                                    <button type="button" wire:click="bulkActivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <flux:icon name="check-circle" class="size-4 text-emerald-500" />
-                                        <span>{{ __('common.activate') }}</span>
-                                    </button>
-                                    <button type="button" wire:click="bulkDeactivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <flux:icon name="pause-circle" class="size-4 text-zinc-400" />
-                                        <span>{{ __('common.deactivate') }}</span>
-                                    </button>
-                                    <flux:menu.separator />
-                                    <button 
-                                        type="button" 
-                                        wire:click="confirmBulkDelete"
-                                        class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                    >
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>{{ __('common.delete') }}</span>
-                                    </button>
-                                </flux:menu>
-                            </flux:dropdown>
-                    </x-ui.selection-toolbar>
-                @else
-                    {{-- Search Input with Arrow Down Dropdown --}}
-                    <flux:dropdown position="bottom" align="center" class="w-[480px]">
-                        <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                            <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                            <input 
-                                type="text" 
-                                wire:model.live.debounce.300ms="search"
-                                placeholder="{{ __('inventory.search_products') }}" 
-                                class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
-                            />
-                            <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
-                                <flux:icon name="chevron-down" class="size-4" />
-                            </button>
-                        </div>
-
-                        {{-- Horizontal Dropdown Content --}}
-                        <flux:menu class="w-[480px]">
-                                <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
-                                    {{-- Filters Section --}}
-                                    <div class="flex-1 p-3">
-                                        <div class="mb-2 flex items-center justify-between">
-                                            <div class="flex items-center gap-1.5">
-                                                <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.filters') }}</span>
-                                            </div>
-                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">{{ __('common.add_custom') }}</button>
-                                        </div>
-                                        <div class="space-y-1">
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" wire:model.live="status" value="in_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>{{ __('common.in_stock') }}</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" wire:model.live="status" value="low_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>{{ __('common.low_stock') }}</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" wire:model.live="status" value="out_of_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>{{ __('common.out_of_stock') }}</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>{{ __('common.favorites') }}</span>
-                                            </label>
-                                        </div>
+                                        {{-- Actions Dropdown --}}
+                                        <flux:dropdown position="bottom" align="center">
+                                            <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                                <flux:icon name="ellipsis-horizontal" class="size-4" />
+                                            </button>
+                
+                                            <flux:menu class="w-56">
+                                                <button type="button" wire:click="bulkActivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <flux:icon name="check-circle" class="size-4 text-emerald-500" />
+                                                    <span>{{ __('common.activate') }}</span>
+                                                </button>
+                                                <button type="button" wire:click="bulkDeactivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <flux:icon name="pause-circle" class="size-4 text-zinc-400" />
+                                                    <span>{{ __('common.deactivate') }}</span>
+                                                </button>
+                                                <flux:menu.separator />
+                                                <button 
+                                                    type="button" 
+                                                    wire:click="confirmBulkDelete"
+                                                    class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                >
+                                                    <flux:icon name="trash" class="size-4" />
+                                                    <span>{{ __('common.delete') }}</span>
+                                                </button>
+                                            </flux:menu>
+                                        </flux:dropdown>
+                                </x-ui.selection-toolbar>
+                            @else
+                                {{-- Search Input with Arrow Down Dropdown --}}
+                                <flux:dropdown position="bottom" align="center" class="w-[480px]">
+                                    <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
+                                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                                        <input 
+                                            type="text" 
+                                            wire:model.live.debounce.300ms="search"
+                                            placeholder="{{ __('inventory.search_products') }}" 
+                                            class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
+                                        />
+                                        <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
+                                            <flux:icon name="chevron-down" class="size-4" />
+                                        </button>
                                     </div>
 
-                                    {{-- Group By Section --}}
-                                    <div class="flex-1 p-3">
-                                        <div class="mb-2 flex items-center justify-between">
-                                            <div class="flex items-center gap-1.5">
-                                                <flux:icon name="rectangle-group" class="size-4 text-zinc-400" />
-                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.group_by') }}</span>
+                                    {{-- Horizontal Dropdown Content --}}
+                                    <flux:menu class="w-[480px]">
+                                            <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
+                                                {{-- Filters Section --}}
+                                                <div class="flex-1 p-3">
+                                                    <div class="mb-2 flex items-center justify-between">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <flux:icon name="funnel" class="size-4 text-zinc-400" />
+                                                            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.filters') }}</span>
+                                                        </div>
+                                                        <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">{{ __('common.add_custom') }}</button>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                            <input type="checkbox" wire:model.live="status" value="in_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                            <span>{{ __('common.in_stock') }}</span>
+                                                        </label>
+                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                            <input type="checkbox" wire:model.live="status" value="low_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                            <span>{{ __('common.low_stock') }}</span>
+                                                        </label>
+                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                            <input type="checkbox" wire:model.live="status" value="out_of_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                            <span>{{ __('common.out_of_stock') }}</span>
+                                                        </label>
+                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                            <span>{{ __('common.favorites') }}</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Group By Section --}}
+                                                <div class="flex-1 p-3">
+                                                    <div class="mb-2 flex items-center justify-between">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <flux:icon name="rectangle-group" class="size-4 text-zinc-400" />
+                                                            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.group_by') }}</span>
+                                                        </div>
+                                                        <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">{{ __('common.add_custom') }}</button>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                            <span>{{ __('common.category') }}</span>
+                                                        </label>
+                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                            <span>{{ __('common.status') }}</span>
+                                                        </label>
+                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                                            <span>{{ __('inventory.warehouse') }}</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">{{ __('common.add_custom') }}</button>
-                                        </div>
-                                        <div class="space-y-1">
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>{{ __('common.category') }}</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>{{ __('common.status') }}</span>
-                                            </label>
-                                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                <span>{{ __('inventory.warehouse') }}</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </flux:menu>
-                    </flux:dropdown>
-                @endif
-            </div>
-
-            {{-- Right Group: Pagination Info + View Toggle --}}
-            <div class="flex items-center gap-3">
-                {{-- Pagination Info & Navigation --}}
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $items->firstItem() ?? 0 }}-{{ $items->lastItem() ?? 0 }}/{{ $items->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button 
-                            type="button"
-                            wire:click="goToPreviousPage"
-                            @disabled($items->onFirstPage())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button 
-                            type="button"
-                            wire:click="goToNextPage"
-                            @disabled(!$items->hasMorePages())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {{-- View Toggle --}}
-                <x-ui.view-toggle :view="$view" :views="['list', 'grid', 'kanban']" />
-            </div>
-        </div>
-    </div>
+                                        </flux:menu>
+                                </flux:dropdown>
+                            @endif
+        </x-slot:search>
+    </x-ui.index-header>
 
     {{-- Content --}}
     <div>
