@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Overview
     'overview' => 'Overview',
     'total_orders' => 'Total Orders',
     'this_month' => 'this month',
@@ -11,8 +10,6 @@ return [
     'active_suppliers' => 'Active suppliers',
     'no_orders_found' => 'No orders found',
     'total' => 'Total',
-    
-    // General
     'title' => 'Purchase',
     'rfq' => 'Request for Quotation',
     'rfqs' => 'Requests for Quotation',
@@ -20,26 +17,26 @@ return [
     'orders' => 'Purchase Orders',
     'bill' => 'Vendor Bill',
     'bills' => 'Vendor Bills',
-    'supplier' => 'Supplier',
+    'supplier' => [
+        'name' => 'Supplier Name',
+        'contact' => 'Contact',
+        'email' => 'Email',
+        'phone' => 'Phone',
+        'address' => 'Address',
+    ],
     'suppliers' => 'Suppliers',
-    
-    // Fields
     'reference' => 'Reference',
     'order_date' => 'Order Date',
     'expected_arrival' => 'Expected Arrival',
     'vendor_reference' => 'Vendor Reference',
     'bill_number' => 'Bill No.',
     'bill_date' => 'Bill Date',
-    
-    // Status - RFQ/PO
     'status.rfq' => 'Request for Quotation',
     'status.rfq_sent' => 'RFQ Sent',
     'status.purchase_order' => 'Purchase Order',
     'status.received' => 'Received',
     'status.billed' => 'Billed',
     'status.cancelled' => 'Cancelled',
-    
-    // Actions
     'create_rfq' => 'Create RFQ',
     'send_rfq' => 'Send RFQ',
     'confirm_order' => 'Confirm Order',
@@ -47,12 +44,22 @@ return [
     'create_bill' => 'Create Bill',
     'pay_bill' => 'Pay Bill',
     'cancel_order' => 'Cancel Order',
-    
-    // Messages
     'rfq_created' => 'RFQ created successfully',
     'rfq_sent' => 'RFQ sent successfully',
     'order_confirmed' => 'Order confirmed successfully',
     'products_received' => 'Products received successfully',
     'bill_created' => 'Bill created successfully',
     'bill_paid' => 'Bill paid successfully',
+    'bill_status' => [
+        'draft' => 'Draft',
+        'pending' => 'Pending',
+        'paid' => 'Paid',
+        'partial' => 'Partial',
+        'overdue' => 'Overdue',
+        'cancelled' => 'Cancelled',
+    ],
+    'pending_rfqs' => 'Pending RFQs',
+    'orders_to_receive' => 'Orders To Receive',
+    'bills_to_pay' => 'Bills To Pay',
+    'total_purchases' => 'Total Purchases',
 ];

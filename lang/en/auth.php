@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Login
     'login' => 'Login',
     'logout' => 'Logout',
     'email' => 'Email',
@@ -10,18 +9,12 @@ return [
     'forgot_password' => 'Forgot Password?',
     'sign_in' => 'Sign In',
     'sign_out' => 'Sign Out',
-    
-    // Register
     'register' => 'Register',
     'name' => 'Name',
     'confirm_password' => 'Confirm Password',
     'already_registered' => 'Already registered?',
-    
-    // Password Reset
     'reset_password' => 'Reset Password',
     'send_reset_link' => 'Send Reset Link',
-    
-    // Messages
     'failed' => 'These credentials do not match our records.',
     'password_incorrect' => 'The provided password is incorrect.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
@@ -29,8 +22,6 @@ return [
     'logged_out' => 'Logged out successfully',
     'password_reset' => 'Password reset successfully',
     'email_verified' => 'Email verified successfully',
-    
-    // Profile
     'profile' => 'Profile',
     'update_profile' => 'Update Profile',
     'update_password' => 'Update Password',
@@ -38,4 +29,19 @@ return [
     'new_password' => 'New Password',
     'profile_updated' => 'Profile updated successfully',
     'password_updated' => 'Password updated successfully',
+    'reset_password_notification' => 'Password Reset Notification',
+    'reset_password_intro' => 'You are receiving this email because we received a password reset request for your account.',
+    'reset_password_action' => 'Reset Password',
+    'reset_password_expire' => 'This password reset link will expire in :count minutes.',
+    'reset_password_ignore' => 'If you did not request a password reset, no further action is required.',
+    'verify_email' => 'Verify Email',
+    'verification_link_sent' => 'A new verification link has been sent to your email address.',
+    'check_email_verification' => 'Before proceeding, please check your email for a verification link.',
+    'not_receive_email' => 'If you did not receive the email',
+    'click_resend' => 'click here to request another',
+    'two_factor' => 'Two-Factor Authentication',
+    'two_factor_code' => 'Authentication Code',
+    'two_factor_recovery' => 'Recovery Code',
+    'use_recovery_code' => 'Use a recovery code',
+    'use_authentication_code' => 'Use an authentication code',
 ];

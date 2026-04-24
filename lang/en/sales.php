@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Overview
     'overview' => 'Sales Overview',
     'new_order' => 'New Order',
     'recent_orders' => 'Recent Orders',
@@ -25,8 +24,6 @@ return [
     'export_report' => 'Export Report',
     'no_orders_yet' => 'No orders yet',
     'vs_last_month' => 'vs last month',
-    
-    // Stats
     'total_orders' => 'Total Orders',
     'quotations' => 'Quotations',
     'pending_confirmation' => 'Pending confirmation',
@@ -41,28 +38,29 @@ return [
     'awaiting_payment' => 'Awaiting payment',
     'completed' => 'Completed',
     'cancelled' => 'Cancelled',
-    
-
-    // General
     'title' => 'Sales',
     'quotation' => 'Quotation',
-    'quotations' => 'Quotations',
     'order' => 'Order',
     'orders' => 'Orders',
     'sales_order' => 'Sales Order',
     'sales_orders' => 'Sales Orders',
-    
-    // Fields
     'order_number' => 'Order No.',
     'order_date' => 'Order Date',
     'expected_delivery' => 'Expected Delivery',
-    'customer' => 'Customer',
+    'customer' => [
+        'name' => 'Customer Name',
+        'email' => 'Email',
+        'phone' => 'Phone',
+        'address' => 'Address',
+        'type' => [
+            'person' => 'Person',
+            'company' => 'Company',
+        ],
+    ],
     'salesperson' => 'Salesperson',
     'payment_terms' => 'Payment Terms',
     'shipping_address' => 'Shipping Address',
     'billing_address' => 'Billing Address',
-    
-    // Status
     'status.draft' => 'Draft',
     'status.quotation' => 'Quotation',
     'status.quotation_sent' => 'Quotation Sent',
@@ -70,8 +68,6 @@ return [
     'status.processing' => 'Processing',
     'status.done' => 'Done',
     'status.cancelled' => 'Cancelled',
-    
-    // Actions
     'create_quotation' => 'Create Quotation',
     'create_order' => 'Create Order',
     'confirm_order' => 'Confirm Order',
@@ -79,24 +75,14 @@ return [
     'create_invoice' => 'Create Invoice',
     'create_delivery' => 'Create Delivery',
     'cancel_order' => 'Cancel Order',
-    
-    // Messages
     'order_confirmed' => 'Order confirmed successfully',
     'order_cancelled' => 'Order cancelled successfully',
     'quotation_sent' => 'Quotation sent successfully',
     'invoice_created' => 'Invoice created successfully',
     'delivery_created' => 'Delivery created successfully',
-    
-    // Stats
-    'my_quotations' => 'My Quotations',
     'all_quotations' => 'All Quotations',
-    'to_invoice' => 'To Invoice',
-    'to_deliver' => 'To Deliver',
     'total_sales' => 'Total Sales',
-    
-    // Customers
     'customers' => 'Customers',
-    'customer' => 'Customer',
     'new_customer' => 'New Customer',
     'edit_customer' => 'Edit Customer',
     'customer_name' => 'Customer Name',
@@ -110,14 +96,23 @@ return [
     'inactive_customers' => 'Inactive Customers',
     'with_orders' => 'With Orders',
     'my_customers' => 'My Customers',
-    
-    // Teams
     'sales_teams' => 'Sales Teams',
     'sales_team' => 'Sales Team',
     'new_sales_team' => 'New Sales Team',
-    
-    // Pricelists
     'pricelists' => 'Pricelists',
     'pricelist' => 'Pricelist',
     'new_pricelist' => 'New Pricelist',
+    'lines' => 'Order Items',
+    'add_line' => 'Add Item',
+    'product' => 'Product',
+    'quantity' => 'Quantity',
+    'unit_price' => 'Unit Price',
+    'discount' => 'Discount',
+    'tax' => 'Tax',
+    'line_total' => 'Total',
+    'qty_ordered' => 'Qty Ordered',
+    'qty_delivered' => 'Qty Delivered',
+    'qty_invoiced' => 'Qty Invoiced',
+    'qty_to_deliver' => 'Qty To Deliver',
+    'qty_to_invoice' => 'Qty To Invoice',
 ];

@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Overview
     'overview' => 'Overview',
     'invite_user' => 'Invite User',
     'statistics' => 'Statistics',
@@ -30,28 +29,34 @@ return [
     'business_profile' => 'Business profile',
     'localization' => 'Localization',
     'language_region' => 'Language & region',
-    'email' => 'Email',
+    'email' => [
+        'driver' => 'Email Driver',
+        'host' => 'SMTP Host',
+        'port' => 'Port',
+        'username' => 'Username',
+        'password' => 'Password',
+        'encryption' => 'Encryption',
+        'from_address' => 'From Address',
+        'from_name' => 'From Name',
+    ],
     'smtp_configuration' => 'SMTP configuration',
     'audit_trail' => 'Audit Trail',
     'activity_logs' => 'Activity logs',
     'import_users' => 'Import users',
     'export_all' => 'Export all',
     'locale' => 'Language',
-    
-
-    // General
     'title' => 'Settings',
     'general' => 'General',
-    'company' => 'Company',
-    'users' => 'Users',
-    'roles' => 'Roles',
     'permissions' => 'Permissions',
-    'email' => 'Email',
-    'localization' => 'Localization',
     'modules' => 'Modules',
-    'audit' => 'Audit Trail',
-    
-    // Company Settings
+    'audit' => [
+        'user' => 'User',
+        'action' => 'Action',
+        'model' => 'Model',
+        'changes' => 'Changes',
+        'ip_address' => 'IP Address',
+        'timestamp' => 'Timestamp',
+    ],
     'company.name' => 'Company Name',
     'company.email' => 'Company Email',
     'company.phone' => 'Phone',
@@ -61,8 +66,6 @@ return [
     'company.tax_id' => 'Tax ID',
     'company.logo' => 'Logo',
     'company.website' => 'Website',
-    
-    // User Settings
     'user.name' => 'Name',
     'user.email' => 'Email',
     'user.password' => 'Password',
@@ -72,16 +75,10 @@ return [
     'user.language' => 'Language',
     'user.timezone' => 'Timezone',
     'user.avatar' => 'Avatar',
-    
-    // Localization
-    'locale' => 'Language',
-    'timezone' => 'Timezone',
     'date_format' => 'Date Format',
     'time_format' => 'Time Format',
     'currency' => 'Currency',
     'currency_symbol' => 'Currency Symbol',
-    
-    // Messages
     'settings_saved' => 'Settings saved successfully',
     'user_created' => 'User created successfully',
     'user_updated' => 'User updated successfully',
@@ -89,4 +86,25 @@ return [
     'role_created' => 'Role created successfully',
     'role_updated' => 'Role updated successfully',
     'role_deleted' => 'Role deleted successfully',
+    'role' => [
+        'name' => 'Role Name',
+        'permissions' => 'Permissions',
+        'users' => 'Users',
+    ],
+    'currency_position' => 'Symbol Position',
+    'decimal_separator' => 'Decimal Separator',
+    'thousand_separator' => 'Thousand Separator',
+    'module' => [
+        'name' => 'Module Name',
+        'status' => 'Status',
+        'enabled' => 'Enabled',
+        'disabled' => 'Disabled',
+    ],
+    'save_settings' => 'Save Settings',
+    'create_user' => 'Create User',
+    'create_role' => 'Create Role',
+    'test_email' => 'Send Test Email',
+    'clear_cache' => 'Clear Cache',
+    'email_sent' => 'Test email sent successfully',
+    'cache_cleared' => 'Cache cleared successfully',
 ];

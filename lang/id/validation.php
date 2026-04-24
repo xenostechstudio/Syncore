@@ -145,13 +145,11 @@ return [
     'url' => ':attribute harus URL yang valid.',
     'ulid' => ':attribute harus ULID yang valid.',
     'uuid' => ':attribute harus UUID yang valid.',
-
     'custom' => [
         'attribute-name' => [
             'rule-name' => 'pesan-kustom',
         ],
     ],
-
     'attributes' => [
         'name' => 'nama',
         'email' => 'email',
@@ -172,4 +170,13 @@ return [
         'message' => 'pesan',
         'subject' => 'subjek',
     ],
+    'any_of' => 'Kolom :attribute tidak valid.',
+    'contains' => 'Kolom :attribute tidak memiliki nilai wajib.',
+    'doesnt_contain' => 'Kolom :attribute tidak boleh berisi salah satu dari: :values.',
+    'encoding' => 'Kolom :attribute harus dalam encoding :encoding.',
+    'in_array_keys' => 'Kolom :attribute harus berisi setidaknya salah satu kunci berikut: :values.',
+    'list' => 'Kolom :attribute harus berupa list.',
+    'prohibited_if_accepted' => 'Kolom :attribute dilarang ketika :other diterima.',
+    'prohibited_if_declined' => 'Kolom :attribute dilarang ketika :other ditolak.',
+    'required_if_declined' => 'Kolom :attribute wajib diisi ketika :other ditolak.',
 ];

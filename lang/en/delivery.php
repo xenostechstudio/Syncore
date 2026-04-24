@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Overview
     'overview' => 'Delivery Overview',
     'new_delivery' => 'New Delivery',
     'recent_deliveries' => 'Recent Deliveries',
@@ -26,8 +25,6 @@ return [
     'export_report' => 'Export Report',
     'no_deliveries_yet' => 'No deliveries yet',
     'vs_last_month' => 'vs last month',
-    
-    // Stats
     'pending' => 'Pending',
     'awaiting_pickup' => 'Awaiting pickup',
     'picked' => 'Picked',
@@ -42,16 +39,11 @@ return [
     'issues' => 'Issues',
     'failed_returned' => 'Failed & returned',
     'days' => 'days',
-    
-
-    // General
     'title' => 'Delivery',
     'order' => 'Delivery Order',
     'orders' => 'Delivery Orders',
     'return' => 'Return',
     'returns' => 'Delivery Returns',
-    
-    // Fields
     'delivery_number' => 'Delivery No.',
     'delivery_date' => 'Delivery Date',
     'scheduled_date' => 'Scheduled Date',
@@ -63,8 +55,6 @@ return [
     'tracking_number' => 'Tracking No.',
     'weight' => 'Weight',
     'shipping_cost' => 'Shipping Cost',
-    
-    // Status
     'status.draft' => 'Draft',
     'status.ready' => 'Ready',
     'status.shipped' => 'Shipped',
@@ -72,8 +62,6 @@ return [
     'status.delivered' => 'Delivered',
     'status.cancelled' => 'Cancelled',
     'status.returned' => 'Returned',
-    
-    // Actions
     'create_delivery' => 'Create Delivery',
     'validate_delivery' => 'Validate Delivery',
     'mark_as_shipped' => 'Mark as Shipped',
@@ -82,15 +70,11 @@ return [
     'create_return' => 'Create Return',
     'print_label' => 'Print Label',
     'print_packing_slip' => 'Print Packing Slip',
-    
-    // Messages
     'delivery_created' => 'Delivery created successfully',
     'delivery_validated' => 'Delivery validated successfully',
     'delivery_shipped' => 'Delivery shipped successfully',
     'delivery_completed' => 'Delivery completed successfully',
     'delivery_cancelled' => 'Delivery cancelled successfully',
-    
-    // Enhanced Features
     'proof_of_delivery' => 'Proof of Delivery',
     'signature' => 'Signature',
     'delivery_photo' => 'Delivery Photo',
@@ -121,4 +105,23 @@ return [
     'recipient_phone' => 'Recipient Phone',
     'hours' => 'hours',
     'delivery_info' => 'Delivery Information',
+    'items' => 'Delivery Items',
+    'add_item' => 'Add Item',
+    'product' => 'Product',
+    'qty_ordered' => 'Qty Ordered',
+    'qty_to_deliver' => 'Qty To Deliver',
+    'qty_delivered' => 'Qty Delivered',
+    'return_number' => 'Return No.',
+    'return_date' => 'Return Date',
+    'return_reason' => 'Return Reason',
+    'return_status' => [
+        'draft' => 'Draft',
+        'confirmed' => 'Confirmed',
+        'received' => 'Received',
+        'cancelled' => 'Cancelled',
+    ],
+    'return_created' => 'Return created successfully',
+    'return_received' => 'Return received successfully',
+    'pending_deliveries' => 'Pending Deliveries',
+    'delivered_today' => 'Delivered Today',
 ];

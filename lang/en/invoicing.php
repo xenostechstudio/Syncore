@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Overview
     'overview' => 'Invoicing Overview',
     'new_invoice' => 'New Invoice',
     'recent_invoices' => 'Recent Invoices',
@@ -31,8 +30,6 @@ return [
     'no_invoices_yet' => 'No invoices yet',
     'no_payments_yet' => 'No payments yet',
     'vs_last_month' => 'vs last month',
-    
-    // Stats
     'total_invoices' => 'Total Invoices',
     'draft' => 'Draft',
     'sent' => 'Sent',
@@ -45,16 +42,10 @@ return [
     'outstanding' => 'Outstanding',
     'avg_value' => 'Avg Value',
     'per_invoice' => 'Per invoice',
-    
-
-    // General
     'title' => 'Invoicing',
     'invoice' => 'Invoice',
     'invoices' => 'Invoices',
     'payment' => 'Payment',
-    'payments' => 'Payments',
-    
-    // Fields
     'invoice_number' => 'Invoice No.',
     'invoice_date' => 'Invoice Date',
     'due_date' => 'Due Date',
@@ -62,16 +53,12 @@ return [
     'amount_due' => 'Amount Due',
     'amount_paid' => 'Amount Paid',
     'balance_due' => 'Balance Due',
-    
-    // Status
     'status.draft' => 'Draft',
     'status.sent' => 'Sent',
     'status.paid' => 'Paid',
     'status.partial' => 'Partial',
     'status.overdue' => 'Overdue',
     'status.cancelled' => 'Cancelled',
-    
-    // Actions
     'create_invoice' => 'Create Invoice',
     'send_invoice' => 'Send Invoice',
     'record_payment' => 'Record Payment',
@@ -80,17 +67,37 @@ return [
     'print_invoice' => 'Print Invoice',
     'download_pdf' => 'Download PDF',
     'send_reminder' => 'Send Reminder',
-    
-    // Payment
     'payment_number' => 'Payment No.',
     'payment_date' => 'Payment Date',
     'payment_method' => 'Payment Method',
     'payment_reference' => 'Payment Reference',
     'payment_amount' => 'Payment Amount',
-    
-    // Messages
     'invoice_created' => 'Invoice created successfully',
     'invoice_sent' => 'Invoice sent successfully',
     'invoice_paid' => 'Invoice paid successfully',
     'payment_recorded' => 'Payment recorded successfully',
+    'method' => [
+        'cash' => 'Cash',
+        'bank_transfer' => 'Bank Transfer',
+        'credit_card' => 'Credit Card',
+        'debit_card' => 'Debit Card',
+        'check' => 'Check',
+        'other' => 'Other',
+    ],
+    'terms' => [
+        'immediate' => 'Immediate Payment',
+        'net15' => 'Net 15 Days',
+        'net30' => 'Net 30 Days',
+        'net45' => 'Net 45 Days',
+        'net60' => 'Net 60 Days',
+        'cod' => 'Cash On Delivery',
+    ],
+    'invoice_cancelled' => 'Invoice cancelled successfully',
+    'reminder_sent' => 'Reminder sent successfully',
+    'total_invoiced' => 'Total Invoiced',
+    'total_paid' => 'Total Paid',
+    'total_outstanding' => 'Total Outstanding',
+    'overdue_amount' => 'Overdue Amount',
+    'draft_invoices' => 'Draft Invoices',
+    'overdue_invoices' => 'Overdue Invoices',
 ];

@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Overview
     'overview' => 'CRM Overview',
     'new_lead' => 'New Lead',
     'lead_statistics' => 'Lead Statistics',
@@ -23,26 +22,31 @@ return [
     'upcoming_activities' => 'Upcoming Activities',
     'no_leads_yet' => 'No leads yet',
     'no_upcoming_activities' => 'No upcoming activities',
-    
-    // Stats
     'new' => 'New',
     'contacted' => 'Contacted',
     'qualified' => 'Qualified',
     'converted' => 'Converted',
     'lost' => 'Lost',
-    
-
-    // General
     'title' => 'CRM',
     'lead' => 'Lead',
     'leads' => 'Leads',
-    'opportunity' => 'Opportunity',
+    'opportunity' => [
+        'name' => 'Opportunity Name',
+        'customer' => 'Customer',
+        'stage' => 'Stage',
+        'expected_close' => 'Expected Close',
+        'amount' => 'Amount',
+        'probability' => 'Probability',
+    ],
     'opportunities' => 'Opportunities',
-    'activity' => 'Activity',
-    'activities' => 'Activities',
+    'activity' => [
+        'deadline' => 'Deadline',
+        'subject' => 'Subject',
+        'description' => 'Description',
+        'due_date' => 'Due Date',
+        'completed' => 'Completed',
+    ],
     'pipeline' => 'Pipeline',
-    
-    // Lead Fields
     'lead.name' => 'Name',
     'lead.company' => 'Company',
     'lead.email' => 'Email',
@@ -51,8 +55,6 @@ return [
     'lead.assigned_to' => 'Assigned To',
     'lead.expected_revenue' => 'Expected Revenue',
     'lead.probability' => 'Probability',
-    
-    // Lead Sources
     'source.website' => 'Website',
     'source.referral' => 'Referral',
     'source.social_media' => 'Social Media',
@@ -61,34 +63,38 @@ return [
     'source.trade_show' => 'Trade Show',
     'source.email_campaign' => 'Email Campaign',
     'source.other' => 'Other',
-    
-    // Lead Status
     'lead.status.new' => 'New',
     'lead.status.contacted' => 'Contacted',
     'lead.status.qualified' => 'Qualified',
     'lead.status.converted' => 'Converted',
     'lead.status.lost' => 'Lost',
-    
-    // Opportunity Stages
     'stage.qualification' => 'Qualification',
     'stage.needs_analysis' => 'Needs Analysis',
     'stage.proposal' => 'Proposal',
     'stage.negotiation' => 'Negotiation',
     'stage.won' => 'Won',
     'stage.lost' => 'Lost',
-    
-    // Activity Types
     'activity.call' => 'Call',
     'activity.email' => 'Email',
     'activity.meeting' => 'Meeting',
     'activity.task' => 'Task',
     'activity.note' => 'Note',
-    
-    // Actions
     'create_lead' => 'Create Lead',
     'convert_to_opportunity' => 'Convert to Opportunity',
     'create_opportunity' => 'Create Opportunity',
     'mark_as_won' => 'Mark as Won',
     'mark_as_lost' => 'Mark as Lost',
     'schedule_activity' => 'Schedule Activity',
+    'log_call' => 'Log Call',
+    'send_email' => 'Send Email',
+    'schedule_meeting' => 'Schedule Meeting',
+    'lead_created' => 'Lead created successfully',
+    'lead_converted' => 'Lead converted successfully',
+    'opportunity_created' => 'Opportunity created successfully',
+    'opportunity_won' => 'Congratulations! Opportunity won',
+    'opportunity_lost' => 'Opportunity marked as lost',
+    'activity_scheduled' => 'Activity scheduled successfully',
+    'activity_completed' => 'Activity completed successfully',
+    'qualified_leads' => 'Qualified Leads',
+    'won_opportunities' => 'Won Opportunities',
 ];

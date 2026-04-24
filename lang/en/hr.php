@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Overview
     'overview' => 'HR Overview',
     'new_employee' => 'New Employee',
     'recent_employees' => 'Recent Employees',
@@ -34,13 +33,19 @@ return [
     'next_30_days' => 'Next 30 days',
     'quick_actions' => 'Quick Actions',
     'employees' => 'Employees',
-    'payroll' => 'Payroll',
+    'payroll' => [
+        'status' => [
+            'draft' => 'Draft',
+            'processing' => 'Processing',
+            'approved' => 'Approved',
+            'paid' => 'Paid',
+            'cancelled' => 'Cancelled',
+        ],
+    ],
     'no_employees_yet' => 'No employees yet',
     'no_leave_requests' => 'No leave requests found',
     'no_departments' => 'No departments found',
     'vs_last_month' => 'vs last month',
-    
-    // Stats
     'active' => 'Active',
     'on_leave' => 'On Leave',
     'inactive' => 'Inactive',
@@ -52,18 +57,17 @@ return [
     'today' => 'Today',
     'tomorrow' => 'Tomorrow',
     'in_days' => 'In :count days',
-    
-
-    // General
     'title' => 'Human Resources',
-    'employee' => 'Employee',
-    'employees' => 'Employees',
+    'employee' => [
+        'marital_status' => 'Marital Status',
+        'marital' => [
+            'single' => 'Single',
+            'married' => 'Married',
+            'divorced' => 'Divorced',
+        ],
+    ],
     'department' => 'Department',
-    'departments' => 'Departments',
     'position' => 'Position',
-    'positions' => 'Positions',
-    
-    // Employee Fields
     'employee.name' => 'Employee Name',
     'employee.employee_id' => 'Employee ID',
     'employee.email' => 'Email',
@@ -75,19 +79,21 @@ return [
     'employee.gender' => 'Gender',
     'employee.gender.male' => 'Male',
     'employee.gender.female' => 'Female',
-    
-    // Employee Status
     'status.active' => 'Active',
     'status.inactive' => 'Inactive',
     'status.on_leave' => 'On Leave',
     'status.terminated' => 'Terminated',
     'status.probation' => 'Probation',
-    
-    // Leave
     'leave' => 'Leave',
     'leave_request' => 'Leave Request',
-    'leave_requests' => 'Leave Requests',
-    'leave_type' => 'Leave Type',
+    'leave_type' => [
+        'annual' => 'Annual Leave',
+        'sick' => 'Sick Leave',
+        'maternity' => 'Maternity Leave',
+        'paternity' => 'Paternity Leave',
+        'unpaid' => 'Unpaid Leave',
+        'other' => 'Other',
+    ],
     'leave_types' => 'Leave Types',
     'leave_balance' => 'Leave Balance',
     'leave.start_date' => 'Start Date',
@@ -98,9 +104,6 @@ return [
     'leave.status.approved' => 'Approved',
     'leave.status.rejected' => 'Rejected',
     'leave.status.cancelled' => 'Cancelled',
-    
-    // Payroll
-    'payroll' => 'Payroll',
     'payroll_period' => 'Payroll Period',
     'payroll_slip' => 'Payroll Slip',
     'salary' => 'Salary',
@@ -111,4 +114,21 @@ return [
     'deductions' => 'Deductions',
     'net_salary' => 'Net Salary',
     'gross_salary' => 'Gross Salary',
+    'payroll_slips' => 'Payroll Slips',
+    'create_employee' => 'Create Employee',
+    'create_leave_request' => 'Request Leave',
+    'approve_leave' => 'Approve Leave',
+    'reject_leave' => 'Reject Leave',
+    'process_payroll' => 'Process Payroll',
+    'generate_slips' => 'Generate Payroll Slips',
+    'print_slip' => 'Print Payroll Slip',
+    'employee_created' => 'Employee created successfully',
+    'employee_updated' => 'Employee updated successfully',
+    'leave_submitted' => 'Leave request submitted successfully',
+    'leave_approved' => 'Leave approved successfully',
+    'leave_rejected' => 'Leave rejected successfully',
+    'payroll_processed' => 'Payroll processed successfully',
+    'slips_generated' => 'Payroll slips generated successfully',
+    'total_employees' => 'Total Employees',
+    'pending_leaves' => 'Pending Leaves',
 ];

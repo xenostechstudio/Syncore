@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // Overview
     'overview' => 'Inventory',
     'recent_items' => 'Recent Items',
     'last_30_days' => 'Last 30 Days',
@@ -18,16 +17,11 @@ return [
     'no_items_found' => 'No items found',
     'get_started' => 'Get started by adding your first item',
     'import_records' => 'Import records',
-    
-    // Stats
     'total_items' => 'Total Items',
     'in_stock' => 'In Stock',
     'low_stock' => 'Low Stock',
     'out_of_stock' => 'Out of Stock',
     'units' => 'units',
-    
-
-    // General
     'title' => 'Inventory',
     'product' => 'Product',
     'products' => 'Products',
@@ -36,8 +30,6 @@ return [
     'warehouse' => 'Warehouse',
     'warehouses' => 'Warehouses',
     'stock' => 'Stock',
-    
-    // Product Fields
     'product.name' => 'Product Name',
     'product.sku' => 'SKU',
     'product.barcode' => 'Barcode',
@@ -51,26 +43,31 @@ return [
     'product.min_stock' => 'Minimum Stock',
     'product.max_stock' => 'Maximum Stock',
     'product.reorder_point' => 'Reorder Point',
-    
-    // Stock Status
-    'in_stock' => 'In Stock',
-    'out_of_stock' => 'Out of Stock',
-    'low_stock' => 'Low Stock',
     'available' => 'Available',
     'reserved' => 'Reserved',
     'on_hand' => 'On Hand',
-    
-    // Transfers
-    'transfer' => 'Transfer',
+    'transfer' => [
+        'status' => [
+            'draft' => 'Draft',
+            'ready' => 'Ready',
+            'in_transit' => 'In Transit',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+        ],
+    ],
     'transfers' => 'Stock Transfers',
     'transfer_number' => 'Transfer No.',
     'source_warehouse' => 'Source Warehouse',
     'destination_warehouse' => 'Destination Warehouse',
     'transfer_date' => 'Transfer Date',
     'expected_arrival' => 'Expected Arrival',
-    
-    // Adjustments
-    'adjustment' => 'Adjustment',
+    'adjustment' => [
+        'type' => [
+            'increase' => 'Increase',
+            'decrease' => 'Decrease',
+            'count' => 'Stock Count',
+        ],
+    ],
     'adjustments' => 'Stock Adjustments',
     'adjustment_number' => 'Adjustment No.',
     'adjustment_date' => 'Adjustment Date',
@@ -79,33 +76,21 @@ return [
     'counted_quantity' => 'Counted Qty',
     'difference' => 'Difference',
     'reason' => 'Reason',
-    
-    // Actions
     'create_transfer' => 'Create Transfer',
     'create_adjustment' => 'Create Adjustment',
     'post_adjustment' => 'Post Adjustment',
     'validate_transfer' => 'Validate Transfer',
     'receive_transfer' => 'Receive Transfer',
-    
-    // Messages
     'transfer_created' => 'Transfer created successfully',
     'transfer_completed' => 'Transfer completed successfully',
     'adjustment_posted' => 'Adjustment posted successfully',
     'stock_updated' => 'Stock updated successfully',
     'insufficient_stock' => 'Insufficient stock',
     'low_stock_alert' => 'Low stock alert',
-    
-    // Search
     'search_products' => 'Search products...',
-    'search_items' => 'Search items...',
-    
-    // Empty States
     'no_products_found' => 'No products found',
     'add_first_product' => 'Add your first product to get started',
-    'no_items_found' => 'No items found',
     'add_first_item' => 'Add your first item to get started',
-    
-    // Form
     'new_product' => 'New Product',
     'edit_product' => 'Edit Product',
     'product_name' => 'Product Name',
