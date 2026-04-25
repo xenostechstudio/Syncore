@@ -8,13 +8,19 @@
     'paginator' => null,
     'showPagination' => true,
     'selected' => [],
+    // Strip the outer sticky/border/padding wrapper. Use when this
+    // component is rendered inside a layout's <x-slot:header>, where
+    // the layout already provides the page-chrome bar.
+    'bare' => false,
 ])
 
 @php
     $searchPlaceholder = $searchPlaceholder ?? __('common.search') . '...';
 @endphp
 
+@unless ($bare)
 <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
+@endunless
     <div class="flex w-full items-center justify-between gap-4">
         {{-- Left group: New button, title, gear menu, optional extras --}}
         <div class="flex items-center gap-3">
@@ -126,4 +132,6 @@
             @endisset
         </div>
     </div>
+@unless ($bare)
 </div>
+@endunless

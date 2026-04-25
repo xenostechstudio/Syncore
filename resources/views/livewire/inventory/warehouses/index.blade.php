@@ -2,77 +2,25 @@
     <x-ui.flash />
 
     <x-slot:header>
-        <div class="flex items-center justify-between gap-4">
-            {{-- Left Group: New Button, Title, Gear --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('inventory.warehouses.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
-                </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Warehouses</span>
-                
-                {{-- Actions Menu (Gear) --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
-                    </button>
-
-                    <flux:menu class="w-48">
-                        <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import records</span>
-                        </button>
-                        <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export All</span>
-                        </button>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Center Group: Search --}}
-            <div class="flex flex-1 items-center justify-center">
-                <div class="relative flex h-9 w-[480px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                    <input 
-                        type="text" 
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Search warehouses..." 
-                        class="h-full w-full border-0 bg-transparent pl-9 pr-4 text-sm outline-none focus:ring-0" 
-                    />
-                </div>
-            </div>
-
-            {{-- Right Group: Pagination & View Toggle --}}
-            <div class="flex items-center gap-4">
-                {{-- Pagination Info --}}
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $warehouses->firstItem() ?? 0 }}-{{ $warehouses->lastItem() ?? 0 }}/{{ $warehouses->total() }}
-                    </span>
-                    <div class="flex items-center gap-0.5">
-                        <button 
-                            type="button"
-                            wire:click="previousPage"
-                            @disabled($warehouses->onFirstPage())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button 
-                            type="button"
-                            wire:click="nextPage"
-                            @disabled(!$warehouses->hasMorePages())
-                            class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                        >
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {{-- View Toggle --}}
-                <x-ui.view-toggle :view="$view" />
-            </div>
-        </div>
+        <x-ui.index-header
+            :bare="true"
+            title="Warehouses"
+            :createRoute="route('inventory.warehouses.create')"
+            :paginator="$warehouses"
+            :view="$view"
+            searchPlaceholder="Search warehouses..."
+        >
+            <x-slot:actions>
+                <button type="button" wire:click="openImportModal" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                    <flux:icon name="arrow-down-tray" class="size-4" />
+                    <span>Import records</span>
+                </button>
+                <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                    <flux:icon name="arrow-up-tray" class="size-4" />
+                    <span>Export All</span>
+                </button>
+            </x-slot:actions>
+        </x-ui.index-header>
     </x-slot:header>
 
     {{-- Content --}}

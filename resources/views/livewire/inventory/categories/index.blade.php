@@ -2,107 +2,56 @@
     <x-ui.flash />
 
     <x-slot:header>
-        <div class="flex items-center justify-between gap-4">
-            {{-- Left Group: New Button, Title, Gear --}}
-            <div class="flex items-center gap-3">
-                <a href="{{ route('inventory.categories.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                    New
+        <x-ui.index-header
+            :bare="true"
+            title="Categories"
+            :createRoute="route('inventory.categories.create')"
+            :paginator="$categories"
+            :selected="$selected"
+            :views="['list', 'grid']"
+            :view="$view"
+            searchPlaceholder="Search categories..."
+        >
+            <x-slot:actions>
+                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                    <flux:icon name="arrow-down-tray" class="size-4" />
+                    <span>Import records</span>
+                </button>
+                <a href="{{ route('export.categories') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                    <flux:icon name="arrow-up-tray" class="size-4" />
+                    <span>Export All</span>
                 </a>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">
-                    Categories
-                </span>
-                
-                {{-- Actions Menu (Gear) --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
+            </x-slot:actions>
+
+            <x-slot:selectionActions>
+                <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                    <flux:icon name="arrow-down-tray" class="size-4" />
+                    <span>Export</span>
+                </button>
+
+                <flux:dropdown position="bottom" align="center">
+                    <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                        <flux:icon name="ellipsis-horizontal" class="size-4" />
                     </button>
 
-                    <flux:menu class="w-48">
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>Import records</span>
+                    <flux:menu class="w-56">
+                        <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                            <flux:icon name="document-duplicate" class="size-4" />
+                            <span>Duplicate</span>
                         </button>
-                        <a href="{{ route('export.categories') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>Export All</span>
-                        </a>
+                        <flux:menu.separator />
+                        <button
+                            type="button"
+                            wire:click="confirmBulkDelete"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                        >
+                            <flux:icon name="trash" class="size-4" />
+                            <span>Delete</span>
+                        </button>
                     </flux:menu>
                 </flux:dropdown>
-            </div>
-
-            {{-- Center Group: Search or Selection Toolbar --}}
-            <div class="flex flex-1 items-center justify-center">
-                @if(count($selected) > 0)
-                    {{-- Selection Toolbar --}}
-                    <x-ui.selection-toolbar :count="count($selected)">
-    {{-- Export --}}
-                            <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                <flux:icon name="arrow-down-tray" class="size-4" />
-                                <span>Export</span>
-                            </button>
-    
-                            {{-- Actions Dropdown --}}
-                            <flux:dropdown position="bottom" align="center">
-                                <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                                    <flux:icon name="ellipsis-horizontal" class="size-4" />
-                                </button>
-    
-                                <flux:menu class="w-56">
-                                    <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>Duplicate</span>
-                                    </button>
-                                    <flux:menu.separator />
-                                    <button 
-                                        type="button" 
-                                        wire:click="confirmBulkDelete"
-                                        class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                    >
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
-                                    </button>
-                                </flux:menu>
-                            </flux:dropdown>
-                    </x-ui.selection-toolbar>
-                @else
-                    {{-- Search Input --}}
-                    <div class="relative flex h-9 w-[400px] items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                        <input 
-                            type="text" 
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Search categories..." 
-                            class="h-full w-full border-0 bg-transparent pl-9 pr-4 text-sm outline-none focus:ring-0" 
-                        />
-                    </div>
-                @endif
-            </div>
-
-            {{-- Right Group: View Toggle, Pagination --}}
-            <div class="flex items-center gap-3">
-                <x-ui.view-toggle :view="$view" :views="['list', 'grid']" />
-                
-                @if($categories->hasPages())
-                    <div class="flex items-center gap-1">
-                        <button 
-                            wire:click="previousPage" 
-                            @disabled($categories->onFirstPage())
-                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
-                        >
-                            <flux:icon name="chevron-left" class="size-4" />
-                        </button>
-                        <button 
-                            wire:click="nextPage" 
-                            @disabled(!$categories->hasMorePages())
-                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"
-                        >
-                            <flux:icon name="chevron-right" class="size-4" />
-                        </button>
-                    </div>
-                @endif
-            </div>
-        </div>
+            </x-slot:selectionActions>
+        </x-ui.index-header>
     </x-slot:header>
 
     {{-- Content --}}

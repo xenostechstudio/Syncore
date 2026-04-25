@@ -1,92 +1,44 @@
 <div>
     <x-slot:header>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('settings.users.create') }}" wire:navigate class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                New
-            </a>
-            <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">Users</h1>
-            <flux:dropdown position="bottom" align="start">
-                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                    <flux:icon name="cog-6-tooth" class="size-5" />
+        <x-ui.index-header
+            :bare="true"
+            title="Users"
+            :createRoute="route('settings.users.create')"
+            :paginator="$users"
+            :selected="$selected"
+            :view="$view"
+            searchPlaceholder="Search..."
+        >
+            <x-slot:actions>
+                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                    <flux:icon name="arrow-down-tray" class="size-4" />
+                    <span>Import users</span>
                 </button>
+                <a href="{{ route('export.users') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                    <flux:icon name="arrow-up-tray" class="size-4" />
+                    <span>Export all</span>
+                </a>
+            </x-slot:actions>
 
-                <flux:menu class="w-48">
-                    <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                        <flux:icon name="arrow-down-tray" class="size-4" />
-                        <span>Import users</span>
+            <x-slot:selectionActions>
+                <flux:dropdown position="bottom" align="center">
+                    <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                        <span>Actions</span>
+                        <flux:icon name="chevron-down" class="size-3" />
                     </button>
-                    <a href="{{ route('export.users') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                        <flux:icon name="arrow-up-tray" class="size-4" />
-                        <span>Export all</span>
-                    </a>
-                </flux:menu>
-            </flux:dropdown>
-        </div>
-        <div class="flex items-center gap-4">
-            {{-- Search --}}
-            @if(count($selected) > 0)
-                <div class="flex items-center gap-2">
-                    <button wire:click="clearSelection" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600">
-                        <flux:icon name="x-mark" class="size-4" />
-                        <span>{{ count($selected) }} Selected</span>
-                    </button>
-                    <flux:dropdown position="bottom" align="center">
-                        <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
-                            <span>Actions</span>
-                            <flux:icon name="chevron-down" class="size-3" />
+                    <flux:menu class="w-56">
+                        <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                            <flux:icon name="arrow-up-tray" class="size-4" />
+                            <span>Export</span>
                         </button>
-                        <flux:menu class="w-56">
-                            <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                <flux:icon name="arrow-up-tray" class="size-4" />
-                                <span>Export</span>
-                            </button>
-                            <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                <flux:icon name="trash" class="size-4" />
-                                <span>Delete</span>
-                            </button>
-                        </flux:menu>
-                    </flux:dropdown>
-                </div>
-            @else
-                <div class="relative flex h-9 w-64 items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                    <input 
-                        type="text" 
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Search..." 
-                        class="h-full w-full border-0 bg-transparent pl-9 pr-4 text-sm outline-none focus:ring-0" 
-                    />
-                </div>
-            @endif
-            
-            {{-- Pagination --}}
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ $users->firstItem() ?? 0 }}-{{ $users->lastItem() ?? 0 }}/{{ $users->total() }}
-                </span>
-                <div class="flex items-center gap-0.5">
-                    <button 
-                        type="button"
-                        wire:click="goToPreviousPage"
-                        @disabled($users->onFirstPage())
-                        class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                    >
-                        <flux:icon name="chevron-left" class="size-4" />
-                    </button>
-                    <button 
-                        type="button"
-                        wire:click="goToNextPage"
-                        @disabled(!$users->hasMorePages())
-                        class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                    >
-                        <flux:icon name="chevron-right" class="size-4" />
-                    </button>
-                </div>
-            </div>
-
-            {{-- View Toggle --}}
-            <x-ui.view-toggle :view="$view" />
-        </div>
+                        <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                            <flux:icon name="trash" class="size-4" />
+                            <span>Delete</span>
+                        </button>
+                    </flux:menu>
+                </flux:dropdown>
+            </x-slot:selectionActions>
+        </x-ui.index-header>
     </x-slot:header>
 
     {{-- Users List/Grid --}}
