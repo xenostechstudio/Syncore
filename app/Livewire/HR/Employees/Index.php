@@ -47,7 +47,7 @@ class Index extends Component
 
         foreach ($employees as $employee) {
             $statusValue = $employee->status?->value ?? $employee->status;
-            if (in_array($statusValue, ['terminated', 'resigned'], true)) {
+            if ($statusValue === 'inactive') {
                 $canDelete[] = [
                     'id' => $employee->id,
                     'name' => $employee->name,
@@ -57,7 +57,7 @@ class Index extends Component
                 $cannotDelete[] = [
                     'id' => $employee->id,
                     'name' => $employee->name,
-                    'reason' => "Status is '{$statusValue}' - only terminated/resigned employees can be deleted",
+                    'reason' => "Status is '{$statusValue}' - only inactive employees can be deleted",
                 ];
             }
         }
@@ -78,7 +78,7 @@ class Index extends Component
         }
 
         $count = Employee::whereIn('id', $this->selected)
-            ->whereIn('status', ['terminated', 'resigned'])
+            ->where('status', 'inactive')
             ->delete();
 
         $this->cancelDelete();
@@ -111,9 +111,8 @@ class Index extends Component
         return [
             'total' => Employee::count(),
             'active' => Employee::where('status', 'active')->count(),
-            'inactive' => Employee::where('status', 'suspended')->count(),
-            'terminated' => Employee::where('status', 'terminated')->count(),
-            'resigned' => Employee::where('status', 'resigned')->count(),
+            'on_leave' => Employee::where('status', 'on_leave')->count(),
+            'inactive' => Employee::where('status', 'inactive')->count(),
         ];
     }
 

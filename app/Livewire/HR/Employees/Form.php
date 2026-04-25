@@ -276,7 +276,7 @@ class Form extends Component
             'hireDate' => 'nullable|date',
             'contractEndDate' => 'nullable|date|after_or_equal:hireDate',
             'employmentType' => 'required|in:permanent,contract,probation,intern,freelance',
-            'status' => 'required|in:active,inactive,terminated,resigned',
+            'status' => 'required|in:active,on_leave,inactive',
             'basicSalary' => 'required|numeric|min:0',
             'bankName' => 'nullable|string|max:100',
             'bankAccountNumber' => 'nullable|string|max:50',

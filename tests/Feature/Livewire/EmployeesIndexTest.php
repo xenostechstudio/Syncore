@@ -38,7 +38,7 @@ describe('Employees Index', function () {
     it('filters by departmentId and status', function () {
         $dept = Department::factory()->create();
         Employee::factory()->create(['department_id' => $dept->id, 'status' => 'active']);
-        Employee::factory()->count(2)->terminated()->create();
+        Employee::factory()->count(2)->inactive()->create();
         Employee::factory()->create();
 
         Livewire::test(Index::class)
@@ -46,17 +46,17 @@ describe('Employees Index', function () {
             ->assertViewHas('employees', fn ($p) => $p->total() === 1);
 
         Livewire::test(Index::class)
-            ->set('status', 'terminated')
+            ->set('status', 'inactive')
             ->assertViewHas('employees', fn ($p) => $p->total() === 2);
     });
 
-    it('confirmBulkDelete allows only terminated or resigned employees', function () {
+    it('confirmBulkDelete allows only inactive employees', function () {
         $active = Employee::factory()->create(['name' => 'Active']);
-        $terminated = Employee::factory()->terminated()->create(['name' => 'Terminated']);
-        $resigned = Employee::factory()->resigned()->create(['name' => 'Resigned']);
+        $inactive1 = Employee::factory()->inactive()->create(['name' => 'Inactive One']);
+        $inactive2 = Employee::factory()->inactive()->create(['name' => 'Inactive Two']);
 
         $c = Livewire::test(Index::class)
-            ->set('selected', [(string) $active->id, (string) $terminated->id, (string) $resigned->id])
+            ->set('selected', [(string) $active->id, (string) $inactive1->id, (string) $inactive2->id])
             ->call('confirmBulkDelete');
 
         $v = $c->get('deleteValidation');
@@ -65,16 +65,16 @@ describe('Employees Index', function () {
         expect($v['cannotDelete'][0]['name'])->toBe('Active');
     });
 
-    it('bulkDelete removes only terminated/resigned employees', function () {
+    it('bulkDelete removes only inactive employees', function () {
         $active = Employee::factory()->create();
-        $terminated = Employee::factory()->terminated()->create();
+        $inactive = Employee::factory()->inactive()->create();
 
         Livewire::test(Index::class)
-            ->set('selected', [(string) $active->id, (string) $terminated->id])
+            ->set('selected', [(string) $active->id, (string) $inactive->id])
             ->call('bulkDelete');
 
         expect(Employee::withTrashed()->find($active->id))->not->toBeNull();
-        expect(Employee::find($terminated->id))->toBeNull();
+        expect(Employee::find($inactive->id))->toBeNull();
     });
 
     it('bulkUpdateStatus updates selected employees', function () {

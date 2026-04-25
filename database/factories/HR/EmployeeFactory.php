@@ -22,13 +22,13 @@ class EmployeeFactory extends Factory
         ];
     }
 
-    public function terminated(): static
+    public function inactive(): static
     {
-        return $this->state(fn () => ['status' => 'terminated']);
+        return $this->state(fn () => ['status' => 'inactive']);
     }
 
-    public function resigned(): static
+    public function onLeave(): static
     {
-        return $this->state(fn () => ['status' => 'resigned']);
+        return $this->state(fn () => ['status' => 'on_leave']);
     }
 }

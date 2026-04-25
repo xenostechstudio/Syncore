@@ -82,26 +82,19 @@
                                                 </div>
                                                 @if($status === 'active')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                             </button>
+                                            <button type="button" wire:click="$set('status', 'on_leave')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                                    <span>On Leave</span>
+                                                </div>
+                                                @if($status === 'on_leave')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
                                             <button type="button" wire:click="$set('status', 'inactive')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                 <div class="flex items-center gap-2">
                                                     <span class="h-1.5 w-1.5 rounded-full bg-zinc-500"></span>
                                                     <span>Inactive</span>
                                                 </div>
                                                 @if($status === 'inactive')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                            </button>
-                                            <button type="button" wire:click="$set('status', 'terminated')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                                                    <span>Terminated</span>
-                                                </div>
-                                                @if($status === 'terminated')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
-                                            </button>
-                                            <button type="button" wire:click="$set('status', 'resigned')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                                                    <span>Resigned</span>
-                                                </div>
-                                                @if($status === 'resigned')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                             </button>
                                             <div class="my-2 border-t border-zinc-100 dark:border-zinc-700"></div>
                                             <div class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Department</div>
@@ -180,7 +173,7 @@
     {{-- Statistics Cards --}}
     @if($showStats && $statistics && !$employees->isEmpty())
         <div class="-mx-4 -mt-6 mb-6 border-b border-zinc-200 bg-white px-4 py-4 sm:-mx-6 lg:-mx-8 lg:px-8 dark:border-zinc-800 dark:bg-zinc-950">
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                     <div class="flex items-center gap-2">
                         <flux:icon name="users" class="size-4 text-zinc-400 dark:text-zinc-500" />
@@ -197,24 +190,17 @@
                 </div>
                 <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                     <div class="flex items-center gap-2">
+                        <flux:icon name="calendar-days" class="size-4 text-amber-500" />
+                        <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">On Leave</p>
+                    </div>
+                    <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($statistics['on_leave']) }}</p>
+                </div>
+                <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                    <div class="flex items-center gap-2">
                         <flux:icon name="pause-circle" class="size-4 text-zinc-400" />
                         <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Inactive</p>
                     </div>
                     <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($statistics['inactive']) }}</p>
-                </div>
-                <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                    <div class="flex items-center gap-2">
-                        <flux:icon name="x-circle" class="size-4 text-red-500" />
-                        <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Terminated</p>
-                    </div>
-                    <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($statistics['terminated']) }}</p>
-                </div>
-                <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                    <div class="flex items-center gap-2">
-                        <flux:icon name="arrow-right-start-on-rectangle" class="size-4 text-amber-500" />
-                        <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Resigned</p>
-                    </div>
-                    <p class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{{ number_format($statistics['resigned']) }}</p>
                 </div>
             </div>
         </div>
@@ -283,9 +269,8 @@
             @php
                 $statuses = [
                     'active' => ['label' => 'Active', 'color' => 'emerald', 'icon' => 'check-circle'],
+                    'on_leave' => ['label' => 'On Leave', 'color' => 'amber', 'icon' => 'calendar-days'],
                     'inactive' => ['label' => 'Inactive', 'color' => 'zinc', 'icon' => 'pause-circle'],
-                    'terminated' => ['label' => 'Terminated', 'color' => 'red', 'icon' => 'x-circle'],
-                    'resigned' => ['label' => 'Resigned', 'color' => 'amber', 'icon' => 'arrow-right-start-on-rectangle'],
                 ];
                 $groupedEmployees = $employees->groupBy('status');
             @endphp

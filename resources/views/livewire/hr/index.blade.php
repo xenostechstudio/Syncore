@@ -69,10 +69,6 @@
                             <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Inactive</span>
                             <span class="text-sm font-normal text-zinc-500 dark:text-zinc-400">{{ number_format($inactiveEmployees) }}</span>
                         </div>
-                        <div class="flex items-center justify-between px-4 py-2.5">
-                            <span class="text-sm font-light text-zinc-500 dark:text-zinc-400">Terminated</span>
-                            <span class="text-sm font-normal text-red-600 dark:text-red-400">{{ number_format($terminatedEmployees) }}</span>
-                        </div>
                     </div>
                 </div>
 

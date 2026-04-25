@@ -35,7 +35,6 @@ class Index extends Component
         $activeEmployees = Employee::where('status', 'active')->count();
         $inactiveEmployees = Employee::where('status', 'inactive')->count();
         $onLeaveEmployees = Employee::where('status', 'on_leave')->count();
-        $terminatedEmployees = Employee::where('status', 'terminated')->count();
 
         // Leave Request Stats
         $pendingLeaveRequests = LeaveRequest::where('status', 'pending')->count();
@@ -130,7 +129,6 @@ class Index extends Component
             'activeEmployees' => $activeEmployees,
             'inactiveEmployees' => $inactiveEmployees,
             'onLeaveEmployees' => $onLeaveEmployees,
-            'terminatedEmployees' => $terminatedEmployees,
             'pendingLeaveRequests' => $pendingLeaveRequests,
             'approvedLeaveRequests' => $approvedLeaveRequests,
             'rejectedLeaveRequests' => $rejectedLeaveRequests,

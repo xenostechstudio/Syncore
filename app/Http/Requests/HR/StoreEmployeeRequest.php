@@ -45,7 +45,7 @@ class StoreEmployeeRequest extends FormRequest
             'hire_date' => 'required|date',
             'contract_end_date' => 'nullable|date|after:hire_date',
             'employment_type' => ['required', Rule::in(['full_time', 'part_time', 'contract', 'intern'])],
-            'status' => ['required', Rule::in(['active', 'inactive', 'terminated', 'resigned'])],
+            'status' => ['required', Rule::in(['active', 'on_leave', 'inactive'])],
             
             // Salary & banking
             'basic_salary' => 'nullable|numeric|min:0',

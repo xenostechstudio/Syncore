@@ -71,19 +71,17 @@
                 </div>
                 <div class="hidden items-center lg:flex">
                     @php
-                        $statusConfig = match($status) {
-                            'active' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'icon' => 'check-circle'],
-                            'inactive' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'icon' => null],
-                            'terminated' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'icon' => 'x-circle'],
-                            'resigned' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'icon' => 'arrow-right-start-on-rectangle'],
-                            default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'icon' => null],
+                        $employeeState = \App\Enums\EmployeeStatus::tryFrom($status) ?? \App\Enums\EmployeeStatus::ACTIVE;
+                        // Literal classes so Tailwind JIT picks them up.
+                        [$badgeBg, $badgeText] = match($employeeState->color()) {
+                            'emerald' => ['bg-emerald-100 dark:bg-emerald-900/30', 'text-emerald-700 dark:text-emerald-400'],
+                            'amber'   => ['bg-amber-100 dark:bg-amber-900/30', 'text-amber-700 dark:text-amber-400'],
+                            default   => ['bg-zinc-100 dark:bg-zinc-800', 'text-zinc-600 dark:text-zinc-400'],
                         };
                     @endphp
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                        @if($statusConfig['icon'])
-                            <flux:icon name="{{ $statusConfig['icon'] }}" class="mr-1 size-3" />
-                        @endif
-                        {{ ucfirst($status) }}
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium {{ $badgeBg }} {{ $badgeText }}">
+                        <flux:icon name="{{ $employeeState->icon() }}" class="mr-1 size-3" />
+                        {{ $employeeState->label() }}
                     </span>
                 </div>
             </div>
@@ -298,9 +296,8 @@
                                                 <div class="relative">
                                                     <select wire:model="status" class="w-full appearance-none rounded-lg border border-zinc-200 bg-white px-3 py-2 pr-9 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
                                                         <option value="active">Active</option>
+                                                        <option value="on_leave">On Leave</option>
                                                         <option value="inactive">Inactive</option>
-                                                        <option value="terminated">Terminated</option>
-                                                        <option value="resigned">Resigned</option>
                                                     </select>
                                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                                         <flux:icon name="chevron-down" class="size-4 text-zinc-400" />

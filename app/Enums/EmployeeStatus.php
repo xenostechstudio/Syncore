@@ -11,29 +11,23 @@ enum EmployeeStatus: string implements HasDisplayMetadata
 
     case ACTIVE = 'active';
     case ON_LEAVE = 'on_leave';
-    case SUSPENDED = 'suspended';
-    case RESIGNED = 'resigned';
-    case TERMINATED = 'terminated';
+    case INACTIVE = 'inactive';
 
     public function label(): string
     {
         return match ($this) {
             self::ACTIVE => 'Active',
             self::ON_LEAVE => 'On Leave',
-            self::SUSPENDED => 'Suspended',
-            self::RESIGNED => 'Resigned',
-            self::TERMINATED => 'Terminated',
+            self::INACTIVE => 'Inactive',
         };
     }
 
     public function color(): string
     {
         return match ($this) {
-            self::ACTIVE => 'green',
-            self::ON_LEAVE => 'yellow',
-            self::SUSPENDED => 'orange',
-            self::RESIGNED => 'gray',
-            self::TERMINATED => 'red',
+            self::ACTIVE => 'emerald',
+            self::ON_LEAVE => 'amber',
+            self::INACTIVE => 'zinc',
         };
     }
 
@@ -42,20 +36,16 @@ enum EmployeeStatus: string implements HasDisplayMetadata
         return match ($this) {
             self::ACTIVE => 'check-circle',
             self::ON_LEAVE => 'calendar-days',
-            self::SUSPENDED => 'pause-circle',
-            self::RESIGNED => 'arrow-right-on-rectangle',
-            self::TERMINATED => 'x-circle',
+            self::INACTIVE => 'pause-circle',
         };
     }
 
     public static function transitions(): array
     {
         return [
-            self::ACTIVE->value => [self::ON_LEAVE->value, self::SUSPENDED->value, self::RESIGNED->value, self::TERMINATED->value],
-            self::ON_LEAVE->value => [self::ACTIVE->value, self::RESIGNED->value, self::TERMINATED->value],
-            self::SUSPENDED->value => [self::ACTIVE->value, self::TERMINATED->value],
-            self::RESIGNED->value => [],
-            self::TERMINATED->value => [],
+            self::ACTIVE->value => [self::ON_LEAVE->value, self::INACTIVE->value],
+            self::ON_LEAVE->value => [self::ACTIVE->value, self::INACTIVE->value],
+            self::INACTIVE->value => [],
         ];
     }
 }
