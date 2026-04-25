@@ -177,15 +177,15 @@
                                         <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">${{ number_format($item->selling_price ?? 0, 2) }}</p>
                                     </div>
                                     @php
-                                        $statusConfig = match($item->status) {
-                                            'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'In Stock'],
-                                            'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Low'],
-                                            'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Out'],
-                                            default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($item->status)],
+                                        [$bgText, $shortLabel] = match ($item->stockLevel->color()) {
+                                            'emerald' => ['bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', 'In Stock'],
+                                            'amber' => ['bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', 'Low'],
+                                            'red' => ['bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', 'Out'],
+                                            default => ['bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400', $item->stockLevel->label()],
                                         };
                                     @endphp
-                                    <span class="inline-flex w-16 items-center justify-center rounded-full px-2 py-0.5 text-xs font-light {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                        {{ $statusConfig['label'] }}
+                                    <span class="inline-flex w-16 items-center justify-center rounded-full px-2 py-0.5 text-xs font-light {{ $bgText }}">
+                                        {{ $shortLabel }}
                                     </span>
                                 </div>
                             </a>
@@ -223,14 +223,14 @@
                                 <div class="flex items-start justify-between gap-2">
                                     <h3 class="text-sm font-normal text-zinc-900 dark:text-zinc-100">{{ $item->name }}</h3>
                                     @php
-                                        $statusConfig = match($item->status) {
-                                            'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
-                                            'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'dot' => 'bg-amber-500'],
-                                            'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'dot' => 'bg-red-500'],
-                                            default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'dot' => 'bg-zinc-500'],
+                                        $dot = match ($item->stockLevel->color()) {
+                                            'emerald' => 'bg-emerald-500',
+                                            'amber' => 'bg-amber-500',
+                                            'red' => 'bg-red-500',
+                                            default => 'bg-zinc-500',
                                         };
                                     @endphp
-                                    <span class="h-2 w-2 shrink-0 rounded-full {{ $statusConfig['dot'] }}"></span>
+                                    <span class="h-2 w-2 shrink-0 rounded-full {{ $dot }}" title="{{ $item->stockLevel->label() }}"></span>
                                 </div>
                                 <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ $item->sku }}</p>
                                 <div class="flex items-center justify-between pt-2">

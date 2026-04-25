@@ -463,16 +463,17 @@
                                                     @if($visibleColumns['status'])
                                                         <td class="px-4 py-3">
                                                             @php
-                                                                $statusConfig = match($product->status) {
-                                                                    'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-500/10', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
-                                                                    'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-500/10', 'text' => 'text-amber-700 dark:text-amber-400', 'dot' => 'bg-amber-500'],
-                                                                    'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-500/10', 'text' => 'text-red-700 dark:text-red-400', 'dot' => 'bg-red-500'],
-                                                                    default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-700 dark:text-zinc-300', 'dot' => 'bg-zinc-500'],
+                                                                // Literal classes so Tailwind JIT picks them up.
+                                                                [$bgText, $dot] = match ($product->stockLevel->color()) {
+                                                                    'emerald' => ['bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400', 'bg-emerald-500'],
+                                                                    'amber' => ['bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400', 'bg-amber-500'],
+                                                                    'red' => ['bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400', 'bg-red-500'],
+                                                                    default => ['bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300', 'bg-zinc-500'],
                                                                 };
                                                             @endphp
-                                                            <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                                                <span class="h-1.5 w-1.5 rounded-full {{ $statusConfig['dot'] }}"></span>
-                                                                {{ ucfirst(str_replace('_', ' ', $product->status)) }}
+                                                            <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium {{ $bgText }}">
+                                                                <span class="h-1.5 w-1.5 rounded-full {{ $dot }}"></span>
+                                                                {{ $product->stockLevel->label() }}
                                                             </span>
                                                         </td>
                                                     @endif
@@ -656,16 +657,16 @@
                                     @if($visibleColumns['status'])
                                         <td class="px-4 py-3">
                                             @php
-                                                $statusConfig = match($product->status) {
-                                                    'in_stock' => ['bg' => 'bg-emerald-100 dark:bg-emerald-500/10', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
-                                                    'low_stock' => ['bg' => 'bg-amber-100 dark:bg-amber-500/10', 'text' => 'text-amber-700 dark:text-amber-400', 'dot' => 'bg-amber-500'],
-                                                    'out_of_stock' => ['bg' => 'bg-red-100 dark:bg-red-500/10', 'text' => 'text-red-700 dark:text-red-400', 'dot' => 'bg-red-500'],
-                                                    default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-700 dark:text-zinc-300', 'dot' => 'bg-zinc-500'],
+                                                [$bgText, $dot] = match ($product->stockLevel->color()) {
+                                                    'emerald' => ['bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400', 'bg-emerald-500'],
+                                                    'amber' => ['bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400', 'bg-amber-500'],
+                                                    'red' => ['bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400', 'bg-red-500'],
+                                                    default => ['bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300', 'bg-zinc-500'],
                                                 };
                                             @endphp
-                                            <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                                <span class="h-1.5 w-1.5 rounded-full {{ $statusConfig['dot'] }}"></span>
-                                                {{ ucfirst(str_replace('_', ' ', $product->status)) }}
+                                            <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium {{ $bgText }}">
+                                                <span class="h-1.5 w-1.5 rounded-full {{ $dot }}"></span>
+                                                {{ $product->stockLevel->label() }}
                                             </span>
                                         </td>
                                     @endif
@@ -701,14 +702,14 @@
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                     @forelse($products as $product)
                         @php
-                            $statusConfig = match($product->status) {
-                                'in_stock' => ['color' => 'emerald', 'label' => 'In Stock'],
-                                'low_stock' => ['color' => 'amber', 'label' => 'Low Stock'],
-                                'out_of_stock' => ['color' => 'red', 'label' => 'Out of Stock'],
-                                default => ['color' => 'zinc', 'label' => 'Unknown'],
+                            [$bgText, $dot] = match ($product->stockLevel->color()) {
+                                'emerald' => ['bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400', 'bg-emerald-500'],
+                                'amber' => ['bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400', 'bg-amber-500'],
+                                'red' => ['bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400', 'bg-red-500'],
+                                default => ['bg-zinc-100 text-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-400', 'bg-zinc-500'],
                             };
                         @endphp
-                        <a 
+                        <a
                             href="{{ route('sales.products.edit', $product->id) }}"
                             wire:navigate
                             class="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-zinc-600"
@@ -717,7 +718,7 @@
                             <div class="relative flex h-40 w-full items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900">
                                 <flux:icon name="cube" class="size-12 text-zinc-300 dark:text-zinc-600" />
                                 {{-- Favorite Button --}}
-                                <button 
+                                <button
                                     type="button"
                                     wire:click.prevent="toggleFavorite({{ $product->id }})"
                                     class="absolute right-3 top-3 rounded-full bg-white/80 p-1.5 shadow-sm transition-all hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800"
@@ -726,9 +727,9 @@
                                 </button>
                                 {{-- Status Badge --}}
                                 <div class="absolute left-3 top-3">
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-{{ $statusConfig['color'] }}-100 px-2 py-0.5 text-xs font-medium text-{{ $statusConfig['color'] }}-700 dark:bg-{{ $statusConfig['color'] }}-900/50 dark:text-{{ $statusConfig['color'] }}-400">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-{{ $statusConfig['color'] }}-500"></span>
-                                        {{ $statusConfig['label'] }}
+                                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium {{ $bgText }}">
+                                        <span class="h-1.5 w-1.5 rounded-full {{ $dot }}"></span>
+                                        {{ $product->stockLevel->label() }}
                                     </span>
                                 </div>
                             </div>

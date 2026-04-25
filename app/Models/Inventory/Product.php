@@ -2,6 +2,7 @@
 
 namespace App\Models\Inventory;
 
+use App\Enums\ProductStockLevel;
 use App\Models\User;
 use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
@@ -57,6 +58,11 @@ class Product extends Model
         'customer_lead_time' => 'integer',
         'is_favorite' => 'boolean',
     ];
+
+    public function getStockLevelAttribute(): ProductStockLevel
+    {
+        return ProductStockLevel::tryFrom((string) $this->status) ?? ProductStockLevel::IN_STOCK;
+    }
 
     public function warehouse(): BelongsTo
     {
