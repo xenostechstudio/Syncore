@@ -280,13 +280,18 @@
                 @forelse($orders as $order)
                     <a href="{{ route('purchase.orders.edit', $order->id) }}" wire:navigate class="relative block rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
                         @php
-                            $statusColors = [
-                                'purchase_order' => 'bg-emerald-500',
-                                'done' => 'bg-blue-500',
-                                'cancelled' => 'bg-zinc-400',
-                            ];
+                            // Driver-aware: rows here come from DB::table, not Eloquent, so derive the enum from the raw status.
+                            $orderState = \App\Enums\PurchaseOrderState::tryFrom($order->status);
+                            $dotClass = match($orderState?->color()) {
+                                'blue'    => 'bg-blue-500',
+                                'amber'   => 'bg-amber-500',
+                                'emerald' => 'bg-emerald-500',
+                                'violet'  => 'bg-violet-500',
+                                'red'     => 'bg-red-500',
+                                default   => 'bg-zinc-400',
+                            };
                         @endphp
-                        <span class="absolute right-2 top-2 inline-flex h-2 w-2 rounded-full {{ $statusColors[$order->status] ?? 'bg-zinc-400' }}"></span>
+                        <span class="absolute right-2 top-2 inline-flex h-2 w-2 rounded-full {{ $dotClass }}"></span>
                         
                         <div class="space-y-2">
                             <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $order->reference }}</h3>

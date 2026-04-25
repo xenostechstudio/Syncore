@@ -530,20 +530,28 @@
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @foreach($orders as $order)
                     @php
-                        $statusConfig = match($order->status) {
-                            'draft' => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => 'Quotation'],
-                            'confirmed' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'Sent'],
-                            'processing' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'Order'],
-                            'delivered' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'Done'],
-                            'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'Cancelled'],
-                            default => ['bg' => 'bg-zinc-100 dark:bg-zinc-800', 'text' => 'text-zinc-600 dark:text-zinc-400', 'label' => ucfirst($order->status)],
+                        $shortLabel = match($order->state) {
+                            \App\Enums\SalesOrderState::QUOTATION      => 'Quotation',
+                            \App\Enums\SalesOrderState::QUOTATION_SENT => 'Sent',
+                            \App\Enums\SalesOrderState::SALES_ORDER    => 'Order',
+                            \App\Enums\SalesOrderState::DONE           => 'Done',
+                            \App\Enums\SalesOrderState::CANCELLED      => 'Cancelled',
+                            default                                    => $order->state->label(),
+                        };
+                        // Literal classes so Tailwind JIT picks them up.
+                        [$badgeBg, $badgeText] = match($order->state->color()) {
+                            'blue'    => ['bg-blue-100 dark:bg-blue-900/30', 'text-blue-700 dark:text-blue-400'],
+                            'amber'   => ['bg-amber-100 dark:bg-amber-900/30', 'text-amber-700 dark:text-amber-400'],
+                            'emerald' => ['bg-emerald-100 dark:bg-emerald-900/30', 'text-emerald-700 dark:text-emerald-400'],
+                            'red'     => ['bg-red-100 dark:bg-red-900/30', 'text-red-700 dark:text-red-400'],
+                            default   => ['bg-zinc-100 dark:bg-zinc-800', 'text-zinc-600 dark:text-zinc-400'],
                         };
                     @endphp
                     <a href="{{ route('sales.orders.edit', $order->id) }}" wire:navigate class="group rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ $order->order_number }}</span>
-                            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
-                                {{ $statusConfig['label'] }}
+                            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $badgeBg }} {{ $badgeText }}">
+                                {{ $shortLabel }}
                             </span>
                         </div>
                         <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ $order->customer->name }}</p>
