@@ -84,7 +84,7 @@ class EmployeesImport implements ToCollection, WithHeadingRow, WithValidation, W
             'department' => 'nullable|string|max:255',
             'position' => 'nullable|string|max:255',
             'employment_type' => 'nullable|in:permanent,contract,probation,intern,freelance',
-            'status' => 'nullable|in:active,inactive,terminated,resigned',
+            'status' => 'nullable|in:active,on_leave,inactive',
             'basic_salary' => 'nullable|numeric|min:0',
         ];
     }

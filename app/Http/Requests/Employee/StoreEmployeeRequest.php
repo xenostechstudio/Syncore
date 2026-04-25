@@ -31,7 +31,7 @@ class StoreEmployeeRequest extends FormRequest
             'bank_name' => 'nullable|string|max:100',
             'bank_account_number' => 'nullable|string|max:50',
             'tax_id' => 'nullable|string|max:50',
-            'status' => 'nullable|in:active,inactive,terminated',
+            'status' => 'nullable|in:active,on_leave,inactive',
             'user_id' => 'nullable|exists:users,id|unique:employees,user_id',
         ];
     }
