@@ -74,7 +74,7 @@
             {{-- Left: Action Buttons (col-span-9 to align with card below) --}}
             <div class="col-span-9 flex items-center justify-between">
                 <div class="flex flex-wrap items-center gap-2">
-                    <button 
+                    <button
                         type="button"
                         wire:click="save"
                         wire:loading.attr="disabled"
@@ -90,46 +90,17 @@
 
                 {{-- Status Badge --}}
                 @if($accountId)
-                    <div class="flex items-center gap-2">
-                        @if($isActive)
-                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                                Active
-                            </span>
-                        @else
-                            <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                                Inactive
-                            </span>
-                        @endif
-                    </div>
+                    @if($isActive)
+                        <x-ui.status-badge status="active" />
+                    @else
+                        <x-ui.status-badge status="inactive" />
+                    @endif
                 @endif
             </div>
 
             {{-- Right: Chatter Icons (col-span-3 to align with right column below) --}}
-            <div class="col-span-3 flex items-center justify-end gap-1">
-                <button 
-                    @click="showSendMessage = !showSendMessage; showLogNote = false; showScheduleActivity = false" 
-                    :class="showSendMessage ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Send message"
-                >
-                    <flux:icon name="chat-bubble-left" class="size-5" />
-                </button>
-                <button 
-                    @click="showLogNote = !showLogNote; showSendMessage = false; showScheduleActivity = false" 
-                    :class="showLogNote ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Log note"
-                >
-                    <flux:icon name="pencil-square" class="size-5" />
-                </button>
-                <button 
-                    @click="showScheduleActivity = !showScheduleActivity; showSendMessage = false; showLogNote = false" 
-                    :class="showScheduleActivity ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Schedule activity"
-                >
-                    <flux:icon name="clock" class="size-5" />
-                </button>
+            <div class="col-span-3">
+                <x-ui.chatter-buttons :showMessage="false" />
             </div>
         </div>
     </div>
@@ -194,8 +165,8 @@
                                 <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Active Status</label>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Enable or disable this account</p>
                             </div>
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 wire:click="$toggle('isActive')"
                                 class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {{ $isActive ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-zinc-200 dark:bg-zinc-700' }}"
                             >
@@ -207,7 +178,7 @@
             </div>
 
             {{-- Right Column: Sidebar --}}
-            <div class="lg:col-span-3 space-y-6">
+            <div class="lg:col-span-3 space-y-4">
                 {{-- Account Info (only for existing accounts) --}}
                 @if($accountId && $account)
                     <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
@@ -235,78 +206,54 @@
                     </div>
                 @endif
 
-                {{-- Log Note Panel --}}
-                <div 
-                    x-show="showLogNote" 
-                    x-transition
-                    class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                    <div class="border-b border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                        <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Log Note</h3>
-                    </div>
-                    <div class="p-4">
-                        <textarea rows="3" placeholder="Write a note..." class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
-                        <div class="mt-3 flex justify-end">
-                            <button type="button" class="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                                Log
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                {{-- Chatter Forms --}}
+                <x-ui.chatter-forms :showMessage="false" />
 
-                {{-- Send Message Panel --}}
-                <div 
-                    x-show="showSendMessage" 
-                    x-transition
-                    class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                    <div class="border-b border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                        <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Send Message</h3>
+                {{-- Activity Timeline --}}
+                @if($accountId)
+                    <div class="flex items-center gap-3 py-2">
+                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
+                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                            @if($this->activitiesAndNotes->isNotEmpty() && $this->activitiesAndNotes->first()['created_at']->isToday())
+                                Today
+                            @else
+                                Activity
+                            @endif
+                        </span>
+                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                     </div>
-                    <div class="p-4">
-                        <textarea rows="3" placeholder="Write a message..." class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
-                        <div class="mt-3 flex justify-end">
-                            <button type="button" class="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                                Send
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
-                {{-- Schedule Activity Panel --}}
-                <div 
-                    x-show="showScheduleActivity" 
-                    x-transition
-                    class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-                >
-                    <div class="border-b border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                        <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Schedule Activity</h3>
+                    <div class="space-y-3">
+                        @forelse($this->activitiesAndNotes as $item)
+                            @if($item['type'] === 'note')
+                                <x-ui.note-item :note="$item['data']" />
+                            @else
+                                <x-ui.activity-item :activity="$item['data']" emptyMessage="Account created" />
+                            @endif
+                        @empty
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.user-name :user="auth()->user()" />
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $account?->created_at?->format('H:i') ?? now()->format('H:i') }}</span>
+                                    </div>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Account created</p>
+                                </div>
+                            </div>
+                        @endforelse
                     </div>
-                    <div class="p-4 space-y-3">
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Activity Type</label>
-                            <select class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800">
-                                <option>To Do</option>
-                                <option>Call</option>
-                                <option>Meeting</option>
-                                <option>Email</option>
-                            </select>
+                @else
+                    <div class="py-8 text-center">
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                            <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
                         </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Due Date</label>
-                            <input type="date" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800">
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Summary</label>
-                            <textarea rows="2" placeholder="Activity summary..." class="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"></textarea>
-                        </div>
-                        <div class="flex justify-end">
-                            <button type="button" class="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
-                                Schedule
-                            </button>
-                        </div>
+                        <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once you save</p>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>

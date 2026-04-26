@@ -26,6 +26,7 @@
         @endif
     </div>
 
+    {{-- Action Buttons Bar --}}
     <div class="-mx-4 -mt-6 bg-zinc-50 px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:bg-zinc-900/50">
         <div class="grid grid-cols-12 items-center gap-6">
             <div class="col-span-9 flex items-center justify-between">
@@ -46,25 +47,18 @@
                     @endif
                 </div>
                 @if($is_active)
-                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Active</span>
+                    <x-ui.status-badge status="active" />
                 @else
-                    <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Inactive</span>
+                    <x-ui.status-badge status="inactive" />
                 @endif
             </div>
-            <div class="col-span-3 flex items-center justify-end gap-1">
-                <button @click="showSendMessage = !showSendMessage; showLogNote = false; showScheduleActivity = false" :class="showSendMessage ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'" class="rounded-lg p-2 transition-colors" title="Send message">
-                    <flux:icon name="chat-bubble-left" class="size-5" />
-                </button>
-                <button @click="showLogNote = !showLogNote; showSendMessage = false; showScheduleActivity = false" :class="showLogNote ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'" class="rounded-lg p-2 transition-colors" title="Log note">
-                    <flux:icon name="pencil-square" class="size-5" />
-                </button>
-                <button @click="showScheduleActivity = !showScheduleActivity; showSendMessage = false; showLogNote = false" :class="showScheduleActivity ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800'" class="rounded-lg p-2 transition-colors" title="Schedule activity">
-                    <flux:icon name="clock" class="size-5" />
-                </button>
+            <div class="col-span-3">
+                <x-ui.chatter-buttons :showMessage="false" />
             </div>
         </div>
     </div>
 
+    {{-- Main Content --}}
     <div class="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div class="grid gap-6 lg:grid-cols-12">
             <div class="lg:col-span-9">
@@ -122,33 +116,56 @@
                 </div>
             </div>
 
+            {{-- Right Column: Activity Log --}}
             <div class="lg:col-span-3">
-                <div class="sticky top-20 space-y-4">
-                    <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                        <h3 class="mb-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">Activity</h3>
-                        @if($pricelistId)
-                            <div class="mb-4 flex items-center gap-2">
-                                <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Today</span>
-                                <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                            </div>
-                            <div class="flex gap-3">
-                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ auth()->user()->name ?? 'User' }}</span>
-                                        <span class="text-xs text-zinc-400">{{ now()->format('H:i') }}</span>
-                                    </div>
-                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Pricelist updated</p>
-                                </div>
-                            </div>
-                        @else
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">No activity yet.</p>
-                        @endif
+                {{-- Chatter Forms --}}
+                <x-ui.chatter-forms :showMessage="false" />
+
+                {{-- Activity Timeline --}}
+                @if($pricelistId)
+                    <div class="flex items-center gap-3 py-2">
+                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
+                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                            @if($this->activitiesAndNotes->isNotEmpty() && $this->activitiesAndNotes->first()['created_at']->isToday())
+                                Today
+                            @else
+                                Activity
+                            @endif
+                        </span>
+                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                     </div>
-                </div>
+
+                    <div class="space-y-3">
+                        @forelse($this->activitiesAndNotes as $item)
+                            @if($item['type'] === 'note')
+                                <x-ui.note-item :note="$item['data']" />
+                            @else
+                                <x-ui.activity-item :activity="$item['data']" emptyMessage="Pricelist created" />
+                            @endif
+                        @empty
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.user-name :user="auth()->user()" />
+                                        <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ now()->format('H:i') }}</span>
+                                    </div>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Pricelist created</p>
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                @else
+                    <div class="py-8 text-center">
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                            <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
+                        </div>
+                        <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once you save</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

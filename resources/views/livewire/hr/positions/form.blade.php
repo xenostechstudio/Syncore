@@ -1,4 +1,4 @@
-<div>
+<div x-data="{ showSendMessage: false, showLogNote: false, showScheduleActivity: false }">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -60,15 +60,16 @@
                     </a>
                 </div>
                 <div class="hidden items-center lg:flex">
-                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium {{ $isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' }}">
-                        @if($isActive)
-                            <flux:icon name="check-circle" class="mr-1 size-3" />
-                        @endif
-                        {{ $isActive ? 'Active' : 'Inactive' }}
-                    </span>
+                    @if($isActive)
+                        <x-ui.status-badge status="active" />
+                    @else
+                        <x-ui.status-badge status="inactive" />
+                    @endif
                 </div>
             </div>
-            <div class="col-span-3"></div>
+            <div class="col-span-3">
+                <x-ui.chatter-buttons :showMessage="false" />
+            </div>
         </div>
     </div>
 
@@ -188,12 +189,15 @@
 
             {{-- Right Column: Activity Timeline --}}
             <div class="lg:col-span-3">
+                {{-- Chatter Forms --}}
+                <x-ui.chatter-forms :showMessage="false" />
+
+                {{-- Activity Timeline --}}
                 @if($positionId)
-                    {{-- Date Separator --}}
                     <div class="flex items-center gap-3 py-2">
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                         <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                            @if($activities->isNotEmpty() && $activities->first()->created_at->isToday())
+                            @if($this->activitiesAndNotes->isNotEmpty() && $this->activitiesAndNotes->first()['created_at']->isToday())
                                 Today
                             @else
                                 Activity
@@ -202,17 +206,19 @@
                         <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
                     </div>
 
-                    {{-- Activity Items --}}
-                    <div class="space-y-4">
-                        @forelse($activities as $activity)
-                            <x-ui.activity-item :activity="$activity" emptyMessage="Position created" />
+                    <div class="space-y-3">
+                        @forelse($this->activitiesAndNotes as $item)
+                            @if($item['type'] === 'note')
+                                <x-ui.note-item :note="$item['data']" />
+                            @else
+                                <x-ui.activity-item :activity="$item['data']" emptyMessage="Position created" />
+                            @endif
                         @empty
-                            {{-- Position Created (fallback when no activities yet) --}}
                             <div class="flex items-start gap-3">
                                 <div class="flex-shrink-0">
                                     <x-ui.user-avatar :user="auth()->user()" size="md" :showPopup="true" />
                                 </div>
-                                <div class="flex-1 min-w-0">
+                                <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2">
                                         <x-ui.user-name :user="auth()->user()" />
                                         <span class="text-xs text-zinc-400 dark:text-zinc-500">{{ $position?->created_at?->format('H:i') ?? now()->format('H:i') }}</span>
@@ -223,15 +229,12 @@
                         @endforelse
                     </div>
                 @else
-                    {{-- Empty State for New Position --}}
-                    <div class="flex items-center gap-3 py-2">
-                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Activity</span>
-                        <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></div>
-                    </div>
                     <div class="py-8 text-center">
-                        <flux:icon name="clock" class="mx-auto size-8 text-zinc-300 dark:text-zinc-600" />
-                        <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                            <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
+                        </div>
+                        <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No activity yet</p>
+                        <p class="text-xs text-zinc-400 dark:text-zinc-500">Activity will appear here once you save</p>
                     </div>
                 @endif
             </div>
