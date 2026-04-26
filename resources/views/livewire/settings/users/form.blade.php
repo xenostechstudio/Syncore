@@ -1,4 +1,6 @@
-<div x-data="{ showSendMessage: false, showLogNote: false, showScheduleActivity: false, activeTab: 'access', showChangePasswordModal: false, showCancelModal: false, showTwoFactorModal: false, twoFactorCode: '' }" x-on:open-change-password-modal.window="activeTab = 'security'; showChangePasswordModal = true" x-on:show-two-factor-qr-modal.window="showTwoFactorModal = true">
+<div x-data="{ showSendMessage: false, showLogNote: false, showScheduleActivity: false, activeTab: 'access', showChangePasswordModal: false, showCancelModal: false, showTwoFactorModal: false, twoFactorCode: '' }"
+     x-on:open-change-password-modal.window="activeTab = 'security'; showChangePasswordModal = true"
+     x-on:show-two-factor-qr-modal.window="showTwoFactorModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -106,45 +108,11 @@
                     @endif
                 </div>
 
-                <div class="hidden items-center lg:flex">
-                    @if($is_active)
-                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                            <flux:icon name="check-circle" class="mr-1 size-3" />
-                            Active
-                        </span>
-                    @else
-                        <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                            Inactive
-                        </span>
-                    @endif
-                </div>
+                <x-ui.status-badge :status="$is_active ? 'active' : 'inactive'" />
             </div>
 
-            <div class="col-span-3 flex items-center justify-end gap-1">
-                <button 
-                    @click="showSendMessage = !showSendMessage; showLogNote = false; showScheduleActivity = false" 
-                    :class="showSendMessage ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Send message"
-                >
-                    <flux:icon name="chat-bubble-left" class="size-5" />
-                </button>
-                <button 
-                    @click="showLogNote = !showLogNote; showSendMessage = false; showScheduleActivity = false" 
-                    :class="showLogNote ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Log note"
-                >
-                    <flux:icon name="pencil-square" class="size-5" />
-                </button>
-                <button 
-                    @click="showScheduleActivity = !showScheduleActivity; showSendMessage = false; showLogNote = false" 
-                    :class="showScheduleActivity ? 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200' : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'"
-                    class="rounded-lg p-2 transition-colors" 
-                    title="Schedule activity"
-                >
-                    <flux:icon name="clock" class="size-5" />
-                </button>
+            <div class="col-span-3">
+                <x-ui.chatter-buttons :showMessage="false" />
             </div>
         </div>
     </div>
