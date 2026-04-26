@@ -120,7 +120,7 @@
 
     {{-- Main Content --}}
     <div class="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div class="mt-6 grid gap-6 lg:grid-cols-12">
+        <div class="grid gap-6 lg:grid-cols-12">
             {{-- Left Column: Main Form (col-span-9) --}}
             <div class="lg:col-span-9">
                 <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
