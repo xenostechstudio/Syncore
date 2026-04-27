@@ -107,102 +107,72 @@
             <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Module Configuration</h3>
             <div class="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
                 <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    <a href="{{ route('settings.modules.sales-order') }}" wire:navigate class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                                <flux:icon name="shopping-cart" class="size-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                                <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Sales Order</p>
-                                <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Order settings, quotations, pricing</p>
-                            </div>
-                        </div>
-                        <flux:icon name="chevron-right" class="size-4 text-zinc-300 dark:text-zinc-600" />
-                    </a>
-                    <a href="{{ route('settings.modules.purchase-order') }}" wire:navigate class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-900/20">
-                                <flux:icon name="truck" class="size-5 text-purple-600 dark:text-purple-400" />
-                            </div>
-                            <div>
-                                <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Purchase Order</p>
-                                <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Vendor management, approval workflow</p>
-                            </div>
-                        </div>
-                        <flux:icon name="chevron-right" class="size-4 text-zinc-300 dark:text-zinc-600" />
-                    </a>
-                    <a href="{{ route('settings.modules.invoice') }}" wire:navigate class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-                                <flux:icon name="document-text" class="size-5 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <div>
-                                <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Invoice</p>
-                                <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Payment gateway, tax configuration</p>
-                            </div>
-                        </div>
-                        <flux:icon name="chevron-right" class="size-4 text-zinc-300 dark:text-zinc-600" />
-                    </a>
+                    <x-ui.settings-card
+                        :href="route('settings.modules.sales-order')"
+                        icon="shopping-cart"
+                        iconColor="blue"
+                        title="Sales Order"
+                        subtitle="Order settings, quotations, pricing"
+                        :chevron="true"
+                    />
+                    <x-ui.settings-card
+                        :href="route('settings.modules.purchase-order')"
+                        icon="truck"
+                        iconColor="purple"
+                        title="Purchase Order"
+                        subtitle="Vendor management, approval workflow"
+                        :chevron="true"
+                    />
+                    <x-ui.settings-card
+                        :href="route('settings.modules.invoice')"
+                        icon="document-text"
+                        iconColor="emerald"
+                        title="Invoice"
+                        subtitle="Payment gateway, tax configuration"
+                        :chevron="true"
+                    />
                 </div>
             </div>
 
             {{-- General Settings --}}
             <h3 class="mt-6 text-sm font-medium text-zinc-900 dark:text-zinc-100">General Settings</h3>
             <div class="grid gap-3 sm:grid-cols-2">
-                <a href="{{ route('settings.users.index') }}" wire:navigate class="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                        <flux:icon name="users" class="size-5 text-zinc-600 dark:text-zinc-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Users</p>
-                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ $totalUsers }} users</p>
-                    </div>
-                </a>
-                <a href="{{ route('settings.roles.index') }}" wire:navigate class="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                        <flux:icon name="shield-check" class="size-5 text-zinc-600 dark:text-zinc-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Roles & Permissions</p>
-                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">{{ $totalRoles }} roles</p>
-                    </div>
-                </a>
-                <a href="{{ route('settings.company.index') }}" wire:navigate class="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                        <flux:icon name="building-office" class="size-5 text-zinc-600 dark:text-zinc-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Company</p>
-                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Business profile</p>
-                    </div>
-                </a>
-                <a href="{{ route('settings.localization.index') }}" wire:navigate class="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                        <flux:icon name="globe-alt" class="size-5 text-zinc-600 dark:text-zinc-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Localization</p>
-                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Language & region</p>
-                    </div>
-                </a>
-                <a href="{{ route('settings.email.index') }}" wire:navigate class="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                        <flux:icon name="envelope" class="size-5 text-zinc-600 dark:text-zinc-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Email</p>
-                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">SMTP configuration</p>
-                    </div>
-                </a>
-                <a href="{{ route('settings.audit-trail.index') }}" wire:navigate class="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                        <flux:icon name="clipboard-document-list" class="size-5 text-zinc-600 dark:text-zinc-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-normal text-zinc-900 dark:text-zinc-100">Audit Trail</p>
-                        <p class="text-xs font-light text-zinc-500 dark:text-zinc-400">Activity logs</p>
-                    </div>
-                </a>
+                <x-ui.settings-card
+                    :href="route('settings.users.index')"
+                    icon="users"
+                    title="Users"
+                    :subtitle="$totalUsers . ' users'"
+                />
+                <x-ui.settings-card
+                    :href="route('settings.roles.index')"
+                    icon="shield-check"
+                    title="Roles & Permissions"
+                    :subtitle="$totalRoles . ' roles'"
+                />
+                <x-ui.settings-card
+                    :href="route('settings.company.index')"
+                    icon="building-office"
+                    title="Company"
+                    subtitle="Business profile"
+                />
+                <x-ui.settings-card
+                    :href="route('settings.localization.index')"
+                    icon="globe-alt"
+                    title="Localization"
+                    subtitle="Language & region"
+                />
+                <x-ui.settings-card
+                    :href="route('settings.email.index')"
+                    icon="envelope"
+                    title="Email"
+                    subtitle="SMTP configuration"
+                />
+                <x-ui.settings-card
+                    :href="route('settings.audit-trail.index')"
+                    icon="clipboard-document-list"
+                    title="Audit Trail"
+                    subtitle="Activity logs"
+                />
             </div>
         </div>
     </div>

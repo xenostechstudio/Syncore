@@ -1,144 +1,87 @@
 <div>
     <x-slot:header>
-        <div class="flex items-center gap-3">
-            @if($search || $action || $modelType || $userId || $dateFrom || $dateTo)
-            <button 
-                wire:click="clearFilters"
-                class="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
-                Clear
-            </button>
-            @endif
-            <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">Audit Trail</h1>
-            <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                {{ $activities->total() }} activities
-            </span>
-        </div>
-        <div class="flex items-center gap-4">
-            {{-- Search with Filter Dropdown --}}
-            <div class="flex items-center gap-2">
-                <div class="relative flex h-9 w-64 items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                    <input 
-                        type="text" 
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Search activities..." 
-                        class="h-full w-full border-0 bg-transparent pl-9 pr-4 text-sm outline-none focus:ring-0" 
-                    />
-                </div>
-                
-                {{-- Filter Button --}}
-                <flux:dropdown position="bottom" align="end">
-                    <button class="flex h-9 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
-                        <flux:icon name="funnel" class="size-4" />
-                        <span>Filter</span>
-                        @if($action || $modelType || $userId || $dateFrom || $dateTo)
-                            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-900 text-[10px] font-medium text-white dark:bg-zinc-100 dark:text-zinc-900">
-                                {{ collect([$action, $modelType, $userId, $dateFrom, $dateTo])->filter()->count() }}
-                            </span>
-                        @endif
-                    </button>
-
-                    <flux:menu class="w-80">
-                        <div class="border-b border-zinc-200 px-4 py-3 dark:border-zinc-700">
-                            <h3 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Filter Activities</h3>
-                        </div>
-                        <div class="space-y-4 p-4">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Action</label>
-                                    <select 
-                                        wire:model.live="action" 
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                    >
-                                        <option value="">All</option>
-                                        @foreach($actions as $act)
-                                            <option value="{{ $act }}">{{ ucfirst($act) }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Model</label>
-                                    <select 
-                                        wire:model.live="modelType" 
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                    >
-                                        <option value="">All</option>
-                                        @foreach($modelTypes as $type)
-                                            <option value="{{ $type }}">{{ $type }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">User</label>
-                                <select 
-                                    wire:model.live="userId" 
-                                    class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                >
-                                    <option value="">All Users</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Date Range</label>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <input 
-                                        type="date" 
-                                        wire:model.live="dateFrom" 
-                                        placeholder="From"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                    />
-                                    <input 
-                                        type="date" 
-                                        wire:model.live="dateTo" 
-                                        placeholder="To"
-                                        class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        @if($action || $modelType || $userId || $dateFrom || $dateTo)
-                        <div class="border-t border-zinc-200 px-4 py-3 dark:border-zinc-700">
-                            <button 
-                                wire:click="clearFilters"
-                                class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                            >
-                                Clear All Filters
-                            </button>
-                        </div>
-                        @endif
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-
-            {{-- Pagination --}}
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ $activities->firstItem() ?? 0 }}-{{ $activities->lastItem() ?? 0 }}/{{ $activities->total() }}
+        <x-ui.index-header
+            :bare="true"
+            title="Audit Trail"
+            :showNew="false"
+            :paginator="$activities"
+            :views="[]"
+            searchPlaceholder="Search activities..."
+        >
+            <x-slot:leftExtra>
+                <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                    {{ $activities->total() }} activities
                 </span>
-                <div class="flex items-center gap-0.5">
-                    <button 
-                        type="button"
-                        wire:click="previousPage"
-                        @disabled($activities->onFirstPage())
-                        class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                @if($search || $action || $modelType || $userId || $dateFrom || $dateTo)
+                    <button
+                        wire:click="clearFilters"
+                        class="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >
-                        <flux:icon name="chevron-left" class="size-4" />
+                        Clear
                     </button>
-                    <button 
-                        type="button"
-                        wire:click="nextPage"
-                        @disabled(!$activities->hasMorePages())
-                        class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                    >
-                        <flux:icon name="chevron-right" class="size-4" />
-                    </button>
+                @endif
+            </x-slot:leftExtra>
+
+            <x-slot:filters>
+                {{-- Two columns: left = Action/Model/User, right = Date range --}}
+                <div class="flex-1 space-y-3">
+                    <div>
+                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Action</label>
+                        <select
+                            wire:model.live="action"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                            <option value="">All</option>
+                            @foreach($actions as $act)
+                                <option value="{{ $act }}">{{ ucfirst($act) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Model</label>
+                        <select
+                            wire:model.live="modelType"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                            <option value="">All</option>
+                            @foreach($modelTypes as $type)
+                                <option value="{{ $type }}">{{ $type }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">User</label>
+                        <select
+                            wire:model.live="userId"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        >
+                            <option value="">All Users</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-            </div>
-        </div>
+                <div class="flex-1 space-y-3">
+                    <div>
+                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Date From</label>
+                        <input
+                            type="date"
+                            wire:model.live="dateFrom"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Date To</label>
+                        <input
+                            type="date"
+                            wire:model.live="dateTo"
+                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                        />
+                    </div>
+                </div>
+            </x-slot:filters>
+        </x-ui.index-header>
     </x-slot:header>
 
     {{-- Statistics Cards --}}
