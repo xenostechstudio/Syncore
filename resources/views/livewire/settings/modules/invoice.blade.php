@@ -43,9 +43,7 @@
     <div class="space-y-8">
         {{-- Invoice Template Section --}}
         <section>
-            <div class="-mx-4 -mt-6 mb-6 border-b border-zinc-200 bg-zinc-100 px-4 py-2.5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:border-zinc-800 dark:bg-zinc-800/50">
-                <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Invoice Template</h2>
-            </div>
+            <x-ui.section-bar title="Invoice Template" :first="true" />
 
             <div class="space-y-6">
                 {{-- Template Style --}}
@@ -232,9 +230,7 @@
 
         {{-- Payment Information Section --}}
         <section>
-            <div class="-mx-4 mb-6 border-y border-zinc-200 bg-zinc-100 px-4 py-2.5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:border-zinc-800 dark:bg-zinc-800/50">
-                <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Payment Information</h2>
-            </div>
+            <x-ui.section-bar title="Payment Information" />
 
             <div class="space-y-4">
                 <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
@@ -299,9 +295,7 @@
 
         {{-- Payment Gateway Section --}}
         <section>
-            <div class="-mx-4 mb-6 border-y border-zinc-200 bg-zinc-100 px-4 py-2.5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 dark:border-zinc-800 dark:bg-zinc-800/50">
-                <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Payment Gateway</h2>
-            </div>
+            <x-ui.section-bar title="Payment Gateway" />
 
             <div class="space-y-4">
                 {{-- Xendit --}}
