@@ -1,9 +1,10 @@
 <div x-data="{
     showSendMessage: false, showLogNote: false, showScheduleActivity: false,
     showChangePasswordModal: false, showCancelModal: false,
-    showTwoFactorModal: false, twoFactorCode: ''
+    showTwoFactorModal: false, twoFactorCode: '',
+    activeTab: 'access'
 }"
-     x-on:open-change-password-modal.window="showChangePasswordModal = true"
+     x-on:open-change-password-modal.window="activeTab = 'access'; showChangePasswordModal = true"
      x-on:show-two-factor-qr-modal.window="showTwoFactorModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
@@ -185,10 +186,56 @@
                         </div>
                     </div>
 
-                    {{-- Access --}}
-                    <div class="border-b border-zinc-100 p-5 dark:border-zinc-800">
-                        <h3 class="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Access</h3>
+                    {{-- Tab Nav --}}
+                    <div class="border-b border-zinc-100 px-5 dark:border-zinc-800">
+                        <nav class="-mb-px flex gap-1 text-sm">
+                            <button
+                                type="button"
+                                @click="activeTab = 'access'"
+                                class="whitespace-nowrap border-b-2 px-3 pb-2.5 pt-2 font-medium transition-colors"
+                                :class="activeTab === 'access'
+                                    ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+                                    : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
+                            >
+                                Access
+                            </button>
+                            <button
+                                type="button"
+                                @click="activeTab = 'preferences'"
+                                class="whitespace-nowrap border-b-2 px-3 pb-2.5 pt-2 font-medium transition-colors"
+                                :class="activeTab === 'preferences'
+                                    ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+                                    : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
+                            >
+                                Preferences
+                            </button>
+                            <button
+                                type="button"
+                                @click="activeTab = 'schedule'"
+                                class="whitespace-nowrap border-b-2 px-3 pb-2.5 pt-2 font-medium transition-colors"
+                                :class="activeTab === 'schedule'
+                                    ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+                                    : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
+                            >
+                                Schedule
+                            </button>
+                            @if($isSelf)
+                                <button
+                                    type="button"
+                                    @click="activeTab = 'security'"
+                                    class="whitespace-nowrap border-b-2 px-3 pb-2.5 pt-2 font-medium transition-colors"
+                                    :class="activeTab === 'security'
+                                        ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+                                        : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
+                                >
+                                    Security
+                                </button>
+                            @endif
+                        </nav>
+                    </div>
 
+                    {{-- Access --}}
+                    <div x-show="activeTab === 'access'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="p-5">
                         <div class="space-y-6">
                             <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
                                 <div class="lg:w-72">
@@ -280,9 +327,7 @@
                     </div>
 
                     {{-- Preferences --}}
-                    <div class="border-b border-zinc-100 p-5 dark:border-zinc-800">
-                        <h3 class="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Preferences</h3>
-
+                    <div x-show="activeTab === 'preferences'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="p-5">
                         <div class="space-y-6">
                             <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
                                 <div class="lg:w-72">
@@ -332,9 +377,7 @@
                     </div>
 
                     {{-- Schedule --}}
-                    <div class="border-b border-zinc-100 p-5 dark:border-zinc-800">
-                        <h3 class="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Schedule</h3>
-
+                    <div x-show="activeTab === 'schedule'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="p-5">
                         <div class="space-y-6">
                             <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
                                 <div class="lg:w-72">
@@ -438,9 +481,7 @@
 
                     {{-- Security (self-only) --}}
                     @if($isSelf)
-                        <div class="border-b border-zinc-100 p-5 dark:border-zinc-800">
-                            <h3 class="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Security</h3>
-
+                        <div x-show="activeTab === 'security'" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="p-5">
                             <div class="space-y-6">
                                 <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
                                     <div class="lg:w-72">
@@ -549,7 +590,7 @@
                     @endif
 
                     @if($userId && ($createdAt || $updatedAt))
-                        <div class="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-xs text-zinc-400 dark:text-zinc-500">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 px-5 py-3 text-xs text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
                             @if($createdAt)
                                 <span>Created {{ $createdAt }}</span>
                             @endif
