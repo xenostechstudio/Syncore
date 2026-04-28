@@ -294,41 +294,6 @@ class ModuleNavigation
                         ['label' => __('nav.roles_permissions'), 'route' => 'settings.roles.index', 'pattern' => 'settings.roles*'],
                     ],
                 ],
-                [
-                    'label' => __('nav.module_configuration'),
-                    'route' => 'settings.modules.sales-order',
-                    'icon' => 'squares-2x2',
-                    'pattern' => 'settings.modules.*',
-                    'children' => [
-                        ['label' => __('nav.sales_order_settings'), 'route' => 'settings.modules.sales-order', 'pattern' => 'settings.modules.sales-order*'],
-                        ['label' => __('nav.purchase_order_settings'), 'route' => 'settings.modules.purchase-order', 'pattern' => 'settings.modules.purchase-order*'],
-                        ['label' => __('nav.invoice_settings'), 'route' => 'settings.modules.invoice', 'pattern' => 'settings.modules.invoice*'],
-                    ],
-                ],
-                [
-                    'label' => __('nav.company'),
-                    'route' => 'settings.company.index',
-                    'icon' => 'building-office',
-                    'pattern' => 'settings.company*',
-                ],
-                [
-                    'label' => __('nav.localization'),
-                    'route' => 'settings.localization.index',
-                    'icon' => 'globe-alt',
-                    'pattern' => 'settings.localization*',
-                ],
-                [
-                    'label' => __('nav.email'),
-                    'route' => 'settings.email.index',
-                    'icon' => 'envelope',
-                    'pattern' => 'settings.email*',
-                ],
-                [
-                    'label' => __('nav.audit_trail'),
-                    'route' => 'settings.audit-trail.index',
-                    'icon' => 'clipboard-document-list',
-                    'pattern' => 'settings.audit-trail*',
-                ],
             ],
             'Accounting' => [
                 [

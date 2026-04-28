@@ -1,39 +1,37 @@
 <div>
     <x-slot:header>
-        <div class="flex w-full items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <a
-                    href="{{ route('settings.users.create') }}"
-                    wire:navigate
-                    class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                >
-                    {{ __('settings.invite_user') }}
-                </a>
-                <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">{{ __('settings.overview') }}</h1>
+        <div class="flex items-center gap-3">
+            <a
+                href="{{ route('settings.users.create') }}"
+                wire:navigate
+                class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+                {{ __('settings.invite_user') }}
+            </a>
+            <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">{{ __('settings.overview') }}</h1>
 
-                {{-- Actions Menu --}}
-                <flux:dropdown position="bottom" align="start">
-                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                        <flux:icon name="cog-6-tooth" class="size-5" />
+            {{-- Actions Menu --}}
+            <flux:dropdown position="bottom" align="start">
+                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                    <flux:icon name="cog-6-tooth" class="size-5" />
+                </button>
+
+                <flux:menu class="w-48">
+                    <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <flux:icon name="arrow-down-tray" class="size-4" />
+                        <span>{{ __('settings.import_users') }}</span>
                     </button>
-
-                    <flux:menu class="w-48">
-                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
-                            <span>{{ __('settings.import_users') }}</span>
-                        </button>
-                        <a href="{{ route('export.users') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                            <flux:icon name="arrow-up-tray" class="size-4" />
-                            <span>{{ __('settings.export_all') }}</span>
-                        </a>
-                    </flux:menu>
-                </flux:dropdown>
-            </div>
-            <div class="flex items-center gap-4">
-                <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                    {{ $totalUsers }} {{ __('settings.users') }} · {{ $totalRoles }} {{ __('settings.roles') }}
-                </span>
-            </div>
+                    <a href="{{ route('export.users') }}" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <flux:icon name="arrow-up-tray" class="size-4" />
+                        <span>{{ __('settings.export_all') }}</span>
+                    </a>
+                </flux:menu>
+            </flux:dropdown>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                {{ $totalUsers }} {{ __('settings.users') }} · {{ $totalRoles }} {{ __('settings.roles') }}
+            </span>
         </div>
     </x-slot:header>
 

@@ -9,7 +9,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 
-#[Layout('components.layouts.module', ['module' => 'Settings'])]
+#[Layout('components.layouts.settings')]
 #[Title('Company Profile')]
 class Index extends Component
 {
