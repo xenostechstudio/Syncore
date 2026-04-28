@@ -1,42 +1,44 @@
 <div x-data="{ activeTab: 'modules', showSendMessage: false, showLogNote: false, showScheduleActivity: false }" x-cloak>
     <x-slot:header>
-        <div class="flex items-center gap-3">
-            <button 
-                type="button"
-                wire:click="save"
-                wire:loading.attr="disabled"
-                wire:target="save"
-                class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-                <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
-                <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
-                <span wire:loading.remove wire:target="save">Save</span>
-                <span wire:loading wire:target="save">Saving...</span>
-            </button>
-            <a href="{{ route('settings.roles.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                <flux:icon name="arrow-left" class="size-5" />
-            </a>
-            <div class="flex flex-col">
-                <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Role</span>
-                <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $roleId ? ucfirst($roleName) : 'New Role' }}</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-4">
-            @if($roleId)
-                <button 
+        <div class="flex w-full items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <button
                     type="button"
-                    wire:click="delete"
-                    wire:confirm="Delete this role? This action cannot be undone."
+                    wire:click="save"
                     wire:loading.attr="disabled"
-                    wire:target="delete"
-                    class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900/30 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                    wire:target="save"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
-                    <flux:icon name="trash" wire:loading.remove wire:target="delete" class="size-4" />
-                    <flux:icon name="arrow-path" wire:loading wire:target="delete" class="size-4 animate-spin" />
-                    <span wire:loading.remove wire:target="delete">Delete</span>
-                    <span wire:loading wire:target="delete">Deleting...</span>
+                    <flux:icon name="document-check" wire:loading.remove wire:target="save" class="size-4" />
+                    <flux:icon name="arrow-path" wire:loading wire:target="save" class="size-4 animate-spin" />
+                    <span wire:loading.remove wire:target="save">Save</span>
+                    <span wire:loading wire:target="save">Saving...</span>
                 </button>
-            @endif
+                <a href="{{ route('settings.roles.index') }}" wire:navigate class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                    <flux:icon name="arrow-left" class="size-5" />
+                </a>
+                <div class="flex flex-col">
+                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Role</span>
+                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $roleId ? ucfirst($roleName) : 'New Role' }}</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                @if($roleId)
+                    <button
+                        type="button"
+                        wire:click="delete"
+                        wire:confirm="Delete this role? This action cannot be undone."
+                        wire:loading.attr="disabled"
+                        wire:target="delete"
+                        class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900/30 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                    >
+                        <flux:icon name="trash" wire:loading.remove wire:target="delete" class="size-4" />
+                        <flux:icon name="arrow-path" wire:loading wire:target="delete" class="size-4 animate-spin" />
+                        <span wire:loading.remove wire:target="delete">Delete</span>
+                        <span wire:loading wire:target="delete">Deleting...</span>
+                    </button>
+                @endif
+            </div>
         </div>
     </x-slot:header>
 

@@ -10,7 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
-#[Layout('components.layouts.settings')]
+#[Layout('components.layouts.module', ['module' => 'Settings'])]
 #[Title('Users')]
 class Index extends Component
 {

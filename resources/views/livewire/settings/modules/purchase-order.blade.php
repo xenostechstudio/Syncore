@@ -1,22 +1,24 @@
 <div>
     <x-slot:header>
-        <div class="flex items-center gap-3">
-            <button
-                type="button"
-                wire:click="save"
-                wire:loading.attr="disabled"
-                wire:target="save"
-                class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-                <span wire:loading.remove wire:target="save">Save</span>
-                <span wire:loading wire:target="save">Saving...</span>
-            </button>
-            <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">Purchase Order</h1>
-        </div>
-        <div class="flex items-center gap-4">
-            <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                Module configuration
-            </span>
+        <div class="flex w-full items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <button
+                    type="button"
+                    wire:click="save"
+                    wire:loading.attr="disabled"
+                    wire:target="save"
+                    class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                    <span wire:loading.remove wire:target="save">Save</span>
+                    <span wire:loading wire:target="save">Saving...</span>
+                </button>
+                <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">Purchase Order</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs text-zinc-400 dark:text-zinc-500">
+                    Module configuration
+                </span>
+            </div>
         </div>
     </x-slot:header>
 

@@ -8,7 +8,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.settings')]
+#[Layout('components.layouts.module', ['module' => 'Settings'])]
 #[Title('Invoice Settings')]
 class Invoice extends Component
 {

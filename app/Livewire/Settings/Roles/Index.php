@@ -8,7 +8,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-#[Layout('components.layouts.settings')]
+#[Layout('components.layouts.module', ['module' => 'Settings'])]
 #[Title('Roles & Permissions')]
 class Index extends Component
 {

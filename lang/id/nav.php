@@ -44,10 +44,15 @@ return [
     'suppliers' => 'Supplier',
     
     // Settings
+    'account_management' => 'Manajemen Akun',
     'users' => 'Pengguna',
     'all_users' => 'Semua Pengguna',
     'create_user' => 'Buat Pengguna',
     'roles_permissions' => 'Peran & Izin',
+    'module_configuration' => 'Modul',
+    'sales_order_settings' => 'Pesanan Penjualan',
+    'purchase_order_settings' => 'Pesanan Pembelian',
+    'invoice_settings' => 'Faktur',
     'localization' => 'Lokalisasi',
     'company' => 'Perusahaan',
     'email' => 'Email',
