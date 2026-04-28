@@ -501,6 +501,8 @@ class Form extends Component
     {
         return view('livewire.settings.users.form', [
             'availableRoles' => $this->getAvailableRoles(),
+            'activities' => $this->userId ? $this->activitiesAndNotes : collect(),
+            'isSelf' => $this->userId !== null && $this->userId === Auth::id(),
         ]);
     }
 }
