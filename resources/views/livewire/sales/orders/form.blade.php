@@ -608,7 +608,7 @@
                     }"
                 >
                     {{-- Items Table --}}
-                    <div class="relative min-h-[300px] overflow-x-auto lg:overflow-visible">
+                    <div class="relative overflow-x-auto lg:overflow-visible">
                         <table class="w-full">
                             <thead>
                                 <tr class="border-b border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/50">
