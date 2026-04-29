@@ -54,6 +54,12 @@
                                 </button>
                                 @if($orderId)
                                 <flux:menu.separator />
+                                @if($status !== 'cancelled')
+                                <button type="button" @click="showCancelModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <flux:icon name="x-mark" class="size-4" />
+                                    <span>Cancel Order</span>
+                                </button>
+                                @endif
                                 <button type="button" wire:click="delete" wire:confirm="Are you sure you want to delete this order? This action cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
@@ -253,16 +259,6 @@
                         >
                             <flux:icon name="eye" class="size-4" />
                             Preview
-                        </button>
-                    @endif
-                    @if($orderId && $status !== 'cancelled')
-                        <button 
-                            type="button"
-                            @click="showCancelModal = true"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                        >
-                            <flux:icon name="x-mark" class="size-4" />
-                            Cancel Order
                         </button>
                     @endif
                 </div>
