@@ -82,7 +82,7 @@
                         >
                             <flux:icon name="truck" class="size-4" />
                             <span>{{ $delivery->delivery_number }}</span>
-                            <x-ui.status-badge :status="$delivery->status->value" type="delivery" />
+                            <x-ui.status-badge :status="$delivery->state" />
                         </a>
                     @endforeach
 
@@ -94,7 +94,7 @@
                         >
                             <flux:icon name="document-text" class="size-4" />
                             <span>{{ $invoice->invoice_number }}</span>
-                            <x-ui.status-badge :status="$invoice->status" type="invoice" />
+                            <x-ui.status-badge :status="$invoice->state" />
                         </a>
                     @endforeach
                 </div>

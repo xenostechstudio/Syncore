@@ -11,7 +11,9 @@
         $label = $status->label();
         $color = $status->color();
     } else {
-        // Fall back to the legacy string-keyed table.
+        // Fall back to the legacy string-keyed table. Coerce to string so a null
+        // status doesn't trigger the "null as array offset" deprecation.
+        $status = (string) $status;
         $commonStatuses = [
             'active' => ['color' => 'emerald', 'label' => 'Active'],
             'inactive' => ['color' => 'zinc', 'label' => 'Inactive'],
