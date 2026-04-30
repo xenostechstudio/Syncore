@@ -267,7 +267,7 @@
             </div>
 
             {{-- Chatter Forms --}}
-            <x-ui.chatter-forms />
+            <x-ui.chatter-forms :showMessage="false" />
             </div>
         </div>
 </div>

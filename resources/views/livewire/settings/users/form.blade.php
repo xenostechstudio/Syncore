@@ -603,7 +603,7 @@
             </div>
 
             <div class="lg:col-span-3">
-                <x-ui.chatter-forms />
+                <x-ui.chatter-forms :showMessage="false" />
 
                 @if($userId)
                     <div class="flex items-center gap-3 py-2">
