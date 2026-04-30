@@ -1,4 +1,4 @@
-<div x-data="{ activeTab: 'modules', showSendMessage: false, showLogNote: false, showScheduleActivity: false }" x-cloak>
+<div x-data="{ activeTab: 'modules' }" x-cloak>
     <x-slot:header>
         <div class="flex w-full items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -58,10 +58,8 @@
     </div>
 
     {{-- Main Content --}}
-    <div class="grid gap-6 lg:grid-cols-12">
-            {{-- Left Column: Main Form --}}
-            <div class="lg:col-span-9">
-            <div class="overflow-visible rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+    <div>
+        <div class="overflow-visible rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="p-5">
                     {{-- Details Tab --}}
                     <div class="mb-4 flex items-start justify-between gap-4">
@@ -252,22 +250,6 @@
                         @endif
                     </div>
                 </div>
-            </div>
         </div>
-
-            {{-- Right Column: Panels (no timeline) --}}
-            <div class="lg:col-span-3">
-
-            <div x-show="!showSendMessage && !showLogNote && !showScheduleActivity" class="py-8 text-center" x-cloak>
-                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <flux:icon name="chat-bubble-left-right" class="size-6 text-zinc-400" />
-                </div>
-                <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No messages yet</p>
-                <p class="text-xs text-zinc-400 dark:text-zinc-500">Use the icons above to send a message or log a note</p>
-            </div>
-
-            {{-- Chatter Forms --}}
-            <x-ui.chatter-forms :showMessage="false" />
-            </div>
-        </div>
+    </div>
 </div>
