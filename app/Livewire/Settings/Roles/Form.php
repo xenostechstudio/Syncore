@@ -2,10 +2,8 @@
 
 namespace App\Livewire\Settings\Roles;
 
-use App\Livewire\Concerns\WithNotes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -15,14 +13,11 @@ use Livewire\Component;
 #[Title('Role')]
 class Form extends Component
 {
-    use WithNotes;
     #[Locked]
     public ?int $roleId = null;
     public string $roleName = '';
     public string $roleGuard = 'web';
     public array $selectedPermissions = [];
-    public array $activityLog = [];
-    public string $noteDraft = '';
 
     public array $moduleGroups = [
         'supply_chain' => [
@@ -143,8 +138,6 @@ class Form extends Component
                 }
             }
         }
-
-        $this->setActivityLog($role);
     }
 
     public function save(): void
@@ -221,7 +214,6 @@ class Form extends Component
         
         $this->selectedPermissions = $allPermissions;
         $this->roleId = $role->id;
-        $this->setActivityLog($role);
 
         session()->flash('success', 'Role saved successfully.');
         $this->redirect(route('settings.roles.edit', $role->id), navigate: true);
@@ -251,24 +243,6 @@ class Form extends Component
         } else {
             $this->selectedPermissions[] = $permission;
         }
-    }
-
-    public function addNote(): void
-    {
-        $note = trim($this->noteDraft);
-        if ($note === '') {
-            return;
-        }
-
-        array_unshift($this->activityLog, [
-            'title' => 'Note added',
-            'description' => $note,
-            'time' => now()->format('M d, Y H:i'),
-            'icon' => 'chat-bubble-oval-left-ellipsis',
-            'color' => 'violet',
-        ]);
-
-        $this->noteDraft = '';
     }
 
     public function setModuleAccessLevel(string $module, string $level): void
@@ -337,43 +311,4 @@ class Form extends Component
         ]);
     }
 
-    private function setActivityLog(?\Spatie\Permission\Models\Role $role): void
-    {
-        if (! $role) {
-            $this->activityLog = [[
-                'title' => 'Draft role started',
-                'description' => 'Define permissions before inviting teammates.',
-                'time' => now()->format('M d, Y H:i'),
-                'icon' => 'sparkles',
-                'color' => 'violet',
-            ]];
-
-            return;
-        }
-
-        $log = [[
-            'title' => 'Role saved',
-            'description' => Str::headline($role->name) . ' updated.',
-            'time' => $role->updated_at?->diffForHumans() ?? '',
-            'icon' => 'document-check',
-            'color' => 'emerald',
-        ]];
-
-        $log[] = [
-            'title' => 'Role created',
-            'description' => 'Created via settings module.',
-            'time' => $role->created_at?->diffForHumans() ?? '',
-            'icon' => 'sparkles',
-            'color' => 'blue',
-        ];
-        $log[] = [
-            'title' => 'Permissions synced',
-            'description' => count($this->selectedPermissions) . ' permissions assigned.',
-            'time' => now()->format('M d, Y H:i'),
-            'icon' => 'shield-check',
-            'color' => 'amber',
-        ];
-
-        $this->activityLog = $log;
-    }
 }
