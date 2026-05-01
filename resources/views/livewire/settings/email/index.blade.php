@@ -1,18 +1,7 @@
 <div>
     <x-slot:header>
         <div class="flex items-center gap-3">
-            <button
-                type="button"
-                wire:click="save"
-                wire:loading.attr="disabled"
-                class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-                <span wire:loading.remove wire:target="save">Save</span>
-                <span wire:loading wire:target="save">Saving...</span>
-            </button>
-            <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">Email Configuration</h1>
-        </div>
-        <div class="flex items-center gap-4">
+            <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Email Configuration</h1>
             @if($isActive)
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                     <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -25,6 +14,15 @@
                 </span>
             @endif
         </div>
+        <button
+            type="button"
+            wire:click="save"
+            wire:loading.attr="disabled"
+            class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+            <span wire:loading.remove wire:target="save">Save</span>
+            <span wire:loading wire:target="save">Saving...</span>
+        </button>
     </x-slot:header>
 
     <div class="space-y-6">

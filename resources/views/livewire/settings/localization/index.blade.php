@@ -1,16 +1,7 @@
 <div>
     <x-slot:header>
-        <div class="flex items-center gap-3">
-            <button
-                type="button"
-                wire:click="save"
-                wire:loading.attr="disabled"
-                class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-                <span wire:loading.remove wire:target="save">Save</span>
-                <span wire:loading wire:target="save">Saving...</span>
-            </button>
-            <h1 class="text-lg font-medium text-zinc-900 dark:text-zinc-100">Localization</h1>
+        <div class="flex items-center gap-2">
+            <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Localization</h1>
             <flux:dropdown position="bottom" align="start">
                 <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                     <flux:icon name="cog-6-tooth" class="size-5" />
@@ -28,11 +19,15 @@
                 </flux:menu>
             </flux:dropdown>
         </div>
-        <div class="flex items-center gap-4">
-            <span class="text-xs text-zinc-400 dark:text-zinc-500">
-                {{ strtoupper($language) }} · {{ $timezone }}
-            </span>
-        </div>
+        <button
+            type="button"
+            wire:click="save"
+            wire:loading.attr="disabled"
+            class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+            <span wire:loading.remove wire:target="save">Save</span>
+            <span wire:loading wire:target="save">Saving...</span>
+        </button>
     </x-slot:header>
 
     {{-- Flash Messages --}}
