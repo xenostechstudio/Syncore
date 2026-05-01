@@ -2,21 +2,148 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
         @include('partials.head')
+        <link href="https://fonts.bunny.net/css?family=fraunces:400,500,600,700|jetbrains-mono:400,500&display=swap" rel="stylesheet" />
+        <style>
+            @keyframes syncore-fade-up {
+                from { opacity: 0; transform: translateY(14px); }
+                to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes syncore-pulse {
+                0%, 100% { opacity: 0.5; transform: scale(1); }
+                50%      { opacity: 0.15; transform: scale(2.4); }
+            }
+        </style>
     </head>
-    <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div class="flex w-full max-w-sm flex-col gap-2">
-                <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
+    <body class="min-h-screen bg-zinc-950 text-zinc-100 antialiased selection:bg-zinc-100 selection:text-zinc-900">
+
+        <main class="grid min-h-screen lg:grid-cols-2">
+
+            {{-- ───────────────  Form pane (left)  ─────────────── --}}
+            <section class="relative flex flex-col bg-zinc-900 px-6 py-8 sm:px-10 lg:px-14">
+
+                {{-- Top: Wordmark + lang flip --}}
+                <header class="flex items-center justify-between">
+                    <a href="{{ route('home') }}" wire:navigate class="group inline-flex items-center gap-2.5 text-zinc-100 transition">
+                        <span class="flex size-7 items-center justify-center rounded-sm bg-zinc-100 text-zinc-950 transition group-hover:rotate-[8deg]">
+                            <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 19.5h20L12 2z"/></svg>
+                        </span>
+                        <span class="font-display text-lg font-semibold tracking-tight" style="font-variation-settings: 'opsz' 24, 'SOFT' 30;">
+                            Syncore
+                        </span>
+                    </a>
+                    <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
+                        {{ strtoupper(app()->getLocale()) }} / Auth
                     </span>
-                    <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
-                </a>
-                <div class="flex flex-col gap-6">
-                    {{ $slot }}
+                </header>
+
+                {{-- Form slot --}}
+                <div class="flex flex-1 items-center justify-center">
+                    <div class="w-full max-w-[22rem] py-12">
+                        {{ $slot }}
+                    </div>
                 </div>
-            </div>
-        </div>
+
+                {{-- Footer --}}
+                <footer class="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600">
+                    <span class="font-mono uppercase tracking-[0.18em]">{{ now()->year }} · Syncore</span>
+                    <div class="flex items-center gap-4 font-mono uppercase tracking-[0.18em]">
+                        <a href="#" class="transition hover:text-zinc-300">Privacy</a>
+                        <span class="text-zinc-800">/</span>
+                        <a href="#" class="transition hover:text-zinc-300">Terms</a>
+                        <span class="text-zinc-800">/</span>
+                        <a href="mailto:hello@syncore.app" class="transition hover:text-zinc-300">Help</a>
+                    </div>
+                </footer>
+            </section>
+
+            {{-- ───────────────  Brand pane (right)  ─────────────── --}}
+            <aside class="relative hidden overflow-hidden bg-zinc-950 lg:block">
+
+                {{-- Hairline grid texture --}}
+                <div class="pointer-events-none absolute inset-0 opacity-[0.06]"
+                     style="background-image:
+                                linear-gradient(to right, white 1px, transparent 1px),
+                                linear-gradient(to bottom, white 1px, transparent 1px);
+                            background-size: 64px 64px;
+                            mask-image: radial-gradient(ellipse 80% 70% at 30% 40%, black 30%, transparent 75%);"></div>
+
+                {{-- Soft warm spotlight --}}
+                <div class="pointer-events-none absolute inset-0"
+                     style="background: radial-gradient(circle at 28% 22%, rgba(250,240,220,0.06) 0%, transparent 55%);"></div>
+
+                {{-- Hairline border on the seam --}}
+                <div class="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-zinc-800 to-transparent"></div>
+
+                <div class="relative flex h-full flex-col justify-between p-14 xl:p-16">
+
+                    {{-- Top stamp --}}
+                    <div class="flex items-start justify-between">
+                        <div class="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-600">
+                            Syncore <span class="text-zinc-800">·</span> Operations Suite
+                        </div>
+                        <div class="text-right font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-700">
+                            <div>v1.0</div>
+                            <div class="mt-1">build · {{ substr(md5(config('app.key', 'syncore')), 0, 7) }}</div>
+                        </div>
+                    </div>
+
+                    {{-- Center block --}}
+                    <div>
+                        <h1 class="font-display font-semibold leading-[0.95] tracking-[-0.045em] text-zinc-50"
+                            style="font-size: clamp(60px, 9vw, 112px);
+                                   font-variation-settings: 'opsz' 96, 'SOFT' 30, 'wght' 600;
+                                   animation: syncore-fade-up 0.7s ease-out both;">
+                            Syncore
+                        </h1>
+
+                        <p class="mt-5 font-display text-2xl xl:text-[26px] italic font-light text-zinc-400"
+                           style="font-variation-settings: 'opsz' 36, 'SOFT' 60, 'WONK' 1;
+                                  animation: syncore-fade-up 0.8s ease-out 0.12s both;">
+                            Run the work.
+                        </p>
+
+                        {{-- Modules manifest --}}
+                        <div class="mt-12 max-w-md">
+                            <div class="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-600"
+                                 style="animation: syncore-fade-up 0.5s ease-out 0.25s both;">
+                                <span class="h-px w-5 bg-zinc-700"></span>
+                                <span>Modules</span>
+                            </div>
+                            <ul class="grid grid-cols-2 gap-x-10 gap-y-3 font-mono text-sm text-zinc-500">
+                                @php
+                                    $modules = ['sales', 'purchase', 'inventory', 'invoicing', 'delivery', 'accounting', 'hr', 'crm'];
+                                @endphp
+                                @foreach($modules as $i => $name)
+                                    <li class="flex items-center gap-3"
+                                        style="animation: syncore-fade-up 0.5s ease-out {{ 0.32 + $i * 0.055 }}s both;">
+                                        <svg class="size-[7px] shrink-0 text-zinc-700" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 2L2 19.5h20L12 2z"/>
+                                        </svg>
+                                        <span class="lowercase tracking-wide">{{ $name }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+
+                    {{-- Bottom: status row --}}
+                    <div class="flex items-end justify-between">
+                        <div class="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-zinc-500">
+                            <span class="relative flex size-2">
+                                <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400"
+                                      style="animation: syncore-pulse 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></span>
+                                <span class="relative inline-flex size-2 rounded-full bg-emerald-400"></span>
+                            </span>
+                            <span>Operational</span>
+                        </div>
+                        <span class="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-700">
+                            All systems · {{ now()->format('Y.m.d') }}
+                        </span>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
         @fluxScripts
     </body>
 </html>
