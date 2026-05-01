@@ -1,5 +1,5 @@
 <x-layouts.auth>
-    <div class="flex flex-col gap-7" style="animation: syncore-fade-up 0.6s ease-out both;">
+    <div class="syncore-anim flex flex-col gap-7">
 
         <x-auth-header
             :title="__('Welcome back.')"
