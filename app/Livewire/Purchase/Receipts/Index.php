@@ -19,6 +19,15 @@ class Index extends Component
     #[Url]
     public int $perPage = 10;
 
+    public array $visibleColumns = [
+        'reference' => true,
+        'source_po' => true,
+        'supplier' => true,
+        'warehouse' => true,
+        'received_at' => true,
+        'status' => true,
+    ];
+
     public function mount(): void
     {
         $this->status = $this->status ?: 'all';
@@ -27,6 +36,13 @@ class Index extends Component
     public function updatedPerPage(): void
     {
         $this->resetPage();
+    }
+
+    public function toggleColumn(string $column): void
+    {
+        if (isset($this->visibleColumns[$column])) {
+            $this->visibleColumns[$column] = ! $this->visibleColumns[$column];
+        }
     }
 
     protected function getAllowedViews(): array
