@@ -126,12 +126,15 @@ class Form extends Component
         $validated = $this->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'order_date' => 'required|date',
+            'expected_arrival' => 'nullable|date',
         ], [
             'supplier_id.required' => 'Please select a supplier.',
             'supplier_id.exists' => 'Selected supplier is invalid.',
         ]);
 
         $this->recalculateTotals();
+
+        $expectedArrival = $this->expected_arrival !== '' ? $this->expected_arrival : null;
 
         if ($this->rfqId) {
             DB::table('purchase_rfqs')
@@ -140,7 +143,7 @@ class Form extends Component
                     'supplier_id' => $this->supplier_id,
                     'supplier_name' => $this->supplier_name,
                     'order_date' => $this->order_date,
-                    'expected_arrival' => $this->expected_arrival,
+                    'expected_arrival' => $expectedArrival,
                     'status' => $this->status,
                     'subtotal' => $this->subtotal,
                     'tax' => $this->tax,
@@ -155,7 +158,7 @@ class Form extends Component
                 'supplier_id' => $this->supplier_id,
                 'supplier_name' => $this->supplier_name,
                 'order_date' => $this->order_date,
-                'expected_arrival' => $this->expected_arrival,
+                'expected_arrival' => $expectedArrival,
                 'status' => $this->status,
                 'subtotal' => $this->subtotal,
                 'tax' => $this->tax,
