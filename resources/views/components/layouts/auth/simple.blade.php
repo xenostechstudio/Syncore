@@ -64,7 +64,7 @@
 
             {{-- ───────────────  Brand pane (right) — persists across page swaps  ─────────────── --}}
             @persist('syncore-auth-brand-pane')
-                <aside class="relative hidden overflow-hidden bg-zinc-100 lg:block dark:bg-zinc-950">
+                <aside class="relative hidden h-full min-h-screen overflow-hidden bg-zinc-100 lg:block dark:bg-zinc-950">
 
                     {{-- Hairline grid texture: dark lines on light, white lines on dark --}}
                     <div class="pointer-events-none absolute inset-0 opacity-[0.08] dark:opacity-[0.06]"
