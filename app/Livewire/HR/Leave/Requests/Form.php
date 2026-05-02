@@ -4,6 +4,7 @@ namespace App\Livewire\HR\Leave\Requests;
 
 use App\Enums\LeaveRequestState;
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\HR\Employee;
 use App\Models\HR\LeaveRequest;
 use App\Models\HR\LeaveType;
@@ -17,7 +18,7 @@ use Livewire\Component;
 #[Title('Leave Request')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
     public ?int $requestId = null;
     public ?LeaveRequest $leaveRequest = null;
 
@@ -133,6 +134,8 @@ class Form extends Component
 
     public function approve(): void
     {
+        $this->authorizePermission('leave.approve');
+
         if (!$this->leaveRequest) return;
 
         if ($this->leaveRequest->approve(auth()->id())) {
@@ -146,6 +149,8 @@ class Form extends Component
 
     public function reject(): void
     {
+        $this->authorizePermission('leave.reject');
+
         if (!$this->leaveRequest) return;
 
         if ($this->leaveRequest->reject(auth()->id())) {

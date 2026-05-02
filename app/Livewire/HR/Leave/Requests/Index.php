@@ -4,6 +4,7 @@ namespace App\Livewire\HR\Leave\Requests;
 
 use App\Exports\LeaveRequestsExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\HR\LeaveRequest;
 use App\Models\HR\LeaveType;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Leave Requests')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public string $leaveTypeId = '';
@@ -40,6 +41,8 @@ class Index extends Component
 
     public function approveSelected(): void
     {
+        $this->authorizePermission('leave.approve');
+
         if (empty($this->selected)) {
             return;
         }
@@ -57,6 +60,8 @@ class Index extends Component
 
     public function rejectSelected(): void
     {
+        $this->authorizePermission('leave.reject');
+
         if (empty($this->selected)) {
             return;
         }

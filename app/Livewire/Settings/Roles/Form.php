@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings\Roles;
 
+use App\Livewire\Concerns\WithPermissions;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -13,6 +14,8 @@ use Livewire\Component;
 #[Title('Role')]
 class Form extends Component
 {
+    use WithPermissions;
+
     #[Locked]
     public ?int $roleId = null;
     public string $roleName = '';
@@ -221,6 +224,8 @@ class Form extends Component
 
     public function delete(): void
     {
+        $this->authorizePermission('roles.delete');
+
         if (! $this->roleId || ! class_exists('\Spatie\Permission\Models\Role')) {
             return;
         }

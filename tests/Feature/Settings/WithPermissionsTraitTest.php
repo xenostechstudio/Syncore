@@ -35,7 +35,7 @@ class TestPermissionComponent
 
     public function testAuthorize(string $permission): void
     {
-        $this->authorize($permission);
+        $this->authorizePermission($permission);
     }
 }
 
@@ -126,7 +126,7 @@ describe('WithPermissions Trait', function () {
         expect($permissions['delete'])->toBeFalse();
     });
 
-    it('authorize() throws exception without permission', function () {
+    it('authorizePermission() throws exception without permission', function () {
         $user = User::factory()->create();
         $user->assignRole('employee');
         auth()->login($user);
@@ -137,7 +137,7 @@ describe('WithPermissions Trait', function () {
             ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
     });
 
-    it('authorize() passes with permission', function () {
+    it('authorizePermission() passes with permission', function () {
         $user = User::factory()->create();
         $user->assignRole('sales');
         auth()->login($user);

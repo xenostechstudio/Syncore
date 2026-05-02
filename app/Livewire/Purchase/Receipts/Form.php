@@ -4,6 +4,7 @@ namespace App\Livewire\Purchase\Receipts;
 
 use App\Enums\PurchaseReceiptState;
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Warehouse;
 use App\Models\Purchase\PurchaseReceipt;
 use App\Models\Purchase\PurchaseRfq;
@@ -18,7 +19,7 @@ use Livewire\Component;
 #[Title('Goods Receipt')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     #[Locked]
     public ?int $receiptId = null;
@@ -105,6 +106,8 @@ class Form extends Component
 
     public function validateReceipt(PurchaseReceiptService $service): void
     {
+        $this->authorizePermission('purchase.receive');
+
         $receipt = $this->guardEditableReceipt();
         if (! $receipt) {
             return;

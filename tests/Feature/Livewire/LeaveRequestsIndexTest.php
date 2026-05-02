@@ -4,6 +4,7 @@ use App\Livewire\HR\Leave\Requests\Index;
 use App\Models\HR\LeaveRequest;
 use App\Models\HR\LeaveType;
 use App\Models\User;
+use Database\Seeders\ModulePermissionSeeder;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 
@@ -12,7 +13,10 @@ beforeEach(function () {
         App\Events\LeaveRequestApproved::class,
         App\Events\LeaveRequestRejected::class,
     ]);
-    $this->actingAs(User::factory()->create());
+    $this->seed(ModulePermissionSeeder::class);
+    $user = User::factory()->create();
+    $user->assignRole('super-admin');
+    $this->actingAs($user);
 });
 
 describe('LeaveRequests Index', function () {

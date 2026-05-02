@@ -93,8 +93,15 @@ class PdfController extends Controller
 
     public function payrollSlip(PayrollItem $payrollItem)
     {
+        $user = auth()->user();
+        $isOwner = $user && $payrollItem->employee?->user_id === $user->id;
+
+        if (! $isOwner && ! $user?->can('payroll.view')) {
+            abort(403);
+        }
+
         $payrollItem->load(['employee.department', 'employee.position', 'period', 'details.component']);
-        
+
         $pdf = Pdf::loadView('pdf.payroll-slip', [
             'payrollItem' => $payrollItem,
             'company' => $this->getCompanyInfo(),

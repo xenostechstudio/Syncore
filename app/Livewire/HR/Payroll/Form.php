@@ -3,6 +3,7 @@
 namespace App\Livewire\HR\Payroll;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\HR\Employee;
 use App\Models\HR\PayrollItem;
 use App\Models\HR\PayrollItemDetail;
@@ -19,7 +20,7 @@ use Livewire\WithPagination;
 #[Title('Payroll')]
 class Form extends Component
 {
-    use WithNotes, WithPagination;
+    use WithNotes, WithPagination, WithPermissions;
 
     public ?int $periodId = null;
     public ?PayrollPeriod $period = null;
@@ -153,6 +154,8 @@ class Form extends Component
 
     public function approve(): void
     {
+        $this->authorizePermission('payroll.approve');
+
         if (!$this->period || $this->period->status !== 'draft') return;
 
         $this->period->update([
@@ -167,6 +170,8 @@ class Form extends Component
 
     public function startProcessing(): void
     {
+        $this->authorizePermission('payroll.process');
+
         if (!$this->period || $this->period->status !== 'approved') return;
 
         $this->period->update(['status' => 'processing']);
@@ -176,6 +181,8 @@ class Form extends Component
 
     public function markAsPaid(): void
     {
+        $this->authorizePermission('payroll.process');
+
         if (!$this->period || $this->period->status !== 'processing') return;
 
         $this->period->update([

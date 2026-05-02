@@ -3,6 +3,7 @@
 namespace App\Livewire\Purchase\Rfq;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Purchase\PurchaseRfq;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ use Livewire\Component;
 #[Title('RFQ')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
     public ?int $rfqId = null;
     public string $reference = '';
     public ?int $supplier_id = null;
@@ -276,6 +277,8 @@ class Form extends Component
 
     public function confirmOrder(): void
     {
+        $this->authorizePermission('purchase.confirm');
+
         if (!$this->rfqId) {
             session()->flash('error', 'Please save the RFQ first.');
             return;

@@ -4,6 +4,7 @@ namespace App\Livewire\Accounting\JournalEntries;
 
 use App\Exports\JournalEntriesExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Accounting\JournalEntry;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -14,10 +15,12 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Journal Entries')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     public function post(int $id): void
     {
+        $this->authorizePermission('accounting.post');
+
         $entry = JournalEntry::findOrFail($id);
 
         if ($entry->post()) {

@@ -3,6 +3,7 @@
 namespace App\Livewire\Invoicing\Invoices;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\InvoiceItem;
 use App\Models\Invoicing\Payment;
@@ -23,7 +24,7 @@ use Livewire\Component;
 #[Title('Invoice')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $invoiceId = null;
 
@@ -208,6 +209,8 @@ class Form extends Component
 
     public function addPayment(): void
     {
+        $this->authorizePermission('invoicing.record_payment');
+
         $this->validate([
             'paymentAmount' => 'required|numeric|min:0.01',
             'paymentDate' => 'required|date',
@@ -347,6 +350,8 @@ class Form extends Component
 
     public function sendInvoiceEmail(): void
     {
+        $this->authorizePermission('invoicing.send');
+
         $this->validate([
             'emailTo' => 'required|email',
             'emailSubject' => 'required|string|max:255',

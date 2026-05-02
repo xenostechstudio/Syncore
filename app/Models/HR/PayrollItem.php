@@ -4,13 +4,14 @@ namespace App\Models\HR;
 
 use App\Traits\HasNotes;
 use App\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollItem extends Model
 {
-    use HasNotes, LogsActivity;
+    use HasFactory, HasNotes, LogsActivity;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

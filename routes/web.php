@@ -284,33 +284,33 @@ Route::middleware(['auth', 'verified', 'permission:access.settings'])->prefix('s
 
 // Export Routes
 Route::middleware(['auth', 'verified'])->prefix('export')->name('export.')->group(function () {
-    Route::get('/sales-orders', [\App\Http\Controllers\ExportController::class, 'salesOrders'])->name('sales-orders');
-    Route::get('/invoices', [\App\Http\Controllers\ExportController::class, 'invoices'])->name('invoices');
-    Route::get('/delivery-orders', [\App\Http\Controllers\ExportController::class, 'deliveryOrders'])->name('delivery-orders');
-    Route::get('/customers', [\App\Http\Controllers\ExportController::class, 'customers'])->name('customers');
-    Route::get('/products', [\App\Http\Controllers\ExportController::class, 'products'])->name('products');
-    Route::get('/purchase-orders', [\App\Http\Controllers\ExportController::class, 'purchaseOrders'])->name('purchase-orders');
-    Route::get('/suppliers', [\App\Http\Controllers\ExportController::class, 'suppliers'])->name('suppliers');
-    Route::get('/warehouses', [\App\Http\Controllers\ExportController::class, 'warehouses'])->name('warehouses');
-    Route::get('/categories', [\App\Http\Controllers\ExportController::class, 'categories'])->name('categories');
-    Route::get('/users', [\App\Http\Controllers\ExportController::class, 'users'])->name('users');
+    Route::get('/sales-orders', [\App\Http\Controllers\ExportController::class, 'salesOrders'])->middleware('permission:sales.export')->name('sales-orders');
+    Route::get('/invoices', [\App\Http\Controllers\ExportController::class, 'invoices'])->middleware('permission:invoicing.export')->name('invoices');
+    Route::get('/delivery-orders', [\App\Http\Controllers\ExportController::class, 'deliveryOrders'])->middleware('permission:delivery.export')->name('delivery-orders');
+    Route::get('/customers', [\App\Http\Controllers\ExportController::class, 'customers'])->middleware('permission:customers.export')->name('customers');
+    Route::get('/products', [\App\Http\Controllers\ExportController::class, 'products'])->middleware('permission:inventory.export')->name('products');
+    Route::get('/purchase-orders', [\App\Http\Controllers\ExportController::class, 'purchaseOrders'])->middleware('permission:purchase.export')->name('purchase-orders');
+    Route::get('/suppliers', [\App\Http\Controllers\ExportController::class, 'suppliers'])->middleware('permission:purchase.export')->name('suppliers');
+    Route::get('/warehouses', [\App\Http\Controllers\ExportController::class, 'warehouses'])->middleware('permission:inventory.export')->name('warehouses');
+    Route::get('/categories', [\App\Http\Controllers\ExportController::class, 'categories'])->middleware('permission:inventory.export')->name('categories');
+    Route::get('/users', [\App\Http\Controllers\ExportController::class, 'users'])->middleware('permission:users.view')->name('users');
 });
 
 // PDF Routes
 Route::middleware(['auth', 'verified'])->prefix('pdf')->name('pdf.')->group(function () {
-    Route::get('/invoice/{invoice}', [\App\Http\Controllers\PdfController::class, 'invoice'])->name('invoice');
-    Route::get('/sales-order/{salesOrder}', [\App\Http\Controllers\PdfController::class, 'salesOrder'])->name('sales-order');
-    Route::get('/delivery-order/{deliveryOrder}', [\App\Http\Controllers\PdfController::class, 'deliveryOrder'])->name('delivery-order');
-    Route::get('/purchase-order/{purchaseOrder}', [\App\Http\Controllers\PdfController::class, 'purchaseOrder'])->name('purchase-order');
-    Route::get('/vendor-bill/{vendorBill}', [\App\Http\Controllers\PdfController::class, 'vendorBill'])->name('vendor-bill');
+    Route::get('/invoice/{invoice}', [\App\Http\Controllers\PdfController::class, 'invoice'])->middleware('permission:invoicing.view')->name('invoice');
+    Route::get('/sales-order/{salesOrder}', [\App\Http\Controllers\PdfController::class, 'salesOrder'])->middleware('permission:sales.view')->name('sales-order');
+    Route::get('/delivery-order/{deliveryOrder}', [\App\Http\Controllers\PdfController::class, 'deliveryOrder'])->middleware('permission:delivery.view')->name('delivery-order');
+    Route::get('/purchase-order/{purchaseOrder}', [\App\Http\Controllers\PdfController::class, 'purchaseOrder'])->middleware('permission:purchase.view')->name('purchase-order');
+    Route::get('/vendor-bill/{vendorBill}', [\App\Http\Controllers\PdfController::class, 'vendorBill'])->middleware('permission:purchase.view')->name('vendor-bill');
     Route::get('/payroll-slip/{payrollItem}', [\App\Http\Controllers\PdfController::class, 'payrollSlip'])->name('payroll-slip');
 });
 
 // Import Routes
 Route::middleware(['auth', 'verified'])->prefix('import')->name('import.')->group(function () {
-    Route::post('/products', [\App\Http\Controllers\ImportController::class, 'products'])->name('products');
-    Route::post('/customers', [\App\Http\Controllers\ImportController::class, 'customers'])->name('customers');
-    Route::post('/suppliers', [\App\Http\Controllers\ImportController::class, 'suppliers'])->name('suppliers');
+    Route::post('/products', [\App\Http\Controllers\ImportController::class, 'products'])->middleware('permission:inventory.create')->name('products');
+    Route::post('/customers', [\App\Http\Controllers\ImportController::class, 'customers'])->middleware('permission:customers.create')->name('customers');
+    Route::post('/suppliers', [\App\Http\Controllers\ImportController::class, 'suppliers'])->middleware('permission:purchase.create')->name('suppliers');
     Route::get('/template/{type}', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('template');
 });
 

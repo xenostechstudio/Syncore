@@ -40,9 +40,11 @@ trait WithPermissions
     }
 
     /**
-     * Authorize an action or abort.
+     * Abort if the current user lacks the given permission. Named to avoid
+     * colliding with Livewire\Component::authorize() (which forwards to
+     * Laravel's Gate facade with a different signature).
      */
-    protected function authorize(string $permission, ?string $message = null): void
+    protected function authorizePermission(string $permission, ?string $message = null): void
     {
         if (!$this->can($permission)) {
             abort(403, $message ?? "You don't have permission to perform this action.");
