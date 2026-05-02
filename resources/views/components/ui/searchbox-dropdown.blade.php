@@ -60,12 +60,12 @@
                         'px-2' => $activeFilterCount > 0,
                     ])
                 >
+                    <flux:icon name="chevron-down" class="size-4" />
                     @if($activeFilterCount > 0)
                         <span class="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-zinc-900 px-1 text-[10px] font-semibold leading-none text-white dark:bg-zinc-100 dark:text-zinc-900">
                             {{ $activeFilterCount }}
                         </span>
                     @endif
-                    <flux:icon name="chevron-down" class="size-4" />
                 </button>
 
                 <flux:menu class="w-[640px] max-w-[90vw]">
