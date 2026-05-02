@@ -50,7 +50,7 @@
                                         </flux:dropdown>
                                 </x-ui.selection-toolbar>
                             @else
-                            <x-ui.searchbox-dropdown placeholder="Search employees..." widthClass="w-[520px]" width="520px">
+                            <x-ui.searchbox-dropdown placeholder="Search employees..." widthClass="w-[520px]" width="520px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                                 <x-slot:badge>
                                     @if($status)
                                         <div class="flex items-center">

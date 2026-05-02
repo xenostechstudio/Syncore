@@ -52,6 +52,11 @@ class Index extends Component
         $this->clearSelection();
     }
 
+    protected function getCustomActiveFilterCount(): int
+    {
+        return $this->myInvoice ? 0 : 1;
+    }
+
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {

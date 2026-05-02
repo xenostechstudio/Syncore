@@ -48,7 +48,7 @@
                                 </x-ui.selection-toolbar>
                             @else
                                 {{-- Search & Filter --}}
-                                <x-ui.searchbox-dropdown placeholder="Search entries..." widthClass="w-[420px]" width="420px">
+                                <x-ui.searchbox-dropdown placeholder="Search entries..." widthClass="w-[420px]" width="420px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                                     <div class="flex flex-col gap-4 p-3 md:flex-row">
                                         {{-- Filters column --}}
                                         <div class="flex-1">

@@ -57,7 +57,7 @@
                                 </x-ui.selection-toolbar>
                             @else
                                 {{-- Search Input with Arrow Down Dropdown --}}
-                                <x-ui.searchbox-dropdown placeholder="Search invoices..." widthClass="w-[520px]" width="520px">
+                                <x-ui.searchbox-dropdown placeholder="Search invoices..." widthClass="w-[520px]" width="520px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                                     <x-slot:badge>
                                         @if($myInvoice)
                                             <div class="flex items-center">

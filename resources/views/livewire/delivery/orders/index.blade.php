@@ -70,7 +70,7 @@
                         </flux:dropdown>
                     </div>
                 @else
-                    <x-ui.searchbox-dropdown placeholder="Search delivery orders..." wireModel="search">
+                    <x-ui.searchbox-dropdown placeholder="Search delivery orders..." wireModel="search" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                         <div class="flex flex-col gap-4 p-3 md:flex-row">
                             <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
                                 <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">

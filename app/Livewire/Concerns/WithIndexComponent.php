@@ -179,4 +179,45 @@ trait WithIndexComponent
     {
         return [];
     }
+
+    /**
+     * Number of non-default filters currently applied.
+     *
+     * Counts the standard $status / $sort / $groupBy filters provided by this
+     * trait, then defers to getCustomActiveFilterCount() for any page-specific
+     * filters (e.g. "My Quotations", date ranges).
+     *
+     * Used by <x-ui.searchbox-dropdown> to show a count pill on the chevron
+     * and to decide whether to render the "Clear all filters" footer.
+     */
+    public function getActiveFilterCount(): int
+    {
+        $count = 0;
+
+        $status = $this->status ?? '';
+        if ($status !== '' && $status !== 'all') {
+            $count++;
+        }
+
+        $sort = $this->sort ?? 'latest';
+        if ($sort !== 'latest') {
+            $count++;
+        }
+
+        $groupBy = $this->groupBy ?? '';
+        if ($groupBy !== '') {
+            $count++;
+        }
+
+        return $count + $this->getCustomActiveFilterCount();
+    }
+
+    /**
+     * Override to add page-specific filter counts (e.g. "My Quotations"
+     * toggle, date-range, custom selects). Returns 0 by default.
+     */
+    protected function getCustomActiveFilterCount(): int
+    {
+        return 0;
+    }
 }

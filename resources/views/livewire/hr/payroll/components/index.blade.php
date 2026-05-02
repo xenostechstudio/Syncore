@@ -27,7 +27,7 @@
                                     </button>
                                 </div>
                             @else
-                                <x-ui.searchbox-dropdown placeholder="Search components..." widthClass="w-[420px]" width="420px">
+                                <x-ui.searchbox-dropdown placeholder="Search components..." widthClass="w-[420px]" width="420px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                                     <x-slot:badge>
                                         @if($componentType)
                                             <div class="flex items-center">

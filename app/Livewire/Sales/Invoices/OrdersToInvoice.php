@@ -124,7 +124,13 @@ class OrdersToInvoice extends Component
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'sort', 'groupBy']);
+        $this->myInvoice = true;
         $this->resetPage();
+    }
+
+    protected function getCustomActiveFilterCount(): int
+    {
+        return $this->myInvoice ? 0 : 1;
     }
 
     private function getOrdersQuery()

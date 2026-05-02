@@ -39,7 +39,7 @@
                                     </button>
                                 </div>
                             @else
-                                <x-ui.searchbox-dropdown placeholder="Search taxes..." widthClass="w-[520px]" width="520px">
+                                <x-ui.searchbox-dropdown placeholder="Search taxes..." widthClass="w-[520px]" width="520px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                                     <div class="flex flex-col gap-4 p-3 md:flex-row">
                                         {{-- Filters Section --}}
                                         <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">

@@ -64,6 +64,20 @@ class Index extends Component
         $this->clearSelection();
     }
 
+    protected function getCustomActiveFilterCount(): int
+    {
+        $count = 0;
+        // Counted as "active" when the user has departed from the page's
+        // default for the My/All toggle.
+        if ($this->mode === 'quotations' && ! $this->myQuotations) {
+            $count++;
+        }
+        if ($this->mode !== 'quotations' && $this->myQuotations) {
+            $count++;
+        }
+        return $count;
+    }
+
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {

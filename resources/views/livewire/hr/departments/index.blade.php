@@ -20,7 +20,7 @@
         </x-slot:actions>
 
         <x-slot:search>
-            <x-ui.searchbox-dropdown placeholder="Search departments..." widthClass="w-[400px]" width="400px">
+            <x-ui.searchbox-dropdown placeholder="Search departments..." widthClass="w-[400px]" width="400px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                     <x-slot:badge>
                         @if($status !== '')
                             <div class="flex items-center">

@@ -76,21 +76,11 @@
                                 </x-ui.selection-toolbar>
                             @else
                                 {{-- Search Input with Arrow Down Dropdown --}}
-                                @php
-                                    $activeFilters = 0;
-                                    // Toggled away from the page's default for the "My X" filter.
-                                    if ($mode === 'quotations' && ! ($myQuotations ?? true)) $activeFilters++;
-                                    if ($mode !== 'quotations' && ($myQuotations ?? false)) $activeFilters++;
-                                    if (($isOrdersToInvoicePage ?? false) && ($myInvoice ?? false)) $activeFilters++;
-                                    if (! empty($status)) $activeFilters++;
-                                    if (($sort ?? 'latest') !== 'latest') $activeFilters++;
-                                    if (! empty($groupBy)) $activeFilters++;
-                                @endphp
                                 <x-ui.searchbox-dropdown
                                     placeholder="Search orders..."
                                     widthClass="w-[520px]"
                                     width="520px"
-                                    :activeFilterCount="$activeFilters"
+                                    :activeFilterCount="$this->getActiveFilterCount()"
                                     clearAction="clearFilters"
                                 >
                                     <x-slot:badge>

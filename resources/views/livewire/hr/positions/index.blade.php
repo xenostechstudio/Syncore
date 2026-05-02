@@ -19,7 +19,7 @@
 
         <x-slot:search>
 
-                            <x-ui.searchbox-dropdown placeholder="Search positions..." widthClass="w-[480px]" width="480px">
+                            <x-ui.searchbox-dropdown placeholder="Search positions..." widthClass="w-[480px]" width="480px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                                 <x-slot:badge>
                                     @if($departmentId)
                                         @php $selectedDept = $departments->firstWhere('id', $departmentId); @endphp

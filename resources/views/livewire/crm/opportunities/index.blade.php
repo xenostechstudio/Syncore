@@ -49,7 +49,7 @@
 
         <x-slot:search>
 
-                            <x-ui.searchbox-dropdown placeholder="Search opportunities..." widthClass="w-[520px]" width="520px">
+                            <x-ui.searchbox-dropdown placeholder="Search opportunities..." widthClass="w-[520px]" width="520px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
                                 <div class="flex flex-col gap-4 p-3 md:flex-row">
                                     {{-- Stage Filter --}}
                                     <div class="flex-1">
