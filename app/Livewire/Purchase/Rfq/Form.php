@@ -41,7 +41,7 @@ class Form extends Component
     {
         if ($id) {
             $rfq = DB::table('purchase_rfqs')->where('id', $id)->first();
-            
+
             if ($rfq) {
                 $this->rfqId = $rfq->id;
                 $this->reference = $rfq->reference;
@@ -56,6 +56,8 @@ class Form extends Component
 
                 $this->createdAt = \Carbon\Carbon::parse($rfq->created_at)->format('M d, Y \a\t H:i');
                 $this->updatedAt = \Carbon\Carbon::parse($rfq->updated_at)->format('M d, Y \a\t H:i');
+
+                $this->loadLines($id);
             }
         } else {
             $this->order_date = now()->format('Y-m-d');
@@ -64,6 +66,37 @@ class Form extends Component
         }
 
         $this->recalculateTotals();
+    }
+
+    private function loadLines(int $rfqId): void
+    {
+        $items = DB::table('purchase_rfq_items')
+            ->leftJoin('products', 'products.id', '=', 'purchase_rfq_items.product_id')
+            ->where('purchase_rfq_items.purchase_rfq_id', $rfqId)
+            ->whereNull('purchase_rfq_items.deleted_at')
+            ->orderBy('purchase_rfq_items.id')
+            ->select(
+                'purchase_rfq_items.*',
+                'products.name as product_name',
+                'products.sku as product_sku',
+            )
+            ->get();
+
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        $this->lines = $items->map(fn ($i) => [
+            'id' => (int) $i->id,
+            'product_id' => $i->product_id ? (int) $i->product_id : null,
+            'product_name' => $i->product_name ?? '',
+            'product_sku' => $i->product_sku ?? '',
+            'description' => $i->description ?? '',
+            'quantity' => (float) $i->quantity,
+            'unit_price' => (float) $i->unit_price,
+            'discount' => 0,
+            'total' => (float) $i->subtotal,
+        ])->toArray();
     }
 
     public function addLine(): void
@@ -151,6 +184,8 @@ class Form extends Component
                     'updated_at' => now(),
                 ]);
 
+            $this->syncLines($this->rfqId);
+
             session()->flash('success', 'RFQ updated successfully.');
         } else {
             $id = DB::table('purchase_rfqs')->insertGetId([
@@ -167,8 +202,57 @@ class Form extends Component
                 'updated_at' => now(),
             ]);
 
+            $this->syncLines($id);
+
             session()->flash('success', 'RFQ created successfully.');
             $this->redirect(route('purchase.rfq.edit', $id), navigate: true);
+        }
+    }
+
+    private function syncLines(int $rfqId): void
+    {
+        $existingIds = DB::table('purchase_rfq_items')
+            ->where('purchase_rfq_id', $rfqId)
+            ->whereNull('deleted_at')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $touchedIds = [];
+
+        foreach ($this->lines as $line) {
+            if (empty($line['product_id'])) {
+                continue;
+            }
+
+            $payload = [
+                'purchase_rfq_id' => $rfqId,
+                'product_id' => (int) $line['product_id'],
+                'description' => ($line['description'] ?? '') !== '' ? $line['description'] : null,
+                'quantity' => (float) ($line['quantity'] ?? 0),
+                'unit_price' => (float) ($line['unit_price'] ?? 0),
+                'subtotal' => (float) ($line['total'] ?? 0),
+                'updated_at' => now(),
+            ];
+
+            if (! empty($line['id']) && in_array((int) $line['id'], $existingIds, true)) {
+                DB::table('purchase_rfq_items')
+                    ->where('id', $line['id'])
+                    ->update($payload);
+                $touchedIds[] = (int) $line['id'];
+            } else {
+                $payload['quantity_received'] = 0;
+                $payload['created_at'] = now();
+                $touchedIds[] = (int) DB::table('purchase_rfq_items')->insertGetId($payload);
+            }
+        }
+
+        $toDelete = array_diff($existingIds, $touchedIds);
+        if (! empty($toDelete)) {
+            DB::table('purchase_rfq_items')
+                ->whereIn('id', $toDelete)
+                ->where('quantity_received', 0)
+                ->update(['deleted_at' => now()]);
         }
     }
 
