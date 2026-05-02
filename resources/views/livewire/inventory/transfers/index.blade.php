@@ -23,59 +23,58 @@
                 </button>
             </x-slot:actions>
 
-            <x-slot:filters>
-                <div class="flex-1">
-                    <div class="mb-2 flex items-center gap-1.5">
-                        <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</span>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>All Transfers</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="draft" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Draft</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="ready" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Ready</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="in_transit" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>In Transit</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="completed" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Completed</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="cancelled" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Cancelled</span>
-                        </label>
-                    </div>
-                </div>
+            <x-slot:search>
+                <x-ui.searchbox-dropdown
+                    placeholder="Search transfers..."
+                    widthClass="w-[560px]"
+                    width="560px"
+                    :activeFilterCount="$this->getActiveFilterCount()"
+                    clearAction="clearFilters"
+                >
+                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="funnel" class="size-3.5" />
+                                <span>Status</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach([
+                                    '' => 'All Transfers',
+                                    'draft' => 'Draft',
+                                    'ready' => 'Ready',
+                                    'in_transit' => 'In Transit',
+                                    'completed' => 'Completed',
+                                    'cancelled' => 'Cancelled',
+                                ] as $value => $label)
+                                    <button type="button" wire:click="$set('status', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span>{{ $label }}</span>
+                                        @if((string) $status === (string) $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
 
-                <div class="flex-1">
-                    <div class="mb-2 flex items-center gap-1.5">
-                        <flux:icon name="building-storefront" class="size-4 text-zinc-400" />
-                        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Warehouse</span>
+                        <div class="flex-1 md:pl-3">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="building-storefront" class="size-3.5" />
+                                <span>Source Warehouse</span>
+                            </div>
+                            <div class="max-h-48 space-y-1 overflow-y-auto">
+                                <button type="button" wire:click="$set('sourceWarehouse', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>All Sources</span>
+                                    @if($sourceWarehouse === '')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                @foreach($warehouses as $warehouse)
+                                    <button type="button" wire:click="$set('sourceWarehouse', '{{ $warehouse->id }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span class="truncate">{{ $warehouse->name }}</span>
+                                        @if((string) $sourceWarehouse === (string) $warehouse->id)<flux:icon name="check" class="size-3.5 shrink-0 text-violet-500" />@endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="sourceWarehouse" value="" name="source_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>All Sources</span>
-                        </label>
-                        @foreach($warehouses as $warehouse)
-                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                <input type="radio" wire:model.live="sourceWarehouse" value="{{ $warehouse->id }}" name="source_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                <span>{{ $warehouse->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-            </x-slot:filters>
+                </x-ui.searchbox-dropdown>
+            </x-slot:search>
 
             <x-slot:selectionActions>
                 <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">

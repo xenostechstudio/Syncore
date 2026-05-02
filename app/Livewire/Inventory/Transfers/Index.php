@@ -54,6 +54,19 @@ class Index extends Component
         $this->clearSelection();
     }
 
+    protected function getCustomActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->sourceWarehouse !== '') {
+            $count++;
+        }
+        if ($this->destinationWarehouse !== '') {
+            $count++;
+        }
+
+        return $count;
+    }
+
     public function sortBy(string $field): void
     {
         if ($this->sortField === $field) {

@@ -126,6 +126,10 @@ return [
     'descending' => 'Descending',
     'latest' => 'Latest',
     'oldest' => 'Oldest',
+    'price_high_to_low' => 'Price: High to Low',
+    'price_low_to_high' => 'Price: Low to High',
+    'stock_high_to_low' => 'Stock: High to Low',
+    'stock_low_to_high' => 'Stock: Low to High',
     
     // Views
     'list_view' => 'List View',

@@ -12,75 +12,91 @@
                 <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
                     {{ $activities->total() }} activities
                 </span>
-                @if($search || $action || $modelType || $userId || $dateFrom || $dateTo)
-                    <button
-                        wire:click="clearFilters"
-                        class="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                        Clear
-                    </button>
-                @endif
             </x-slot:leftExtra>
 
-            <x-slot:filters>
-                {{-- Two columns: left = Action/Model/User, right = Date range --}}
-                <div class="flex-1 space-y-3">
-                    <div>
-                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Action</label>
-                        <select
-                            wire:model.live="action"
-                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                        >
-                            <option value="">All</option>
-                            @foreach($actions as $act)
-                                <option value="{{ $act }}">{{ ucfirst($act) }}</option>
-                            @endforeach
-                        </select>
+            <x-slot:search>
+                <x-ui.searchbox-dropdown
+                    placeholder="Search activities..."
+                    widthClass="w-[560px]"
+                    width="560px"
+                    :activeFilterCount="$this->getActiveFilterCount()"
+                    clearAction="clearFilters"
+                >
+                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                        <div class="flex-1 space-y-3 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                            <div>
+                                <label class="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="bolt" class="size-3.5" />
+                                    <span>Action</span>
+                                </label>
+                                <select
+                                    wire:model.live="action"
+                                    class="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                    <option value="">All</option>
+                                    @foreach($actions as $act)
+                                        <option value="{{ $act }}">{{ ucfirst($act) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="cube" class="size-3.5" />
+                                    <span>Model</span>
+                                </label>
+                                <select
+                                    wire:model.live="modelType"
+                                    class="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                    <option value="">All</option>
+                                    @foreach($modelTypes as $type)
+                                        <option value="{{ $type }}">{{ $type }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="user" class="size-3.5" />
+                                    <span>User</span>
+                                </label>
+                                <select
+                                    wire:model.live="userId"
+                                    class="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                >
+                                    <option value="">All Users</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex-1 space-y-3 md:pl-3">
+                            <div>
+                                <label class="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="calendar" class="size-3.5" />
+                                    <span>Date From</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    wire:model.live="dateFrom"
+                                    class="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                />
+                            </div>
+                            <div>
+                                <label class="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="calendar" class="size-3.5" />
+                                    <span>Date To</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    wire:model.live="dateTo"
+                                    class="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Model</label>
-                        <select
-                            wire:model.live="modelType"
-                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                        >
-                            <option value="">All</option>
-                            @foreach($modelTypes as $type)
-                                <option value="{{ $type }}">{{ $type }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">User</label>
-                        <select
-                            wire:model.live="userId"
-                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                        >
-                            <option value="">All Users</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="flex-1 space-y-3">
-                    <div>
-                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Date From</label>
-                        <input
-                            type="date"
-                            wire:model.live="dateFrom"
-                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                        />
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Date To</label>
-                        <input
-                            type="date"
-                            wire:model.live="dateTo"
-                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                        />
-                    </div>
-                </div>
-            </x-slot:filters>
+                </x-ui.searchbox-dropdown>
+            </x-slot:search>
         </x-ui.index-header>
     </x-slot:header>
 

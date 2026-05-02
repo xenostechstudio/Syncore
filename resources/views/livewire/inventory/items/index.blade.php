@@ -56,80 +56,58 @@
                                         </flux:dropdown>
                                 </x-ui.selection-toolbar>
                             @else
-                                {{-- Search Input with Arrow Down Dropdown --}}
-                                <flux:dropdown position="bottom" align="center" class="w-[480px]">
-                                    <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                                        <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                                        <input 
-                                            type="text" 
-                                            wire:model.live.debounce.300ms="search"
-                                            placeholder="{{ __('inventory.search_products') }}" 
-                                            class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
-                                        />
-                                        <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
-                                            <flux:icon name="chevron-down" class="size-4" />
-                                        </button>
-                                    </div>
-
-                                    {{-- Horizontal Dropdown Content --}}
-                                    <flux:menu class="w-[480px]">
-                                            <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
-                                                {{-- Filters Section --}}
-                                                <div class="flex-1 p-3">
-                                                    <div class="mb-2 flex items-center justify-between">
-                                                        <div class="flex items-center gap-1.5">
-                                                            <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                                                            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.filters') }}</span>
-                                                        </div>
-                                                        <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">{{ __('common.add_custom') }}</button>
-                                                    </div>
-                                                    <div class="space-y-1">
-                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                            <input type="checkbox" wire:model.live="status" value="in_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                            <span>{{ __('common.in_stock') }}</span>
-                                                        </label>
-                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                            <input type="checkbox" wire:model.live="status" value="low_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                            <span>{{ __('common.low_stock') }}</span>
-                                                        </label>
-                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                            <input type="checkbox" wire:model.live="status" value="out_of_stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                            <span>{{ __('common.out_of_stock') }}</span>
-                                                        </label>
-                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                            <span>{{ __('common.favorites') }}</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-
-                                                {{-- Group By Section --}}
-                                                <div class="flex-1 p-3">
-                                                    <div class="mb-2 flex items-center justify-between">
-                                                        <div class="flex items-center gap-1.5">
-                                                            <flux:icon name="rectangle-group" class="size-4 text-zinc-400" />
-                                                            <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ __('common.group_by') }}</span>
-                                                        </div>
-                                                        <button class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">{{ __('common.add_custom') }}</button>
-                                                    </div>
-                                                    <div class="space-y-1">
-                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                            <span>{{ __('common.category') }}</span>
-                                                        </label>
-                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                            <span>{{ __('common.status') }}</span>
-                                                        </label>
-                                                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                            <input type="checkbox" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                            <span>{{ __('inventory.warehouse') }}</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
+                                <x-ui.searchbox-dropdown
+                                    placeholder="{{ __('inventory.search_products') }}"
+                                    widthClass="w-[480px]"
+                                    width="480px"
+                                    :activeFilterCount="$this->getActiveFilterCount()"
+                                    clearAction="clearFilters"
+                                >
+                                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                                <flux:icon name="funnel" class="size-3.5" />
+                                                <span>{{ __('common.status') }}</span>
                                             </div>
-                                        </flux:menu>
-                                </flux:dropdown>
+                                            <div class="space-y-1">
+                                                @foreach([
+                                                    '' => __('common.all'),
+                                                    'in_stock' => __('common.in_stock'),
+                                                    'low_stock' => __('common.low_stock'),
+                                                    'out_of_stock' => __('common.out_of_stock'),
+                                                ] as $value => $label)
+                                                    <button type="button" wire:click="$set('status', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                        <span>{{ $label }}</span>
+                                                        @if((string) $status === (string) $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+
+                                        <div class="flex-1 md:pl-3">
+                                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                                <flux:icon name="arrows-up-down" class="size-3.5" />
+                                                <span>{{ __('common.sort_by') }}</span>
+                                            </div>
+                                            <div class="space-y-1">
+                                                @foreach([
+                                                    'latest' => __('common.latest'),
+                                                    'oldest' => __('common.oldest'),
+                                                    'name' => __('common.name'),
+                                                    'price_high' => __('common.price_high_to_low'),
+                                                    'price_low' => __('common.price_low_to_high'),
+                                                    'stock_high' => __('common.stock_high_to_low'),
+                                                    'stock_low' => __('common.stock_low_to_high'),
+                                                ] as $value => $label)
+                                                    <button type="button" wire:click="$set('sort', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                        <span>{{ $label }}</span>
+                                                        @if($sort === $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </x-ui.searchbox-dropdown>
                             @endif
         </x-slot:search>
     </x-ui.index-header>

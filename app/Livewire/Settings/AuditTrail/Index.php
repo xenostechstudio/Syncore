@@ -47,6 +47,18 @@ class Index extends Component
         $this->reset(['search', 'action', 'modelType', 'userId', 'dateFrom', 'dateTo']);
     }
 
+    public function getActiveFilterCount(): int
+    {
+        $count = 0;
+        foreach (['action', 'modelType', 'userId', 'dateFrom', 'dateTo'] as $field) {
+            if (($this->$field ?? '') !== '') {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
     public function showDetail(int $activityId): void
     {
         $activity = DB::table('activity_logs')

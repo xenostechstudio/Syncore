@@ -61,8 +61,33 @@ class Index extends Component
     public function clearFilters(): void
     {
         $this->reset(['search', 'status', 'warehouse']);
+
+        if (request()->routeIs('inventory.warehouse-in.*')) {
+            $this->adjustmentType = 'increase';
+        } elseif (request()->routeIs('inventory.warehouse-out.*')) {
+            $this->adjustmentType = 'decrease';
+        } else {
+            $this->adjustmentType = '';
+        }
+
         $this->resetPage();
         $this->clearSelection();
+    }
+
+    protected function getCustomActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->warehouse !== '') {
+            $count++;
+        }
+
+        if (! request()->routeIs('inventory.warehouse-in.*') && ! request()->routeIs('inventory.warehouse-out.*')) {
+            if ($this->adjustmentType !== '') {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     public function sortBy(string $field): void

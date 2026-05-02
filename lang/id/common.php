@@ -126,6 +126,10 @@ return [
     'descending' => 'Turun',
     'latest' => 'Terbaru',
     'oldest' => 'Terlama',
+    'price_high_to_low' => 'Harga: Tinggi ke Rendah',
+    'price_low_to_high' => 'Harga: Rendah ke Tinggi',
+    'stock_high_to_low' => 'Stok: Banyak ke Sedikit',
+    'stock_low_to_high' => 'Stok: Sedikit ke Banyak',
     
     // Views
     'list_view' => 'Tampilan List',

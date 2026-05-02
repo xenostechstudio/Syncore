@@ -30,57 +30,59 @@
                 </button>
             </x-slot:actions>
 
-            <x-slot:filters>
-                <div class="flex-1">
-                    <div class="mb-2 flex items-center gap-1.5">
-                        <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</span>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>All Adjustments</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="draft" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Draft</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="completed" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Completed</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="status" value="cancelled" name="status_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Cancelled</span>
-                        </label>
-                    </div>
-                </div>
+            <x-slot:search>
+                <x-ui.searchbox-dropdown
+                    placeholder="Search adjustments..."
+                    widthClass="{{ ($isIn || $isOut) ? 'w-[360px]' : 'w-[480px]' }}"
+                    width="{{ ($isIn || $isOut) ? '360px' : '480px' }}"
+                    :activeFilterCount="$this->getActiveFilterCount()"
+                    clearAction="clearFilters"
+                >
+                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                        <div class="flex-1 {{ ($isIn || $isOut) ? '' : 'border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700' }}">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="funnel" class="size-3.5" />
+                                <span>Status</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach([
+                                    '' => 'All Adjustments',
+                                    'draft' => 'Draft',
+                                    'completed' => 'Completed',
+                                    'cancelled' => 'Cancelled',
+                                ] as $value => $label)
+                                    <button type="button" wire:click="$set('status', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span>{{ $label }}</span>
+                                        @if((string) $status === (string) $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
 
-                <div class="flex-1">
-                    <div class="mb-2 flex items-center gap-1.5">
-                        <flux:icon name="adjustments-vertical" class="size-4 text-zinc-400" />
-                        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Type</span>
+                        @if(! $isIn && ! $isOut)
+                            <div class="flex-1 md:pl-3">
+                                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <flux:icon name="adjustments-vertical" class="size-3.5" />
+                                    <span>Type</span>
+                                </div>
+                                <div class="space-y-1">
+                                    @foreach([
+                                        '' => 'All Types',
+                                        'increase' => 'Increase',
+                                        'decrease' => 'Decrease',
+                                        'count' => 'Count',
+                                    ] as $value => $label)
+                                        <button type="button" wire:click="$set('adjustmentType', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                            <span>{{ $label }}</span>
+                                            @if((string) $adjustmentType === (string) $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     </div>
-                    <div class="space-y-1">
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="adjustmentType" value="" name="type_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>All Types</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="adjustmentType" value="increase" name="type_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Increase</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="adjustmentType" value="decrease" name="type_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Decrease</span>
-                        </label>
-                        <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                            <input type="radio" wire:model.live="adjustmentType" value="count" name="type_filter" class="border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                            <span>Count</span>
-                        </label>
-                    </div>
-                </div>
-            </x-slot:filters>
+                </x-ui.searchbox-dropdown>
+            </x-slot:search>
 
             <x-slot:selectionActions>
                 <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
