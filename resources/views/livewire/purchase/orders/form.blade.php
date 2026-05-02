@@ -93,7 +93,17 @@
                         <span wire:loading.remove wire:target="save">Save</span>
                         <span wire:loading wire:target="save">Saving...</span>
                     </button>
-                    <button 
+                    @if($rfqId && in_array($status, ['purchase_order', 'partially_received']))
+                        <a
+                            href="{{ route('purchase.receipts.create', ['rfq' => $rfqId]) }}"
+                            wire:navigate
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                        >
+                            <flux:icon name="inbox-arrow-down" class="size-4" />
+                            Receive Goods
+                        </a>
+                    @endif
+                    <button
                         type="button"
                         class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >

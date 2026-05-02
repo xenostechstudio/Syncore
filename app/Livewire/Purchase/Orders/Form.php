@@ -12,6 +12,6 @@ class Form extends RfqForm
 {
     public function render()
     {
-        return view('livewire.purchase.orders.form');
+        return view('livewire.purchase.orders.form', $this->getViewData());
     }
 }

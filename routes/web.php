@@ -60,6 +60,8 @@ use App\Livewire\Purchase\Suppliers\Index as PurchaseSuppliersIndex;
 use App\Livewire\Purchase\Suppliers\Form as PurchaseSuppliersForm;
 use App\Livewire\Purchase\Bills\Index as PurchaseBillsIndex;
 use App\Livewire\Purchase\Bills\Form as PurchaseBillsForm;
+use App\Livewire\Purchase\Receipts\Index as PurchaseReceiptsIndex;
+use App\Livewire\Purchase\Receipts\Form as PurchaseReceiptsForm;
 
 Route::post('/locale', function (Request $request) {
     $locale = $request->input('locale');
@@ -241,6 +243,11 @@ Route::middleware(['auth', 'verified', 'permission:access.purchase'])->prefix('p
     Route::get('/bills', PurchaseBillsIndex::class)->name('bills.index');
     Route::get('/bills/create', PurchaseBillsForm::class)->name('bills.create');
     Route::get('/bills/{id}/edit', PurchaseBillsForm::class)->name('bills.edit');
+
+    // Goods Receipt Notes
+    Route::get('/receipts', PurchaseReceiptsIndex::class)->name('receipts.index');
+    Route::get('/receipts/create', PurchaseReceiptsForm::class)->name('receipts.create');
+    Route::get('/receipts/{id}/edit', PurchaseReceiptsForm::class)->name('receipts.edit');
 });
 
 // General Setup Module

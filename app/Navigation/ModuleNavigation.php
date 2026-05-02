@@ -248,10 +248,11 @@ class ModuleNavigation
                     'label' => __('nav.orders'),
                     'route' => 'purchase.rfq.index',
                     'icon' => 'clipboard-document-list',
-                    'pattern' => 'purchase.rfq*|purchase.orders*',
+                    'pattern' => 'purchase.rfq*|purchase.orders*|purchase.receipts*',
                     'children' => [
                         ['label' => __('nav.rfq'), 'route' => 'purchase.rfq.index', 'pattern' => 'purchase.rfq*'],
                         ['label' => __('nav.purchase_orders'), 'route' => 'purchase.orders.index', 'pattern' => 'purchase.orders*'],
+                        ['label' => __('nav.receipts'), 'route' => 'purchase.receipts.index', 'pattern' => 'purchase.receipts*'],
                     ],
                 ],
                 [

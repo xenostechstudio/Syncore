@@ -42,6 +42,7 @@ return [
     'purchase_orders' => 'Purchase Orders',
     'vendor_bills' => 'Vendor Bills',
     'suppliers' => 'Suppliers',
+    'receipts' => 'Goods Receipts',
     
     // Settings
     'account_management' => 'Account Management',

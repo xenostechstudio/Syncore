@@ -42,6 +42,7 @@ return [
     'purchase_orders' => 'Pesanan Pembelian',
     'vendor_bills' => 'Tagihan Vendor',
     'suppliers' => 'Supplier',
+    'receipts' => 'Penerimaan Barang',
     
     // Settings
     'account_management' => 'Manajemen Akun',
