@@ -54,14 +54,18 @@
             <flux:dropdown position="bottom" align="{{ $align }}">
                 <button
                     type="button"
-                    class="relative flex h-full w-10 items-center justify-center border-l border-zinc-200 bg-white/90 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+                    @class([
+                        'flex h-full items-center justify-center gap-1 border-l border-zinc-200 bg-white/90 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 dark:hover:text-zinc-200',
+                        'w-10' => $activeFilterCount === 0,
+                        'px-2' => $activeFilterCount > 0,
+                    ])
                 >
-                    <flux:icon name="chevron-down" class="size-4" />
                     @if($activeFilterCount > 0)
-                        <span class="absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-zinc-900 px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white dark:bg-zinc-100 dark:text-zinc-900 dark:ring-zinc-800">
+                        <span class="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-zinc-900 px-1 text-[10px] font-semibold leading-none text-white dark:bg-zinc-100 dark:text-zinc-900">
                             {{ $activeFilterCount }}
                         </span>
                     @endif
+                    <flux:icon name="chevron-down" class="size-4" />
                 </button>
 
                 <flux:menu class="w-[640px] max-w-[90vw]">
