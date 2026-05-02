@@ -34,6 +34,33 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'status', 'groupBy', 'departmentId']);
+        $this->sort = 'name_asc';
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
+    public function getActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->status !== '' && $this->status !== 'all') {
+            $count++;
+        }
+        if ($this->sort !== 'name_asc') {
+            $count++;
+        }
+        if ($this->groupBy !== '') {
+            $count++;
+        }
+        if ($this->departmentId !== '') {
+            $count++;
+        }
+
+        return $count;
+    }
+
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {

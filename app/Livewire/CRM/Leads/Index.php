@@ -27,9 +27,14 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'source']);
+        $this->reset(['search', 'status', 'sort', 'groupBy', 'source']);
         $this->resetPage();
         $this->clearSelection();
+    }
+
+    protected function getCustomActiveFilterCount(): int
+    {
+        return $this->source !== '' ? 1 : 0;
     }
 
     public function confirmBulkDelete(): void

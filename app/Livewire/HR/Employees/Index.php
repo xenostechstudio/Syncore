@@ -34,6 +34,11 @@ class Index extends Component
         $this->clearSelection();
     }
 
+    protected function getCustomActiveFilterCount(): int
+    {
+        return $this->departmentId !== '' ? 1 : 0;
+    }
+
     public function confirmBulkDelete(): void
     {
         if (empty($this->selected)) {

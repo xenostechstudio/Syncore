@@ -47,6 +47,11 @@ class Index extends Component
         $this->clearSelection();
     }
 
+    protected function getCustomActiveFilterCount(): int
+    {
+        return $this->filter !== 'active' ? 1 : 0;
+    }
+
     public function confirmBulkArchive(): void
     {
         if (empty($this->selected)) {

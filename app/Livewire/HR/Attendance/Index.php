@@ -38,11 +38,27 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'sort', 'employeeId']);
+        $this->reset(['search', 'status', 'sort', 'groupBy', 'employeeId']);
         $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = now()->endOfMonth()->format('Y-m-d');
         $this->resetPage();
         $this->clearSelection();
+    }
+
+    protected function getCustomActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->employeeId !== '') {
+            $count++;
+        }
+        if ($this->dateFrom !== '' && $this->dateFrom !== now()->startOfMonth()->format('Y-m-d')) {
+            $count++;
+        }
+        if ($this->dateTo !== '' && $this->dateTo !== now()->endOfMonth()->format('Y-m-d')) {
+            $count++;
+        }
+
+        return $count;
     }
 
     public function confirmBulkDelete(): void

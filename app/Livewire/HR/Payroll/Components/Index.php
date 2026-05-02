@@ -28,6 +28,33 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'status', 'groupBy', 'componentType']);
+        $this->sort = 'sort_order';
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
+    public function getActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->status !== '' && $this->status !== 'all') {
+            $count++;
+        }
+        if ($this->sort !== 'sort_order') {
+            $count++;
+        }
+        if ($this->groupBy !== '') {
+            $count++;
+        }
+        if ($this->componentType !== '') {
+            $count++;
+        }
+
+        return $count;
+    }
+
     protected function getQuery()
     {
         return SalaryComponent::query()

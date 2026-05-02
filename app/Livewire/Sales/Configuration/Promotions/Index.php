@@ -60,6 +60,27 @@ class Index extends Component
         $this->page = 1;
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'status', 'type']);
+        $this->page = 1;
+        $this->selected = [];
+        $this->selectAll = false;
+    }
+
+    public function getActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->status !== '' && $this->status !== 'all') {
+            $count++;
+        }
+        if ($this->type !== '') {
+            $count++;
+        }
+
+        return $count;
+    }
+
     public function updatedSelectAll(): void
     {
         if ($this->selectAll) {

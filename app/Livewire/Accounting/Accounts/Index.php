@@ -27,6 +27,18 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'status', 'sort', 'groupBy', 'type']);
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
+    protected function getCustomActiveFilterCount(): int
+    {
+        return $this->type !== '' ? 1 : 0;
+    }
+
     public function delete(int $id): void
     {
         $account = Account::findOrFail($id);

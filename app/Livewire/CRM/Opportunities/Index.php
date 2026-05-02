@@ -33,6 +33,18 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'status', 'sort', 'groupBy', 'stage']);
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
+    protected function getCustomActiveFilterCount(): int
+    {
+        return $this->stage !== '' ? 1 : 0;
+    }
+
     public function exportSelected()
     {
         $filename = empty($this->selected)

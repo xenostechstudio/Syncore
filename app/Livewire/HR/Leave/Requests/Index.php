@@ -26,6 +26,18 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'status', 'sort', 'groupBy', 'leaveTypeId']);
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
+    protected function getCustomActiveFilterCount(): int
+    {
+        return $this->leaveTypeId !== '' ? 1 : 0;
+    }
+
     public function approveSelected(): void
     {
         if (empty($this->selected)) {
