@@ -8,52 +8,56 @@
             :paginator="$receipts"
             :view="$view"
             :views="['list']"
-            searchPlaceholder="Search by GRN, PO, or supplier..."
         >
-            <x-slot:filters>
-                {{-- Status --}}
-                <div class="flex-1 p-1">
-                    <div class="mb-2 flex items-center gap-1.5">
-                        <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</span>
-                    </div>
-                    <div class="space-y-1">
-                        @php
-                            $statusOpts = [
-                                ['value' => 'all',                                              'label' => 'All Receipts'],
-                                ['value' => \App\Enums\PurchaseReceiptState::DRAFT->value,      'label' => 'Draft'],
-                                ['value' => \App\Enums\PurchaseReceiptState::VALIDATED->value,  'label' => 'Validated'],
-                                ['value' => \App\Enums\PurchaseReceiptState::CANCELLED->value,  'label' => 'Cancelled'],
-                            ];
-                        @endphp
-                        @foreach($statusOpts as $opt)
-                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                <input type="radio" wire:model.live="status" value="{{ $opt['value'] }}" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                <span>{{ $opt['label'] }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
+            <x-slot:search>
+                <x-ui.searchbox-dropdown
+                    placeholder="Search by GRN, PO, or supplier..."
+                    widthClass="w-[480px]"
+                    width="480px"
+                    :activeFilterCount="$this->getActiveFilterCount()"
+                    clearAction="clearFilters"
+                >
+                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="funnel" class="size-3.5" />
+                                <span>Status</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach([
+                                    'all' => 'All Receipts',
+                                    \App\Enums\PurchaseReceiptState::DRAFT->value => 'Draft',
+                                    \App\Enums\PurchaseReceiptState::VALIDATED->value => 'Validated',
+                                    \App\Enums\PurchaseReceiptState::CANCELLED->value => 'Cancelled',
+                                ] as $value => $label)
+                                    <button type="button" wire:click="$set('status', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span>{{ $label }}</span>
+                                        @if($status === $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
 
-                {{-- Sort --}}
-                <div class="flex-1 p-1">
-                    <div class="mb-2 flex items-center gap-1.5">
-                        <flux:icon name="arrows-up-down" class="size-4 text-zinc-400" />
-                        <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sort By</span>
+                        <div class="flex-1 md:pl-3">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="arrows-up-down" class="size-3.5" />
+                                <span>Sort By</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach([
+                                    'latest' => 'Latest',
+                                    'oldest' => 'Oldest',
+                                ] as $value => $label)
+                                    <button type="button" wire:click="$set('sort', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span>{{ $label }}</span>
+                                        @if($sort === $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        @foreach([
-                            'latest' => 'Latest',
-                            'oldest' => 'Oldest',
-                        ] as $value => $label)
-                            <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                <input type="radio" wire:model.live="sort" value="{{ $value }}" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                <span>{{ $label }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-            </x-slot:filters>
+                </x-ui.searchbox-dropdown>
+            </x-slot:search>
         </x-ui.index-header>
     </x-slot:header>
 

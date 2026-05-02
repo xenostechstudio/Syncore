@@ -46,62 +46,38 @@
                                         </flux:dropdown>
                                 </x-ui.selection-toolbar>
                             @else
-                            <flux:dropdown position="bottom" align="center" class="w-[480px]">
-                                <div class="relative flex h-9 w-full items-center overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
-                                    <flux:icon name="magnifying-glass" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                                    <input 
-                                        type="text" 
-                                        wire:model.live.debounce.300ms="search"
-                                        placeholder="Search bills..." 
-                                        class="h-full w-full border-0 bg-transparent pl-9 pr-10 text-sm outline-none focus:ring-0" 
-                                    />
-                                    <button type="button" class="absolute right-0 top-0 flex h-full items-center border-l border-zinc-200 px-2.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
-                                        <flux:icon name="chevron-down" class="size-4" />
-                                    </button>
-                                </div>
-
-                                <flux:menu class="w-[480px]">
-                                    <div class="flex divide-x divide-zinc-200 dark:divide-zinc-700">
-                                        {{-- Filters Section --}}
-                                        <div class="flex-1 p-3">
-                                            <div class="mb-2 flex items-center gap-1.5">
-                                                <flux:icon name="funnel" class="size-4 text-zinc-400" />
-                                                <span class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Status</span>
+                                <x-ui.searchbox-dropdown
+                                    placeholder="Search bills..."
+                                    widthClass="w-[480px]"
+                                    width="480px"
+                                    :activeFilterCount="$this->getActiveFilterCount()"
+                                    clearAction="clearFilters"
+                                >
+                                    <div class="flex flex-col gap-4 p-3">
+                                        <div class="flex-1">
+                                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                                <flux:icon name="funnel" class="size-3.5" />
+                                                <span>Status</span>
                                             </div>
                                             <div class="space-y-1">
-                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <input type="radio" wire:model.live="status" value="" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                    <span>All Status</span>
-                                                </label>
-                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <input type="radio" wire:model.live="status" value="draft" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                    <span>Draft</span>
-                                                </label>
-                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <input type="radio" wire:model.live="status" value="pending" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                    <span>Pending</span>
-                                                </label>
-                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <input type="radio" wire:model.live="status" value="partial" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                    <span>Partially Paid</span>
-                                                </label>
-                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <input type="radio" wire:model.live="status" value="paid" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                    <span>Paid</span>
-                                                </label>
-                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <input type="radio" wire:model.live="status" value="overdue" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                    <span>Overdue</span>
-                                                </label>
-                                                <label class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <input type="radio" wire:model.live="status" value="cancelled" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                                    <span>Cancelled</span>
-                                                </label>
+                                                @foreach([
+                                                    '' => 'All Status',
+                                                    'draft' => 'Draft',
+                                                    'pending' => 'Pending',
+                                                    'partial' => 'Partially Paid',
+                                                    'paid' => 'Paid',
+                                                    'overdue' => 'Overdue',
+                                                    'cancelled' => 'Cancelled',
+                                                ] as $value => $label)
+                                                    <button type="button" wire:click="$set('status', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                        <span>{{ $label }}</span>
+                                                        @if((string) $status === (string) $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                    </button>
+                                                @endforeach
                                             </div>
                                         </div>
                                     </div>
-                                </flux:menu>
-                            </flux:dropdown>
+                                </x-ui.searchbox-dropdown>
                             @endif
         </x-slot:search>
     </x-ui.index-header>
