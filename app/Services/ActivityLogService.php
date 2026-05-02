@@ -132,15 +132,39 @@ class ActivityLogService
         if (empty($filteredChanges)) {
             return;
         }
-        
+
+        // If the only meaningful change is the status column on a state-machine
+        // model, suppress this entry — HasStateMachine::transitionTo() will emit
+        // a richer 'status_changed' entry next. Avoids a duplicate "Updated
+        // Status: …" alongside "Status changed from … to …" in the timeline.
+        $statusColumn = method_exists($model, 'getStatusColumn') ? $model->getStatusColumn() : 'status';
+        if (count($filteredChanges) === 1
+            && array_key_exists($statusColumn, $filteredChanges)
+            && method_exists($model, 'getStateEnumClass')) {
+            return;
+        }
+
+        // Pre-format old/new values so the timeline view can render labels
+        // (warehouse name, supplier name, status enum label, formatted dates,
+        // money) without re-querying the DB to resolve foreign keys.
+        $formattedOld = [];
+        $formattedNew = [];
+        foreach ($filteredChanges as $key => $newValue) {
+            $oldValue = $filteredOld[$key] ?? null;
+            $formattedOld[$key] = self::formatFieldValue($key, $oldValue, $model);
+            $formattedNew[$key] = self::formatFieldValue($key, $newValue, $model);
+        }
+
         // Generate human-readable description if not provided
         if (!$description) {
             $description = self::generateUpdateDescription($model, $filteredOld, $filteredChanges);
         }
-        
+
         self::log('updated', $model, $description, [
             'old' => $filteredOld,
             'new' => $filteredChanges,
+            'old_formatted' => $formattedOld,
+            'new_formatted' => $formattedNew,
         ]);
     }
     

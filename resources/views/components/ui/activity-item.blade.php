@@ -157,6 +157,11 @@
                 @php
                     $old = $properties->get('old', []);
                     $new = $properties->get('new', []);
+                    // Newer entries include pre-resolved labels (e.g. warehouse
+                    // names, formatted money) so the timeline doesn't have to
+                    // re-query the DB to resolve foreign keys at render time.
+                    $oldFormatted = $properties->get('old_formatted', []);
+                    $newFormatted = $properties->get('new_formatted', []);
                     // Filter out ignored fields and find actual changes
                     $changes = collect($new)->filter(function($val, $key) use ($old, $ignoredFields) {
                         if (in_array($key, $ignoredFields)) return false;
@@ -169,8 +174,8 @@
                         @php
                             $oldVal = $old[$key] ?? null;
                             $label = $formatLabel($key);
-                            $displayOld = $formatValue($key, $oldVal);
-                            $displayNew = $formatValue($key, $newVal);
+                            $displayOld = $oldFormatted[$key] ?? $formatValue($key, $oldVal);
+                            $displayNew = $newFormatted[$key] ?? $formatValue($key, $newVal);
                         @endphp
                         <span class="block">
                             Updated <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</span>:
