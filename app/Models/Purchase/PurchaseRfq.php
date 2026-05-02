@@ -11,13 +11,16 @@ use App\Traits\HasStateMachine;
 use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
+use Database\Factories\Purchase\PurchaseRfqFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseRfq extends Model
 {
-    use LogsActivity, HasNotes, HasSoftDeletes, HasYearlySequenceNumber, Searchable, HasAttachments, HasStateMachine;
+    /** @use HasFactory<PurchaseRfqFactory> */
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, HasYearlySequenceNumber, Searchable, HasAttachments, HasStateMachine;
 
     protected string $stateEnum = PurchaseOrderState::class;
 
@@ -68,6 +71,14 @@ class PurchaseRfq extends Model
         return $this->transitionTo(PurchaseOrderState::PURCHASE_ORDER);
     }
 
+    public function markAsPartiallyReceived(): bool
+    {
+        if (!$this->state->canReceive()) {
+            return false;
+        }
+        return $this->transitionTo(PurchaseOrderState::PARTIALLY_RECEIVED);
+    }
+
     public function markAsReceived(): bool
     {
         if (!$this->state->canReceive()) {
@@ -92,6 +103,21 @@ class PurchaseRfq extends Model
         return $this->transitionTo(PurchaseOrderState::CANCELLED);
     }
 
+    public function isFullyReceived(): bool
+    {
+        $this->loadMissing('items');
+
+        return $this->items->isNotEmpty()
+            && $this->items->every(fn ($item) => (float) $item->quantity_received >= (float) $item->quantity);
+    }
+
+    public function hasAnyReceived(): bool
+    {
+        $this->loadMissing('items');
+
+        return $this->items->contains(fn ($item) => (float) $item->quantity_received > 0);
+    }
+
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
@@ -100,6 +126,11 @@ class PurchaseRfq extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseRfqItem::class, 'purchase_rfq_id');
+    }
+
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(PurchaseReceipt::class, 'purchase_rfq_id');
     }
 
     public function createdBy(): BelongsTo

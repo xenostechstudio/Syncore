@@ -11,6 +11,7 @@ enum PurchaseOrderState: string implements HasDisplayMetadata
     case RFQ = 'rfq';
     case RFQ_SENT = 'sent';
     case PURCHASE_ORDER = 'purchase_order';
+    case PARTIALLY_RECEIVED = 'partially_received';
     case RECEIVED = 'received';
     case BILLED = 'billed';
     case CANCELLED = 'cancelled';
@@ -21,6 +22,7 @@ enum PurchaseOrderState: string implements HasDisplayMetadata
             self::RFQ => 'RFQ',
             self::RFQ_SENT => 'RFQ Sent',
             self::PURCHASE_ORDER => 'Purchase Order',
+            self::PARTIALLY_RECEIVED => 'Partially Received',
             self::RECEIVED => 'Received',
             self::BILLED => 'Billed',
             self::CANCELLED => 'Cancelled',
@@ -33,6 +35,7 @@ enum PurchaseOrderState: string implements HasDisplayMetadata
             self::RFQ => 'zinc',
             self::RFQ_SENT => 'blue',
             self::PURCHASE_ORDER => 'amber',
+            self::PARTIALLY_RECEIVED => 'orange',
             self::RECEIVED => 'emerald',
             self::BILLED => 'violet',
             self::CANCELLED => 'red',
@@ -45,6 +48,7 @@ enum PurchaseOrderState: string implements HasDisplayMetadata
             self::RFQ => 'document-text',
             self::RFQ_SENT => 'paper-airplane',
             self::PURCHASE_ORDER => 'shopping-bag',
+            self::PARTIALLY_RECEIVED => 'inbox',
             self::RECEIVED => 'inbox-arrow-down',
             self::BILLED => 'receipt-percent',
             self::CANCELLED => 'x-circle',
@@ -63,12 +67,12 @@ enum PurchaseOrderState: string implements HasDisplayMetadata
 
     public function canReceive(): bool
     {
-        return $this === self::PURCHASE_ORDER;
+        return in_array($this, [self::PURCHASE_ORDER, self::PARTIALLY_RECEIVED]);
     }
 
     public function canCreateBill(): bool
     {
-        return in_array($this, [self::PURCHASE_ORDER, self::RECEIVED]);
+        return in_array($this, [self::PURCHASE_ORDER, self::PARTIALLY_RECEIVED, self::RECEIVED]);
     }
 
     public function canCancel(): bool
