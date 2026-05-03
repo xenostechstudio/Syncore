@@ -38,7 +38,7 @@
                     <div class="document-title">DELIVERY ORDER</div>
                     <div class="document-number">#{{ $delivery->delivery_number }}</div>
                     <div style="margin-top: 10px;">
-                        <span class="status status-{{ str_replace(' ', '_', strtolower($delivery->status->value ?? $delivery->status ?? 'pending')) }}">{{ ucfirst($delivery->status->value ?? $delivery->status ?? 'Pending') }}</span>
+                        <span class="status status-{{ str_replace(' ', '_', strtolower($delivery->status ?? 'pending')) }}">{{ ucfirst($delivery->status ?? 'Pending') }}</span>
                     </div>
                 </td>
             </tr>

@@ -31,16 +31,13 @@
                 @if($invoices->count() > 0)
                     <div class="flex flex-wrap items-center justify-center gap-2">
                         @foreach($invoices as $invoice)
-                            <a 
-                                href="{{ route('invoicing.invoices.edit', $invoice->id) }}" 
-                                wire:navigate
-                                class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/20 dark:hover:bg-violet-900/30"
+                            <x-ui.related-resource
+                                resource="invoice"
+                                :href="route('invoicing.invoices.edit', $invoice->id)"
+                                :label="$invoice->invoice_number"
                             >
-                                <flux:icon name="document-text" class="size-4 text-violet-600 dark:text-violet-400" />
-                                <span class="font-medium text-violet-700 dark:text-violet-400">{{ $invoice->invoice_number }}</span>
-                                <x-ui.status-badge :status="$invoice->status" type="invoice" />
-                                <flux:icon name="arrow-top-right-on-square" class="size-3.5 text-violet-400" />
-                            </a>
+                                <x-ui.status-badge :status="$invoice->state" />
+                            </x-ui.related-resource>
                         @endforeach
                     </div>
                 @endif
@@ -49,16 +46,13 @@
                 @if($deliveries->count() > 0)
                     <div class="flex flex-wrap items-center justify-center gap-2">
                         @foreach($deliveries as $delivery)
-                            <a 
-                                href="{{ route('delivery.orders.edit', $delivery->id) }}" 
-                                wire:navigate
-                                class="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/30"
+                            <x-ui.related-resource
+                                resource="delivery_order"
+                                :href="route('delivery.orders.edit', $delivery->id)"
+                                :label="$delivery->delivery_number"
                             >
-                                <flux:icon name="truck" class="size-4 text-blue-600 dark:text-blue-400" />
-                                <span class="font-medium text-blue-700 dark:text-blue-400">{{ $delivery->delivery_number }}</span>
-                                <x-ui.status-badge :status="$delivery->status->value" type="delivery" />
-                                <flux:icon name="arrow-top-right-on-square" class="size-3.5 text-blue-400" />
-                            </a>
+                                <x-ui.status-badge :status="$delivery->state" />
+                            </x-ui.related-resource>
                         @endforeach
                     </div>
                 @endif

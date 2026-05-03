@@ -41,7 +41,7 @@ class DeliveryOrderPolicy
             return false;
         }
 
-        return $deliveryOrder->status->value === 'pending';
+        return $deliveryOrder->status === 'pending';
     }
 
     public function transition(User $user, DeliveryOrder $deliveryOrder): bool
