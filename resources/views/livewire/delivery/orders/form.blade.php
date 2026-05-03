@@ -76,8 +76,8 @@
                 <div class="flex items-center gap-2">
                     @if(isset($outboundAdjustment) && $outboundAdjustment)
                         <x-ui.related-resource
+                            resource="outbound_adjustment"
                             :href="route('inventory.warehouse-out.edit', $outboundAdjustment->id)"
-                            icon="building-storefront"
                             :label="$outboundAdjustment->adjustment_number"
                         >
                             @if(!empty($outboundAdjustment->status))
@@ -88,8 +88,8 @@
 
                     @if($soId && $soNumber)
                         <x-ui.related-resource
+                            resource="sales_order"
                             :href="route('sales.orders.edit', $soId)"
-                            icon="shopping-cart"
                             :label="$soNumber"
                         >
                             @if(!empty($soStatus))
@@ -899,8 +899,8 @@
                         @if(!empty($forecast_data['outbound_adjustment']))
                             <div class="flex flex-wrap items-center justify-between gap-3">
                                 <x-ui.related-resource
+                                    resource="outbound_adjustment"
                                     :href="route('inventory.warehouse-out.edit', (int) ($forecast_data['outbound_adjustment']['id'] ?? 0))"
-                                    icon="building-storefront"
                                     :label="$forecast_data['outbound_adjustment']['adjustment_number'] ?? 'WH/OUT'"
                                 />
 

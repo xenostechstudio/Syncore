@@ -76,8 +76,8 @@
                 <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     @foreach($deliveries as $delivery)
                         <x-ui.related-resource
+                            resource="delivery_order"
                             :href="route('delivery.orders.edit', $delivery->id)"
-                            icon="truck"
                             :label="$delivery->delivery_number"
                         >
                             <x-ui.status-badge :status="$delivery->state" />
@@ -86,8 +86,8 @@
 
                     @foreach($invoices as $invoice)
                         <x-ui.related-resource
+                            resource="invoice"
                             :href="route('invoicing.invoices.edit', $invoice->id)"
-                            icon="document-text"
                             :label="$invoice->invoice_number"
                         >
                             <x-ui.status-badge :status="$invoice->state" />
