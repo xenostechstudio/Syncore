@@ -250,8 +250,8 @@ Route::middleware(['auth', 'verified', 'permission:access.purchase'])->prefix('p
     Route::get('/receipts/{id}/edit', PurchaseReceiptsForm::class)->name('receipts.edit');
 });
 
-// General Setup Module
-Route::middleware(['auth', 'verified', 'permission:access.settings'])->prefix('setup')->name('settings.')->group(function () {
+// Settings Module
+Route::middleware(['auth', 'verified', 'permission:access.settings'])->prefix('settings')->name('settings.')->group(function () {
     Route::get('/', SettingsIndex::class)->name('index');
     
     // Module Configuration
