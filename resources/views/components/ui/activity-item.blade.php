@@ -150,9 +150,9 @@
             @if($event === 'created')
                 {{ $emptyMessage }}
             @elseif($isInvoiceCreated)
-                Created invoice
+                Invoice created
             @elseif($isDeliveryCreated)
-                Created delivery order
+                Delivery Order created
             @elseif($properties->has('old') && $properties->has('new') && $event === 'updated')
                 @php
                     $old = $properties->get('old', []);
