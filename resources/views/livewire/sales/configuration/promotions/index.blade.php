@@ -31,7 +31,7 @@
                             <flux:icon name="arrow-down-tray" class="size-4" />
                             <span>Import</span>
                         </button>
-                        <button type="button" wire:click="export" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                        <button type="button" wire:click="exportSelected" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                             <flux:icon name="arrow-up-tray" class="size-4" />
                             <span>Export{{ count($selected) > 0 ? ' (' . count($selected) . ')' : '' }}</span>
                         </button>
@@ -126,10 +126,10 @@
                         {{ $promotions->firstItem() ?? 0 }}-{{ $promotions->lastItem() ?? 0 }}/{{ $promotions->total() }}
                     </span>
                     <div class="flex items-center gap-0.5">
-                        <button type="button" wire:click="$set('page', {{ max(1, $page - 1) }})" @disabled($promotions->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <button type="button" wire:click="goToPreviousPage" @disabled($promotions->onFirstPage()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                             <flux:icon name="chevron-left" class="size-4" />
                         </button>
-                        <button type="button" wire:click="$set('page', {{ $page + 1 }})" @disabled(!$promotions->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                        <button type="button" wire:click="goToNextPage" @disabled(!$promotions->hasMorePages()) class="flex h-7 w-7 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                             <flux:icon name="chevron-right" class="size-4" />
                         </button>
                     </div>
@@ -178,7 +178,7 @@
                     <tr onclick="window.location.href='{{ route('sales.configuration.promotions.edit', $promotion->id) }}'" class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}">
                         <td class="relative py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
                             <div class="absolute inset-y-0 left-0 w-0.5 transition-all duration-150 {{ $isSelected ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700' }}"></div>
-                            <input type="checkbox" wire:click="toggleSelect({{ $promotion->id }})" @checked($isSelected) class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}">
+                            <input type="checkbox" wire:model.live="selected" value="{{ $promotion->id }}" class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}">
                         </td>
                         <td class="py-4 pl-2 pr-4">
                             <div>

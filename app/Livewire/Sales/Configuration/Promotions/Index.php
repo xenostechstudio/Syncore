@@ -4,6 +4,7 @@ namespace App\Livewire\Sales\Configuration\Promotions;
 
 use App\Exports\PromotionsExport;
 use App\Imports\PromotionsImport;
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Sales\Promotion;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -16,133 +17,71 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Promotions')]
 class Index extends Component
 {
-    use WithFileUploads;
-
-    #[Url]
-    public string $search = '';
-
-    #[Url]
-    public string $status = '';
+    use WithIndexComponent, WithFileUploads;
 
     #[Url]
     public string $type = '';
-
-    #[Url]
-    public string $view = 'list';
-
-    public int $page = 1;
-    public array $selected = [];
-    public bool $selectAll = false;
 
     public bool $showImportModal = false;
     public $importFile = null;
     public array $importResult = [];
 
-    public function setView(string $view): void
-    {
-        if (in_array($view, ['list', 'grid', 'kanban'])) {
-            $this->view = $view;
-        }
-    }
-
-    public function updatedSearch(): void
-    {
-        $this->page = 1;
-    }
-
-    public function updatedStatus(): void
-    {
-        $this->page = 1;
-    }
-
     public function updatedType(): void
     {
-        $this->page = 1;
+        $this->resetPage();
     }
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'type']);
-        $this->page = 1;
-        $this->selected = [];
-        $this->selectAll = false;
+        $this->reset(['search', 'status', 'sort', 'groupBy', 'type']);
+        $this->resetPage();
+        $this->clearSelection();
     }
 
-    public function getActiveFilterCount(): int
+    protected function getCustomActiveFilterCount(): int
     {
-        $count = 0;
-        if ($this->status !== '' && $this->status !== 'all') {
-            $count++;
-        }
-        if ($this->type !== '') {
-            $count++;
-        }
-
-        return $count;
-    }
-
-    public function updatedSelectAll(): void
-    {
-        if ($this->selectAll) {
-            $this->selected = $this->getPromotionsQuery()->pluck('id')->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function toggleSelect(int $id): void
-    {
-        if (in_array($id, $this->selected)) {
-            $this->selected = array_diff($this->selected, [$id]);
-        } else {
-            $this->selected[] = $id;
-        }
-    }
-
-    public function deleteSelected(): void
-    {
-        Promotion::whereIn('id', $this->selected)->delete();
-        $this->selected = [];
-        $this->selectAll = false;
-        session()->flash('success', 'Selected promotions deleted successfully.');
+        return $this->type !== '' ? 1 : 0;
     }
 
     public function activateSelected(): void
     {
-        Promotion::whereIn('id', $this->selected)->update(['is_active' => true]);
-        $this->selected = [];
-        $this->selectAll = false;
-        session()->flash('success', count($this->selected) . ' promotions activated.');
+        $count = Promotion::whereIn('id', $this->selected)->update(['is_active' => true]);
+        $this->clearSelection();
+        session()->flash('success', "{$count} promotions activated.");
     }
 
     public function deactivateSelected(): void
     {
-        Promotion::whereIn('id', $this->selected)->update(['is_active' => false]);
-        $this->selected = [];
-        $this->selectAll = false;
-        session()->flash('success', count($this->selected) . ' promotions deactivated.');
+        $count = Promotion::whereIn('id', $this->selected)->update(['is_active' => false]);
+        $this->clearSelection();
+        session()->flash('success', "{$count} promotions deactivated.");
+    }
+
+    public function deleteSelected(): void
+    {
+        $count = Promotion::whereIn('id', $this->selected)->delete();
+        $this->clearSelection();
+        session()->flash('success', "{$count} promotions deleted.");
     }
 
     public function duplicateSelected(): void
     {
         $promotions = Promotion::with(['rules', 'reward'])->whereIn('id', $this->selected)->get();
-        
+
         foreach ($promotions as $promotion) {
             $newPromotion = $promotion->replicate();
-            $newPromotion->name = $promotion->name . ' (Copy)';
-            $newPromotion->code = $promotion->code ? $promotion->code . '_COPY' : null;
+            $newPromotion->name = $promotion->name.' (Copy)';
+            $newPromotion->code = $promotion->code ? $promotion->code.'_COPY' : null;
             $newPromotion->usage_count = 0;
             $newPromotion->is_active = false;
             $newPromotion->save();
 
-            // Duplicate rules
             foreach ($promotion->rules as $rule) {
                 $newRule = $rule->replicate();
                 $newRule->promotion_id = $newPromotion->id;
                 $newRule->save();
             }
 
-            // Duplicate reward
             if ($promotion->reward) {
                 $newReward = $promotion->reward->replicate();
                 $newReward->promotion_id = $newPromotion->id;
@@ -151,16 +90,15 @@ class Index extends Component
         }
 
         $count = count($this->selected);
-        $this->selected = [];
-        $this->selectAll = false;
-        session()->flash('success', $count . ' promotion(s) duplicated.');
+        $this->clearSelection();
+        session()->flash('success', "{$count} promotion(s) duplicated.");
     }
 
-    public function export()
+    public function exportSelected()
     {
-        $ids = !empty($this->selected) ? $this->selected : null;
-        $filename = 'promotions_' . now()->format('Y-m-d_His') . '.xlsx';
-        
+        $ids = ! empty($this->selected) ? $this->selected : null;
+        $filename = 'promotions_'.now()->format('Y-m-d_His').'.xlsx';
+
         return Excel::download(new PromotionsExport($ids), $filename);
     }
 
@@ -185,7 +123,7 @@ class Index extends Component
         ]);
 
         try {
-            $import = new PromotionsImport();
+            $import = new PromotionsImport;
             Excel::import($import, $this->importFile->getRealPath());
 
             $this->importResult = [
@@ -214,7 +152,7 @@ class Index extends Component
             'Start Date', 'End Date', 'Usage Limit', 'Per Customer',
             'Min Order Amount', 'Min Quantity', 'Status', 'Reward Type',
             'Discount Value', 'Max Discount', 'Buy Quantity', 'Get Quantity',
-            'Apply To', 'Description'
+            'Apply To', 'Description',
         ];
 
         $example = [
@@ -222,10 +160,10 @@ class Index extends Component
             '2026-06-01', '2026-08-31', '1000', '3',
             '100000', '', 'Active', 'discount_percent',
             '20', '50000', '', '',
-            'order', 'Summer discount promotion'
+            'order', 'Summer discount promotion',
         ];
 
-        $callback = function() use ($headers, $example) {
+        $callback = function () use ($headers, $example) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $headers);
             fputcsv($file, $example);
@@ -238,32 +176,27 @@ class Index extends Component
         ]);
     }
 
-    protected function getPromotionsQuery()
+    protected function getQuery()
     {
         return Promotion::query()
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('code', 'like', "%{$this->search}%");
-                });
-            })
-            ->when($this->status !== '', function ($query) {
-                if ($this->status === 'active') {
-                    $query->where('is_active', true);
-                } elseif ($this->status === 'inactive') {
-                    $query->where('is_active', false);
-                }
-            })
-            ->when($this->type, function ($query) {
-                $query->where('type', $this->type);
-            })
-            ->orderByDesc('created_at');
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', "%{$this->search}%")
+                ->orWhere('code', 'like', "%{$this->search}%")))
+            ->when($this->status === 'active', fn ($q) => $q->where('is_active', true))
+            ->when($this->status === 'inactive', fn ($q) => $q->where('is_active', false))
+            ->when($this->type, fn ($q) => $q->where('type', $this->type));
+    }
+
+    protected function getModelClass(): string
+    {
+        return Promotion::class;
     }
 
     public function render()
     {
-        $promotions = $this->getPromotionsQuery()
+        $promotions = $this->getQuery()
             ->withCount('usages')
+            ->orderByDesc('created_at')
             ->paginate(15, ['*'], 'page', $this->page);
 
         return view('livewire.sales.configuration.promotions.index', [
