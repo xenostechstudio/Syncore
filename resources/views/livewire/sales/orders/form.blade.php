@@ -75,27 +75,23 @@
             @if($orderId && $status === \App\Enums\SalesOrderState::SALES_ORDER->value)
                 <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     @foreach($deliveries as $delivery)
-                        <a 
-                            href="{{ route('delivery.orders.edit', $delivery->id) }}" 
-                            wire:navigate
-                            class="inline-flex flex-shrink-0 items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
+                        <x-ui.related-resource
+                            :href="route('delivery.orders.edit', $delivery->id)"
+                            icon="truck"
+                            :label="$delivery->delivery_number"
                         >
-                            <flux:icon name="truck" class="size-4" />
-                            <span>{{ $delivery->delivery_number }}</span>
                             <x-ui.status-badge :status="$delivery->state" />
-                        </a>
+                        </x-ui.related-resource>
                     @endforeach
 
                     @foreach($invoices as $invoice)
-                        <a 
-                            href="{{ route('invoicing.invoices.edit', $invoice->id) }}" 
-                            wire:navigate
-                            class="inline-flex flex-shrink-0 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-400 dark:hover:bg-violet-900/50"
+                        <x-ui.related-resource
+                            :href="route('invoicing.invoices.edit', $invoice->id)"
+                            icon="document-text"
+                            :label="$invoice->invoice_number"
                         >
-                            <flux:icon name="document-text" class="size-4" />
-                            <span>{{ $invoice->invoice_number }}</span>
                             <x-ui.status-badge :status="$invoice->state" />
-                        </a>
+                        </x-ui.related-resource>
                     @endforeach
                 </div>
             @endif

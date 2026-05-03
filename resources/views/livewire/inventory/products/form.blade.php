@@ -65,23 +65,15 @@
                     </span>
                 </div>
 
-                @if($editing && $product)
-                    <a href="{{ route('inventory.products.edit', $product->id) }}?forecast=1" wire:navigate class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 transition-colors hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-900/50">
-                        <flux:icon name="arrows-up-down" class="size-4" />
-                        <span>Forecast</span>
-                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-200 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-300">In {{ (int) ($forecast_in ?? 0) }}</span>
-                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-red-200 text-red-700 dark:bg-red-800 dark:text-red-300">Out {{ (int) ($forecast_out ?? 0) }}</span>
-                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">Avail {{ (int) ($forecast_available ?? 0) }}</span>
-                    </a>
-                @else
-                    <div class="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-300">
-                        <flux:icon name="arrows-up-down" class="size-4" />
-                        <span>Forecast</span>
-                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-200 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-300">In {{ (int) ($forecast_in ?? 0) }}</span>
-                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-red-200 text-red-700 dark:bg-red-800 dark:text-red-300">Out {{ (int) ($forecast_out ?? 0) }}</span>
-                        <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">Avail {{ (int) ($forecast_available ?? 0) }}</span>
-                    </div>
-                @endif
+                <x-ui.related-resource
+                    :href="$editing && $product ? route('inventory.products.edit', $product->id) . '?forecast=1' : null"
+                    icon="arrows-up-down"
+                    label="Forecast"
+                >
+                    <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-200 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-300">In {{ (int) ($forecast_in ?? 0) }}</span>
+                    <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-red-200 text-red-700 dark:bg-red-800 dark:text-red-300">Out {{ (int) ($forecast_out ?? 0) }}</span>
+                    <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">Avail {{ (int) ($forecast_available ?? 0) }}</span>
+                </x-ui.related-resource>
             </div>
         </div>
     </x-slot:header>

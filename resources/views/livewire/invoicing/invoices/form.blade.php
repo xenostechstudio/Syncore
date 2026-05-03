@@ -64,18 +64,13 @@
             {{-- Right Group: Sales Order Badge --}}
             @if($invoice && $invoice->salesOrder)
                 <div class="flex items-center gap-2">
-                    <a 
-                        href="{{ route('sales.orders.edit', $invoice->salesOrder->id) }}" 
-                        wire:navigate
-                        class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
+                    <x-ui.related-resource
+                        :href="route('sales.orders.edit', $invoice->salesOrder->id)"
+                        icon="shopping-cart"
+                        :label="$invoice->salesOrder->order_number"
                     >
-                        <flux:icon name="shopping-cart" class="size-4" />
-                        <span>{{ $invoice->salesOrder->order_number }}</span>
-                        @php
-                            $soStatus = $invoice->salesOrder->status;
-                        @endphp
-                        <x-ui.status-badge :status="$soStatus" type="order" />
-                    </a>
+                        <x-ui.status-badge :status="$invoice->salesOrder->status" type="order" />
+                    </x-ui.related-resource>
                 </div>
             @endif
         </div>

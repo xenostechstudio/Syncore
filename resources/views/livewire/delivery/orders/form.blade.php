@@ -75,55 +75,27 @@
             @if((isset($outboundAdjustment) && $outboundAdjustment) || ($soId && $soNumber))
                 <div class="flex items-center gap-2">
                     @if(isset($outboundAdjustment) && $outboundAdjustment)
-                        <a
-                            href="{{ route('inventory.warehouse-out.edit', $outboundAdjustment->id) }}"
-                            wire:navigate
-                            class="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-900/30 dark:text-sky-400 dark:hover:bg-sky-900/50"
+                        <x-ui.related-resource
+                            :href="route('inventory.warehouse-out.edit', $outboundAdjustment->id)"
+                            icon="building-storefront"
+                            :label="$outboundAdjustment->adjustment_number"
                         >
-                            <flux:icon name="building-storefront" class="size-4" />
-                            <span>{{ $outboundAdjustment->adjustment_number }}</span>
                             @if(!empty($outboundAdjustment->status))
-                                @php
-                                    $outboundStatusConfig = match($outboundAdjustment->status) {
-                                        'draft' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                        'pending' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
-                                        'approved' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
-                                        'completed' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
-                                        'cancelled' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
-                                        default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                    };
-                                @endphp
-                                <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $outboundStatusConfig['bg'] }} {{ $outboundStatusConfig['text'] }}">
-                                    {{ ucfirst(str_replace('_', ' ', $outboundAdjustment->status)) }}
-                                </span>
+                                <x-ui.status-badge :status="$outboundAdjustment->state" />
                             @endif
-                        </a>
+                        </x-ui.related-resource>
                     @endif
 
                     @if($soId && $soNumber)
-                        <a 
-                            href="{{ route('sales.orders.edit', $soId) }}" 
-                            wire:navigate
-                            class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
+                        <x-ui.related-resource
+                            :href="route('sales.orders.edit', $soId)"
+                            icon="shopping-cart"
+                            :label="$soNumber"
                         >
-                            <flux:icon name="shopping-cart" class="size-4" />
-                            <span>{{ $soNumber }}</span>
                             @if(!empty($soStatus))
-                                @php
-                                    $soStatusConfig = match($soStatus) {
-                                        'quotation', 'draft' => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                        'confirmed', 'sales_order', 'processing' => ['bg' => 'bg-blue-200 dark:bg-blue-800', 'text' => 'text-blue-700 dark:text-blue-300'],
-                                        'shipped', 'in_progress' => ['bg' => 'bg-violet-200 dark:bg-violet-800', 'text' => 'text-violet-700 dark:text-violet-300'],
-                                        'delivered', 'done', 'paid' => ['bg' => 'bg-emerald-200 dark:bg-emerald-800', 'text' => 'text-emerald-700 dark:text-emerald-300'],
-                                        'cancelled', 'canceled' => ['bg' => 'bg-red-200 dark:bg-red-800', 'text' => 'text-red-700 dark:text-red-300'],
-                                        default => ['bg' => 'bg-zinc-200 dark:bg-zinc-700', 'text' => 'text-zinc-600 dark:text-zinc-300'],
-                                    };
-                                @endphp
-                                <span class="rounded px-1.5 py-0.5 text-xs font-medium {{ $soStatusConfig['bg'] }} {{ $soStatusConfig['text'] }}">
-                                    {{ ucfirst(str_replace('_', ' ', $soStatus)) }}
-                                </span>
+                                <x-ui.status-badge :status="$soStatus" type="order" />
                             @endif
-                        </a>
+                        </x-ui.related-resource>
                     @endif
                 </div>
             @endif
@@ -926,14 +898,12 @@
 
                         @if(!empty($forecast_data['outbound_adjustment']))
                             <div class="flex flex-wrap items-center justify-between gap-3">
-                                <a
-                                    href="{{ route('inventory.warehouse-out.edit', (int) ($forecast_data['outbound_adjustment']['id'] ?? 0)) }}"
-                                    wire:navigate
-                                    class="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 transition-colors hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-900/30 dark:text-sky-400 dark:hover:bg-sky-900/50"
-                                >
-                                    <flux:icon name="building-storefront" class="size-4" />
-                                    <span>{{ $forecast_data['outbound_adjustment']['adjustment_number'] ?? 'WH/OUT' }}</span>
-                                </a>
+                                <x-ui.related-resource
+                                    :href="route('inventory.warehouse-out.edit', (int) ($forecast_data['outbound_adjustment']['id'] ?? 0))"
+                                    icon="building-storefront"
+                                    :label="$forecast_data['outbound_adjustment']['adjustment_number'] ?? 'WH/OUT'"
+                                />
+
 
                                 <div class="text-sm text-zinc-600 dark:text-zinc-300">
                                     Qty: <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ (int) ($forecast_data['outbound_adjustment']['item_qty'] ?? 0) }}</span>
