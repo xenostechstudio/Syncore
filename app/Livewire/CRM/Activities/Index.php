@@ -2,6 +2,7 @@
 
 namespace App\Livewire\CRM\Activities;
 
+use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\CRM\Activity;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Opportunity;
@@ -11,19 +12,15 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Livewire\Concerns\WithManualPagination;
 
 #[Layout('components.layouts.module', ['module' => 'CRM'])]
 #[Title('Activities')]
 class Index extends Component
 {
-    use WithManualPagination;
+    use WithIndexComponent;
 
     #[Url]
     public string $type = '';
-
-    #[Url]
-    public string $status = '';
 
     #[Url]
     public string $filter = 'upcoming'; // upcoming, today, overdue, all
@@ -138,18 +135,50 @@ class Index extends Component
         session()->flash('success', 'Activity deleted successfully.');
     }
 
-    public function render()
+    public function clearFilters(): void
     {
-        $query = Activity::query()
+        $this->reset(['search', 'status', 'sort', 'groupBy', 'type']);
+        $this->filter = 'upcoming';
+        $this->resetPage();
+        $this->clearSelection();
+    }
+
+    protected function getCustomActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->type !== '') {
+            $count++;
+        }
+        if ($this->filter !== 'upcoming') {
+            $count++;
+        }
+
+        return $count;
+    }
+
+    protected function getQuery()
+    {
+        return Activity::query()
             ->with(['activitable', 'assignedTo', 'createdBy'])
+            ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('subject', 'like', "%{$this->search}%")
+                ->orWhere('description', 'like', "%{$this->search}%")))
             ->when($this->type, fn ($q) => $q->where('type', $this->type))
             ->when($this->status, fn ($q) => $q->where('status', $this->status));
+    }
 
+    protected function getModelClass(): string
+    {
+        return Activity::class;
+    }
+
+    public function render()
+    {
         $query = match ($this->filter) {
-            'upcoming' => $query->where('status', 'planned')->where('scheduled_at', '>=', now())->orderBy('scheduled_at'),
-            'today' => $query->whereDate('scheduled_at', today())->orderBy('scheduled_at'),
-            'overdue' => $query->where('status', 'planned')->where('scheduled_at', '<', now())->orderByDesc('scheduled_at'),
-            default => $query->orderByDesc('created_at'),
+            'upcoming' => $this->getQuery()->where('status', 'planned')->where('scheduled_at', '>=', now())->orderBy('scheduled_at'),
+            'today' => $this->getQuery()->whereDate('scheduled_at', today())->orderBy('scheduled_at'),
+            'overdue' => $this->getQuery()->where('status', 'planned')->where('scheduled_at', '<', now())->orderByDesc('scheduled_at'),
+            default => $this->getQuery()->orderByDesc('created_at'),
         };
 
         return view('livewire.crm.activities.index', [

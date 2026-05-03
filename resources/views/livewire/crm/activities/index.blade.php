@@ -1,38 +1,82 @@
 <div>
-    {{-- Header Bar --}}
-    <div class="sticky top-14 z-40 -mx-4 -mt-6 mb-6 flex min-h-[60px] items-center border-b border-zinc-200 bg-white px-4 py-2 sm:-mx-6 lg:-mx-8 lg:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div class="flex w-full items-center justify-between gap-4">
-            {{-- Left Group --}}
-            <div class="flex items-center gap-3">
+    <x-ui.flash />
+
+    <x-slot:header>
+        <x-ui.index-header
+            :bare="true"
+            title="Activities"
+            :paginator="$activities"
+            :views="[]"
+            searchPlaceholder="Search activities..."
+        >
+            <x-slot:leftExtra>
                 <button wire:click="openModal" class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200">
                     New
                 </button>
-                <span class="text-md font-light text-zinc-600 dark:text-zinc-400">Activities</span>
-            </div>
+            </x-slot:leftExtra>
 
-            {{-- Right Group: Filters --}}
-            <div class="flex items-center gap-3">
-                <select wire:model.live="filter" class="rounded-lg border-zinc-200 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800">
-                    <option value="upcoming">Upcoming</option>
-                    <option value="today">Today</option>
-                    <option value="overdue">Overdue</option>
-                    <option value="all">All</option>
-                </select>
-                <select wire:model.live="type" class="rounded-lg border-zinc-200 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800">
-                    <option value="">All Types</option>
-                    @foreach($types as $key => $label)
-                        <option value="{{ $key }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-                <select wire:model.live="status" class="rounded-lg border-zinc-200 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800">
-                    <option value="">All Status</option>
-                    <option value="planned">Planned</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-            </div>
-        </div>
-    </div>
+            <x-slot:search>
+                <x-ui.searchbox-dropdown
+                    placeholder="Search activities..."
+                    widthClass="w-[520px]"
+                    width="520px"
+                    :activeFilterCount="$this->getActiveFilterCount()"
+                    clearAction="clearFilters"
+                >
+                    <div class="flex flex-col gap-4 p-3 md:flex-row">
+                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:pr-3 dark:border-zinc-700">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="calendar" class="size-3.5" />
+                                <span>When</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach(['upcoming' => 'Upcoming', 'today' => 'Today', 'overdue' => 'Overdue', 'all' => 'All'] as $value => $label)
+                                    <button type="button" wire:click="$set('filter', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span>{{ $label }}</span>
+                                        @if($filter === $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="flex-1 border-b border-zinc-100 pb-3 md:border-b-0 md:border-r md:pb-0 md:px-3 dark:border-zinc-700">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="tag" class="size-3.5" />
+                                <span>Type</span>
+                            </div>
+                            <div class="space-y-1">
+                                <button type="button" wire:click="$set('type', '')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <span>All Types</span>
+                                    @if($type === '')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                </button>
+                                @foreach($types as $key => $label)
+                                    <button type="button" wire:click="$set('type', '{{ $key }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span>{{ $label }}</span>
+                                        @if($type === $key)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="flex-1 md:pl-3">
+                            <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                <flux:icon name="funnel" class="size-3.5" />
+                                <span>Status</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach(['' => 'All', 'planned' => 'Planned', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $value => $label)
+                                    <button type="button" wire:click="$set('status', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                        <span>{{ $label }}</span>
+                                        @if($status === $value)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </x-ui.searchbox-dropdown>
+            </x-slot:search>
+        </x-ui.index-header>
+    </x-slot:header>
 
     {{-- Activities List --}}
     <div class="space-y-3">
@@ -103,12 +147,6 @@
             </div>
         @endforelse
     </div>
-
-    @if($activities->hasPages())
-        <div class="mt-4">
-            {{ $activities->links() }}
-        </div>
-    @endif
 
     {{-- Modal --}}
     @if($showModal)
