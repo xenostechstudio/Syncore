@@ -37,41 +37,6 @@ class HRReportService
             ->toArray();
     }
 
-    /**
-     * Get employee turnover rate.
-     */
-    public function getTurnoverRate(Carbon $startDate, Carbon $endDate): array
-    {
-        $startCount = Employee::where('hire_date', '<', $startDate)
-            ->where(function ($q) use ($startDate) {
-                $q->whereNull('termination_date')
-                    ->orWhere('termination_date', '>=', $startDate);
-            })
-            ->count();
-
-        $endCount = Employee::where('hire_date', '<=', $endDate)
-            ->where(function ($q) use ($endDate) {
-                $q->whereNull('termination_date')
-                    ->orWhere('termination_date', '>', $endDate);
-            })
-            ->count();
-
-        $avgCount = ($startCount + $endCount) / 2;
-
-        $separations = Employee::whereBetween('termination_date', [$startDate, $endDate])->count();
-        $newHires = Employee::whereBetween('hire_date', [$startDate, $endDate])->count();
-
-        $turnoverRate = $avgCount > 0 ? ($separations / $avgCount) * 100 : 0;
-
-        return [
-            'start_headcount' => $startCount,
-            'end_headcount' => $endCount,
-            'average_headcount' => round($avgCount),
-            'new_hires' => $newHires,
-            'separations' => $separations,
-            'turnover_rate' => round($turnoverRate, 2),
-        ];
-    }
 
     /**
      * Get leave analysis by type.

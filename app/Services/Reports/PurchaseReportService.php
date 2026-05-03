@@ -220,7 +220,7 @@ class PurchaseReportService
             'avg_order_value' => round($avgOrderValue, 2),
             'pending_bills' => $pendingBills,
             'overdue_bills' => $overdueBills,
-            'active_suppliers' => Supplier::where('status', 'active')->count(),
+            'active_suppliers' => Supplier::where('is_active', true)->count(),
         ];
     }
 }

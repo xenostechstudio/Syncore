@@ -5,15 +5,38 @@ on:
     branches:
       - develop
       - main
+      - master
   pull_request:
     branches:
       - develop
       - main
+      - master
 
 jobs:
   ci:
+    name: pest (${{ matrix.db }})
     runs-on: ubuntu-latest
     environment: Testing
+
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, pgsql]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: syncore
+          POSTGRES_PASSWORD: syncore
+          POSTGRES_DB: syncore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -52,3 +75,10 @@ jobs:
 
       - name: Run Tests
         run: ./vendor/bin/pest
+        env:
+          DB_CONNECTION: ${{ matrix.db }}
+          DB_HOST: ${{ matrix.db == 'pgsql' && '127.0.0.1' || '' }}
+          DB_PORT: ${{ matrix.db == 'pgsql' && '5432' || '' }}
+          DB_DATABASE: ${{ matrix.db == 'pgsql' && 'syncore_test' || ':memory:' }}
+          DB_USERNAME: ${{ matrix.db == 'pgsql' && 'syncore' || '' }}
+          DB_PASSWORD: ${{ matrix.db == 'pgsql' && 'syncore' || '' }}

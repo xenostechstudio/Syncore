@@ -117,7 +117,7 @@ class Index extends Component
             ->whereIn('product_id', $this->selected)
             ->selectRaw('product_id, SUM(quantity) as total_stock')
             ->groupBy('product_id')
-            ->having('total_stock', '>', 0)
+            ->havingRaw('SUM(quantity) > 0')
             ->pluck('product_id')
             ->toArray();
 

@@ -140,10 +140,6 @@ class ReportService
             'summary' => $this->hrReport->getSummary(),
             'by_department' => $this->hrReport->getEmployeesByDepartment(),
             'leave_analysis' => $this->hrReport->getLeaveAnalysis($startDate, $endDate),
-            'turnover' => $this->hrReport->getTurnoverRate(
-                now()->subYear()->startOfYear(),
-                now()
-            ),
         ];
 
         if ($useCache) {
@@ -265,7 +261,6 @@ class ReportService
                 'by_department' => $this->hrReport->getEmployeesByDepartment(),
                 'leave_analysis' => $this->hrReport->getLeaveAnalysis($startDate, $endDate),
                 'payroll' => $this->hrReport->getPayrollSummary($startDate, $endDate),
-                'turnover' => $this->hrReport->getTurnoverRate($startDate, $endDate),
             ],
             'crm' => [
                 'summary' => $this->crmReport->getSummary(),
