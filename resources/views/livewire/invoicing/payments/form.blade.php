@@ -1,4 +1,4 @@
-<div>
+<div x-data="{ showSendMessage: false, showLogNote: false, showScheduleActivity: false }">
     {{-- Flash Messages --}}
     <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
         @if(session('success'))
@@ -49,8 +49,8 @@
     </div>
 
     {{-- Content --}}
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div class="lg:col-span-2 space-y-6">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div class="lg:col-span-9 space-y-6">
             <div class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
                 <h3 class="mb-4 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Payment Details</h3>
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -101,7 +101,7 @@
         </div>
 
         {{-- Sidebar --}}
-        <div class="space-y-6">
+        <div class="space-y-6 lg:col-span-3">
             @if($selectedInvoice)
             <div class="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                 <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Invoice</h3>

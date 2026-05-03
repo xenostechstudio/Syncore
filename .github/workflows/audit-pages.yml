@@ -1,4 +1,4 @@
-name: audit-index-pages
+name: audit-pages
 
 on:
   push:
@@ -18,11 +18,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  audit:
+  audit-index-pages:
     name: Index page consistency audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
       - name: Run audit
         run: bin/audit-index-pages.sh
+
+  audit-form-pages:
+    name: Form page consistency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run audit
+        run: bin/audit-form-pages.sh
