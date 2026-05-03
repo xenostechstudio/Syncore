@@ -42,10 +42,11 @@ The seeder creates an initial admin: **`rifqi@mail.com` / `password`** (change o
 ## Daily workflow
 
 ```bash
-./vendor/bin/pest                     # full suite (~25s, 460+ tests)
+./vendor/bin/pest                     # full suite (~25s, 470+ tests)
 ./vendor/bin/pest --filter="Sales"    # subset
 ./vendor/bin/pint                     # format
 php artisan migrate                   # always after pulling
+bin/audit-index-pages.sh              # flag drift from the standard list-page pattern
 ```
 
 CI runs Pint but the auto-commit step is disabled — fix style issues only on files you're already editing (don't try a project-wide sweep on a feature branch).
