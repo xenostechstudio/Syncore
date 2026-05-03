@@ -128,6 +128,22 @@ class OrdersToInvoice extends Component
         $this->resetPage();
     }
 
+    public function getActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->status !== '' && $this->status !== 'all') {
+            $count++;
+        }
+        if ($this->sort !== 'latest') {
+            $count++;
+        }
+        if ($this->groupBy !== '') {
+            $count++;
+        }
+
+        return $count + $this->getCustomActiveFilterCount();
+    }
+
     protected function getCustomActiveFilterCount(): int
     {
         return $this->myInvoice ? 0 : 1;

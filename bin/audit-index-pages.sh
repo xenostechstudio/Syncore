@@ -90,6 +90,28 @@ while IFS= read -r v; do
     fi
 done < <(grep -l "x-ui.searchbox-dropdown" -r "$VIEWS_DIR" --include="*.blade.php" 2>/dev/null || true)
 
+# ---------------------------------------------------------------- finding #3b
+# Views calling $this->getActiveFilterCount() must back a component that
+# either uses WithIndexComponent (which provides it) or defines its own
+# getActiveFilterCount() method. Otherwise hitting the page throws
+# "Method ... ::getActiveFilterCount does not exist".
+
+while IFS= read -r v; do
+    rel="${v#"$VIEWS_DIR"/}"
+    grep -q '\$this->getActiveFilterCount' "$v" || continue
+    # Map the view path back to a Livewire component path. Index views can be
+    # used by multiple components (e.g. Sales/Orders/Index AND Sales/Invoices/
+    # OrdersToInvoice both render livewire.sales.orders.index), so check ALL
+    # components whose render() returns this view.
+    view_dotted=$(echo "${rel%.blade.php}" | tr '/' '.')
+    while IFS= read -r f; do
+        grep -q "view('livewire\.${view_dotted}'" "$f" || continue
+        if ! grep -qE "WithIndexComponent|function getActiveFilterCount" "$f"; then
+            findings+=("missing-getActiveFilterCount: ${f#"$LIVEWIRE_DIR"/} renders $rel which calls \$this->getActiveFilterCount() but the component lacks WithIndexComponent or its own getActiveFilterCount()")
+        fi
+    done < <(find "$LIVEWIRE_DIR" -name "*.php")
+done < <(find "$VIEWS_DIR" -name "*.blade.php")
+
 # ---------------------------------------------------------------- finding #4
 # Index components with extra #[Url] filter props but no getCustomActiveFilterCount
 # override (they undercount the filter pill) or whose clearFilters doesn't list them

@@ -180,6 +180,19 @@ class Index extends Component
         $this->selectAll = false;
     }
 
+    public function getActiveFilterCount(): int
+    {
+        $count = 0;
+        if ($this->status !== '' && $this->status !== 'all') {
+            $count++;
+        }
+        if ($this->sort !== 'latest') {
+            $count++;
+        }
+
+        return $count;
+    }
+
     private function getDeliveriesQuery()
     {
         return DeliveryOrder::query()
