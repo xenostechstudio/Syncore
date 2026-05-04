@@ -5,6 +5,7 @@ namespace App\Livewire\Sales\Teams;
 use App\Exports\SalesTeamsExport;
 use App\Imports\SalesTeamsImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Sales\SalesTeam;
 use Livewire\Attributes\Layout;
@@ -17,7 +18,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Sales Teams')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     #[Url]
     public string $filter = 'active';
@@ -62,6 +63,8 @@ class Index extends Component
 
     public function bulkArchive(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if (empty($this->selected)) {
             return;
         }
@@ -124,6 +127,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if (empty($this->selected)) {
             return;
         }

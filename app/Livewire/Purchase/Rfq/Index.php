@@ -5,6 +5,7 @@ namespace App\Livewire\Purchase\Rfq;
 use App\Exports\PurchaseOrdersExport;
 use App\Imports\PurchaseRfqsImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -17,7 +18,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Request for Quotation')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     #[Url]
     public int $perPage = 10;
@@ -96,6 +97,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('purchase.delete');
+
         if (empty($this->selected)) {
             return;
         }
@@ -111,6 +114,8 @@ class Index extends Component
 
     public function bulkConfirm(): void
     {
+        $this->authorizePermission('purchase.confirm');
+
         if (empty($this->selected)) {
             return;
         }
@@ -126,6 +131,8 @@ class Index extends Component
 
     public function bulkCancel(): void
     {
+        $this->authorizePermission('purchase.edit');
+
         if (empty($this->selected)) {
             return;
         }

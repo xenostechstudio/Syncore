@@ -3,6 +3,7 @@
 namespace App\Livewire\CRM\Opportunities;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Opportunity;
 use App\Models\CRM\Pipeline;
@@ -16,7 +17,7 @@ use Livewire\Component;
 #[Title('Opportunity')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $opportunityId = null;
     public ?Opportunity $opportunity = null;
@@ -124,6 +125,8 @@ class Form extends Component
 
     public function markAsWon(): void
     {
+        $this->authorizePermission('crm.edit');
+
         if (!$this->opportunity) return;
 
         $this->opportunity->markAsWon();
@@ -153,6 +156,8 @@ class Form extends Component
 
     public function markAsLost(): void
     {
+        $this->authorizePermission('crm.edit');
+
         if (!$this->opportunity) return;
 
         $this->opportunity->markAsLost();

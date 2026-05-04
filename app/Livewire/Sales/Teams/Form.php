@@ -3,6 +3,7 @@
 namespace App\Livewire\Sales\Teams;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Sales\SalesTeam;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,7 @@ use Livewire\WithPagination;
 #[Title('Sales Team')]
 class Form extends Component
 {
-    use WithNotes, WithPagination;
+    use WithNotes, WithPagination, WithPermissions;
 
     public ?int $teamId = null;
     public string $type = 'team'; // 'team' or 'salesperson'
@@ -176,6 +177,8 @@ class Form extends Component
 
     public function archive(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if ($this->teamId) {
             $team = SalesTeam::findOrFail($this->teamId);
             $team->update(['is_active' => false]);
@@ -187,6 +190,8 @@ class Form extends Component
 
     public function restore(): void
     {
+        $this->authorizePermission('sales.edit');
+
         if ($this->teamId) {
             $team = SalesTeam::findOrFail($this->teamId);
             $team->update(['is_active' => true]);

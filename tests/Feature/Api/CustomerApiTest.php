@@ -4,7 +4,7 @@ use App\Models\User;
 use App\Models\Sales\Customer;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create()->assignRole('super-admin');
 });
 
 test('unauthenticated user cannot access customers', function () {

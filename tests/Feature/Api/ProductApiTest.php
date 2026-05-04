@@ -5,7 +5,7 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\Category;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create()->assignRole('super-admin');
 });
 
 test('unauthenticated user cannot access products', function () {

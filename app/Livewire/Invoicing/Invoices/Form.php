@@ -150,6 +150,8 @@ class Form extends Component
 
     public function cancel(): void
     {
+        $this->authorizePermission('invoicing.edit');
+
         if (!$this->invoiceId) {
             return;
         }

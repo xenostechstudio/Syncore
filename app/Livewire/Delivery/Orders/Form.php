@@ -4,6 +4,7 @@ namespace App\Livewire\Delivery\Orders;
 
 use App\Enums\DeliveryOrderState;
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Delivery\DeliveryOrderItem;
 use App\Models\Delivery\DeliveryReturn;
@@ -26,7 +27,7 @@ use Livewire\Component;
 #[Title('Delivery Order')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $deliveryId = null;
 
@@ -122,6 +123,8 @@ class Form extends Component
 
     public function cancel(): void
     {
+        $this->authorizePermission('delivery.confirm');
+
         if (! $this->deliveryId) {
             return;
         }

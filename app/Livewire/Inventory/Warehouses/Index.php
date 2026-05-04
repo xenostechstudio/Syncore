@@ -5,6 +5,7 @@ namespace App\Livewire\Inventory\Warehouses;
 use App\Exports\WarehousesExport;
 use App\Imports\WarehousesImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Inventory\InventoryTransfer;
 use App\Models\Inventory\Warehouse;
@@ -18,7 +19,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Warehouses')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     #[Url]
     public int $perPage = 15;
@@ -74,6 +75,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('inventory.delete');
+
         if (empty($this->selected)) {
             return;
         }

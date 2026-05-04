@@ -4,6 +4,7 @@ namespace App\Livewire\CRM\Leads;
 
 use App\Exports\LeadsExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\CRM\Lead;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -15,7 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Leads')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public string $source = '';
@@ -75,6 +76,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('crm.delete');
+
         if (empty($this->selected)) {
             return;
         }

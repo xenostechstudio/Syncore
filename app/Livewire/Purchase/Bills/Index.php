@@ -5,6 +5,7 @@ namespace App\Livewire\Purchase\Bills;
 use App\Exports\VendorBillsExport;
 use App\Imports\VendorBillsImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Purchase\VendorBill;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Vendor Bills')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     public function confirmBulkDelete(): void
     {
@@ -57,6 +58,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('purchase.delete');
+
         if (empty($this->selected)) {
             return;
         }

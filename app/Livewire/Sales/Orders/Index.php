@@ -5,6 +5,7 @@ namespace App\Livewire\Sales\Orders;
 use App\Exports\SalesOrdersExport;
 use App\Imports\SalesOrdersImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Sales\SalesOrder;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Sales Orders')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     #[Url]
     public bool $myQuotations = true;
@@ -113,6 +114,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if (empty($this->selected)) {
             return;
         }
@@ -127,6 +130,8 @@ class Index extends Component
 
     public function bulkCancel(): void
     {
+        $this->authorizePermission('sales.cancel');
+
         if (empty($this->selected)) {
             return;
         }
@@ -141,6 +146,8 @@ class Index extends Component
 
     public function bulkConfirm(): void
     {
+        $this->authorizePermission('sales.confirm');
+
         if (empty($this->selected)) {
             return;
         }

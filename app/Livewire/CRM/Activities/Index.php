@@ -3,6 +3,7 @@
 namespace App\Livewire\CRM\Activities;
 
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\CRM\Activity;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Opportunity;
@@ -17,7 +18,7 @@ use Livewire\Component;
 #[Title('Activities')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public string $type = '';
@@ -124,6 +125,8 @@ class Index extends Component
 
     public function markAsCompleted(int $id): void
     {
+        $this->authorizePermission('crm.edit');
+
         $activity = Activity::findOrFail($id);
         $activity->markAsCompleted();
         session()->flash('success', 'Activity marked as completed.');

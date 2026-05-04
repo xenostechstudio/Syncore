@@ -5,7 +5,7 @@ use App\Models\Sales\Customer;
 use App\Models\Invoicing\Invoice;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create()->assignRole('super-admin');
     $this->customer = Customer::factory()->create();
 });
 

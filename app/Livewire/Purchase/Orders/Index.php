@@ -4,6 +4,7 @@ namespace App\Livewire\Purchase\Orders;
 
 use App\Exports\PurchaseOrdersExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -15,7 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Purchase Orders')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public int $perPage = 10;
@@ -94,6 +95,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('purchase.delete');
+
         if (empty($this->selected)) {
             return;
         }
@@ -109,6 +112,8 @@ class Index extends Component
 
     public function bulkConfirm(): void
     {
+        $this->authorizePermission('purchase.confirm');
+
         if (empty($this->selected)) {
             return;
         }

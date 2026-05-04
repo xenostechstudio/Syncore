@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(User::factory()->create()->assignRole('super-admin'));
 });
 
 function makeRfq(string $status, ?string $reference = null, ?string $supplierName = null): int

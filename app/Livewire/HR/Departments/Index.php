@@ -5,6 +5,7 @@ namespace App\Livewire\HR\Departments;
 use App\Exports\DepartmentsExport;
 use App\Imports\DepartmentsImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\HR\Department;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Departments')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     public function mount(): void
     {
@@ -60,6 +61,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('hr.delete');
+
         if (empty($this->selected)) {
             return;
         }

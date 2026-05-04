@@ -4,6 +4,7 @@ namespace App\Livewire\Delivery\Orders;
 
 use App\Exports\DeliveryOrdersExport;
 use App\Livewire\Concerns\WithManualPagination;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Delivery\DeliveryOrder;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -15,7 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Delivery Orders')]
 class Index extends Component
 {
-    use WithManualPagination;
+    use WithManualPagination, WithPermissions;
 
     #[Url]
     public string $search = '';
@@ -110,6 +111,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('delivery.delete');
+
         if (empty($this->selected)) {
             return;
         }

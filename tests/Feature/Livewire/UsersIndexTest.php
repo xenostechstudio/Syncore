@@ -5,7 +5,7 @@ use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    $this->me = User::factory()->create();
+    $this->me = User::factory()->create()->assignRole('super-admin');
     $this->actingAs($this->me);
 });
 

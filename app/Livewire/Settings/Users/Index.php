@@ -4,6 +4,7 @@ namespace App\Livewire\Settings\Users;
 
 use App\Exports\UsersExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -14,7 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Users')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     public array $visibleColumns = [
         'user' => true,
@@ -64,6 +65,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('users.delete');
+
         if (empty($this->selected)) {
             return;
         }

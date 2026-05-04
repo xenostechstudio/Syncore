@@ -4,6 +4,7 @@ namespace App\Livewire\Sales\Customers;
 
 use App\Exports\CustomersExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Sales\Customer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -14,7 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Customers')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     public bool $filterActive = false;
     public bool $filterInactive = false;
@@ -72,6 +73,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('customers.delete');
+
         if (empty($this->selected)) {
             return;
         }
@@ -97,6 +100,8 @@ class Index extends Component
 
     public function bulkActivate(): void
     {
+        $this->authorizePermission('customers.edit');
+
         if (empty($this->selected)) {
             return;
         }
@@ -109,6 +114,8 @@ class Index extends Component
 
     public function bulkDeactivate(): void
     {
+        $this->authorizePermission('customers.edit');
+
         if (empty($this->selected)) {
             return;
         }

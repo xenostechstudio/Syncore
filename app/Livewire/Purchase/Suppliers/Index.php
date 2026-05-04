@@ -4,6 +4,7 @@ namespace App\Livewire\Purchase\Suppliers;
 
 use App\Exports\SuppliersExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Purchase\Supplier;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -15,7 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Suppliers')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public int $perPage = 10;
@@ -95,6 +96,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('purchase.delete');
+
         if (empty($this->selected)) {
             return;
         }
@@ -120,6 +123,8 @@ class Index extends Component
 
     public function bulkActivate(): void
     {
+        $this->authorizePermission('purchase.edit');
+
         if (empty($this->selected)) {
             return;
         }
@@ -131,6 +136,8 @@ class Index extends Component
 
     public function bulkDeactivate(): void
     {
+        $this->authorizePermission('purchase.edit');
+
         if (empty($this->selected)) {
             return;
         }

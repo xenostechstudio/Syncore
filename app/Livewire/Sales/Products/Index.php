@@ -4,6 +4,7 @@ namespace App\Livewire\Sales\Products;
 
 use App\Exports\ProductsExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Product;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -14,7 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Products')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     public array $openGroups = [];
 
@@ -44,6 +45,8 @@ class Index extends Component
 
     public function bulkActivate(): void
     {
+        $this->authorizePermission('sales.edit');
+
         if (empty($this->selected)) {
             return;
         }
@@ -55,6 +58,8 @@ class Index extends Component
 
     public function bulkDeactivate(): void
     {
+        $this->authorizePermission('sales.edit');
+
         if (empty($this->selected)) {
             return;
         }
@@ -66,6 +71,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if (empty($this->selected)) {
             return;
         }

@@ -5,6 +5,7 @@ namespace App\Livewire\CRM\Opportunities;
 use App\Exports\OpportunitiesExport;
 use App\Imports\OpportunitiesImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\CRM\Opportunity;
 use App\Models\CRM\Pipeline;
@@ -18,7 +19,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Opportunities')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     #[Url]
     public string $stage = '';
@@ -91,6 +92,8 @@ class Index extends Component
 
     public function markAsWon(int $id): void
     {
+        $this->authorizePermission('crm.edit');
+
         $opportunity = Opportunity::findOrFail($id);
         $opportunity->markAsWon();
         session()->flash('success', 'Opportunity marked as won!');
@@ -98,6 +101,8 @@ class Index extends Component
 
     public function markAsLost(int $id, string $reason = ''): void
     {
+        $this->authorizePermission('crm.edit');
+
         $opportunity = Opportunity::findOrFail($id);
         $opportunity->markAsLost($reason);
         session()->flash('success', 'Opportunity marked as lost.');

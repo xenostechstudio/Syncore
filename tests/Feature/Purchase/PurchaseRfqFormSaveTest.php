@@ -10,7 +10,7 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     $this->seed(ModulePermissionSeeder::class);
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create()->assignRole('super-admin');
     $this->user->assignRole('super-admin');
     $this->actingAs($this->user);
 });

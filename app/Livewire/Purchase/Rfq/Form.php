@@ -297,6 +297,8 @@ class Form extends Component
 
     public function cancel(): void
     {
+        $this->authorizePermission('purchase.edit');
+
         if (!$this->rfqId) {
             return;
         }

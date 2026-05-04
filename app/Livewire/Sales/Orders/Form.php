@@ -5,6 +5,7 @@ namespace App\Livewire\Sales\Orders;
 use App\Enums\DeliveryOrderState;
 use App\Enums\SalesOrderState;
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Delivery\DeliveryOrderItem;
 use App\Models\Inventory\Product;
@@ -31,7 +32,7 @@ use Livewire\Component;
 #[Title('Sales Order')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     // Order Details
     public ?int $orderId = null;
@@ -627,6 +628,8 @@ class Form extends Component
 
     public function confirm(): void
     {
+        $this->authorizePermission('sales.confirm');
+
         if (!$this->validateOrderItems()) {
             return;
         }
@@ -858,6 +861,8 @@ class Form extends Component
 
     public function cancel(): void
     {
+        $this->authorizePermission('sales.cancel');
+
         if ($this->orderId) {
             $order = SalesOrder::findOrFail($this->orderId);
 
@@ -876,6 +881,8 @@ class Form extends Component
 
     public function archive(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if (!$this->orderId) {
             session()->flash('error', 'Please save the order first.');
             return;
@@ -1035,6 +1042,8 @@ Best regards,
 
     public function sendEmail(): void
     {
+        $this->authorizePermission('sales.edit');
+
         if (! $this->orderId) {
             session()->flash('error', 'Order not found.');
             return;

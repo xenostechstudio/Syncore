@@ -3,6 +3,7 @@
 namespace App\Livewire\HR\Leave\Types;
 
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\HR\LeaveType;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,7 +13,7 @@ use Livewire\Component;
 #[Title('Leave Types')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     public function mount(): void
     {
@@ -55,6 +56,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('leave.delete');
+
         if (empty($this->selected)) {
             return;
         }

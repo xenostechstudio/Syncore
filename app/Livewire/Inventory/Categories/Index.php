@@ -4,6 +4,7 @@ namespace App\Livewire\Inventory\Categories;
 
 use App\Exports\CategoriesExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Category;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -14,7 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Categories')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     public array $visibleColumns = [
         'name' => true,
@@ -66,6 +67,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('inventory.delete');
+
         if (empty($this->selected)) {
             return;
         }
@@ -91,6 +94,8 @@ class Index extends Component
 
     public function bulkActivate(): void
     {
+        $this->authorizePermission('inventory.edit');
+
         if (empty($this->selected)) {
             return;
         }
@@ -103,6 +108,8 @@ class Index extends Component
 
     public function bulkDeactivate(): void
     {
+        $this->authorizePermission('inventory.edit');
+
         if (empty($this->selected)) {
             return;
         }

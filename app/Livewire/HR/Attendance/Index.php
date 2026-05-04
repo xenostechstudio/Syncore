@@ -4,6 +4,7 @@ namespace App\Livewire\HR\Attendance;
 
 use App\Exports\AttendancesExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\HR\Attendance;
 use App\Models\HR\Employee;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Attendance')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public string $employeeId = '';
@@ -96,6 +97,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('hr.delete');
+
         if (empty($this->selected)) {
             return;
         }

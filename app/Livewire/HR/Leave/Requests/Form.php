@@ -164,6 +164,8 @@ class Form extends Component
 
     public function cancel(): void
     {
+        $this->authorizePermission('leave.edit');
+
         if (!$this->leaveRequest) return;
 
         if ($this->leaveRequest->cancel()) {

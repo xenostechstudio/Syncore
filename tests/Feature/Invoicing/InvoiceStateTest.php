@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
     Event::fake([InvoicePaid::class]);
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create()->assignRole('super-admin');
     $this->customer = Customer::factory()->create();
     $this->actingAs($this->user);
 });

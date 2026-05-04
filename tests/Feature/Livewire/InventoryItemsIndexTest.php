@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(User::factory()->create()->assignRole('super-admin'));
 });
 
 function setStock(int $productId, int $warehouseId, int $qty): void

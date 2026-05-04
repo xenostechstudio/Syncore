@@ -24,6 +24,7 @@ use Livewire\Livewire;
 function makeSalesOrderScenario(int $quantity = 10, int $stockQty = 100): array
 {
     $user = User::factory()->create();
+    $user->assignRole('super-admin');
 
     $warehouse = Warehouse::create([
         'name' => 'WH ' . uniqid(),

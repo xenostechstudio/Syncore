@@ -45,7 +45,29 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Seed module permissions + roles before every Feature test. RefreshDatabase
+ * wipes between tests, so re-seeding each time is required for any test
+ * that exercises a Livewire action protected by WithPermissions::authorizePermission().
+ *
+ * Adds ~10ms per test; the tradeoff is that authorizePermission() works
+ * uniformly without each test having to remember to seed.
+ */
+uses()
+    ->beforeEach(function () {
+        $this->seed(\Database\Seeders\ModulePermissionSeeder::class);
+    })
+    ->in('Feature');
+
+/**
+ * Create a super-admin user and act as them. Use in tests that exercise
+ * privileged actions but don't care about per-permission gating.
+ */
+function actAsAdmin(): \App\Models\User
 {
-    // ..
+    $user = \App\Models\User::factory()->create();
+    $user->assignRole('super-admin');
+    test()->actingAs($user);
+
+    return $user;
 }

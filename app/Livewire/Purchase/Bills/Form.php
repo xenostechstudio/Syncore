@@ -4,6 +4,7 @@ namespace App\Livewire\Purchase\Bills;
 
 use App\Enums\VendorBillState;
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Product;
 use App\Models\Purchase\PurchaseRfq;
 use App\Models\Purchase\Supplier;
@@ -19,7 +20,7 @@ use Livewire\Component;
 #[Title('Vendor Bill')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $billId = null;
     public ?int $supplier_id = null;
@@ -218,6 +219,8 @@ class Form extends Component
 
     public function confirm(): void
     {
+        $this->authorizePermission('purchase.confirm');
+
         $this->status = VendorBillState::PENDING->value;
         $this->save();
     }
@@ -283,6 +286,8 @@ class Form extends Component
 
     public function cancel(): void
     {
+        $this->authorizePermission('purchase.edit');
+
         if ($this->billId) {
             $bill = VendorBill::findOrFail($this->billId);
             $bill->update(['status' => VendorBillState::CANCELLED->value]);

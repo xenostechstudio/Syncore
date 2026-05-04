@@ -5,6 +5,7 @@ namespace App\Livewire\Sales\Configuration\Taxes;
 use App\Exports\TaxesExport;
 use App\Imports\TaxesImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Sales\Tax;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Taxes')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
@@ -52,6 +53,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if (empty($this->selected)) {
             return;
         }

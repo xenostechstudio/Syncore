@@ -14,7 +14,7 @@ beforeEach(function () {
         App\Events\LeaveRequestRejected::class,
     ]);
     $this->seed(ModulePermissionSeeder::class);
-    $user = User::factory()->create();
+    $user = User::factory()->create()->assignRole('super-admin');
     $user->assignRole('super-admin');
     $this->actingAs($user);
 });

@@ -3,6 +3,7 @@
 namespace App\Livewire\HR\Attendance\Schedules;
 
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\HR\WorkSchedule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,7 +13,7 @@ use Livewire\Component;
 #[Title('Work Schedules')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     public function mount(): void
     {
@@ -62,6 +63,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('hr.delete');
+
         if (empty($this->selected)) {
             return;
         }

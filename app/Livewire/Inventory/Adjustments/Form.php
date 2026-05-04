@@ -3,6 +3,7 @@
 namespace App\Livewire\Inventory\Adjustments;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\InventoryAdjustmentItem;
 use App\Models\Inventory\InventoryStock;
@@ -18,7 +19,7 @@ use Livewire\Component;
 #[Title('Stock Adjustment')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
     public ?int $adjustmentId = null;
     public ?InventoryAdjustment $adjustment = null;
     public bool $editing = false;
@@ -196,6 +197,8 @@ class Form extends Component
 
     public function validateAndPost(): void
     {
+        $this->authorizePermission('inventory.adjust');
+
         try {
             $adjustment = $this->persist();
             $adjustment->post();

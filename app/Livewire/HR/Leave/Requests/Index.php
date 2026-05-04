@@ -114,6 +114,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('leave.delete');
+
         if (empty($this->selected)) {
             return;
         }

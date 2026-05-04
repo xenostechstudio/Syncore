@@ -6,11 +6,14 @@ use App\Models\Settings\EmailConfiguration;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use App\Livewire\Concerns\WithPermissions;
 
 #[Layout('components.layouts.settings')]
 #[Title('Email Configuration')]
 class Index extends Component
 {
+    use WithPermissions;
+
     public string $mailer = 'smtp';
     public string $host = '';
     public ?int $port = 587;
@@ -111,6 +114,8 @@ class Index extends Component
 
     public function sendTestEmail()
     {
+        $this->authorizePermission('settings.edit');
+
         $this->validate([
             'testEmail' => 'required|email',
         ]);

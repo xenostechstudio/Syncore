@@ -195,6 +195,8 @@ class Form extends Component
 
     public function cancel(): void
     {
+        $this->authorizePermission('payroll.process');
+
         if (!$this->period || in_array($this->period->status, ['paid', 'cancelled'])) return;
 
         $this->period->update(['status' => 'cancelled']);

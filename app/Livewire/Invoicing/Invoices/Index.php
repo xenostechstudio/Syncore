@@ -5,6 +5,7 @@ namespace App\Livewire\Invoicing\Invoices;
 use App\Exports\InvoicesExport;
 use App\Imports\InvoicesImport;
 use App\Livewire\Concerns\WithImport;
+use App\Livewire\Concerns\WithPermissions;
 use App\Livewire\Concerns\WithIndexComponent;
 use App\Models\Invoicing\Invoice;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Invoices')]
 class Index extends Component
 {
-    use WithIndexComponent, WithImport;
+    use WithIndexComponent, WithImport, WithPermissions;
 
     #[Url]
     public bool $myInvoice = true;
@@ -96,6 +97,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('invoicing.delete');
+
         if (empty($this->selected)) {
             return;
         }

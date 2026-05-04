@@ -4,6 +4,7 @@ namespace App\Livewire\Inventory\Adjustments;
 
 use App\Exports\AdjustmentsExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\Warehouse;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Stock Adjustment')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public string $warehouse = '';
@@ -139,6 +140,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('inventory.delete');
+
         if (empty($this->selected)) {
             return;
         }

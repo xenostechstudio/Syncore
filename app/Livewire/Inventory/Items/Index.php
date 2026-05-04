@@ -4,6 +4,7 @@ namespace App\Livewire\Inventory\Items;
 
 use App\Exports\ProductsExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Products')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public int $perPage = 15;
@@ -109,6 +110,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('inventory.delete');
+
         if (empty($this->selected)) {
             return;
         }
@@ -137,6 +140,8 @@ class Index extends Component
 
     public function bulkActivate(): void
     {
+        $this->authorizePermission('inventory.edit');
+
         if (empty($this->selected)) {
             return;
         }
@@ -148,6 +153,8 @@ class Index extends Component
 
     public function bulkDeactivate(): void
     {
+        $this->authorizePermission('inventory.edit');
+
         if (empty($this->selected)) {
             return;
         }

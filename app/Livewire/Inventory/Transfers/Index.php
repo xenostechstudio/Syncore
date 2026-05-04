@@ -4,6 +4,7 @@ namespace App\Livewire\Inventory\Transfers;
 
 use App\Exports\TransfersExport;
 use App\Livewire\Concerns\WithIndexComponent;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\InventoryTransfer;
 use App\Models\Inventory\Warehouse;
 use Livewire\Attributes\Layout;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Title('Internal Transfer')]
 class Index extends Component
 {
-    use WithIndexComponent;
+    use WithIndexComponent, WithPermissions;
 
     #[Url]
     public string $sourceWarehouse = '';
@@ -116,6 +117,8 @@ class Index extends Component
 
     public function bulkDelete(): void
     {
+        $this->authorizePermission('inventory.delete');
+
         if (empty($this->selected)) {
             return;
         }

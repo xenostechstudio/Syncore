@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Services\PurchaseReceiptService;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create()->assignRole('super-admin');
     $this->actingAs($this->user);
 
     $this->warehouse = Warehouse::factory()->create();

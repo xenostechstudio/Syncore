@@ -3,7 +3,7 @@
 use App\Models\User;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create()->assignRole('super-admin');
 });
 
 test('unauthenticated user cannot access dashboard API', function () {

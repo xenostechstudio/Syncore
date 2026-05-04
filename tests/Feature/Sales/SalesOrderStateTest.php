@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Services\SalesOrderService;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create()->assignRole('super-admin');
     $this->customer = Customer::factory()->create();
     $this->actingAs($this->user);
 });

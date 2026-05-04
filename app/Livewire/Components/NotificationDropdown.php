@@ -31,6 +31,7 @@ class NotificationDropdown extends Component
 
     public function markAsRead(int $notificationId): void
     {
+        // authz: scoped to auth()->id() — user only mutates own notifications
         if (!$this->tableExists()) {
             return;
         }
@@ -45,6 +46,7 @@ class NotificationDropdown extends Component
 
     public function markAllAsRead(): void
     {
+        // authz: scoped to auth()->id() — user only mutates own notifications
         if (!$this->tableExists()) {
             return;
         }
