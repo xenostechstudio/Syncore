@@ -4,14 +4,10 @@
 ])
 
 @php
-    // Handle both Spatie Activity Log (causer) and custom ActivityLogService (user_id/user_name)
-    $causer = $activity->causer ?? null;
-    if (!$causer && isset($activity->user_id)) {
-        $causer = (object) [
-            'id' => $activity->user_id,
-            'name' => $activity->user_name ?? 'System',
-        ];
-    }
+    // ActivityLogService rows expose user_id/user_name directly (no relation).
+    $causer = isset($activity->user_id)
+        ? (object) ['id' => $activity->user_id, 'name' => $activity->user_name ?? 'System']
+        : null;
     
     // Parse created_at if it's a string
     $activityCreatedAt = $activity->created_at ?? null;

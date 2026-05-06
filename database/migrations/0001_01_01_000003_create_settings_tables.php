@@ -158,20 +158,6 @@ return new class extends Migration
             $table->primary(['permission_id', 'role_id'], 'role_has_permissions_permission_id_role_id_primary');
         });
 
-        // Activity Log (Spatie)
-        Schema::create('activity_log', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('log_name')->nullable();
-            $table->text('description');
-            $table->nullableMorphs('subject', 'subject');
-            $table->string('event')->nullable();
-            $table->nullableMorphs('causer', 'causer');
-            $table->json('properties')->nullable();
-            $table->uuid('batch_uuid')->nullable();
-            $table->timestamps();
-            $table->index('log_name');
-        });
-
         // Notes (Polymorphic)
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
@@ -244,7 +230,6 @@ return new class extends Migration
         Schema::dropIfExists('system_notifications');
         Schema::dropIfExists('attachments');
         Schema::dropIfExists('notes');
-        Schema::dropIfExists('activity_log');
         Schema::dropIfExists('role_has_permissions');
         Schema::dropIfExists('model_has_roles');
         Schema::dropIfExists('model_has_permissions');
