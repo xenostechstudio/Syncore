@@ -66,7 +66,7 @@
                 <div class="flex items-center gap-2">
                     <x-ui.related-resource
                         resource="sales_order"
-                        :href="route('sales.orders.edit', $invoice->salesOrder->id)"
+                        :id="$invoice->salesOrder->id"
                         :label="$invoice->salesOrder->order_number"
                     >
                         <x-ui.status-badge :status="$invoice->salesOrder->status" type="order" />

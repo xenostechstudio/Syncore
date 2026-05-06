@@ -33,7 +33,7 @@
                         @foreach($invoices as $invoice)
                             <x-ui.related-resource
                                 resource="invoice"
-                                :href="route('invoicing.invoices.edit', $invoice->id)"
+                                :id="$invoice->id"
                                 :label="$invoice->invoice_number"
                             >
                                 <x-ui.status-badge :status="$invoice->state" />
@@ -48,7 +48,7 @@
                         @foreach($deliveries as $delivery)
                             <x-ui.related-resource
                                 resource="delivery_order"
-                                :href="route('delivery.orders.edit', $delivery->id)"
+                                :id="$delivery->id"
                                 :label="$delivery->delivery_number"
                             >
                                 <x-ui.status-badge :status="$delivery->state" />

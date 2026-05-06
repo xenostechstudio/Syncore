@@ -1,5 +1,6 @@
 @props([
     'resource' => null,
+    'id' => null,
     'href' => null,
     'icon' => null,
     'label' => '',
@@ -35,6 +36,20 @@
 
     $iconName = $icon ?? $resourceEnum?->icon() ?? 'document';
     $toneName = $tone ?? $resourceEnum?->tone() ?? 'zinc';
+
+    // If `:id` is passed without an explicit `:href`, derive the route from
+    // the enum. Saves callers from hand-rolling route() in five places per
+    // page; one source of truth in ResourceType::route().
+    if ($href === null && $id !== null && $resourceEnum !== null) {
+        $href = $resourceEnum->route($id);
+    }
+
+    // Same idea for label: if no label was passed, fall back to the enum's
+    // human name ("Sales Order"). Most callers pass a record number, so
+    // this only fires for chips that are pure type references.
+    if ($label === '' && $resourceEnum !== null) {
+        $label = $resourceEnum->label();
+    }
 
     // Tailwind JIT only ships classes whose names appear as literal
     // strings somewhere in the source — interpolated `bg-{$tone}-50`

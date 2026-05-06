@@ -67,7 +67,7 @@
 
                 <x-ui.related-resource
                     resource="forecast"
-                    :href="$editing && $product ? route('inventory.products.edit', $product->id) . '?forecast=1' : null"
+                    :id="$editing && $product ? $product->id : null"
                     label="Forecast"
                 >
                     <span class="rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-200 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-300">In {{ (int) ($forecast_in ?? 0) }}</span>

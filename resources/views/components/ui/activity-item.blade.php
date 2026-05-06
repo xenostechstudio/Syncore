@@ -150,9 +150,9 @@
             @if($event === 'created')
                 {{ $emptyMessage }}
             @elseif($isInvoiceCreated)
-                Invoice created
+                {{ \App\Enums\ResourceType::Invoice->label() }} created
             @elseif($isDeliveryCreated)
-                Delivery Order created
+                {{ \App\Enums\ResourceType::DeliveryOrder->label() }} created
             @elseif($properties->has('old') && $properties->has('new') && $event === 'updated')
                 @php
                     $old = $properties->get('old', []);
@@ -196,7 +196,7 @@
         @if($isInvoiceCreated && $properties->has('invoice_number'))
             <x-ui.related-resource
                 resource="invoice"
-                :href="route('invoicing.invoices.edit', $properties->get('invoice_id'))"
+                :id="$properties->get('invoice_id')"
                 :label="$properties->get('invoice_number')"
                 class="mt-2"
             >
@@ -207,7 +207,7 @@
         @elseif($isDeliveryCreated && $properties->has('delivery_number'))
             <x-ui.related-resource
                 resource="delivery_order"
-                :href="route('delivery.orders.edit', $properties->get('delivery_order_id'))"
+                :id="$properties->get('delivery_order_id')"
                 :label="$properties->get('delivery_number')"
                 class="mt-2"
             />
