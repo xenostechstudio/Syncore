@@ -39,11 +39,21 @@ class Index extends Component
             ->whereYear('created_at', now()->subMonth()->year)
             ->sum('total');
         
-        // Quotations & Sales Orders
-        $quotations = SalesOrder::whereIn('status', ['draft', 'confirmed', 'quotation'])->count();
-        $salesOrders = SalesOrder::where('status', 'sales_order')->count();
-        
-        // To Invoice & To Deliver
+        // SalesOrder status distribution — single grouped scan, was 4
+        // separate WHERE...COUNT queries.
+        $ordersByStatus = SalesOrder::query()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+        $quotations = (int) (($ordersByStatus['draft'] ?? 0)
+            + ($ordersByStatus['confirmed'] ?? 0)
+            + ($ordersByStatus['quotation'] ?? 0));
+        $salesOrders = (int) ($ordersByStatus['sales_order'] ?? 0);
+        $cancelledOrders = (int) ($ordersByStatus['cancelled'] ?? 0);
+        $completedOrders = (int) ($ordersByStatus['delivered'] ?? 0);
+
+        // To Invoice & To Deliver — these need item-level filters, so
+        // they stay as separate queries.
         $toInvoice = SalesOrder::where('status', 'sales_order')
             ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_invoiced'))
             ->count();
@@ -51,17 +61,21 @@ class Index extends Component
             ->whereHas('items', fn($q) => $q->whereRaw('quantity > quantity_delivered'))
             ->count();
 
-        // Additional stats
-        $cancelledOrders = SalesOrder::where('status', 'cancelled')->count();
-        $completedOrders = SalesOrder::where('status', 'delivered')->count();
-
-        // Invoice stats
-        $overdueInvoices = Invoice::where('status', 'overdue')->count();
-        $awaitingPayment = Invoice::whereIn('status', ['sent', 'partial'])->sum('total');
-        $paidInvoices = Invoice::where('status', 'paid')->count();
-        $draftInvoices = Invoice::where('status', 'draft')->count();
-        $sentInvoices = Invoice::where('status', 'sent')->count();
-        $partialInvoices = Invoice::where('status', 'partial')->count();
+        // Invoice status distribution — single grouped scan with both
+        // count and sum(total) so awaitingPayment piggybacks. Was 5
+        // separate WHERE...COUNT queries plus a separate sum.
+        $invoicesByStatus = Invoice::query()
+            ->selectRaw('status, COUNT(*) as count, SUM(total) as total_sum')
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+        $overdueInvoices = (int) ($invoicesByStatus->get('overdue')?->count ?? 0);
+        $paidInvoices = (int) ($invoicesByStatus->get('paid')?->count ?? 0);
+        $draftInvoices = (int) ($invoicesByStatus->get('draft')?->count ?? 0);
+        $sentInvoices = (int) ($invoicesByStatus->get('sent')?->count ?? 0);
+        $partialInvoices = (int) ($invoicesByStatus->get('partial')?->count ?? 0);
+        $awaitingPayment = (float) (($invoicesByStatus->get('sent')?->total_sum ?? 0)
+            + ($invoicesByStatus->get('partial')?->total_sum ?? 0));
 
         // Average order value
         $avgOrderValue = $totalOrders > 0 ? $totalRevenue / max($completedOrders, 1) : 0;

@@ -116,11 +116,17 @@ class Index extends Component
 
     public function getStatisticsProperty(): array
     {
+        // Single grouped scan instead of four separate WHERE...COUNT queries.
+        $byStatus = Employee::query()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
         return [
-            'total' => Employee::count(),
-            'active' => Employee::where('status', 'active')->count(),
-            'on_leave' => Employee::where('status', 'on_leave')->count(),
-            'inactive' => Employee::where('status', 'inactive')->count(),
+            'total'    => (int) $byStatus->sum(),
+            'active'   => (int) ($byStatus['active'] ?? 0),
+            'on_leave' => (int) ($byStatus['on_leave'] ?? 0),
+            'inactive' => (int) ($byStatus['inactive'] ?? 0),
         ];
     }
 

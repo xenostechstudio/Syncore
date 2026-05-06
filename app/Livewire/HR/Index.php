@@ -18,11 +18,21 @@ class Index extends Component
 {
     public function render()
     {
-        // Employee Stats
-        $totalEmployees = Employee::where('status', 'active')->count();
+        // Employee status distribution — single grouped scan, was 4 separate
+        // WHERE...COUNT queries (and totalEmployees was a duplicate of
+        // activeEmployees).
+        $employeesByStatus = Employee::query()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+        $activeEmployees = (int) ($employeesByStatus['active'] ?? 0);
+        $inactiveEmployees = (int) ($employeesByStatus['inactive'] ?? 0);
+        $onLeaveEmployees = (int) ($employeesByStatus['on_leave'] ?? 0);
+        $totalEmployees = $activeEmployees;
+
         $totalDepartments = Department::where('is_active', true)->count();
         $totalPositions = Position::where('is_active', true)->count();
-        
+
         // New employees this month
         $newEmployeesThisMonth = Employee::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
@@ -31,15 +41,15 @@ class Index extends Component
             ->whereYear('created_at', now()->subMonth()->year)
             ->count();
 
-        // Employee by status
-        $activeEmployees = Employee::where('status', 'active')->count();
-        $inactiveEmployees = Employee::where('status', 'inactive')->count();
-        $onLeaveEmployees = Employee::where('status', 'on_leave')->count();
-
-        // Leave Request Stats
-        $pendingLeaveRequests = LeaveRequest::where('status', 'pending')->count();
-        $approvedLeaveRequests = LeaveRequest::where('status', 'approved')->count();
-        $rejectedLeaveRequests = LeaveRequest::where('status', 'rejected')->count();
+        // Leave Request status distribution — single grouped scan, was 3
+        // separate WHERE...COUNT queries.
+        $leaveByStatus = LeaveRequest::query()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+        $pendingLeaveRequests = (int) ($leaveByStatus['pending'] ?? 0);
+        $approvedLeaveRequests = (int) ($leaveByStatus['approved'] ?? 0);
+        $rejectedLeaveRequests = (int) ($leaveByStatus['rejected'] ?? 0);
         $leaveRequestsThisMonth = LeaveRequest::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->count();
