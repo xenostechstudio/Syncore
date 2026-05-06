@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\SalesOrderState;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Delivery\DeliveryOrderItem;
 use App\Models\Inventory\Warehouse;
@@ -20,21 +21,28 @@ class DeliverySeeder extends Seeder
             return;
         }
 
-        // Create delivery orders for delivered/processing sales orders
-        $salesOrders = SalesOrder::whereIn('status', ['delivered', 'processing'])
+        // Walk the seeded confirmed sales orders and give ~60% a delivery
+        // order with a varied status so the Delivery dashboard isn't empty.
+        $salesOrders = SalesOrder::where('status', SalesOrderState::SALES_ORDER->value)
             ->with('items', 'customer')
+            ->orderBy('id')
             ->get();
 
         $couriers = ['JNE', 'J&T Express', 'SiCepat', 'AnterAja', 'Ninja Express'];
+        // Status distribution. Order matters — we cycle through this as
+        // we walk the orders, skipping every ~3rd to leave some undelivered.
+        $statusCycle = ['delivered', 'in_transit', 'delivered', 'picked', 'pending', 'delivered'];
+        $cycleIdx = 0;
 
         foreach ($salesOrders as $index => $salesOrder) {
-            $deliveryDate = $salesOrder->order_date->copy()->addDays(rand(1, 3));
+            if ($index % 3 === 2) {
+                continue;
+            }
 
-            $status = match($salesOrder->status) {
-                'delivered' => 'delivered',
-                'processing' => rand(0, 1) ? 'picked' : 'pending',
-                default => 'pending',
-            };
+            $status = $statusCycle[$cycleIdx % count($statusCycle)];
+            $cycleIdx++;
+
+            $deliveryDate = $salesOrder->order_date->copy()->addDays(rand(1, 3));
 
             // Generate delivery number explicitly for seeding
             $deliveryNumber = 'DO' . str_pad($index + 1, 5, '0', STR_PAD_LEFT);
@@ -60,7 +68,8 @@ class DeliverySeeder extends Seeder
                 DeliveryOrderItem::create([
                     'delivery_order_id' => $delivery->id,
                     'sales_order_item_id' => $item->id,
-                    'quantity_to_deliver' => $item->quantity,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
                     'quantity_delivered' => $status === 'delivered' ? $item->quantity : 0,
                 ]);
             }
