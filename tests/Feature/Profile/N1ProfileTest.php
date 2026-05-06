@@ -26,28 +26,29 @@ beforeEach(function () {
 });
 
 dataset('budgets', [
-    // [component class, max queries per render]
-    'Sales/Orders'        => [\App\Livewire\Sales\Orders\Index::class,           8],
-    'Invoicing/Invoices'  => [\App\Livewire\Invoicing\Invoices\Index::class,    10],
-    'Delivery/Orders'     => [\App\Livewire\Delivery\Orders\Index::class,       10],
-    'Sales/Customers'     => [\App\Livewire\Sales\Customers\Index::class,        6],
-    'Sales/Products'      => [\App\Livewire\Sales\Products\Index::class,         6],
-    'Inventory/Items'     => [\App\Livewire\Inventory\Items\Index::class,       12],
-    'CRM/Activities'      => [\App\Livewire\CRM\Activities\Index::class,        15],
-    'CRM/Opportunities'   => [\App\Livewire\CRM\Opportunities\Index::class,     10],
-    'CRM/Leads'           => [\App\Livewire\CRM\Leads\Index::class,              8],
-    'HR/Employees'        => [\App\Livewire\HR\Employees\Index::class,          14],
-    'Purchase/Orders'     => [\App\Livewire\Purchase\Orders\Index::class,        6],
-    'Purchase/Bills'      => [\App\Livewire\Purchase\Bills\Index::class,         5],
-    'Purchase/Suppliers'  => [\App\Livewire\Purchase\Suppliers\Index::class,     6],
-    'Settings/Users'      => [\App\Livewire\Settings\Users\Index::class,         6],
+    // [component class, max queries per render]. Budgets are current
+    // measured count + ~3 for breathing room.
+    'Sales/Orders'        => [\App\Livewire\Sales\Orders\Index::class,           7],
+    'Invoicing/Invoices'  => [\App\Livewire\Invoicing\Invoices\Index::class,     8],
+    'Delivery/Orders'     => [\App\Livewire\Delivery\Orders\Index::class,        8],
+    'Sales/Customers'     => [\App\Livewire\Sales\Customers\Index::class,        5],
+    'Sales/Products'      => [\App\Livewire\Sales\Products\Index::class,         5],
+    'Inventory/Items'     => [\App\Livewire\Inventory\Items\Index::class,        9],
+    'CRM/Activities'      => [\App\Livewire\CRM\Activities\Index::class,        12],
+    'CRM/Opportunities'   => [\App\Livewire\CRM\Opportunities\Index::class,      7],
+    'CRM/Leads'           => [\App\Livewire\CRM\Leads\Index::class,              6],
+    'HR/Employees'        => [\App\Livewire\HR\Employees\Index::class,          11],
+    'Purchase/Orders'     => [\App\Livewire\Purchase\Orders\Index::class,        5],
+    'Purchase/Bills'      => [\App\Livewire\Purchase\Bills\Index::class,         4],
+    'Purchase/Suppliers'  => [\App\Livewire\Purchase\Suppliers\Index::class,     5],
+    'Settings/Users'      => [\App\Livewire\Settings\Users\Index::class,         5],
 
-    // Module dashboards aggregate many independent stats — looser budgets.
-    'Dashboard/Sales'     => [\App\Livewire\Sales\Index::class,                 25],
-    'Dashboard/HR'        => [\App\Livewire\HR\Index::class,                    35],
-    'Dashboard/CRM'       => [\App\Livewire\CRM\Index::class,                   20],
-    'Dashboard/Inventory' => [\App\Livewire\Inventory\Index::class,             18],
-    'Dashboard/Accounting'=> [\App\Livewire\Accounting\Index::class,            18],
+    // Module dashboards aggregate many independent stats.
+    'Dashboard/Sales'     => [\App\Livewire\Sales\Index::class,                 19],
+    'Dashboard/HR'        => [\App\Livewire\HR\Index::class,                    27],
+    'Dashboard/CRM'       => [\App\Livewire\CRM\Index::class,                   13],
+    'Dashboard/Inventory' => [\App\Livewire\Inventory\Index::class,              8],
+    'Dashboard/Accounting'=> [\App\Livewire\Accounting\Index::class,             8],
 ]);
 
 it('renders within its query budget', function (string $component, int $budget) {

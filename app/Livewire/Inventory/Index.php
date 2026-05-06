@@ -23,18 +23,27 @@ class Index extends Component
 
     public function render()
     {
-        // Stats (always show total, not filtered)
-        $totalProducts = Product::count();
+        // Single scan over products: count + status buckets + value/unit
+        // sums. Was 6 separate queries; the low/out-of-stock buckets keep
+        // their original OR-on-quantity semantics via CASE WHEN.
+        $stats = Product::query()
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'in_stock' THEN 1 ELSE 0 END) as in_stock,
+                SUM(CASE WHEN status = 'low_stock' OR quantity < 10 THEN 1 ELSE 0 END) as low_stock,
+                SUM(CASE WHEN status = 'out_of_stock' OR quantity = 0 THEN 1 ELSE 0 END) as out_of_stock,
+                SUM(quantity * cost_price) as total_value,
+                SUM(quantity) as total_units
+            ")
+            ->first();
+        $totalProducts = (int) ($stats->total ?? 0);
+        $inStockProducts = (int) ($stats->in_stock ?? 0);
+        $lowStockProducts = (int) ($stats->low_stock ?? 0);
+        $outOfStockProducts = (int) ($stats->out_of_stock ?? 0);
+        $totalValue = (float) ($stats->total_value ?? 0);
+        $totalUnits = (int) ($stats->total_units ?? 0);
+
         $totalWarehouses = Warehouse::count();
-        $inStockProducts = Product::where('status', 'in_stock')->count();
-        $lowStockProducts = Product::where('status', 'low_stock')
-            ->orWhere('quantity', '<', 10)
-            ->count();
-        $outOfStockProducts = Product::where('status', 'out_of_stock')
-            ->orWhere('quantity', '=', 0)
-            ->count();
-        $totalValue = Product::sum(DB::raw('quantity * cost_price'));
-        $totalUnits = Product::sum('quantity');
         
         // Last 30 days
         $productsAddedLast30Days = Product::where('created_at', '>=', now()->subDays(30))->count();

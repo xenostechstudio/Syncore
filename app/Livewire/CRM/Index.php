@@ -16,9 +16,15 @@ class Index extends Component
 {
     public function render()
     {
-        $totalLeads = Lead::count();
-        $newLeads = Lead::where('status', 'new')->count();
-        $qualifiedLeads = Lead::where('status', 'qualified')->count();
+        // Lead status distribution — single grouped scan, was 3 separate
+        // queries.
+        $leadsByStatus = Lead::query()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+        $totalLeads = (int) $leadsByStatus->sum();
+        $newLeads = (int) ($leadsByStatus['new'] ?? 0);
+        $qualifiedLeads = (int) ($leadsByStatus['qualified'] ?? 0);
 
         $totalOpportunities = Opportunity::count();
         $openOpportunities = Opportunity::whereNull('won_at')->whereNull('lost_at')->count();

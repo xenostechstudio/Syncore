@@ -40,13 +40,22 @@ class Index extends Component
 
     protected function getStatistics(): array
     {
+        // Single grouped scan with both COUNT and SUM(total_net) so the
+        // paid-amount stat piggybacks. Was 5 separate WHERE...COUNT queries
+        // plus a separate sum.
+        $byStatus = PayrollPeriod::query()
+            ->selectRaw('status, COUNT(*) as count, SUM(total_net) as total_sum')
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+
         return [
-            'total' => PayrollPeriod::count(),
-            'draft' => PayrollPeriod::where('status', 'draft')->count(),
-            'processing' => PayrollPeriod::where('status', 'processing')->count(),
-            'approved' => PayrollPeriod::where('status', 'approved')->count(),
-            'paid' => PayrollPeriod::where('status', 'paid')->count(),
-            'total_amount' => PayrollPeriod::where('status', 'paid')->sum('total_net'),
+            'total'        => (int) $byStatus->sum('count'),
+            'draft'        => (int) ($byStatus->get('draft')?->count ?? 0),
+            'processing'   => (int) ($byStatus->get('processing')?->count ?? 0),
+            'approved'     => (int) ($byStatus->get('approved')?->count ?? 0),
+            'paid'         => (int) ($byStatus->get('paid')?->count ?? 0),
+            'total_amount' => (float) ($byStatus->get('paid')?->total_sum ?? 0),
         ];
     }
 

@@ -15,11 +15,17 @@ class Index extends Component
 {
     public function render()
     {
-        $totalAssets = Account::where('type', 'asset')->sum('balance');
-        $totalLiabilities = Account::where('type', 'liability')->sum('balance');
-        $totalEquity = Account::where('type', 'equity')->sum('balance');
-        $totalRevenue = Account::where('type', 'revenue')->sum('balance');
-        $totalExpenses = Account::where('type', 'expense')->sum('balance');
+        // Account balances by type — single grouped scan, was 5 separate
+        // SUM queries.
+        $balancesByType = Account::query()
+            ->selectRaw('type, SUM(balance) as total')
+            ->groupBy('type')
+            ->pluck('total', 'type');
+        $totalAssets = (float) ($balancesByType['asset'] ?? 0);
+        $totalLiabilities = (float) ($balancesByType['liability'] ?? 0);
+        $totalEquity = (float) ($balancesByType['equity'] ?? 0);
+        $totalRevenue = (float) ($balancesByType['revenue'] ?? 0);
+        $totalExpenses = (float) ($balancesByType['expense'] ?? 0);
 
         $recentEntries = JournalEntry::with('createdBy')
             ->orderByDesc('entry_date')
