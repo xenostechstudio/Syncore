@@ -214,7 +214,7 @@
                                 @endif
                                 @if($visibleColumns['status'])
                                     <td class="px-4 py-4">
-                                        <x-ui.status-badge :status="$rfq->status" type="purchase_order" class="px-2.5 py-0.5" />
+                                        <x-ui.status-badge :status="\App\Enums\PurchaseOrderState::tryFrom($rfq->status)" class="px-2.5 py-0.5" />
                                     </td>
                                 @endif
                                 <td class="py-4 pr-4 sm:pr-6 lg:pr-8"></td>

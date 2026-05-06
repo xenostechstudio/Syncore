@@ -93,7 +93,7 @@
                             :label="$soNumber"
                         >
                             @if(!empty($soStatus))
-                                <x-ui.status-badge :status="$soStatus" type="order" />
+                                <x-ui.status-badge :status="\App\Enums\SalesOrderState::tryFrom($soStatus)" />
                             @endif
                         </x-ui.related-resource>
                     @endif

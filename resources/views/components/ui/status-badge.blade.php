@@ -1,70 +1,24 @@
 @props([
     'status',
-    'type' => 'default', // kept for backward compat: invoice | delivery | order
 ])
 
 @php
     use App\Enums\Contracts\HasDisplayMetadata;
 
-    // If $status implements HasDisplayMetadata, consume the interface directly.
+    // Preferred path: pass an enum that implements HasDisplayMetadata
+    // (every state enum in app/Enums does). Strings still work for the
+    // common 'active'/'inactive' booleans used by config-style models.
     if ($status instanceof HasDisplayMetadata) {
         $label = $status->label();
         $color = $status->color();
     } else {
-        // Fall back to the legacy string-keyed table. Coerce to string so a null
-        // status doesn't trigger the "null as array offset" deprecation.
         $status = (string) $status;
-        $commonStatuses = [
-            'active' => ['color' => 'emerald', 'label' => 'Active'],
-            'inactive' => ['color' => 'zinc', 'label' => 'Inactive'],
+        $common = [
+            'active'   => ['color' => 'emerald', 'label' => 'Active'],
+            'inactive' => ['color' => 'zinc',    'label' => 'Inactive'],
         ];
-
-        if (isset($commonStatuses[$status])) {
-            $label = $commonStatuses[$status]['label'];
-            $color = $commonStatuses[$status]['color'];
-        } else {
-            $legacy = match ($type) {
-                'invoice' => match ($status) {
-                    'draft' => ['color' => 'zinc', 'label' => 'Draft'],
-                    'sent' => ['color' => 'blue', 'label' => 'Sent'],
-                    'partial' => ['color' => 'amber', 'label' => 'Partial'],
-                    'paid' => ['color' => 'emerald', 'label' => 'Paid'],
-                    'overdue' => ['color' => 'red', 'label' => 'Overdue'],
-                    'cancelled' => ['color' => 'red', 'label' => 'Cancelled'],
-                    default => null,
-                },
-                'delivery' => match ($status) {
-                    'pending' => ['color' => 'zinc', 'label' => 'Pending'],
-                    'picked' => ['color' => 'blue', 'label' => 'Picked'],
-                    'in_transit' => ['color' => 'violet', 'label' => 'In Transit'],
-                    'delivered' => ['color' => 'emerald', 'label' => 'Delivered'],
-                    'failed' => ['color' => 'red', 'label' => 'Failed'],
-                    'returned' => ['color' => 'amber', 'label' => 'Returned'],
-                    'cancelled' => ['color' => 'red', 'label' => 'Cancelled'],
-                    default => null,
-                },
-                'order' => match ($status) {
-                    'draft', 'quotation' => ['color' => 'zinc', 'label' => 'Quotation'],
-                    'confirmed' => ['color' => 'blue', 'label' => 'Confirmed'],
-                    'sales_order' => ['color' => 'emerald', 'label' => 'Sales Order'],
-                    'cancelled' => ['color' => 'red', 'label' => 'Cancelled'],
-                    default => null,
-                },
-                'purchase_order' => match ($status) {
-                    'draft', 'rfq' => ['color' => 'blue', 'label' => 'RFQ'],
-                    'sent' => ['color' => 'violet', 'label' => 'Sent'],
-                    'purchase_order' => ['color' => 'emerald', 'label' => 'Purchase Order'],
-                    'done' => ['color' => 'blue', 'label' => 'Done'],
-                    'received' => ['color' => 'blue', 'label' => 'Received'],
-                    'cancelled' => ['color' => 'zinc', 'label' => 'Cancelled'],
-                    default => null,
-                },
-                default => null,
-            };
-
-            $label = $legacy['label'] ?? ucfirst(str_replace('_', ' ', (string) $status));
-            $color = $legacy['color'] ?? 'zinc';
-        }
+        $label = $common[$status]['label'] ?? ucfirst(str_replace('_', ' ', $status));
+        $color = $common[$status]['color'] ?? 'zinc';
     }
 
     // Map Tailwind color names to bg/text classes. Tailwind JIT needs literal
