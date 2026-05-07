@@ -167,8 +167,11 @@ class NotificationService
         if ($userId) {
             $userIds = [$userId];
         } else {
-            // Notify all users with relevant permissions (admins/managers)
-            $userIds = User::permission(['view-all', 'manage-all'])
+            // Fan out to admins/managers when no specific recipient. The
+            // earlier `view-all`/`manage-all` permissions never existed in
+            // ModulePermissionSeeder, so this branch silently produced
+            // zero notifications. Use the role names that actually exist.
+            $userIds = User::role(['super-admin', 'admin'])
                 ->pluck('id')
                 ->toArray();
         }

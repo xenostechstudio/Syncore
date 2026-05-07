@@ -4,12 +4,15 @@ namespace App\Models\Purchase;
 
 use App\Models\User;
 use App\Traits\LogsActivity;
+use Database\Factories\Purchase\VendorBillPaymentFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class VendorBillPayment extends Model
 {
-    use LogsActivity;
+    /** @use HasFactory<VendorBillPaymentFactory> */
+    use HasFactory, LogsActivity;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
 

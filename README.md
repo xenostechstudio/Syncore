@@ -100,6 +100,28 @@ Notable ones:
 - All tests use `RefreshDatabase` against in-memory SQLite. Postgres can still reject values that pass tests (CHECK constraints on enum columns aren't enforced by SQLite) — write driver-aware migrations.
 - A few features (Postgres-only `whereRaw('LOWER(...)')` and `ILIKE` in Audit Trail filters) won't behave identically on SQLite — keep that in mind when reading those tests.
 
+## Notifications + queue
+
+The notification system writes to `system_notifications` (in-app inbox via
+`NotificationDropdown`) and may dispatch mail. Most listeners implement
+`ShouldQueue`, so in production the work runs via a queue worker rather
+than blocking the user-facing request.
+
+Already configured: `QUEUE_CONNECTION=database`. Production needs a
+worker process (e.g. `supervisord`) running:
+
+```
+php artisan queue:work --tries=3 --timeout=60
+```
+
+For local dev, `composer dev` already runs `queue:listen` alongside the
+server. Mail goes to `storage/logs/laravel.log` by default
+(`MAIL_MAILER=log`); set the real provider's env vars to actually send.
+
+`tests/Feature/Notifications/PipelineTest.php` is the smoke for the
+event → listener → DB-row pipeline; if a future change breaks the
+wiring, this fails before users notice silent dropouts.
+
 ## Composer platform pin
 
 `composer.json` sets `config.platform.php = "8.4.99"` so the resolver
