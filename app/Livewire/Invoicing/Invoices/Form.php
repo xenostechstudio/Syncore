@@ -228,7 +228,7 @@ class Form extends Component
             return;
         }
 
-        Payment::create([
+        $payment = Payment::create([
             'invoice_id' => $this->invoiceId,
             'amount' => $this->paymentAmount,
             'payment_date' => $this->paymentDate,
@@ -242,6 +242,7 @@ class Form extends Component
         if ($newPaidAmount >= $invoice->total) {
             $invoice->update(['status' => 'paid', 'paid_amount' => $newPaidAmount]);
             $this->status = 'paid';
+            event(new \App\Events\InvoicePaid($invoice->fresh(), $payment));
         } else {
             $invoice->update(['status' => 'partial', 'paid_amount' => $newPaidAmount]);
             $this->status = 'partial';

@@ -555,6 +555,10 @@ class Form extends Component
                 }
             }
 
+            if ($markDelivered) {
+                event(new \App\Events\DeliveryCompleted($delivery->fresh()));
+            }
+
             $this->closeStatusTransitionModal();
 
             $this->delivery_number = $delivery->delivery_number;

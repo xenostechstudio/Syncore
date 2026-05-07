@@ -648,7 +648,11 @@ class Form extends Component
         // Only change status after validation passes - set to 'sales_order'
         $this->status = SalesOrderState::SALES_ORDER->value;
         $this->saveOrder();
-        
+
+        if ($this->orderId) {
+            event(new \App\Events\SalesOrderConfirmed(SalesOrder::find($this->orderId)));
+        }
+
         session()->flash('success', 'Order confirmed successfully. Status changed to Sales Order.');
     }
 

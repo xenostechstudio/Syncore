@@ -190,6 +190,8 @@ class Form extends Component
             'payment_date' => $this->paymentDate ?? now()->format('Y-m-d'),
         ]);
         $this->status = 'paid';
+        event(new \App\Events\PayrollProcessed($this->period->fresh()));
+
         session()->flash('success', 'Payroll marked as paid.');
     }
 

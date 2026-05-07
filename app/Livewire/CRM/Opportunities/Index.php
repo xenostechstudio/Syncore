@@ -96,6 +96,8 @@ class Index extends Component
 
         $opportunity = Opportunity::findOrFail($id);
         $opportunity->markAsWon();
+        event(new \App\Events\OpportunityWon($opportunity->fresh()));
+
         session()->flash('success', 'Opportunity marked as won!');
     }
 
@@ -105,6 +107,8 @@ class Index extends Component
 
         $opportunity = Opportunity::findOrFail($id);
         $opportunity->markAsLost($reason);
+        event(new \App\Events\OpportunityLost($opportunity->fresh(), $reason));
+
         session()->flash('success', 'Opportunity marked as lost.');
     }
 

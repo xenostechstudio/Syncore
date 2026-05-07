@@ -128,6 +128,10 @@ class Form extends Component
             return;
         }
 
+        if ($receipt->purchaseRfq) {
+            event(new \App\Events\PurchaseOrderReceived($receipt->purchaseRfq));
+        }
+
         session()->flash('success', 'Receipt validated. Stock has been updated.');
         $this->loadFromExisting($receipt->id);
     }

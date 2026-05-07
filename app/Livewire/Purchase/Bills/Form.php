@@ -256,8 +256,10 @@ class Form extends Component
             return;
         }
 
-        DB::transaction(function () use ($bill) {
-            $bill->payments()->create([
+        $billFullyPaid = false;
+        $payment = null;
+        DB::transaction(function () use ($bill, &$billFullyPaid, &$payment) {
+            $payment = $bill->payments()->create([
                 'payment_date' => $this->paymentDate,
                 'amount' => $this->paymentAmount,
                 'payment_method' => $this->paymentMethod,
@@ -272,12 +274,17 @@ class Form extends Component
             if ($newPaidAmount >= $bill->total) {
                 $bill->status = VendorBillState::PAID->value;
                 $bill->paid_date = $this->paymentDate;
+                $billFullyPaid = true;
             } else {
                 $bill->status = VendorBillState::PARTIAL->value;
             }
 
             $bill->save();
         });
+
+        if ($billFullyPaid && $payment) {
+            event(new \App\Events\VendorBillPaid($bill->fresh(), $payment));
+        }
 
         $this->showPaymentModal = false;
         $this->loadBill();

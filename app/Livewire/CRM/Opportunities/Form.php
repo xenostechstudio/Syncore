@@ -130,7 +130,8 @@ class Form extends Component
         if (!$this->opportunity) return;
 
         $this->opportunity->markAsWon();
-        
+        event(new \App\Events\OpportunityWon($this->opportunity->fresh()));
+
         session()->flash('success', "'{$this->opportunity->name}' marked as Won!");
     }
 
@@ -161,6 +162,8 @@ class Form extends Component
         if (!$this->opportunity) return;
 
         $this->opportunity->markAsLost();
+        event(new \App\Events\OpportunityLost($this->opportunity->fresh(), $this->opportunity->lost_reason ?? ''));
+
         session()->flash('success', "'{$this->opportunity->name}' marked as Lost.");
     }
 
