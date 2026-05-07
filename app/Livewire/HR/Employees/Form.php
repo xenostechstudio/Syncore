@@ -316,7 +316,11 @@ class Form extends Component
             $this->hireDate = $this->employee->hire_date?->format('Y-m-d');
             $this->contractEndDate = $this->employee->contract_end_date?->format('Y-m-d');
             $this->employmentType = $this->employee->employment_type;
-            $this->status = $this->employee->status;
+            // Employee::$status is cast to EmployeeStatus enum, but the
+            // Livewire string property needs the raw value.
+            $this->status = $this->employee->status instanceof \BackedEnum
+                ? $this->employee->status->value
+                : (string) $this->employee->status;
             $this->basicSalary = $this->employee->basic_salary;
             $this->bankName = $this->employee->bank_name ?? '';
             $this->bankAccountNumber = $this->employee->bank_account_number ?? '';

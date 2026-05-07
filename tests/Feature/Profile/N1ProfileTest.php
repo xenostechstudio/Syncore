@@ -70,3 +70,37 @@ it('renders within its query budget', function (string $component, int $budget) 
         "Component fired {$count} queries (budget: {$budget}). Either eager-load the missing relation or, if the new query is justified, raise the budget here."
     );
 })->with('budgets');
+
+dataset('formBudgets', [
+    // [component class, model class to pick first ID from, budget]
+    // Edit pages are heavier than indexes — they hydrate the record, its
+    // relations (items, payments, invoices, etc.) and render the chatter
+    // timeline. Budgets are current measured + ~5 buffer.
+    'Sales/Orders/Form'       => [\App\Livewire\Sales\Orders\Form::class,        \App\Models\Sales\SalesOrder::class,       22],
+    'Invoicing/Invoices/Form' => [\App\Livewire\Invoicing\Invoices\Form::class,  \App\Models\Invoicing\Invoice::class,       17],
+    'Delivery/Orders/Form'    => [\App\Livewire\Delivery\Orders\Form::class,     \App\Models\Delivery\DeliveryOrder::class,  20],
+    'Sales/Customers/Form'    => [\App\Livewire\Sales\Customers\Form::class,     \App\Models\Sales\Customer::class,          11],
+    'CRM/Leads/Form'          => [\App\Livewire\CRM\Leads\Form::class,           \App\Models\CRM\Lead::class,                12],
+    'CRM/Opportunities/Form'  => [\App\Livewire\CRM\Opportunities\Form::class,   \App\Models\CRM\Opportunity::class,         14],
+    'HR/Employees/Form'       => [\App\Livewire\HR\Employees\Form::class,        \App\Models\HR\Employee::class,             13],
+    'Purchase/Suppliers/Form' => [\App\Livewire\Purchase\Suppliers\Form::class,  \App\Models\Purchase\Supplier::class,        8],
+]);
+
+it('edit-page renders within its query budget', function (string $component, string $modelClass, int $budget) {
+    $id = $modelClass::query()->orderBy('id')->value('id');
+    if (! $id) {
+        $this->markTestSkipped("No seeded {$modelClass} row to mount.");
+    }
+
+    $test = Livewire::test($component, ['id' => $id]);
+
+    DB::enableQueryLog();
+    DB::flushQueryLog();
+    $test->call('$refresh');
+    $count = count(DB::getQueryLog());
+
+    expect($count)->toBeLessThanOrEqual(
+        $budget,
+        "Form for {$modelClass}#{$id} fired {$count} queries (budget: {$budget}). Eager-load the missing relation in mount/render, or raise the budget here if it's a new feature."
+    );
+})->with('formBudgets');

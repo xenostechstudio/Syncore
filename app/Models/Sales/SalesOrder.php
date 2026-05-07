@@ -223,23 +223,39 @@ class SalesOrder extends Model
         return $this->items->sum(fn($item) => $item->quantity_to_deliver);
     }
 
+    /** Per-instance cache for isLocked() — Blade calls it 4x per render. */
+    protected ?bool $cachedIsLocked = null;
+
+    /** Bust the isLocked cache whenever Eloquent refreshes the instance. */
+    public function refresh(): static
+    {
+        $this->cachedIsLocked = null;
+        return parent::refresh();
+    }
+
     /**
-     * Check if the order is locked (has active invoices or delivery orders)
-     * A locked order cannot have its items modified
+     * Check if the order is locked (has active invoices or delivery orders).
+     * A locked order cannot have its items modified.
+     *
+     * Result is cached on the model instance because the form view calls
+     * this multiple times per render, and each unmemoized call fired two
+     * exists() queries (8 queries just to compute the lock state).
      */
     public function isLocked(): bool
     {
-        // Check for non-cancelled invoices
+        if ($this->cachedIsLocked !== null) {
+            return $this->cachedIsLocked;
+        }
+
         $hasActiveInvoices = $this->invoices()
             ->where('status', '!=', 'cancelled')
             ->exists();
 
-        // Check for non-cancelled delivery orders
         $hasActiveDeliveries = $this->deliveryOrders()
             ->where('status', '!=', 'cancelled')
             ->exists();
 
-        return $hasActiveInvoices || $hasActiveDeliveries;
+        return $this->cachedIsLocked = ($hasActiveInvoices || $hasActiveDeliveries);
     }
 
     /**
