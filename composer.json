@@ -58,6 +58,10 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "test:fast": [
+            "@php artisan config:clear --ansi",
+            "@php vendor/bin/pest --parallel"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

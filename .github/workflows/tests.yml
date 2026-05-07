@@ -73,8 +73,11 @@ jobs:
       - name: Build Assets
         run: npm run build
 
+      # SQLite parallel works out of the box (in-memory DB is per-process).
+      # Postgres parallel needs paratest's per-process DB setup + the test
+      # user holding CREATEDB; left sequential here pending that work.
       - name: Run Tests
-        run: ./vendor/bin/pest
+        run: ./vendor/bin/pest ${{ matrix.db == 'sqlite' && '--parallel' || '' }}
         env:
           DB_CONNECTION: ${{ matrix.db }}
           DB_HOST: ${{ matrix.db == 'pgsql' && '127.0.0.1' || '' }}
