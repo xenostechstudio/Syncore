@@ -66,7 +66,13 @@ trait HasStateMachine
     public function transitionTo(BackedEnum $state, bool $withLogging = true): bool
     {
         $column = $this->getStatusColumn();
-        $oldStatus = $this->{$column};
+        $rawOldStatus = $this->{$column};
+        // Models that cast their status column to an enum (e.g. Opportunity)
+        // return the enum instance here — coerce to the string value so
+        // logStatusChange and equality below work.
+        $oldStatus = $rawOldStatus instanceof BackedEnum
+            ? $rawOldStatus->value
+            : ($rawOldStatus !== null ? (string) $rawOldStatus : null);
         $newStatus = $state->value;
 
         // Skip if already in this state

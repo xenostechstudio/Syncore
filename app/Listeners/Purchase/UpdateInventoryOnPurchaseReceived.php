@@ -18,9 +18,9 @@ class UpdateInventoryOnPurchaseReceived implements ShouldQueue
     {
         $purchaseOrder = $event->purchaseOrder;
 
-        // Get default receiving warehouse (first warehouse or create one)
-        $warehouse = Warehouse::where('is_default', true)->first() 
-            ?? Warehouse::first();
+        // Receiving warehouse: there's no is_default column on warehouses,
+        // so fall back to the first one (matches existing seeder behavior).
+        $warehouse = Warehouse::first();
 
         if (!$warehouse) {
             return;

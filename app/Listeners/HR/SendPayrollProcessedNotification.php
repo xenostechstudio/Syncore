@@ -13,7 +13,9 @@ class SendPayrollProcessedNotification implements ShouldQueue
      */
     public function handle(PayrollProcessed $event): void
     {
-        $payrollPeriod = $event->payrollPeriod;
+        // Eager-load items + employee so the per-payslip loop below
+        // doesn't trip strict lazy-loading mode.
+        $payrollPeriod = $event->payrollPeriod->loadMissing('items.employee');
 
         NotificationService::create(
             type: 'payroll_processed',
