@@ -4,7 +4,7 @@ A Laravel ERP covering Inventory, Sales, Purchase, Delivery, Invoicing, Accounti
 
 ## Stack
 
-- **Backend:** PHP 8.5, Laravel 12, Livewire 3 (Volt), Spatie Activity Log + Permission, Maatwebsite Excel, dompdf
+- **Backend:** PHP 8.5 (runtime), Laravel 12, Livewire 3 (Volt), Spatie Permission, Maatwebsite Excel, dompdf
 - **Frontend:** Tailwind 4, Flux UI, Chart.js, Vite 7
 - **Tests:** Pest 4 on in-memory SQLite (`RefreshDatabase`)
 - **Lint:** Laravel Pint
@@ -99,6 +99,16 @@ Notable ones:
 
 - All tests use `RefreshDatabase` against in-memory SQLite. Postgres can still reject values that pass tests (CHECK constraints on enum columns aren't enforced by SQLite) — write driver-aware migrations.
 - A few features (Postgres-only `whereRaw('LOWER(...)')` and `ILIKE` in Audit Trail filters) won't behave identically on SQLite — keep that in mind when reading those tests.
+
+## Composer platform pin
+
+`composer.json` sets `config.platform.php = "8.4.99"` so the resolver
+treats the runtime as 8.4 even though we run PHP 8.5+. This is
+because `phpoffice/phpspreadsheet` (a transitive dep of
+`maatwebsite/excel`) caps at PHP 8.4. The runtime is unaffected —
+PHP 8.5 still actually executes the code; the override only stops
+`composer require`/`update` from refusing to resolve. Drop the pin
+when the upstream chain releases a PHP 8.5-compatible version.
 
 ## License
 
