@@ -14,51 +14,65 @@ class XenditWebhookController extends Controller
     ) {}
 
     /**
-     * Handle Xendit webhook callback
+     * Handle Xendit webhook callback.
+     *
+     * Two security gates:
+     *  1) `x-callback-token` header must match `config('xendit.webhook_token')`.
+     *  2) When the env is production AND no token is configured, refuse the
+     *     request entirely — a missing token in prod is almost always a
+     *     misconfiguration that would leave the endpoint open. Dev bypass
+     *     stays for local testing but is logged at warning.
      */
     public function __invoke(Request $request)
     {
-        Log::info('Xendit webhook endpoint hit', [
-            'headers' => $request->headers->all(),
-            'ip' => $request->ip(),
-        ]);
-
-        // Get the callback token from header
-        $callbackToken = $request->header('x-callback-token', '');
+        $callbackToken   = $request->header('x-callback-token', '');
         $configuredToken = config('xendit.webhook_token');
 
-        Log::info('Xendit webhook token check', [
-            'received_token' => $callbackToken ? 'present' : 'empty',
-            'configured_token' => $configuredToken ? 'present' : 'empty',
-        ]);
-
-        // Verify webhook signature (skip if no token configured)
-        if ($configuredToken && !$this->xenditService->verifyWebhookSignature($callbackToken)) {
+        if (empty($configuredToken)) {
+            if (app()->isProduction()) {
+                Log::error('Xendit webhook: refused — production env has no webhook token configured', [
+                    'ip' => $request->ip(),
+                ]);
+                return response()->json(['error' => 'Webhook not configured'], 503);
+            }
+            Log::warning('Xendit webhook: signature verification SKIPPED (no token configured) — non-production only', [
+                'env' => app()->environment(),
+                'ip'  => $request->ip(),
+            ]);
+        } elseif (! $this->xenditService->verifyWebhookSignature($callbackToken)) {
             Log::warning('Xendit webhook: invalid callback token', [
-                'received' => substr($callbackToken, 0, 10) . '...',
+                'ip' => $request->ip(),
             ]);
             return response()->json(['error' => 'Invalid callback token'], 401);
         }
 
         $payload = $request->all();
 
+        // Scrubbed log: header summary only. The full payload contains
+        // payment-instrument metadata (channel, paid_amount, customer
+        // identifiers from external_id) that aggregators retain and index.
+        // Keep behind the local guard for development debugging.
         Log::info('Xendit webhook received', [
-            'event' => $payload['status'] ?? 'unknown',
+            'event'       => $payload['status'] ?? 'unknown',
             'external_id' => $payload['external_id'] ?? 'unknown',
             'paid_amount' => $payload['paid_amount'] ?? 0,
-            'full_payload' => $payload,
         ]);
+        if (app()->environment('local', 'testing')) {
+            Log::debug('Xendit webhook payload', ['payload' => $payload]);
+        }
 
-        // Handle empty payload or test/validation requests from Xendit
-        if (empty($payload) || !isset($payload['external_id'])) {
-            Log::info('Xendit webhook: validation/test request received (empty payload)');
+        // Empty body or missing external_id — Xendit's "Test endpoint"
+        // button. Acknowledge so the dashboard goes green.
+        if (empty($payload) || ! isset($payload['external_id'])) {
             return response()->json(['success' => true, 'message' => 'Webhook endpoint is active']);
         }
 
-        // Handle Xendit test payloads (external_id doesn't match our format INV-{id}-{timestamp})
+        // External_id we created elsewhere uses INV-{id}-{timestamp}; if a
+        // callback arrives with a different shape it's a Xendit test payload
+        // — acknowledge without trying to parse out an invoice id.
         $externalId = $payload['external_id'] ?? '';
-        if (!preg_match('/^INV-\d+-/', $externalId)) {
-            Log::info('Xendit webhook: test payload received', ['external_id' => $externalId]);
+        if (! preg_match('/^INV-\d+-/', $externalId)) {
+            Log::info('Xendit webhook: test payload acknowledged', ['external_id' => $externalId]);
             return response()->json(['success' => true, 'message' => 'Test webhook received']);
         }
 
@@ -66,21 +80,17 @@ class XenditWebhookController extends Controller
             $result = $this->xenditService->handleWebhook($payload);
 
             if ($result) {
-                Log::info('Xendit webhook processed successfully', [
-                    'external_id' => $payload['external_id'] ?? 'unknown',
-                ]);
                 return response()->json(['success' => true]);
             }
 
             Log::warning('Xendit webhook processing returned false', [
-                'external_id' => $payload['external_id'] ?? 'unknown',
+                'external_id' => $externalId,
             ]);
             return response()->json(['error' => 'Failed to process webhook'], 400);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Xendit webhook error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'payload' => $payload,
+                'message'     => $e->getMessage(),
+                'external_id' => $externalId,
             ]);
 
             return response()->json(['error' => 'Internal server error'], 500);

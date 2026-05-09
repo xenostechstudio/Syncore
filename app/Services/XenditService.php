@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\Payment;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -222,7 +223,15 @@ class XenditService
     }
 
     /**
-     * Mark invoice as paid and create payment record
+     * Mark invoice as paid and create payment record. Wrapped in a
+     * transaction with row-level locks because Xendit retries on 5xx
+     * (and on slow responses), so we routinely receive duplicate webhook
+     * deliveries for the same payment. Idempotency keys off the exact
+     * reference string ("XENDIT-<payment-id-or-external-id>") — a unique
+     * value per payment from Xendit's side. The previous LIKE+amount
+     * check would mis-match coincidental same-amount manual payments and
+     * had a TOCTOU race where two concurrent webhooks both saw "no
+     * existing payment" and both created one.
      */
     protected function markInvoiceAsPaid(
         Invoice $invoice,
@@ -231,72 +240,72 @@ class XenditService
         string $paymentChannel,
         array $payload
     ): bool {
-        // Check if payment already recorded
-        $existingPayment = Payment::where('invoice_id', $invoice->id)
-            ->where('reference', 'LIKE', 'XENDIT-%')
-            ->where('amount', $paidAmount)
-            ->first();
+        $reference = 'XENDIT-' . ($payload['id'] ?? $payload['external_id']);
 
-        if ($existingPayment) {
-            Log::info('Xendit payment already recorded', ['invoice_id' => $invoice->id]);
+        return DB::transaction(function () use ($invoice, $paidAmount, $paymentMethod, $paymentChannel, $payload, $reference) {
+            // Lock the invoice row so a concurrent delivery for the same
+            // invoice serializes behind us. The dup-check below will then
+            // see whatever the first delivery wrote.
+            $locked = Invoice::lockForUpdate()->find($invoice->id);
+
+            if (! $locked) {
+                Log::warning('Xendit webhook: invoice vanished mid-transaction', ['invoice_id' => $invoice->id]);
+                return false;
+            }
+
+            $existingPayment = Payment::where('reference', $reference)->first();
+
+            if ($existingPayment) {
+                Log::info('Xendit payment already recorded (idempotent)', [
+                    'invoice_id' => $locked->id,
+                    'reference'  => $reference,
+                ]);
+                return true;
+            }
+
+            $year   = now()->year;
+            $prefix = "PAY/{$year}/";
+            $lastPayment = Payment::where('payment_number', 'like', $prefix . '%')
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->first();
+            $nextNumber    = $lastPayment ? ((int) substr($lastPayment->payment_number, strlen($prefix))) + 1 : 1;
+            $paymentNumber = $prefix . str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
+
+            Payment::create([
+                'payment_number' => $paymentNumber,
+                'invoice_id'     => $locked->id,
+                'amount'         => $paidAmount,
+                'payment_date'   => now(),
+                'payment_method' => $this->formatPaymentMethod($paymentMethod, $paymentChannel),
+                'reference'      => $reference,
+                'notes'          => "Paid via Xendit ({$paymentChannel})",
+                'status'         => 'completed',
+            ]);
+
+            // Recompute paid_amount from the source of truth INSIDE the
+            // transaction, AFTER the new payment is persisted — the prior
+            // implementation snapshotted before the insert and added the
+            // new amount in PHP, which is racy if any other writer slipped
+            // a payment in between (manual entry, second webhook stuck
+            // behind us).
+            $totalPaid = (float) $locked->payments()->sum('amount');
+
+            $locked->update([
+                'status'        => $totalPaid >= $locked->total ? 'paid' : 'partial',
+                'paid_amount'   => $totalPaid,
+                'xendit_status' => $totalPaid >= $locked->total ? 'paid' : 'partial',
+            ]);
+
+            Log::info('Xendit payment recorded', [
+                'invoice_id'     => $locked->id,
+                'reference'      => $reference,
+                'amount'         => $paidAmount,
+                'payment_number' => $paymentNumber,
+            ]);
+
             return true;
-        }
-
-        // Generate payment number
-        $year = now()->year;
-        $prefix = "PAY/{$year}/";
-        $lastPayment = Payment::where('payment_number', 'like', $prefix . '%')
-            ->orderByDesc('id')
-            ->first();
-        $nextNumber = $lastPayment ? ((int) substr($lastPayment->payment_number, strlen($prefix))) + 1 : 1;
-        $paymentNumber = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-
-        Log::info('Xendit creating payment record', [
-            'invoice_id' => $invoice->id,
-            'payment_number' => $paymentNumber,
-            'amount' => $paidAmount,
-        ]);
-
-        $paidBefore = (float) $invoice->payments()->sum('amount');
-
-        // Create payment record
-        $paymentMethodDisplay = $this->formatPaymentMethod($paymentMethod, $paymentChannel);
-        
-        Payment::create([
-            'payment_number' => $paymentNumber,
-            'invoice_id' => $invoice->id,
-            'amount' => $paidAmount,
-            'payment_date' => now(),
-            'payment_method' => $paymentMethodDisplay,
-            'reference' => 'XENDIT-' . ($payload['id'] ?? $payload['external_id']),
-            'notes' => "Paid via Xendit ({$paymentChannel})",
-            'status' => 'completed',
-        ]);
-
-        // Update invoice status
-        $totalPaid = $paidBefore + $paidAmount;
-
-        if ($totalPaid >= $invoice->total) {
-            $invoice->update([
-                'status' => 'paid',
-                'paid_amount' => $totalPaid,
-                'xendit_status' => 'paid',
-            ]);
-        } else {
-            $invoice->update([
-                'status' => 'partial',
-                'paid_amount' => $totalPaid,
-                'xendit_status' => 'partial',
-            ]);
-        }
-
-        Log::info('Xendit payment recorded', [
-            'invoice_id' => $invoice->id,
-            'amount' => $paidAmount,
-            'payment_number' => $paymentNumber,
-        ]);
-
-        return true;
+        });
     }
 
     /**
