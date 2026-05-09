@@ -25,14 +25,11 @@ class PdfController extends Controller
     public function invoice(Invoice $invoice)
     {
         $invoice->load(['customer', 'items.product', 'payments']);
-        $settings = InvoiceSetting::instance();
-        
+
         $pdf = Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
-            'company' => $this->getCompanyInfo(),
-            'settings' => $settings,
-        ]);
-        
+        ] + $this->brandContext());
+
         $filename = $this->sanitizeFilename("invoice-{$invoice->invoice_number}.pdf");
         return $pdf->download($filename);
     }
@@ -40,12 +37,11 @@ class PdfController extends Controller
     public function salesOrder(SalesOrder $salesOrder)
     {
         $salesOrder->load(['customer', 'items.product', 'salesperson']);
-        
+
         $pdf = Pdf::loadView('pdf.sales-order', [
             'order' => $salesOrder,
-            'company' => $this->getCompanyInfo(),
-        ]);
-        
+        ] + $this->brandContext());
+
         $docType = in_array($salesOrder->status, ['draft', 'confirmed']) ? 'quotation' : 'sales-order';
         $filename = $this->sanitizeFilename("{$docType}-{$salesOrder->order_number}.pdf");
         return $pdf->download($filename);
@@ -54,12 +50,11 @@ class PdfController extends Controller
     public function deliveryOrder(DeliveryOrder $deliveryOrder)
     {
         $deliveryOrder->load(['salesOrder.customer', 'items.product', 'warehouse']);
-        
+
         $pdf = Pdf::loadView('pdf.delivery-note', [
             'delivery' => $deliveryOrder,
-            'company' => $this->getCompanyInfo(),
-        ]);
-        
+        ] + $this->brandContext());
+
         $filename = $this->sanitizeFilename("delivery-note-{$deliveryOrder->delivery_number}.pdf");
         return $pdf->download($filename);
     }
@@ -67,12 +62,11 @@ class PdfController extends Controller
     public function purchaseOrder(PurchaseRfq $purchaseOrder)
     {
         $purchaseOrder->load(['supplier', 'items.product']);
-        
+
         $pdf = Pdf::loadView('pdf.purchase-order', [
             'order' => $purchaseOrder,
-            'company' => $this->getCompanyInfo(),
-        ]);
-        
+        ] + $this->brandContext());
+
         $docType = $purchaseOrder->status === 'purchase_order' ? 'PO' : 'RFQ';
         $filename = $this->sanitizeFilename("{$docType}-{$purchaseOrder->reference}.pdf");
         return $pdf->download($filename);
@@ -81,12 +75,11 @@ class PdfController extends Controller
     public function vendorBill(VendorBill $vendorBill)
     {
         $vendorBill->load(['supplier', 'items.product', 'payments']);
-        
+
         $pdf = Pdf::loadView('pdf.vendor-bill', [
             'bill' => $vendorBill,
-            'company' => $this->getCompanyInfo(),
-        ]);
-        
+        ] + $this->brandContext());
+
         $filename = $this->sanitizeFilename("vendor-bill-{$vendorBill->bill_number}.pdf");
         return $pdf->download($filename);
     }
@@ -104,28 +97,36 @@ class PdfController extends Controller
 
         $pdf = Pdf::loadView('pdf.payroll-slip', [
             'payrollItem' => $payrollItem,
-            'company' => $this->getCompanyInfo(),
-        ]);
-        
+        ] + $this->brandContext());
+
         $employeeName = str_replace(' ', '-', strtolower($payrollItem->employee?->name ?? 'employee'));
         $periodName = str_replace(' ', '-', strtolower($payrollItem->period?->name ?? 'period'));
-        
+
         $filename = $this->sanitizeFilename("payroll-slip-{$employeeName}-{$periodName}.pdf");
         return $pdf->download($filename);
     }
 
-    protected function getCompanyInfo(): array
+    /**
+     * Brand context shared by every PDF: company info + InvoiceSetting.
+     * The setting model is named for invoices but its fields (colors,
+     * currency, watermark, date format) drive every document type — one
+     * place to manage brand parity across the whole stack.
+     */
+    protected function brandContext(): array
     {
         $company = \App\Models\Settings\CompanyProfile::first();
 
         return [
-            'name' => $company?->name ?? config('app.name'),
-            'address' => $company?->address ?? '',
-            'phone' => $company?->phone ?? '',
-            'email' => $company?->email ?? '',
-            'website' => $company?->website ?? '',
-            'logo' => $company?->logo_path ?? null,
-            'tax_id' => $company?->tax_id ?? '',
+            'company' => [
+                'name'    => $company?->name    ?? config('app.name'),
+                'address' => $company?->address ?? '',
+                'phone'   => $company?->phone   ?? '',
+                'email'   => $company?->email   ?? '',
+                'website' => $company?->website ?? '',
+                'logo'    => $company?->logo_path ?? null,
+                'tax_id'  => $company?->tax_id  ?? '',
+            ],
+            'settings' => InvoiceSetting::instance(),
         ];
     }
 }

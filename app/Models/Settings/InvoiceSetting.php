@@ -93,11 +93,13 @@ class InvoiceSetting extends Model
     }
 
     /**
-     * Format currency amount
+     * Format currency amount. Accepts null (treated as 0) so PDF templates
+     * don't have to guard every nullable money column individually.
      */
-    public function formatCurrency(float $amount): string
+    public function formatCurrency(float|int|null $amount): string
     {
-        $formatted = $this->number_format === 'id' 
+        $amount = (float) ($amount ?? 0);
+        $formatted = $this->number_format === 'id'
             ? number_format($amount, 0, ',', '.')
             : number_format($amount, 2, '.', ',');
 

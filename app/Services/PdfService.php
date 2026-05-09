@@ -44,13 +44,10 @@ class PdfService
     public static function generateInvoice(Invoice $invoice): Response
     {
         $invoice->load(['customer', 'items.product', 'payments']);
-        $settings = InvoiceSetting::instance();
 
         $pdf = Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
-            'company' => self::getCompanyInfo(),
-            'settings' => $settings,
-        ]);
+        ] + self::brandContext());
 
         $filename = self::sanitizeFilename("Invoice-{$invoice->invoice_number}.pdf");
         return $pdf->download($filename);
@@ -68,8 +65,7 @@ class PdfService
 
         $pdf = Pdf::loadView('pdf.sales-order', [
             'order' => $order,
-            'company' => self::getCompanyInfo(),
-        ]);
+        ] + self::brandContext());
 
         $docType = in_array($order->status, ['draft', 'confirmed']) ? 'Quotation' : 'SalesOrder';
         $filename = self::sanitizeFilename("{$docType}-{$order->order_number}.pdf");
@@ -88,8 +84,7 @@ class PdfService
 
         $pdf = Pdf::loadView('pdf.purchase-order', [
             'order' => $order,
-            'company' => self::getCompanyInfo(),
-        ]);
+        ] + self::brandContext());
 
         $docType = $order->status === 'purchase_order' ? 'PO' : 'RFQ';
         $filename = self::sanitizeFilename("{$docType}-{$order->reference}.pdf");
@@ -108,8 +103,7 @@ class PdfService
 
         $pdf = Pdf::loadView('pdf.delivery-note', [
             'delivery' => $delivery,
-            'company' => self::getCompanyInfo(),
-        ]);
+        ] + self::brandContext());
 
         $filename = self::sanitizeFilename("DeliveryNote-{$delivery->delivery_number}.pdf");
         return $pdf->download($filename);
@@ -127,8 +121,7 @@ class PdfService
 
         $pdf = Pdf::loadView('pdf.leave-request', [
             'leaveRequest' => $leaveRequest,
-            'company' => self::getCompanyInfo(),
-        ]);
+        ] + self::brandContext());
 
         return $pdf->download("LeaveRequest-{$leaveRequest->id}.pdf");
     }
@@ -145,8 +138,7 @@ class PdfService
 
         $pdf = Pdf::loadView('pdf.inventory-transfer', [
             'transfer' => $transfer,
-            'company' => self::getCompanyInfo(),
-        ]);
+        ] + self::brandContext());
 
         $filename = self::sanitizeFilename("Transfer-{$transfer->transfer_number}.pdf");
         return $pdf->download($filename);
@@ -164,8 +156,7 @@ class PdfService
 
         $pdf = Pdf::loadView('pdf.inventory-adjustment', [
             'adjustment' => $adjustment,
-            'company' => self::getCompanyInfo(),
-        ]);
+        ] + self::brandContext());
 
         $filename = self::sanitizeFilename("Adjustment-{$adjustment->reference}.pdf");
         return $pdf->download($filename);
@@ -183,8 +174,7 @@ class PdfService
 
         $pdf = Pdf::loadView('pdf.purchase-rfq', [
             'rfq' => $rfq,
-            'company' => self::getCompanyInfo(),
-        ]);
+        ] + self::brandContext());
 
         $filename = self::sanitizeFilename("RFQ-{$rfq->reference}.pdf");
         return $pdf->download($filename);
@@ -199,13 +189,10 @@ class PdfService
     public static function streamInvoice(Invoice $invoice): Response
     {
         $invoice->load(['customer', 'items.product', 'payments']);
-        $settings = InvoiceSetting::instance();
 
         $pdf = Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
-            'company' => self::getCompanyInfo(),
-            'settings' => $settings,
-        ]);
+        ] + self::brandContext());
 
         $filename = self::sanitizeFilename("Invoice-{$invoice->invoice_number}.pdf");
         return $pdf->stream($filename);
@@ -223,11 +210,25 @@ class PdfService
 
         $pdf = Pdf::loadView('pdf.sales-order', [
             'order' => $order,
-            'company' => self::getCompanyInfo(),
-        ]);
+        ] + self::brandContext());
 
         $filename = self::sanitizeFilename("Order-{$order->order_number}.pdf");
         return $pdf->stream($filename);
+    }
+
+    /**
+     * Render the sales-order PDF and return raw bytes for callers that need
+     * to embed or attach the PDF themselves (mail attachments, custom stream
+     * responses) — keeps the brand context in one place instead of letting
+     * each call site re-load the view manually.
+     */
+    public static function renderSalesOrder(SalesOrder $order): string
+    {
+        $order->loadMissing(['customer', 'items.product']);
+
+        return Pdf::loadView('pdf.sales-order', [
+            'order' => $order,
+        ] + self::brandContext())->output();
     }
 
     /**
@@ -247,6 +248,20 @@ class PdfService
             'website' => $company?->website ?? '',
             'logo' => $company?->logo_path ?? null,
             'tax_id' => $company?->tax_id ?? '',
+        ];
+    }
+
+    /**
+     * Shared brand context for every PDF: company info + InvoiceSetting.
+     * The setting model is named for invoices but its fields (colors, logo
+     * size, currency, watermark, date format) drive every document type —
+     * giving us one place to manage brand parity across the whole stack.
+     */
+    protected static function brandContext(): array
+    {
+        return [
+            'company'  => self::getCompanyInfo(),
+            'settings' => InvoiceSetting::instance(),
         ];
     }
 }

@@ -159,8 +159,8 @@
                         @endif
                     </td>
                     <td class="right">{{ number_format($item->quantity) }}</td>
-                    <td class="right">@formatCurrency($item->unit_price, $settings)</td>
-                    <td class="right">@formatCurrency($item->total, $settings)</td>
+                    <td class="right">{{ $settings->formatCurrency($item->unit_price) }}</td>
+                    <td class="right">{{ $settings->formatCurrency($item->total) }}</td>
                 </tr>
                 @endforeach
             </tbody>

@@ -1076,13 +1076,11 @@ Best regards,
                     ->html(nl2br(e($this->emailBody)));
                 
                 if ($this->emailAttachPdf) {
-                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-order', [
-                        'salesOrder' => $order,
-                    ]);
+                    $pdfBytes = \App\Services\PdfService::renderSalesOrder($order);
                     $isQuotation = in_array($order->status, ['draft', 'confirmed']);
                     $documentType = $isQuotation ? 'Quotation' : 'Sales Order';
                     $message->attachData(
-                        $pdf->output(),
+                        $pdfBytes,
                         "{$documentType} - {$order->order_number}.pdf",
                         ['mime' => 'application/pdf']
                     );
@@ -1168,15 +1166,12 @@ Best regards,
         }
 
         $order = SalesOrder::with(['customer', 'items.product', 'user'])->findOrFail($this->orderId);
-        
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.sales-order', [
-            'order' => $order,
-        ]);
+        $pdfBytes = \App\Services\PdfService::renderSalesOrder($order);
 
         $filename = 'SO-' . $order->order_number . '.pdf';
 
         return response()->streamDownload(
-            fn () => print($pdf->output()),
+            fn () => print($pdfBytes),
             $filename,
             ['Content-Type' => 'application/pdf']
         );
