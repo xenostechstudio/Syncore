@@ -67,17 +67,48 @@
                     @endif
 
                     @if(count($importErrors) > 0)
-                        <div class="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20">
-                            <div class="flex items-start gap-2">
-                                <flux:icon name="exclamation-circle" class="mt-0.5 size-4 text-red-600 dark:text-red-400" />
-                                <div class="text-sm text-red-700 dark:text-red-300">
-                                    <p class="font-medium">Import Errors:</p>
-                                    <ul class="mt-1 list-inside list-disc text-xs max-h-32 overflow-y-auto">
-                                        @foreach($importErrors as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
+                        <div class="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+                            <div class="flex items-center justify-between border-b border-red-200 px-3 py-2 dark:border-red-800">
+                                <div class="flex items-center gap-2">
+                                    <flux:icon name="exclamation-circle" class="size-4 text-red-600 dark:text-red-400" />
+                                    <span class="text-sm font-medium text-red-700 dark:text-red-300">
+                                        {{ count($importErrors) }} {{ \Illuminate\Support\Str::plural('error', count($importErrors)) }}
+                                    </span>
                                 </div>
+                                <button
+                                    type="button"
+                                    wire:click="downloadImportErrors"
+                                    class="inline-flex items-center gap-1 rounded-md border border-red-300 bg-white px-2 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+                                >
+                                    <flux:icon name="arrow-down-tray" class="size-3.5" />
+                                    Download errors (CSV)
+                                </button>
+                            </div>
+                            <div class="max-h-56 overflow-y-auto">
+                                <table class="w-full text-xs">
+                                    <thead class="sticky top-0 bg-red-100 dark:bg-red-900/40">
+                                        <tr class="text-left text-red-800 dark:text-red-300">
+                                            <th class="px-3 py-1.5 font-medium">Row</th>
+                                            <th class="px-3 py-1.5 font-medium">Field</th>
+                                            <th class="px-3 py-1.5 font-medium">Message</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-red-200/50 text-red-800 dark:divide-red-800/50 dark:text-red-200">
+                                        @foreach($importErrors as $error)
+                                            @if(is_string($error))
+                                                <tr>
+                                                    <td colspan="3" class="px-3 py-1.5">{{ $error }}</td>
+                                                </tr>
+                                            @else
+                                                <tr>
+                                                    <td class="px-3 py-1.5 font-mono">{{ $error['row'] ?? '' }}</td>
+                                                    <td class="px-3 py-1.5 font-mono text-red-700 dark:text-red-300">{{ $error['attribute'] ?? '' }}</td>
+                                                    <td class="px-3 py-1.5">{{ $error['message'] ?? '' }}</td>
+                                                </tr>
+                                            @endif
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     @endif

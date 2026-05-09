@@ -2,10 +2,20 @@
 
 namespace App\Imports\Concerns;
 
+use Maatwebsite\Excel\Validators\Failure;
+
 /**
  * Shared import tracking functionality.
- * 
+ *
  * Provides common properties and methods for tracking import results.
+ *
+ * Errors are structured arrays so the UI can render them as a Row|Field|Message
+ * table and produce a downloadable error report. Each entry shape:
+ *
+ *   ['row' => int, 'attribute' => ?string, 'message' => string, 'values' => array]
+ *
+ * Legacy callers that pushed plain strings still work — the modal renders
+ * both shapes.
  */
 trait HasImportTracking
 {
@@ -15,11 +25,36 @@ trait HasImportTracking
     public array $errors = [];
 
     /**
-     * Add an error message for a specific row.
+     * Add an error message for a specific row. The row index is 0-based as
+     * passed in by Maatwebsite collection iteration; we offset by 2 so the
+     * displayed row matches the spreadsheet (header row + 1-based numbering).
      */
-    protected function addError(int $rowIndex, string $message): void
+    protected function addError(int $rowIndex, string $message, ?string $attribute = null, array $values = []): void
     {
-        $this->errors[] = "Row " . ($rowIndex + 2) . ": " . $message;
+        $this->errors[] = [
+            'row'       => $rowIndex + 2,
+            'attribute' => $attribute,
+            'message'   => $message,
+            'values'    => $values,
+        ];
+    }
+
+    /**
+     * Convert a Maatwebsite validation Failure into a structured error.
+     * Called by WithImport::import() when WithValidation throws — without
+     * SkipsOnFailure on every import class, the trait catches the exception
+     * and unspools failures into the same structured array.
+     */
+    public function addValidationFailure(Failure $failure): void
+    {
+        foreach ($failure->errors() as $message) {
+            $this->errors[] = [
+                'row'       => $failure->row(),
+                'attribute' => $failure->attribute(),
+                'message'   => $message,
+                'values'    => $failure->values(),
+            ];
+        }
     }
 
     /**
