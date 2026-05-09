@@ -76,7 +76,7 @@ class NotificationDropdown extends Component
         }
 
         return SystemNotification::query()
-            ->select(['id', 'title', 'message', 'type', 'read_at', 'created_at'])
+            ->select(['id', 'title', 'message', 'type', 'icon', 'color', 'action_url', 'read_at', 'created_at'])
             ->where('user_id', auth()->id())
             ->orderByDesc('created_at')
             ->limit(10)

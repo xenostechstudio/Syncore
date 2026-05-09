@@ -47,8 +47,12 @@
                     class="flex items-start gap-3 border-b border-zinc-50 px-4 py-3 transition-colors last:border-0 hover:bg-zinc-50 dark:border-zinc-800/50 dark:hover:bg-zinc-800/50 {{ !$notification->isRead() ? 'bg-blue-50/50 dark:bg-blue-900/10' : '' }}"
                 >
                     {{-- Icon --}}
-                    <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-{{ $notification->color }}-100 text-{{ $notification->color }}-600 dark:bg-{{ $notification->color }}-900/30 dark:text-{{ $notification->color }}-400">
-                        <flux:icon name="{{ $notification->icon }}" class="size-4" />
+                    @php
+                        $notifColor = $notification->color ?: 'blue';
+                        $notifIcon  = $notification->icon  ?: 'bell';
+                    @endphp
+                    <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-{{ $notifColor }}-100 text-{{ $notifColor }}-600 dark:bg-{{ $notifColor }}-900/30 dark:text-{{ $notifColor }}-400">
+                        <flux:icon name="{{ $notifIcon }}" class="size-4" />
                     </div>
 
                     {{-- Content --}}
