@@ -5,6 +5,7 @@ namespace App\Livewire\Public\SalesOrders;
 use App\Enums\SalesOrderState;
 use App\Models\Sales\SalesOrder;
 use App\Models\Settings\CompanyProfile;
+use App\Services\PdfService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -53,6 +54,20 @@ class Show extends Component
 
         $this->statusIsError = false;
         $this->statusMessage = 'Order confirmed successfully! Thank you for your business.';
+    }
+
+    /**
+     * Stream the sales-order/quotation PDF to the customer. The Show page is
+     * already token-gated in mount(); this action runs in the same component
+     * context so the token check is implicit.
+     */
+    public function downloadPdf()
+    {
+        if ($this->expired || ! $this->order) {
+            return null;
+        }
+
+        return PdfService::streamSalesOrder($this->order);
     }
 
     public function render()

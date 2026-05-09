@@ -4,6 +4,7 @@ namespace App\Livewire\Public\Invoices;
 
 use App\Models\Invoicing\Invoice;
 use App\Models\Settings\CompanyProfile;
+use App\Services\PdfService;
 use App\Services\XenditService;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -91,6 +92,21 @@ class Show extends Component
             $this->statusIsError = true;
             $this->statusMessage = $result['message'] ?? 'Failed to create payment link.';
         }
+    }
+
+    /**
+     * Stream the invoice PDF to the customer. The Show page is already
+     * token-gated in mount(), so by the time this action fires we've
+     * verified the token + expiry — no signed URL needed for the
+     * Livewire action itself.
+     */
+    public function downloadPdf()
+    {
+        if ($this->expired || ! $this->invoice) {
+            return null;
+        }
+
+        return PdfService::streamInvoice($this->invoice);
     }
 
     public function render()

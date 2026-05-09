@@ -157,8 +157,9 @@
                             <flux:icon name="printer" class="size-4" />
                             Print
                         </button>
-                        <button type="button" onclick="window.print()" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50">
-                            <flux:icon name="arrow-down-tray" class="size-4" />
+                        <button type="button" wire:click="downloadPdf" wire:loading.attr="disabled" wire:target="downloadPdf" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-60">
+                            <flux:icon name="arrow-down-tray" wire:loading.remove wire:target="downloadPdf" class="size-4" />
+                            <flux:icon name="arrow-path" wire:loading wire:target="downloadPdf" class="size-4 animate-spin" />
                             Download
                         </button>
                     </div>
