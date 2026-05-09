@@ -56,7 +56,10 @@ CI runs Pint but the auto-commit step is disabled — fix style issues only on f
 
 ## Project conventions
 
-The full set lives in [CLAUDE.md](./CLAUDE.md). The headlines:
+Day-to-day rules live in [CLAUDE.md](./CLAUDE.md); the cross-cutting
+architecture (notification pipeline, ResourceType, audit scripts, query
+budgets, driver caveats) is in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+Headlines:
 
 - **Validation lives in Livewire components**, not FormRequests. There are no FormRequest classes — put rules in `rules()` on the component.
 - **Index list pages** render `<x-ui.index-header :bare="true">` inside `<x-slot:header>` so they don't double-up the layout's chrome bar. Search + filters go through `<x-ui.searchbox-dropdown>` (chevron-down menu with active-filter pill + "Clear all filters" footer).
