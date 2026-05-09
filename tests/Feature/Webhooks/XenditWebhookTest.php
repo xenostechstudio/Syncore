@@ -170,3 +170,30 @@ it('records partial payments correctly when paid_amount is less than total', fun
     expect($this->invoice->status)->toBe('partial');
     expect((float) $this->invoice->paid_amount)->toBe(400_000.0);
 });
+
+it('builds Xendit redirect URLs that include the signature (regression: 403 after pay)', function () {
+    // Regression: createInvoice() previously built success_redirect_url and
+    // failure_redirect_url with route(), which omits the ?signature= query
+    // param the `signed` middleware requires. After paying through Xendit,
+    // the customer landed on /public/invoices/{token} unsigned and hit a
+    // generic 403 "Invalid signature" page.
+    config(['xendit.secret_key' => 'test-secret', 'xendit.is_production' => false]);
+
+    \Illuminate\Support\Facades\Http::fake([
+        '*/v2/invoices' => \Illuminate\Support\Facades\Http::response([
+            'id'          => 'xnd-fake-id',
+            'invoice_url' => 'https://checkout.xendit.co/web/fake',
+        ], 200),
+    ]);
+
+    app(\App\Services\XenditService::class)->createInvoice($this->invoice->fresh());
+
+    \Illuminate\Support\Facades\Http::assertSent(function ($request) {
+        $body = $request->data();
+        expect($body['success_redirect_url'])->toContain('signature=');
+        expect($body['success_redirect_url'])->toContain('payment=success');
+        expect($body['failure_redirect_url'])->toContain('signature=');
+        expect($body['failure_redirect_url'])->toContain('payment=failed');
+        return true;
+    });
+});

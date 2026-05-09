@@ -7,6 +7,7 @@ use App\Models\Invoicing\Payment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 class XenditService
 {
@@ -57,8 +58,19 @@ class XenditService
             'description' => "Payment for Invoice #{$invoice->invoice_number}",
             'invoice_duration' => config('xendit.invoice.invoice_duration', 86400),
             'currency' => config('xendit.invoice.currency', 'IDR'),
-            'success_redirect_url' => route('public.invoices.show', $invoice->share_token),
-            'failure_redirect_url' => route('public.invoices.show', $invoice->share_token) . '?payment=failed',
+            // The /public/invoices/{token} route is signed-middleware-gated,
+            // so the URLs we hand to Xendit must include the signature
+            // query parameter or the customer hits 403 after paying. Use
+            // signedRoute() with the payment-status query param baked in
+            // (the signature must cover the final URL incl. query string).
+            'success_redirect_url' => URL::signedRoute('public.invoices.show', [
+                'token'   => $invoice->share_token,
+                'payment' => 'success',
+            ]),
+            'failure_redirect_url' => URL::signedRoute('public.invoices.show', [
+                'token'   => $invoice->share_token,
+                'payment' => 'failed',
+            ]),
             'payment_methods' => config('xendit.invoice.payment_methods', []),
             'customer' => [
                 'given_names' => $customer->name ?? 'Customer',
