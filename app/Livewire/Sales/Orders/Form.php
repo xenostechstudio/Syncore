@@ -655,6 +655,29 @@ class Form extends Component
             }
         }
 
+        // Stock check — admin-controlled via SalesOrderSetting::stock_check_mode.
+        // 'allow' skips, 'warn' flashes a warning + proceeds, 'block' refuses
+        // confirmation. Aggregates stock across all warehouses (per-warehouse
+        // allocation isn't a concept in the order form today).
+        $stockMode = \App\Models\Settings\SalesOrderSetting::instance()->stock_check_mode;
+        if ($stockMode !== 'allow') {
+            $shortfalls = $this->computeStockShortfalls();
+            if (!empty($shortfalls)) {
+                $message = 'Insufficient stock for: ' . implode(', ', array_map(
+                    fn ($s) => "{$s['name']} (need {$s['needed']}, have {$s['available']})",
+                    $shortfalls
+                ));
+
+                if ($stockMode === 'block') {
+                    session()->flash('error', $message);
+                    return;
+                }
+
+                // 'warn' — let the rep proceed, but tell them.
+                session()->flash('warning', $message);
+            }
+        }
+
         // Only change status after validation passes - set to 'sales_order'
         $this->status = SalesOrderState::SALES_ORDER->value;
         $this->saveOrder();
@@ -664,6 +687,53 @@ class Form extends Component
         }
 
         session()->flash('success', 'Order confirmed successfully. Status changed to Sales Order.');
+    }
+
+    /**
+     * Compare ordered quantity against aggregate stock across all warehouses
+     * for each line. Returns an array of `['product_id', 'name', 'needed',
+     * 'available']` for lines that don't have enough stock; empty when
+     * everything is covered.
+     */
+    protected function computeStockShortfalls(): array
+    {
+        $productIds = collect($this->items)
+            ->pluck('product_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($productIds)) {
+            return [];
+        }
+
+        // One query for all products' aggregate stock.
+        $stockByProduct = \App\Models\Inventory\InventoryStock::query()
+            ->whereIn('product_id', $productIds)
+            ->selectRaw('product_id, COALESCE(SUM(quantity), 0) as total')
+            ->groupBy('product_id')
+            ->pluck('total', 'product_id')
+            ->all();
+
+        $shortfalls = [];
+        foreach ($this->items as $item) {
+            if (empty($item['product_id'])) {
+                continue;
+            }
+            $available = (float) ($stockByProduct[$item['product_id']] ?? 0);
+            $needed = (float) ($item['quantity'] ?? 0);
+            if ($needed > $available) {
+                $shortfalls[] = [
+                    'product_id' => $item['product_id'],
+                    'name'       => $item['name'] ?? "Product #{$item['product_id']}",
+                    'needed'     => $needed,
+                    'available'  => $available,
+                ];
+            }
+        }
+
+        return $shortfalls;
     }
 
     public function openInvoiceModal(): void

@@ -302,12 +302,41 @@ class Form extends Component
             return;
         }
 
+        $settings = PurchaseOrderSetting::instance();
+
+        // Approval gate: when the configured threshold is set and the PO
+        // total meets or exceeds it, require the user to also have the
+        // `purchase.approve` permission. Procurement clerks can issue
+        // small POs; managers approve large ones.
+        if ($settings->requiresApproval((float) $this->total)) {
+            if (! auth()->user()?->can('purchase.approve')) {
+                session()->flash(
+                    'error',
+                    'This PO total (Rp ' . number_format((float) $this->total, 0, ',', '.')
+                    . ') is at or above the approval threshold. A user with the "purchase.approve" permission must confirm it.'
+                );
+                return;
+            }
+        }
+
         DB::table('purchase_rfqs')
             ->where('id', $this->rfqId)
             ->update([
                 'status' => 'purchase_order',
                 'updated_at' => now(),
             ]);
+
+        // Auto-send to supplier — admin opt-in via setting. Skips silently
+        // if the supplier has no email on file (suppliers can be local
+        // walk-ins without one).
+        if ($settings->auto_send_to_supplier) {
+            $rfq = PurchaseRfq::with('supplier', 'items.product')->find($this->rfqId);
+            if ($rfq && $rfq->supplier?->email) {
+                \Illuminate\Support\Facades\Mail::to($rfq->supplier->email)->send(
+                    new \App\Mail\PurchaseOrderNotification($rfq)
+                );
+            }
+        }
 
         session()->flash('success', 'RFQ confirmed as Purchase Order.');
         $this->redirect(route('purchase.orders.edit', $this->rfqId), navigate: true);

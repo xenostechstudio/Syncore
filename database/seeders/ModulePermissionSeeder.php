@@ -17,7 +17,10 @@ class ModulePermissionSeeder extends Seeder
         'customers' => ['view', 'create', 'edit', 'delete', 'export'],
         'invoicing' => ['view', 'create', 'edit', 'delete', 'export', 'send', 'record_payment'],
         'crm' => ['view', 'create', 'edit', 'delete', 'export', 'convert_lead'],
-        'purchase' => ['view', 'create', 'edit', 'delete', 'export', 'confirm', 'receive'],
+        // `approve` gates POs at or above the configured approval_threshold
+        // — procurement clerks may have `confirm` for small POs, while
+        // managers also have `approve` so they can confirm large ones.
+        'purchase' => ['view', 'create', 'edit', 'delete', 'export', 'confirm', 'approve', 'receive'],
         'inventory' => ['view', 'create', 'edit', 'delete', 'export', 'adjust', 'transfer'],
         'delivery' => ['view', 'create', 'edit', 'delete', 'export', 'confirm', 'complete'],
         'hr' => ['view', 'create', 'edit', 'delete', 'export'],
@@ -42,7 +45,7 @@ class ModulePermissionSeeder extends Seeder
             'customers' => ['view', 'create', 'edit', 'export'],
             'invoicing' => ['view', 'create', 'edit', 'send', 'record_payment', 'export'],
             'crm' => ['view', 'create', 'edit', 'convert_lead', 'export'],
-            'purchase' => ['view', 'create', 'edit', 'confirm', 'export'],
+            'purchase' => ['view', 'create', 'edit', 'confirm', 'approve', 'export'],
             'inventory' => ['view', 'create', 'edit', 'adjust', 'transfer', 'export'],
             'delivery' => ['view', 'create', 'edit', 'confirm', 'complete', 'export'],
             'hr' => ['view', 'export'],
