@@ -87,20 +87,26 @@ describe('SalesOrderSetting', function () {
 
 describe('PurchaseOrderSetting', function () {
     it('creates a row with sensible defaults on first instance() call', function () {
+        PurchaseOrderSetting::clearCache();
         $settings = PurchaseOrderSetting::instance();
 
-        expect($settings->doc_number_prefix)->toBe('PO')
+        // Defaults match historical form output ("RFQ-NNNNN") so existing
+        // installs don't see their numbering format change.
+        expect($settings->doc_number_prefix)->toBe('RFQ')
+            ->and($settings->doc_number_separator)->toBe('-')
             ->and($settings->doc_number_padding)->toBe(5)
-            ->and($settings->doc_number_yearly_reset)->toBeTrue()
+            ->and($settings->doc_number_yearly_reset)->toBeFalse()
             ->and($settings->default_lead_time_days)->toBe(7)
             ->and($settings->auto_send_to_supplier)->toBeFalse()
             ->and($settings->approval_threshold)->toBeNull();
     });
 
-    it('formats document numbers like SalesOrder', function () {
+    it('formats document numbers in the default RFQ-NNNNN format', function () {
+        PurchaseOrderSetting::clearCache();
         $settings = PurchaseOrderSetting::instance();
 
-        expect($settings->formatDocumentNumber(1, 2026))->toBe('PO/2026/00001');
+        expect($settings->formatDocumentNumber(1))->toBe('RFQ-00001');
+        expect($settings->formatDocumentNumber(42))->toBe('RFQ-00042');
     });
 
     it('returns false from requiresApproval when no threshold is set', function () {

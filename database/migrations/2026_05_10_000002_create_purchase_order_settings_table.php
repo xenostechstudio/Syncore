@@ -11,12 +11,14 @@ return new class extends Migration
         Schema::create('purchase_order_settings', function (Blueprint $table) {
             $table->id();
 
-            // Document numbering — replaces hardcoded "PO/{year}/{seq}".
-            // Suppliers see this on every PO they receive.
-            $table->string('doc_number_prefix', 20)->default('PO');
-            $table->string('doc_number_separator', 5)->default('/');
+            // Defaults preserve the existing form-generated format
+            // ("RFQ-NNNNN") so installs don't see their numbering change.
+            // Admins can flip on yearly_reset for "RFQ/2026/00001" or
+            // rebrand to "PO" / "PUR" / etc. via the settings page.
+            $table->string('doc_number_prefix', 20)->default('RFQ');
+            $table->string('doc_number_separator', 5)->default('-');
             $table->integer('doc_number_padding')->default(5);
-            $table->boolean('doc_number_yearly_reset')->default(true);
+            $table->boolean('doc_number_yearly_reset')->default(false);
 
             // Default warehouse for receipts — most companies have one main
             // warehouse; null means "ask every time".

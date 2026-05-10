@@ -45,10 +45,13 @@ class PurchaseOrderSetting extends Model
         }
 
         return static::$cached = static::firstOrCreate([], [
-            'doc_number_prefix'       => 'PO',
-            'doc_number_separator'    => '/',
+            // Defaults match historical form output: "RFQ-NNNNN".
+            // Admins can switch on yearly_reset / change prefix in the
+            // settings UI to get "RFQ/2026/00001", "PO-2026-001", etc.
+            'doc_number_prefix'       => 'RFQ',
+            'doc_number_separator'    => '-',
             'doc_number_padding'      => 5,
-            'doc_number_yearly_reset' => true,
+            'doc_number_yearly_reset' => false,
             'default_lead_time_days'  => 7,
             'auto_send_to_supplier'   => false,
         ]);
@@ -74,6 +77,43 @@ class PurchaseOrderSetting extends Model
         }
 
         return "{$this->doc_number_prefix}{$this->doc_number_separator}{$padded}";
+    }
+
+    /**
+     * Compute the next sequential document number for purchase records.
+     * Mirrors what HasYearlySequenceNumber does for Eloquent saves, but
+     * usable from non-Eloquent call sites (the Rfq form persists via
+     * DB::table directly, bypassing the trait's `creating` event). One
+     * source of truth, both paths agree on the format.
+     *
+     * Concurrency caveat: this is a best-effort generator like the trait
+     * — under heavy concurrent insert load you can still race. The form's
+     * single-user-action shape makes that unlikely; if it ever matters,
+     * wrap the caller in a transaction with SELECT FOR UPDATE on a
+     * sequences row.
+     */
+    public function nextDocumentNumber(): string
+    {
+        $year   = now()->year;
+        $prefix = $this->doc_number_prefix;
+        $sep    = $this->doc_number_separator;
+
+        $pattern = $this->doc_number_yearly_reset
+            ? "{$prefix}{$sep}{$year}{$sep}"
+            : "{$prefix}{$sep}";
+        $start = strlen($pattern) + 1;
+
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $substr = $driver === 'pgsql'
+            ? "SUBSTRING(reference FROM {$start})"
+            : "SUBSTR(reference, {$start})";
+
+        $maxSeq = (int) \Illuminate\Support\Facades\DB::table('purchase_rfqs')
+            ->where('reference', 'like', $pattern . '%')
+            ->selectRaw("MAX(CAST({$substr} AS INTEGER)) as max_seq")
+            ->value('max_seq');
+
+        return $this->formatDocumentNumber($maxSeq + 1, $year);
     }
 
     /**

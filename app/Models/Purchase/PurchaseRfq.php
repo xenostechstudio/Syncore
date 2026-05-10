@@ -3,6 +3,7 @@
 namespace App\Models\Purchase;
 
 use App\Enums\PurchaseOrderState;
+use App\Models\Settings\PurchaseOrderSetting;
 use App\Models\User;
 use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
@@ -24,9 +25,30 @@ class PurchaseRfq extends Model
 
     protected string $stateEnum = PurchaseOrderState::class;
 
-    public const NUMBER_PREFIX = 'RFQ';
+    // Column name is fixed; the rest of the format is overridden below to
+    // read from PurchaseOrderSetting so admins can tune the supplier-facing
+    // format without a code change.
     public const NUMBER_COLUMN = 'reference';
-    public const NUMBER_DIGITS = 5;
+
+    public function getNumberPrefix(): string
+    {
+        return PurchaseOrderSetting::instance()->doc_number_prefix ?: 'PO';
+    }
+
+    public function getNumberDigits(): int
+    {
+        return (int) (PurchaseOrderSetting::instance()->doc_number_padding ?: 5);
+    }
+
+    public function getNumberSeparator(): string
+    {
+        return (string) PurchaseOrderSetting::instance()->doc_number_separator;
+    }
+
+    public function getNumberUsesYearReset(): bool
+    {
+        return (bool) PurchaseOrderSetting::instance()->doc_number_yearly_reset;
+    }
 
     protected array $logActions = ['created', 'updated', 'deleted'];
     

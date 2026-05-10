@@ -5,6 +5,7 @@ namespace App\Livewire\Purchase\Rfq;
 use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
 use App\Models\Purchase\PurchaseRfq;
+use App\Models\Settings\PurchaseOrderSetting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -47,7 +48,10 @@ class Form extends Component
                 $this->rfqId = $rfq->id;
                 $this->reference = $rfq->reference;
                 $this->supplier_id = $rfq->supplier_id ? (int) $rfq->supplier_id : null;
-                $this->supplier_name = $rfq->supplier_name;
+                // supplier_name is nullable in the DB but the form property
+                // is a non-nullable string — coerce so PHP 8.5 strict types
+                // don't TypeError when editing an RFQ with no supplier name.
+                $this->supplier_name = (string) ($rfq->supplier_name ?? '');
                 $this->order_date = $rfq->order_date;
                 $this->expected_arrival = $rfq->expected_arrival ?? '';
                 $this->status = $rfq->status;
@@ -61,8 +65,22 @@ class Form extends Component
                 $this->loadLines($id);
             }
         } else {
+            // New-record setup. Pull document number + delivery defaults
+            // from PurchaseOrderSetting. Reference was previously generated
+            // via rand(1, 9999) — random not sequential, collision-prone,
+            // and inconsistent with the Eloquent path which used the
+            // HasYearlySequenceNumber trait. Both paths now agree.
+            $settings = PurchaseOrderSetting::instance();
+
             $this->order_date = now()->format('Y-m-d');
-            $this->reference = 'RFQ-' . str_pad(rand(1, 9999), 5, '0', STR_PAD_LEFT);
+            $this->reference  = $settings->nextDocumentNumber();
+
+            if ($settings->default_lead_time_days > 0) {
+                $this->expected_arrival = now()
+                    ->addDays((int) $settings->default_lead_time_days)
+                    ->format('Y-m-d');
+            }
+
             $this->addLine();
         }
 
