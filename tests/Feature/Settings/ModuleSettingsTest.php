@@ -12,13 +12,16 @@ use App\Models\Settings\SalesOrderSetting;
 
 describe('SalesOrderSetting', function () {
     it('creates a row with sensible defaults on first instance() call', function () {
+        SalesOrderSetting::clearCache();
         $settings = SalesOrderSetting::instance();
 
+        // Defaults match current production format ("SO00001") so existing
+        // installs don't see their numbering change after the migration.
         expect($settings)->toBeInstanceOf(SalesOrderSetting::class)
             ->and($settings->doc_number_prefix)->toBe('SO')
-            ->and($settings->doc_number_separator)->toBe('/')
+            ->and($settings->doc_number_separator)->toBe('')
             ->and($settings->doc_number_padding)->toBe(5)
-            ->and($settings->doc_number_yearly_reset)->toBeTrue()
+            ->and($settings->doc_number_yearly_reset)->toBeFalse()
             ->and($settings->quotation_validity_days)->toBe(30)
             ->and($settings->auto_send_on_confirm)->toBeFalse()
             ->and($settings->stock_check_mode)->toBe('warn');
@@ -32,38 +35,48 @@ describe('SalesOrderSetting', function () {
         expect(SalesOrderSetting::count())->toBe(1);
     });
 
-    it('formats document numbers with yearly reset (default behavior)', function () {
+    it('formats document numbers in the default no-year format (matches current SO production)', function () {
+        SalesOrderSetting::clearCache();
         $settings = SalesOrderSetting::instance();
 
-        expect($settings->formatDocumentNumber(1, 2026))->toBe('SO/2026/00001');
-        expect($settings->formatDocumentNumber(42, 2026))->toBe('SO/2026/00042');
+        // With separator='' and yearly_reset=false the format is just
+        // {prefix}{padded} — i.e. "SO00001". Same as production today.
+        expect($settings->formatDocumentNumber(1))->toBe('SO00001');
+        expect($settings->formatDocumentNumber(42))->toBe('SO00042');
     });
 
-    it('formats document numbers without yearly reset when configured', function () {
+    it('formats document numbers with yearly reset when admin enables it', function () {
+        SalesOrderSetting::clearCache();
         $settings = SalesOrderSetting::instance();
-        $settings->update(['doc_number_yearly_reset' => false]);
+        $settings->update(['doc_number_separator' => '/', 'doc_number_yearly_reset' => true]);
+        SalesOrderSetting::clearCache();
 
-        expect($settings->fresh()->formatDocumentNumber(1))->toBe('SO/00001');
+        expect(SalesOrderSetting::instance()->formatDocumentNumber(7, 2026))->toBe('SO/2026/00007');
     });
 
     it('honors a custom prefix, separator, and padding', function () {
+        SalesOrderSetting::clearCache();
         $settings = SalesOrderSetting::instance();
         $settings->update([
-            'doc_number_prefix'    => 'QUO',
-            'doc_number_separator' => '-',
-            'doc_number_padding'   => 3,
+            'doc_number_prefix'       => 'QUO',
+            'doc_number_separator'    => '-',
+            'doc_number_padding'      => 3,
+            'doc_number_yearly_reset' => true,
         ]);
+        SalesOrderSetting::clearCache();
 
-        expect($settings->fresh()->formatDocumentNumber(7, 2026))->toBe('QUO-2026-007');
+        expect(SalesOrderSetting::instance()->formatDocumentNumber(7, 2026))->toBe('QUO-2026-007');
     });
 
     it('persists writes and survives a fresh load', function () {
+        SalesOrderSetting::clearCache();
         $original = SalesOrderSetting::instance();
         $original->update([
             'quotation_validity_days' => 14,
             'auto_send_on_confirm'    => true,
             'stock_check_mode'        => 'block',
         ]);
+        SalesOrderSetting::clearCache();
 
         $reloaded = SalesOrderSetting::instance();
         expect($reloaded->quotation_validity_days)->toBe(14)

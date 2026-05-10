@@ -1,50 +1,161 @@
 <div>
+    {{-- Flash Messages --}}
+    <div class="fixed right-4 top-20 z-[300] w-96 space-y-2">
+        @if(session('success'))
+            <x-ui.alert type="success" :duration="5000">{{ session('success') }}</x-ui.alert>
+        @endif
+        @if(session('error'))
+            <x-ui.alert type="error" :duration="7000">{{ session('error') }}</x-ui.alert>
+        @endif
+    </div>
+
     <x-slot:header>
         <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Sales Order</h1>
         <button
             type="button"
-            wire:click="save"
-            wire:loading.attr="disabled"
-            wire:target="save"
-            class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            x-data="{ saving: false }"
+            x-on:click="saving = true; Livewire.dispatch('saveSalesOrderSettings')"
+            x-on:sales-order-saved.window="saving = false"
+            x-bind:disabled="saving"
+            class="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
-            <span wire:loading.remove wire:target="save">Save</span>
-            <span wire:loading wire:target="save">Saving...</span>
+            <svg x-show="saving" class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span x-show="!saving">Save</span>
+            <span x-show="saving">Saving…</span>
         </button>
     </x-slot:header>
 
-    <div class="space-y-8">
-        {{-- Order Settings Section --}}
+    <form wire:submit.prevent="save" class="space-y-8">
+        {{-- Document Numbering --}}
         <section>
-            <x-ui.section-bar title="Order Settings" :first="true" />
+            <x-ui.section-bar title="Document Numbering" :first="true" />
+            <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+                How quotation and sales-order numbers are generated. Customers see this on every email and PDF.
+            </p>
 
-            <div class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
-                <flux:icon name="shopping-cart" class="mx-auto size-10 text-zinc-300 dark:text-zinc-600" />
-                <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Order numbering format, prefix, and sequence</p>
-                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Coming soon</p>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                <div class="lg:col-span-3">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Prefix</label>
+                    <input type="text" wire:model.live="doc_number_prefix" maxlength="20"
+                        class="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                    @error('doc_number_prefix') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Separator</label>
+                    <input type="text" wire:model.live="doc_number_separator" maxlength="5" placeholder="(none)"
+                        class="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                    @error('doc_number_separator') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Padding</label>
+                    <input type="number" wire:model.live="doc_number_padding" min="1" max="10"
+                        class="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                    @error('doc_number_padding') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
+                <div class="lg:col-span-5 flex items-center">
+                    <label class="inline-flex items-center gap-2">
+                        <input type="checkbox" wire:model.live="doc_number_yearly_reset"
+                            class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800">
+                        <span class="text-sm text-zinc-700 dark:text-zinc-300">Reset sequence each year (include year in number)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <p class="text-xs uppercase tracking-wider text-zinc-400">Preview</p>
+                <p class="mt-0.5 font-mono text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ $this->numberPreview }}</p>
+                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    Existing order numbers in your database are not renamed — only new orders use this format.
+                </p>
             </div>
         </section>
 
-        {{-- Quotation Section --}}
+        {{-- Quotation --}}
         <section>
             <x-ui.section-bar title="Quotation" />
+            <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+                Behavior of quotations issued to customers.
+            </p>
 
-            <div class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
-                <flux:icon name="document-duplicate" class="mx-auto size-10 text-zinc-300 dark:text-zinc-600" />
-                <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Default validity period, auto-expiry, templates</p>
-                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Coming soon</p>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                <div class="lg:col-span-4">
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Validity period (days)</label>
+                    <input type="number" wire:model.live="quotation_validity_days" min="1" max="365"
+                        class="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Shown on every quotation PDF and email.</p>
+                    @error('quotation_validity_days') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
+                <div class="lg:col-span-8 flex items-center">
+                    <label class="inline-flex items-center gap-2">
+                        <input type="checkbox" wire:model.live="auto_send_on_confirm"
+                            class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800">
+                        <span class="text-sm text-zinc-700 dark:text-zinc-300">Automatically email the customer when an order is confirmed</span>
+                    </label>
+                </div>
             </div>
         </section>
 
-        {{-- Pricing Section --}}
+        {{-- Stock control --}}
         <section>
-            <x-ui.section-bar title="Pricing" />
-
-            <div class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
-                <flux:icon name="currency-dollar" class="mx-auto size-10 text-zinc-300 dark:text-zinc-600" />
-                <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Price lists, discount policies, margin settings</p>
-                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Coming soon</p>
+            <x-ui.section-bar title="Stock Control" />
+            <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+                What happens when a sales rep tries to confirm an order with insufficient stock.
+            </p>
+            <div class="space-y-2">
+                @foreach([
+                    'allow' => ['Allow', 'Confirm anyway, never block on stock.'],
+                    'warn'  => ['Warn (recommended)', 'Show a warning but let the rep confirm. Today\'s default.'],
+                    'block' => ['Block', 'Refuse to confirm until stock is replenished.'],
+                ] as $value => [$label, $description])
+                    <label class="flex items-start gap-3 rounded-lg border border-zinc-200 p-3 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/50 cursor-pointer">
+                        <input type="radio" wire:model.live="stock_check_mode" value="{{ $value }}"
+                            class="mt-0.5 border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800">
+                        <div>
+                            <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</p>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $description }}</p>
+                        </div>
+                    </label>
+                @endforeach
+                @error('stock_check_mode') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
             </div>
         </section>
-    </div>
+
+        {{-- Defaults --}}
+        <section>
+            <x-ui.section-bar title="Defaults" />
+            <p class="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+                Pre-filled on every new quote/order so the sales rep doesn't retype boilerplate.
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Default payment term</label>
+                    <select wire:model.live="default_payment_term_id"
+                        class="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                        <option value="">— Ask every time —</option>
+                        @foreach($paymentTerms as $term)
+                            <option value="{{ $term->id }}">{{ $term->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Default terms &amp; conditions</label>
+                    <textarea wire:model.live="default_terms" rows="4" maxlength="5000"
+                        placeholder="e.g. All quotations are valid for the period stated. Prices in IDR. Delivery time 7-14 working days."
+                        class="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Default notes</label>
+                    <textarea wire:model.live="default_notes" rows="3" maxlength="5000"
+                        placeholder="Internal notes pre-filled on each new order."
+                        class="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"></textarea>
+                </div>
+            </div>
+        </section>
+    </form>
 </div>

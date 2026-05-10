@@ -14,10 +14,13 @@ return new class extends Migration
             // Document numbering — replaces the hardcoded "SO/{year}/{seq}"
             // currently in HasYearlySequenceNumber. Every customer sees this
             // on every quote/order email + PDF.
+            // Defaults preserve current production format ("SO00001" — no
+            // separator, no year). Admins can switch to "SO/2026/00001",
+            // "QUO-2026-001", etc. via the settings page.
             $table->string('doc_number_prefix', 20)->default('SO');
-            $table->string('doc_number_separator', 5)->default('/');
+            $table->string('doc_number_separator', 5)->default('');
             $table->integer('doc_number_padding')->default(5);
-            $table->boolean('doc_number_yearly_reset')->default(true);
+            $table->boolean('doc_number_yearly_reset')->default(false);
 
             // Quotation behavior — drives the "valid for N days" line on
             // PDFs and emails. Hardcoded to 30 in pdf/sales-order.blade.php

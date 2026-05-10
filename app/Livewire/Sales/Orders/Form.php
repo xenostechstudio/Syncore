@@ -137,6 +137,16 @@ class Form extends Component
             $this->orderId = $id;
             $this->loadOrder();
         } else {
+            // New-order setup. Pre-fill terms + notes from settings so the
+            // sales rep doesn't retype the same boilerplate every quote.
+            $settings = \App\Models\Settings\SalesOrderSetting::instance();
+            if (!empty($settings->default_terms)) {
+                $this->terms = (string) $settings->default_terms;
+            }
+            if (!empty($settings->default_notes)) {
+                $this->notes = (string) $settings->default_notes;
+            }
+
             // Add one empty item row
             $this->addItem();
         }

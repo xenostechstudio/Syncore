@@ -8,11 +8,12 @@ use App\Models\Invoicing\Invoice;
 use App\Models\Sales\Pricelist;
 use App\Models\Sales\Promotion;
 use App\Models\User;
+use App\Models\Settings\SalesOrderSetting;
 use App\Traits\HasAttachments;
 use App\Traits\HasNotes;
-use App\Traits\HasSequenceNumber;
 use App\Traits\HasSoftDeletes;
 use App\Traits\HasStateMachine;
+use App\Traits\HasYearlySequenceNumber;
 use App\Traits\LogsActivity;
 use App\Traits\Searchable;
 use Database\Factories\Sales\SalesOrderFactory;
@@ -26,13 +27,34 @@ use Illuminate\Support\Str;
 class SalesOrder extends Model
 {
     /** @use HasFactory<SalesOrderFactory> */
-    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasSequenceNumber, HasAttachments, HasStateMachine;
+    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasYearlySequenceNumber, HasAttachments, HasStateMachine;
 
     protected string $stateEnum = SalesOrderState::class;
 
-    public const NUMBER_PREFIX = 'SO';
+    // Column name is fixed; the rest of the format (prefix / separator /
+    // padding / yearly-reset) is overridden below to read from
+    // SalesOrderSetting so admins can tune the customer-facing format.
     public const NUMBER_COLUMN = 'order_number';
-    public const NUMBER_DIGITS = 5;
+
+    public function getNumberPrefix(): string
+    {
+        return SalesOrderSetting::instance()->doc_number_prefix ?: 'SO';
+    }
+
+    public function getNumberDigits(): int
+    {
+        return (int) (SalesOrderSetting::instance()->doc_number_padding ?: 5);
+    }
+
+    public function getNumberSeparator(): string
+    {
+        return (string) SalesOrderSetting::instance()->doc_number_separator;
+    }
+
+    public function getNumberUsesYearReset(): bool
+    {
+        return (bool) SalesOrderSetting::instance()->doc_number_yearly_reset;
+    }
     
     protected array $logActions = ['created', 'updated', 'deleted'];
     

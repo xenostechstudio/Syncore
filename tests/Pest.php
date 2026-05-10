@@ -56,6 +56,12 @@ expect()->extend('toBeOne', function () {
 uses()
     ->beforeEach(function () {
         $this->seed(\Database\Seeders\ModulePermissionSeeder::class);
+
+        // Per-process settings caches survive RefreshDatabase (static
+        // properties live in the PHP process, not the DB). Clear them so
+        // each test sees a clean settings state.
+        \App\Models\Settings\SalesOrderSetting::clearCache();
+        \App\Models\Settings\PurchaseOrderSetting::clearCache();
     })
     ->in('Feature');
 

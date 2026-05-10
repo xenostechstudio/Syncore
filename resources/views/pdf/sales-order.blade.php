@@ -189,8 +189,9 @@
 
         {{-- Validity Notice --}}
         @if($isQuotation)
+        @php $validityDays = (int) (\App\Models\Settings\SalesOrderSetting::instance()->quotation_validity_days ?? 30); @endphp
         <div class="validity">
-            <strong>Quotation Validity:</strong> This quotation is valid for 30 days from the date of issue.
+            <strong>Quotation Validity:</strong> This quotation is valid for {{ $validityDays }} {{ \Illuminate\Support\Str::plural('day', $validityDays) }} from the date of issue.
         </div>
         @endif
 

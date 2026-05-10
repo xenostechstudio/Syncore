@@ -40,17 +40,41 @@ class SalesOrderSetting extends Model
      * Get the singleton instance, creating it with sensible defaults if it
      * doesn't exist yet. Same pattern as InvoiceSetting::instance().
      */
+    /**
+     * Per-process cache so that creating N records in a loop (seeders, bulk
+     * imports) doesn't hit the DB N times. The settings are effectively
+     * static for the lifetime of a request/job.
+     */
+    protected static ?self $cached = null;
+
     public static function instance(): self
     {
-        return static::firstOrCreate([], [
+        if (static::$cached) {
+            return static::$cached;
+        }
+
+        return static::$cached = static::firstOrCreate([], [
+            // Defaults match current production format: "SO00001" (no
+            // separator, no year). Switch on yearly_reset and set a
+            // separator to get "SO/2026/00001" or similar.
             'doc_number_prefix'       => 'SO',
-            'doc_number_separator'    => '/',
+            'doc_number_separator'    => '',
             'doc_number_padding'      => 5,
-            'doc_number_yearly_reset' => true,
+            'doc_number_yearly_reset' => false,
             'quotation_validity_days' => 30,
             'auto_send_on_confirm'    => false,
             'stock_check_mode'        => 'warn',
         ]);
+    }
+
+    /**
+     * Bust the per-process cache. Called from the settings save action so
+     * the new values take effect for the rest of the current request /
+     * subsequent requests.
+     */
+    public static function clearCache(): void
+    {
+        static::$cached = null;
     }
 
     public function defaultPaymentTerm(): BelongsTo

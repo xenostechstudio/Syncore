@@ -36,9 +36,15 @@ class PurchaseOrderSetting extends Model
         'approval_threshold'      => 'decimal:2',
     ];
 
+    protected static ?self $cached = null;
+
     public static function instance(): self
     {
-        return static::firstOrCreate([], [
+        if (static::$cached) {
+            return static::$cached;
+        }
+
+        return static::$cached = static::firstOrCreate([], [
             'doc_number_prefix'       => 'PO',
             'doc_number_separator'    => '/',
             'doc_number_padding'      => 5,
@@ -46,6 +52,11 @@ class PurchaseOrderSetting extends Model
             'default_lead_time_days'  => 7,
             'auto_send_to_supplier'   => false,
         ]);
+    }
+
+    public static function clearCache(): void
+    {
+        static::$cached = null;
     }
 
     public function defaultWarehouse(): BelongsTo
