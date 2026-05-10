@@ -232,6 +232,20 @@ class PdfService
     }
 
     /**
+     * Render the invoice PDF and return raw bytes — used by InvoiceNotification
+     * to attach the PDF to the customer email so "Please find attached" in the
+     * message body is no longer a lie.
+     */
+    public static function renderInvoice(Invoice $invoice): string
+    {
+        $invoice->loadMissing(['customer', 'items.product', 'payments']);
+
+        return Pdf::loadView('pdf.invoice', [
+            'invoice' => $invoice,
+        ] + self::brandContext())->output();
+    }
+
+    /**
      * Get company information for PDF headers.
      *
      * @return array{name: string, address: string, phone: string, email: string, website: string, logo: string|null, tax_id: string}

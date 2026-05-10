@@ -1,9 +1,13 @@
 <x-mail::message>
 # Invoice {{ $invoice->invoice_number }}
 
+@if(!empty($customMessage))
+{!! nl2br(e($customMessage)) !!}
+@else
 Dear {{ $customer?->name ?? 'Customer' }},
 
 A new invoice has been generated for you.
+@endif
 
 **Invoice Details:**
 - Invoice Number: {{ $invoice->invoice_number }}

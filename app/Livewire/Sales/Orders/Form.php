@@ -1068,24 +1068,21 @@ Best regards,
 
         try {
             $order = SalesOrder::with(['customer', 'items.product'])->findOrFail($this->orderId);
-            
-            // Send the email
-            \Illuminate\Support\Facades\Mail::send([], [], function ($message) use ($order) {
-                $message->to($this->emailRecipients)
-                    ->subject($this->emailSubject)
-                    ->html(nl2br(e($this->emailBody)));
-                
-                if ($this->emailAttachPdf) {
-                    $pdfBytes = \App\Services\PdfService::renderSalesOrder($order);
-                    $isQuotation = in_array($order->status, ['draft', 'confirmed']);
-                    $documentType = $isQuotation ? 'Quotation' : 'Sales Order';
-                    $message->attachData(
-                        $pdfBytes,
-                        "{$documentType} - {$order->order_number}.pdf",
-                        ['mime' => 'application/pdf']
-                    );
-                }
-            });
+            $order->ensureShareToken();
+
+            // Use a real Mailable rather than the legacy Mail::send([],[],$closure)
+            // form. The closure form bypasses Mail::fake() in tests, and it
+            // hard-coded the PDF render + subject building inline. The Mailable
+            // owns those concerns now (envelope subject, attachments() builds
+            // the PDF, view renders the body), and Mail::assertSent works.
+            \Illuminate\Support\Facades\Mail::to($this->emailRecipients)->send(
+                new \App\Mail\SalesOrderNotification(
+                    $order,
+                    $this->emailSubject,
+                    $this->emailBody,
+                    (bool) $this->emailAttachPdf
+                )
+            );
 
             // Update status to quotation_sent if it was draft
             if ($order->status === 'draft') {

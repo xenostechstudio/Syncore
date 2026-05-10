@@ -363,7 +363,12 @@ class Form extends Component
 
         try {
             $invoice = Invoice::findOrFail($this->invoiceId);
-            
+            // Defense in depth: openShareModal also calls this, but
+            // sendInvoiceEmail can in principle be invoked without the modal
+            // open (and the mailable's "View Invoice" button needs the
+            // share_token to exist).
+            $invoice->ensureShareToken();
+
             Mail::to($this->emailTo)->send(new InvoiceNotification(
                 $invoice,
                 $this->emailSubject,
