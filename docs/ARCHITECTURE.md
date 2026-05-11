@@ -276,11 +276,13 @@ regression in any one fails CI independently.
 
 ## Activity log retention
 
-`activity_logs` is unbounded by default. The
-`activity-logs:cleanup --days=N` artisan command (defaults to 90) prunes
-entries older than N days. Wire it into the schedule in
-`app/Console/Kernel.php` (or `bootstrap/app.php` `withSchedule`) for
-production.
+`activity_logs` grows unbounded otherwise. The `activity-logs:cleanup
+--days=N` artisan command (defaults to 90) prunes older entries and is
+already scheduled weekly (Sunday 02:00) in `routes/console.php` —
+alongside `invoices:check-overdue` (daily 08:00), `inventory:check-low-stock`
+(daily 09:00), and an hourly dashboard cache flush. Make sure the
+production cron is wired to `php artisan schedule:run` every minute or
+none of these run.
 
 ## Dashboards
 

@@ -321,6 +321,50 @@ public function test_can_create_sales_order(): void
 }
 ```
 
+## Production deploy checklist
+
+The dev `.env.example` is not safe for production (`MAIL_MAILER=log`,
+`APP_DEBUG=true`, SQLite, `database` queue/cache). Use `.env.production.example`
+as the base for the prod env file.
+
+Pre-deploy steps:
+
+```bash
+# Copy + edit the prod template, fill secrets.
+cp .env.production.example .env
+chmod 600 .env
+
+# One-time setup
+composer install --no-dev --optimize-autoloader
+php artisan key:generate --force
+php artisan migrate --force
+php artisan storage:link
+
+# Compile assets
+npm ci && npm run build
+
+# Cache config / routes / views / events (re-run on every deploy)
+php artisan config:cache route:cache view:cache event:cache
+```
+
+Required infrastructure (see [CONFIGURATION.md](CONFIGURATION.md) for
+Supervisor + cron + backup snippets):
+
+- **Queue worker** running `php artisan queue:work --tries=3 --timeout=60`
+  under Supervisor or systemd. Without this, every queued listener (email,
+  notifications, activity log writes) backs up indefinitely.
+- **Scheduler cron** running `php artisan schedule:run` every minute.
+  Drives activity-log cleanup, overdue invoice checks, low-stock alerts.
+  Without it, none of `routes/console.php`'s Schedule entries fire.
+- **Reverse proxy / TLS** terminating HTTPS in front of the app. Public
+  invoice links use `URL::signedRoute(...)` whose signatures cover the
+  scheme — Xendit won't accept HTTP webhook URLs in live mode anyway.
+- **Backup cron** doing `pg_dump` + `tar` of `storage/app/public` daily
+  to off-host storage. Recipe in `docs/CONFIGURATION.md`.
+- **Xendit webhook URL** pointing at `https://<domain>/api/webhooks/xendit/invoice`
+  with the matching `XENDIT_WEBHOOK_TOKEN` set in env. The controller
+  refuses webhooks in production when the token is empty.
+
 ## Troubleshooting
 
 ### Common Issues
