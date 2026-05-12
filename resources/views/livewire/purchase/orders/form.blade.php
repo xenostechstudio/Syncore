@@ -264,10 +264,15 @@
                             <div class="space-y-3">
                                 {{-- Order Deadline --}}
                                 <div class="flex items-center gap-4">
-                                    <label class="w-32 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Order Deadline</label>
+                                    <span class="inline-flex w-32 flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-light text-zinc-600 dark:text-zinc-400">
+                                        <label>Order Deadline</label>
+                                        <x-ui.help-tip>
+                                            Used for aging reports and supplier scorecards — measures how long between order placement and goods receipt. Defaults to today; backdate only if you're entering a historical PO.
+                                        </x-ui.help-tip>
+                                    </span>
                                     <div class="relative flex-1">
-                                        <input 
-                                            type="date" 
+                                        <input
+                                            type="date"
                                             wire:model="order_date"
                                             class="w-full rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-sm text-zinc-900 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700"
                                         />
@@ -276,7 +281,12 @@
 
                                 {{-- Expected Arrival --}}
                                 <div class="flex items-center gap-4">
-                                    <label class="w-32 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Expected Arrival</label>
+                                    <span class="inline-flex w-32 flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-light text-zinc-600 dark:text-zinc-400">
+                                        <label>Expected Arrival</label>
+                                        <x-ui.help-tip>
+                                            Estimated date the goods will arrive at your warehouse. Used for stock planning and to flag late deliveries on the dashboard.
+                                        </x-ui.help-tip>
+                                    </span>
                                     <div class="relative flex-1">
                                         <input 
                                             type="date" 

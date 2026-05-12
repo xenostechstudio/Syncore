@@ -432,7 +432,12 @@
 
                                         {{-- Customer Lead Time --}}
                                         <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Lead Time</label>
+                                            <span class="inline-flex w-32 items-center gap-1 whitespace-nowrap text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                                <label>Lead Time</label>
+                                                <x-ui.help-tip>
+                                                    Number of days you promise customers between order confirmation and delivery for this product. Used to default the Expected Delivery Date on new sales orders.
+                                                </x-ui.help-tip>
+                                            </span>
                                             <div class="flex-1 flex items-center gap-2">
                                                 <input 
                                                     type="number"

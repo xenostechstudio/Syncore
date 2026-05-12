@@ -350,7 +350,12 @@
                                         @error('salesperson_id') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
 
                                         <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.payment_terms') }}</label>
+                                            <span class="inline-flex w-32 items-center gap-1 whitespace-nowrap text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                                <label>{{ __('common.payment_terms') }}</label>
+                                                <x-ui.help-tip>
+                                                    {{ __('common.payment_terms_help') }}
+                                                </x-ui.help-tip>
+                                            </span>
                                             <div class="flex-1 relative">
                                                 <select
                                                     wire:model="payment_term_id"
@@ -385,7 +390,12 @@
                                         @error('payment_method') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
 
                                         <div class="flex items-center gap-3">
-                                            <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('common.pricelist') }}</label>
+                                            <span class="inline-flex w-32 items-center gap-1 whitespace-nowrap text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                                <label>{{ __('common.pricelist') }}</label>
+                                                <x-ui.help-tip>
+                                                    {{ __('common.pricelist_help') }}
+                                                </x-ui.help-tip>
+                                            </span>
                                             <div class="flex-1 relative">
                                                 <select
                                                     wire:model="pricelist_id"

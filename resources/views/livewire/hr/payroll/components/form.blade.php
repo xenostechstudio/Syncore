@@ -125,7 +125,12 @@
                                 </div>
 
                                 <div class="flex items-center gap-4" x-data="{ open: false }">
-                                    <label class="w-28 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Calculation</label>
+                                    <span class="inline-flex w-28 flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-light text-zinc-600 dark:text-zinc-400">
+                                        <label>Calculation</label>
+                                        <x-ui.help-tip>
+                                            <strong>Fixed Amount</strong> applies the amount below as-is on every payslip. <strong>Percentage</strong> treats the amount as a percent of the employee's base salary (e.g. 5 = 5%).
+                                        </x-ui.help-tip>
+                                    </span>
                                     <div class="relative flex-1">
                                         <button type="button" @click="open = !open" class="flex w-full items-center justify-between rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-left text-sm transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:hover:border-zinc-700">
                                             <span class="text-zinc-900 dark:text-zinc-100">{{ ucfirst($calculationType) }}</span>
@@ -157,7 +162,12 @@
                                     <div class="flex flex-1 flex-wrap gap-4">
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" wire:model="isTaxable" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800">
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-300">Taxable</span>
+                                            <span class="inline-flex items-center gap-1 whitespace-nowrap text-sm text-zinc-700 dark:text-zinc-300">
+                                                Taxable
+                                                <x-ui.help-tip>
+                                                    When on, this component is added to the employee's taxable income base. Turn off for non-taxable allowances like transport reimbursement (subject to local regulations).
+                                                </x-ui.help-tip>
+                                            </span>
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" wire:model="isActive" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800">

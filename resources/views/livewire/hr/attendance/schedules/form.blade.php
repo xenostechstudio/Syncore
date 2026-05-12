@@ -98,7 +98,12 @@
                                 </label>
                                 <label class="flex items-center gap-2">
                                     <input type="checkbox" wire:model="is_flexible" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800">
-                                    <span class="text-sm text-zinc-700 dark:text-zinc-300">{{ __('attendance.is_flexible') }}</span>
+                                    <span class="inline-flex items-center gap-1 whitespace-nowrap text-sm text-zinc-700 dark:text-zinc-300">
+                                        {{ __('attendance.is_flexible') }}
+                                        <x-ui.help-tip>
+                                            {{ __('attendance.is_flexible_help') }}
+                                        </x-ui.help-tip>
+                                    </span>
                                 </label>
                             </div>
                         </div>
@@ -118,7 +123,12 @@
                                 <input type="number" wire:model="break_duration" min="0" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('attendance.grace_period_minutes') }} <span class="text-red-500">*</span></label>
+                                <label class="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                                    {{ __('attendance.grace_period_minutes') }} <span class="text-red-500">*</span>
+                                    <x-ui.help-tip>
+                                        {{ __('attendance.grace_period_help') }}
+                                    </x-ui.help-tip>
+                                </label>
                                 <input type="number" wire:model="grace_period_minutes" min="0" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                             </div>
                         </div>
@@ -150,7 +160,12 @@
                         {{-- Half Day Threshold & Description --}}
                         <div class="grid grid-cols-1 gap-x-6 gap-y-4 p-6 md:grid-cols-2">
                             <div>
-                                <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400">{{ __('attendance.half_day_threshold_minutes') }}</label>
+                                <label class="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                                    {{ __('attendance.half_day_threshold_minutes') }}
+                                    <x-ui.help-tip>
+                                        {{ __('attendance.half_day_threshold_help') }}
+                                    </x-ui.help-tip>
+                                </label>
                                 <input type="number" wire:model="half_day_threshold_minutes" min="0" class="mt-1 block w-full rounded-lg border-zinc-300 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                             </div>
                             <div>

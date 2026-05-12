@@ -200,7 +200,12 @@
 
                             {{-- Adjustment Type --}}
                             <div class="flex items-center gap-4">
-                                <label class="w-28 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Type</label>
+                                <span class="inline-flex w-28 flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-light text-zinc-600 dark:text-zinc-400">
+                                    <label>Type</label>
+                                    <x-ui.help-tip>
+                                        <strong>Increase / Decrease</strong> add or subtract a delta from current stock. <strong>Inventory Count</strong> sets the absolute on-hand quantity, overriding whatever the system thinks the level is — used after a physical recount.
+                                    </x-ui.help-tip>
+                                </span>
                                 <div class="relative flex-1">
                                     <select wire:model="adjustment_type" class="w-full rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-sm text-zinc-900 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700">
                                         @if($isIn)

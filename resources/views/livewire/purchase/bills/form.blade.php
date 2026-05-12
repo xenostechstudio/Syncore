@@ -253,7 +253,12 @@
                                         class="w-full rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-sm text-zinc-900 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700 disabled:opacity-50" />
                                 </div>
                                 <div class="flex items-center gap-4">
-                                    <label class="w-32 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Purchase Order</label>
+                                    <span class="inline-flex w-32 flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-light text-zinc-600 dark:text-zinc-400">
+                                        <label>Purchase Order</label>
+                                        <x-ui.help-tip>
+                                            Link this bill to the originating PO so the system can reconcile billed amounts against received quantities. Leave unlinked for direct vendor charges (rent, utilities, services) that don't follow a PO.
+                                        </x-ui.help-tip>
+                                    </span>
                                     <select wire:model="purchase_rfq_id" @disabled($status !== 'draft')
                                         class="w-full rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-sm text-zinc-900 transition-colors hover:border-zinc-200 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-700 disabled:opacity-50">
                                         <option value="">No linked PO</option>

@@ -97,4 +97,9 @@ return [
     // Empty States
     'no_attendance_hint' => 'Adjust the date range or filters to find attendance records.',
     'employee_not_found' => 'No employee profile linked to your account.',
+
+    // Help tooltips
+    'is_flexible_help' => 'When on, the start and end times below act as a target rather than a hard requirement — late/early arrivals don\'t count as lateness as long as the daily hours are met.',
+    'grace_period_help' => 'Late arrivals within this many minutes are forgiven — the employee is still marked on time. Set to 0 to enforce the start time strictly.',
+    'half_day_threshold_help' => 'If an employee is late by more than this many minutes (or leaves that early), the day is marked as a half day for payroll purposes.',
 ];

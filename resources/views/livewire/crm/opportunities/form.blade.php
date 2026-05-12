@@ -328,7 +328,12 @@
                                 @error('expectedRevenue')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-light text-zinc-600 dark:text-zinc-400">Probability (%)</label>
+                                <label class="mb-2 inline-flex items-center gap-1 text-sm font-light text-zinc-600 dark:text-zinc-400">
+                                    Probability (%)
+                                    <x-ui.help-tip>
+                                        Your estimated chance of closing, 0–100. Drives the weighted pipeline value on dashboards and forecast reports — a 10M opportunity at 30% weights as 3M.
+                                    </x-ui.help-tip>
+                                </label>
                                 <input type="number" wire:model="probability" min="0" max="100" placeholder="0-100" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 transition-colors [appearance:textfield] hover:border-zinc-300 focus:border-zinc-400 focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
                             </div>
                             @if($opportunityId && $opportunity)

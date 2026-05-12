@@ -353,4 +353,8 @@ return [
     'optional' => 'Optional',
     'no_records_found' => 'No records found',
     'employee' => 'Employee',
+
+    // Help tooltips
+    'payment_terms_help' => 'Default for new orders and direct invoices issued to this customer. You can still override on individual documents.',
+    'pricelist_help' => 'Applies to all new orders for this customer — useful for VIP or wholesale tiers. Leave blank to use the order\'s own pricelist on each new document.',
 ];

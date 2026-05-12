@@ -79,7 +79,12 @@
                             @error('roleName') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
 
                             <div class="mt-3 flex items-center gap-3">
-                                <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Guard</label>
+                                <span class="inline-flex w-32 items-center gap-1 whitespace-nowrap text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    <label>Guard</label>
+                                    <x-ui.help-tip>
+                                        Determines where this role applies. <strong>web</strong> for staff who log in through the browser; <strong>api</strong> for service accounts that use API tokens. Most internal roles use <strong>web</strong>.
+                                    </x-ui.help-tip>
+                                </span>
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 text-xs">
                                         <button

@@ -38,6 +38,9 @@
                     <flux:icon name="bars-arrow-up" class="size-4 text-zinc-400" />
                     <span class="text-xs text-zinc-500 dark:text-zinc-400">Priority</span>
                     <input type="number" wire:model.blur="priority" min="1" max="100" class="w-12 border-0 bg-transparent p-0 text-center text-sm font-medium text-zinc-900 focus:ring-0 dark:text-zinc-100" />
+                    <x-ui.help-tip>
+                        When multiple promotions could apply to the same order, the one with the <strong>highest</strong> priority wins. Range 1–100, where 100 takes precedence over 1.
+                    </x-ui.help-tip>
                 </div>
                 @if($promotionId)
                 <div class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-300">

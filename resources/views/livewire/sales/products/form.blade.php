@@ -257,7 +257,12 @@
 
                                     {{-- Invoicing Policy (select column, border only on hover/edit) --}}
                                     <div class="flex items-center gap-3">
-                                        <label class="w-32 text-sm font-medium text-zinc-700 dark:text-zinc-300">Invoicing Policy</label>
+                                        <span class="inline-flex w-32 items-center gap-1 whitespace-nowrap text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                            <label>Invoicing Policy</label>
+                                            <x-ui.help-tip>
+                                                When to bill the customer for this product. <strong>Ordered</strong> creates an invoice as soon as the sales order is confirmed; <strong>Delivered</strong> waits until the goods ship. Affects revenue recognition timing.
+                                            </x-ui.help-tip>
+                                        </span>
                                         <div class="flex-1 relative">
                                             <select
                                                 wire:model="invoicing_policy"

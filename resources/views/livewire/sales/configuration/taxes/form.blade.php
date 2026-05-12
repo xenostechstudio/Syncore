@@ -158,7 +158,12 @@
 
                             {{-- Include in Price --}}
                             <div class="flex items-center gap-4">
-                                <label class="w-32 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Include in Price</label>
+                                <span class="inline-flex w-32 shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    <label>Include in Price</label>
+                                    <x-ui.help-tip>
+                                        Inclusive vs. exclusive tax. When <strong>on</strong>, the product price already contains the tax (price stays as displayed, tax is broken out for reporting). When <strong>off</strong>, the tax is added on top of the product price at checkout.
+                                    </x-ui.help-tip>
+                                </span>
                                 <label class="flex cursor-pointer items-center gap-2">
                                     <input type="checkbox" wire:model="include_in_price" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700" />
                                     <span class="text-sm text-zinc-600 dark:text-zinc-400">Tax is included in product price</span>

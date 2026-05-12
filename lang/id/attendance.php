@@ -97,4 +97,9 @@ return [
     // Empty States
     'no_attendance_hint' => 'Sesuaikan rentang tanggal atau filter untuk menemukan data kehadiran.',
     'employee_not_found' => 'Tidak ada profil karyawan yang terhubung dengan akun Anda.',
+
+    // Help tooltips
+    'is_flexible_help' => 'Saat aktif, waktu mulai dan akhir di bawah berfungsi sebagai target, bukan persyaratan ketat — keterlambatan/lebih awal tidak dihitung selama jam kerja harian terpenuhi.',
+    'grace_period_help' => 'Keterlambatan dalam batas menit ini akan dimaafkan — karyawan tetap dianggap tepat waktu. Setel 0 untuk menerapkan waktu mulai secara ketat.',
+    'half_day_threshold_help' => 'Jika karyawan terlambat lebih dari batas menit ini (atau pulang sebanyak itu lebih awal), hari tersebut dihitung setengah hari untuk penggajian.',
 ];

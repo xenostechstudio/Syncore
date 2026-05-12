@@ -353,4 +353,8 @@ return [
     'optional' => 'Opsional',
     'no_records_found' => 'Tidak ada data ditemukan',
     'employee' => 'Karyawan',
+
+    // Help tooltips
+    'payment_terms_help' => 'Default untuk pesanan baru dan faktur langsung yang diterbitkan untuk pelanggan ini. Anda masih dapat mengubahnya pada dokumen individual.',
+    'pricelist_help' => 'Berlaku untuk semua pesanan baru pelanggan ini — berguna untuk tingkat VIP atau grosir. Kosongkan untuk menggunakan daftar harga pesanan masing-masing dokumen baru.',
 ];

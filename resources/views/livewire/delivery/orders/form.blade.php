@@ -368,7 +368,12 @@
 
                                 {{-- Actual Delivery Date (Right - below) --}}
                                 <div class="flex items-center gap-4">
-                                    <label class="w-32 shrink-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">Actual Date</label>
+                                    <span class="inline-flex w-32 shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                        <label>Actual Date</label>
+                                        <x-ui.help-tip>
+                                            Recorded after the delivery actually happens. Leave blank for in-transit orders — Delivery Date above is just the planned target. The gap between the two drives on-time-delivery KPIs.
+                                        </x-ui.help-tip>
+                                    </span>
                                     <input type="date" wire:model="actual_delivery_date" class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                                 </div>
                             </div>

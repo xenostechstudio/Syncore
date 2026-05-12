@@ -111,7 +111,12 @@
                                     <div class="flex flex-1 flex-wrap gap-4">
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" wire:model="isPaid" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800">
-                                            <span class="text-sm text-zinc-700 dark:text-zinc-300">Paid</span>
+                                            <span class="inline-flex items-center gap-1 whitespace-nowrap text-sm text-zinc-700 dark:text-zinc-300">
+                                                Paid
+                                                <x-ui.help-tip>
+                                                    When on, days taken on this leave type are paid at the normal rate. When off, the days are treated as unpaid leave and prorated out of the employee's monthly payroll.
+                                                </x-ui.help-tip>
+                                            </span>
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" wire:model="requiresApproval" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800">

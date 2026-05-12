@@ -451,7 +451,12 @@
                         <div class="space-y-4 sm:space-y-3">
                             {{-- Expiration --}}
                             <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
-                                <label class="text-sm font-light text-zinc-600 sm:w-28 sm:flex-shrink-0 dark:text-zinc-400">Expiration</label>
+                                <div class="inline-flex items-center gap-1 whitespace-nowrap sm:w-32 sm:flex-shrink-0">
+                                    <label class="text-sm font-light text-zinc-600 dark:text-zinc-400">Expiration</label>
+                                    <x-ui.help-tip>
+                                        The date your quotation expires. After this date the customer must request a fresh quote — pricing isn't held. This doesn't affect delivery or invoice dates.
+                                    </x-ui.help-tip>
+                                </div>
                                 <div class="relative flex-1">
                                     <input 
                                         type="date" 
@@ -463,7 +468,12 @@
 
                             {{-- Pricelist --}}
                             <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4" x-data="{ open: false }">
-                                <label class="text-sm font-light text-zinc-600 sm:w-28 sm:flex-shrink-0 dark:text-zinc-400">Pricelist</label>
+                                <div class="inline-flex items-center gap-1 whitespace-nowrap sm:w-32 sm:flex-shrink-0">
+                                    <label class="text-sm font-light text-zinc-600 dark:text-zinc-400">Pricelist</label>
+                                    <x-ui.help-tip>
+                                        Override product prices for this order — useful for wholesale customers or seasonal discounts. Leave on <em>Default Price</em> to use each product's standard price.
+                                    </x-ui.help-tip>
+                                </div>
                                 <div class="relative flex-1">
                                     <button 
                                         type="button"
@@ -509,7 +519,12 @@
 
                             {{-- Payment Terms --}}
                             <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4" x-data="{ open: false }">
-                                <label class="text-sm font-light text-zinc-600 sm:w-28 sm:flex-shrink-0 dark:text-zinc-400">Payment Terms</label>
+                                <div class="inline-flex items-center gap-1 whitespace-nowrap sm:w-32 sm:flex-shrink-0">
+                                    <label class="text-sm font-light text-zinc-600 dark:text-zinc-400">Payment Terms</label>
+                                    <x-ui.help-tip>
+                                        Determines the invoice due date. <em>Net 30</em> means the customer has 30 days to pay after the invoice is issued; <em>Immediate</em> is due on invoice. Carried forward to every invoice generated from this order.
+                                    </x-ui.help-tip>
+                                </div>
                                 <div class="relative flex-1">
                                     <button 
                                         type="button"
@@ -1107,7 +1122,12 @@
                                 <div class="space-y-4 sm:space-y-3">
                                     {{-- Shipping Policy --}}
                                     <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                                        <label class="text-sm font-medium text-zinc-700 sm:w-36 dark:text-zinc-300">Shipping Policy</label>
+                                        <div class="flex items-center gap-1 sm:w-36">
+                                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Shipping Policy</label>
+                                            <x-ui.help-tip>
+                                                <strong>As soon as possible</strong> ships each line item as it becomes available — may create multiple deliveries. <strong>When all products are ready</strong> waits until everything is in stock before shipping — one delivery.
+                                            </x-ui.help-tip>
+                                        </div>
                                         <div class="relative flex-1">
                                             <select class="w-full appearance-none rounded-lg border border-transparent bg-transparent px-3 py-2 pr-8 text-sm text-zinc-900 hover:border-zinc-300 focus:border-zinc-400 focus:outline-none dark:text-zinc-100 dark:hover:border-zinc-600 dark:focus:border-zinc-500">
                                                 <option value="1">As soon as possible</option>

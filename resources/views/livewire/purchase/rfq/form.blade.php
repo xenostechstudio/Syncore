@@ -316,7 +316,12 @@
                             <div class="space-y-3">
                                 {{-- Order Deadline --}}
                                 <div class="flex items-center gap-4">
-                                    <label class="w-32 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Order Deadline</label>
+                                    <span class="inline-flex w-32 flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-light text-zinc-600 dark:text-zinc-400">
+                                        <label>Order Deadline</label>
+                                        <x-ui.help-tip>
+                                            The date by which the supplier should commit to the quotation. Becomes the official order date once you confirm the RFQ.
+                                        </x-ui.help-tip>
+                                    </span>
                                     <div class="relative flex-1">
                                         <input 
                                             type="date" 
@@ -328,7 +333,12 @@
 
                                 {{-- Expected Arrival --}}
                                 <div class="flex items-center gap-4">
-                                    <label class="w-32 flex-shrink-0 text-sm font-light text-zinc-600 dark:text-zinc-400">Expected Arrival</label>
+                                    <span class="inline-flex w-32 flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-light text-zinc-600 dark:text-zinc-400">
+                                        <label>Expected Arrival</label>
+                                        <x-ui.help-tip>
+                                            Estimated date the goods will arrive at your warehouse. Used for stock planning and to flag late deliveries on the dashboard.
+                                        </x-ui.help-tip>
+                                    </span>
                                     <div class="relative flex-1">
                                         <input 
                                             type="date" 
