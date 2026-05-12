@@ -194,21 +194,53 @@ class PerformanceService
     }
 
     /**
-     * Check queue connection.
+     * Check queue connection. Actually probes the backend rather than
+     * just echoing `config('queue.default')` — for the database driver
+     * verifies the jobs table exists; for redis sends a PING. Anything
+     * else is treated as best-effort "configured" since we have no
+     * universal probe.
      */
     protected static function checkQueueConnection(): array
     {
+        $driver = config('queue.default');
+        $start = microtime(true);
+
         try {
+            $reachable = match ($driver) {
+                'database' => \Illuminate\Support\Facades\Schema::hasTable(
+                    config('queue.connections.database.table', 'jobs')
+                ),
+                'redis' => \Illuminate\Support\Facades\Redis::connection(
+                    config('queue.connections.redis.connection', 'default')
+                )->ping() !== false,
+                'sync', 'null' => true,
+                default => null,
+            };
+        } catch (\Throwable $e) {
             return [
-                'status' => 'configured',
-                'driver' => config('queue.default'),
-            ];
-        } catch (\Exception $e) {
-            return [
-                'status' => 'error',
+                'status'  => 'error',
+                'driver'  => $driver,
                 'message' => $e->getMessage(),
             ];
         }
+
+        $time = (microtime(true) - $start) * 1000;
+
+        if ($reachable === false) {
+            return [
+                'status' => 'error',
+                'driver' => $driver,
+                'message' => $driver === 'database'
+                    ? 'jobs table is missing — run `php artisan queue:table && php artisan migrate`'
+                    : 'queue backend probe failed',
+            ];
+        }
+
+        return [
+            'status'           => $reachable === null ? 'configured' : 'connected',
+            'driver'           => $driver,
+            'response_time_ms' => round($time, 2),
+        ];
     }
 
     /**

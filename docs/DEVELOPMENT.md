@@ -345,7 +345,16 @@ npm ci && npm run build
 
 # Cache config / routes / views / events (re-run on every deploy)
 php artisan config:cache route:cache view:cache event:cache
+
+# Post-deploy sanity check — fails on common misconfigs (APP_DEBUG=true,
+# sqlite in prod, missing Xendit token, sync queue in prod, etc.)
+php artisan production:check
 ```
+
+Uptime monitoring should hit `GET /api/health` — returns 200 when the
+database, cache, and queue probes all pass and 503 if any backend
+reports `error`. For optional Sentry wiring, see
+[CONFIGURATION.md → Error Tracking](CONFIGURATION.md#error-tracking-optional).
 
 Required infrastructure (see [CONFIGURATION.md](CONFIGURATION.md) for
 Supervisor + cron + backup snippets):

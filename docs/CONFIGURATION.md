@@ -377,6 +377,54 @@ public function boot()
 
 ---
 
+## Error Tracking (optional)
+
+Sentry isn't installed by default — the prod baseline keeps the dependency
+list minimal. Wire it up when you're ready to triage exceptions from a
+dashboard instead of grepping `storage/logs/laravel.log`.
+
+```bash
+composer require sentry/sentry-laravel
+php artisan sentry:publish --dsn=https://<your-dsn>@sentry.io/<project-id>
+```
+
+In `.env`:
+
+```env
+SENTRY_LARAVEL_DSN=${SENTRY_DSN}
+SENTRY_TRACES_SAMPLE_RATE=0.1   # 10% of requests get a perf trace
+SENTRY_SEND_DEFAULT_PII=false   # don't ship user IPs / emails
+```
+
+In `bootstrap/app.php`:
+
+```php
+->withExceptions(function (Exceptions $exceptions) {
+    \Sentry\Laravel\Integration::handles($exceptions);
+})
+```
+
+A few things that need handling specifically in this app:
+
+- **Webhook payloads carry PII.** Filter them out in
+  `config/sentry.php` `before_send` so we don't ship customer emails,
+  Xendit external IDs, or bank-account fragments to a third party. The
+  Xendit controller is the highest-volume offender.
+- **Queued jobs.** Sentry's queue integration is on by default — verify
+  it's hooking your worker with `php artisan queue:work --once` and
+  forcing a failure. If you don't see the event, the worker process
+  isn't picking up `bootstrap/app.php` correctly.
+- **PHPDeprecated warnings.** PHP 8.5 produces a lot of these from
+  vendor code. Filter them in `before_send` or you'll burn your event
+  quota in a week.
+
+If you're on a budget, log-only is fine — `php artisan production:check`
+catches the config-level "would this break in prod" issues, and the
+`/api/health` endpoint covers uptime monitoring (point UptimeRobot,
+Pingdom, or any HTTP probe at it).
+
+---
+
 ## Artisan Commands
 
 ### Cache Management
@@ -401,6 +449,26 @@ php artisan cache:manage clear --module=reports
 ```bash
 php artisan system:validate
 ```
+
+### Production readiness
+
+Run before (and after) every deploy:
+
+```bash
+php artisan production:check               # fails on critical misconfigs
+php artisan production:check --strict      # treat warnings as failures too
+```
+
+Catches the most common shipping mistakes: `APP_DEBUG=true`, missing
+`APP_KEY`, http:// `APP_URL`, sqlite/sync queue/array cache in prod,
+`MAIL_MAILER=log` in prod, Xendit configured without a webhook token,
+and missing `public/storage` symlink.
+
+`--config-only` skips both the driver-specific checks (sqlite/sync queue/
+array cache/MAIL_MAILER=log) **and** the live backend probe. It exists for
+test isolation and for boxes that can't see prod's database/redis — never
+run it as your only production gate, because it mutes the checks the
+command exists to catch.
 
 ### Activity Log Cleanup
 
