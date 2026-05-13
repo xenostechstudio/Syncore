@@ -41,6 +41,9 @@ class Form extends Component
     public string $timezone = 'Asia/Jakarta';
     public string $signature = '';
 
+    // UX preferences
+    public bool $show_help_tips = true;
+
     // Security
     public bool $twoFactorEnabled = false;
     public array $sessions = [];
@@ -78,6 +81,9 @@ class Form extends Component
             $this->language = $user->language ?? 'id';
             $this->timezone = $user->timezone ?? 'Asia/Jakarta';
             $this->signature = $user->signature ?? '';
+
+            // UX preferences
+            $this->show_help_tips = (bool) ($user->show_help_tips ?? true);
 
             $this->createdAt = $user->created_at->format('M d, Y \a\t H:i');
             $this->updatedAt = $user->updated_at->format('M d, Y \a\t H:i');
@@ -237,6 +243,9 @@ class Form extends Component
         $user->language = $this->language;
         $user->timezone = $this->timezone;
         $user->signature = $this->signature ?: null;
+
+        // UX preferences
+        $user->show_help_tips = $this->show_help_tips;
 
         if ($this->password !== '') {
             $user->password = $this->password;

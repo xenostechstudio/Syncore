@@ -42,6 +42,7 @@ class User extends Authenticatable
         'language',
         'timezone',
         'signature',
+        'show_help_tips',
     ];
 
     /**
@@ -69,6 +70,7 @@ class User extends Authenticatable
             'working_days' => 'array',
             'out_of_office_start' => 'date',
             'out_of_office_end' => 'date',
+            'show_help_tips' => 'boolean',
         ];
     }
 

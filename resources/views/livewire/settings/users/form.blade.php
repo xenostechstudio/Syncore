@@ -373,6 +373,27 @@
                                     ></textarea>
                                 </div>
                             </div>
+
+                            <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+                                <div class="lg:w-72">
+                                    <h4 class="text-sm font-medium text-zinc-900 dark:text-zinc-100">Help Tips</h4>
+                                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Small <span class="font-mono">?</span> icons next to form fields with on-hover explanations.</p>
+                                </div>
+
+                                <div class="flex-1">
+                                    <label class="flex cursor-pointer items-start gap-3">
+                                        <input
+                                            type="checkbox"
+                                            wire:model="show_help_tips"
+                                            class="mt-0.5 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800"
+                                        />
+                                        <span class="text-sm text-zinc-700 dark:text-zinc-300">
+                                            Show inline help tips
+                                            <span class="block text-xs text-zinc-500 dark:text-zinc-400">Turn off if you already know the app — the <span class="font-mono">?</span> icons disappear from every form.</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
