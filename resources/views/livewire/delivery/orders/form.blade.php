@@ -161,31 +161,47 @@
                         <span wire:loading wire:target="save">Saving...</span>
                     </button>
                     @if($deliveryId && $status === \App\Enums\DeliveryOrderState::DELIVERED->value)
-                        <button 
-                            type="button" 
-                            wire:click="openPodModal" 
-                            wire:loading.attr="disabled"
-                            wire:target="openPodModal"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
-                        >
-                            <flux:icon name="check-badge" wire:loading.remove wire:target="openPodModal" class="size-4" />
-                            <flux:icon name="arrow-path" wire:loading wire:target="openPodModal" class="size-4 animate-spin" />
-                            {{ __('delivery.record_pod') }}
-                        </button>
-                        <button 
-                            type="button" 
-                            wire:click="openFeedbackModal" 
-                            wire:loading.attr="disabled"
-                            wire:target="openFeedbackModal"
-                            class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            <flux:icon name="star" wire:loading.remove wire:target="openFeedbackModal" class="size-4" />
-                            <flux:icon name="arrow-path" wire:loading wire:target="openFeedbackModal" class="size-4 animate-spin" />
-                            {{ __('delivery.record_feedback') }}
-                        </button>
-                        <button 
-                            type="button" 
-                            wire:click="openReturnModal" 
+                        @if(! $hasPodCaptured)
+                            <button
+                                type="button"
+                                wire:click="openPodModal"
+                                wire:loading.attr="disabled"
+                                wire:target="openPodModal"
+                                class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                                <flux:icon name="check-badge" wire:loading.remove wire:target="openPodModal" class="size-4" />
+                                <flux:icon name="arrow-path" wire:loading wire:target="openPodModal" class="size-4 animate-spin" />
+                                {{ __('delivery.record_pod') }}
+                            </button>
+                        @else
+                            <span class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-400">
+                                <flux:icon name="check-badge" class="size-4" />
+                                {{ __('delivery.pod_recorded') }}
+                            </span>
+                        @endif
+
+                        @if(! $hasFeedbackCaptured)
+                            <button
+                                type="button"
+                                wire:click="openFeedbackModal"
+                                wire:loading.attr="disabled"
+                                wire:target="openFeedbackModal"
+                                class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                <flux:icon name="star" wire:loading.remove wire:target="openFeedbackModal" class="size-4" />
+                                <flux:icon name="arrow-path" wire:loading wire:target="openFeedbackModal" class="size-4 animate-spin" />
+                                {{ __('delivery.record_feedback') }}
+                            </button>
+                        @else
+                            <span class="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-400">
+                                <flux:icon name="star" class="size-4" />
+                                {{ __('delivery.feedback_recorded') }} ({{ $customer_rating }}/5)
+                            </span>
+                        @endif
+
+                        <button
+                            type="button"
+                            wire:click="openReturnModal"
                             wire:loading.attr="disabled"
                             wire:target="openReturnModal"
                             class="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:opacity-50"

@@ -137,6 +137,8 @@ return [
     'first_attempt_success' => 'Sukses Percobaan Pertama',
     'record_pod' => 'Catat Bukti Pengiriman',
     'record_feedback' => 'Catat Umpan Balik',
+    'pod_recorded' => 'Bukti pengiriman tercatat',
+    'feedback_recorded' => 'Umpan balik tercatat',
     'create_partial' => 'Buat Pengiriman Sebagian',
     'track_delivery' => 'Lacak Pengiriman',
     'delivery_timeline' => 'Timeline Pengiriman',

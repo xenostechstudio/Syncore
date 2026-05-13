@@ -77,3 +77,144 @@ function actAsAdmin(): \App\Models\User
 
     return $user;
 }
+
+/**
+ * Spin up a complete Sales Order → Delivery Order scenario suitable for
+ * exercising the delivery-side state machine, POD, feedback, and returns
+ * flows. Returns the constructed graph keyed by role so tests can pull
+ * what they need.
+ */
+function makeDeliveryOrderScenario(int $stockQty = 10, int $toDeliver = 5): array
+{
+    $user = \App\Models\User::factory()->create();
+
+    $warehouse = \App\Models\Inventory\Warehouse::create([
+        'name' => 'WH '.uniqid(),
+        'location' => 'Test',
+        'contact_info' => null,
+    ]);
+
+    $product = \App\Models\Inventory\Product::create([
+        'name' => 'Product '.uniqid(),
+        'sku' => 'SKU-'.uniqid(),
+        'barcode' => null,
+        'product_type' => 'goods',
+        'internal_reference' => null,
+        'description' => null,
+        'quantity' => $stockQty,
+        'cost_price' => 10,
+        'selling_price' => 15,
+        'status' => 'in_stock',
+        'warehouse_id' => $warehouse->id,
+        'category_id' => null,
+        'responsible_id' => null,
+        'weight' => null,
+        'volume' => null,
+        'customer_lead_time' => 0,
+        'receipt_note' => null,
+        'delivery_note' => null,
+        'internal_notes' => null,
+        'is_favorite' => false,
+        'sales_tax_id' => null,
+    ]);
+
+    \App\Models\Inventory\InventoryStock::create([
+        'warehouse_id' => $warehouse->id,
+        'product_id' => $product->id,
+        'quantity' => $stockQty,
+    ]);
+
+    $customer = \App\Models\Sales\Customer::create([
+        'type' => 'person',
+        'name' => 'Customer '.uniqid(),
+        'email' => null,
+        'phone' => null,
+        'address' => 'Shipping Address',
+        'city' => null,
+        'country' => 'Indonesia',
+        'notes' => null,
+        'salesperson_id' => null,
+        'payment_term_id' => null,
+        'payment_method' => null,
+        'pricelist_id' => null,
+        'banks' => null,
+        'status' => 'active',
+    ]);
+
+    $salesOrder = \App\Models\Sales\SalesOrder::create([
+        'customer_id' => $customer->id,
+        'user_id' => $user->id,
+        'order_date' => now()->format('Y-m-d'),
+        'expected_delivery_date' => null,
+        'status' => 'draft',
+        'subtotal' => 0,
+        'tax' => 0,
+        'discount' => 0,
+        'total' => 0,
+        'notes' => null,
+        'terms' => null,
+        'shipping_address' => 'Shipping Address',
+    ]);
+
+    $salesOrderItem = \App\Models\Sales\SalesOrderItem::create([
+        'sales_order_id' => $salesOrder->id,
+        'product_id' => $product->id,
+        'tax_id' => null,
+        'quantity' => $toDeliver,
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => $toDeliver * 100,
+    ]);
+
+    $deliveryOrder = \App\Models\Delivery\DeliveryOrder::create([
+        'sales_order_id' => $salesOrder->id,
+        'warehouse_id' => $warehouse->id,
+        'user_id' => $user->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'actual_delivery_date' => null,
+        'status' => 'pending',
+        'shipping_address' => 'Shipping Address',
+        'recipient_name' => 'Receiver',
+        'recipient_phone' => null,
+        'notes' => null,
+        'tracking_number' => null,
+        'courier' => null,
+    ]);
+
+    $deliveryOrderItem = \App\Models\Delivery\DeliveryOrderItem::create([
+        'delivery_order_id' => $deliveryOrder->id,
+        'sales_order_item_id' => $salesOrderItem->id,
+        'quantity' => $toDeliver,
+        'quantity_delivered' => 0,
+    ]);
+
+    return [
+        'user' => $user,
+        'warehouse' => $warehouse,
+        'product' => $product,
+        'customer' => $customer,
+        'salesOrder' => $salesOrder,
+        'salesOrderItem' => $salesOrderItem,
+        'deliveryOrder' => $deliveryOrder,
+        'deliveryOrderItem' => $deliveryOrderItem,
+    ];
+}
+
+/**
+ * Walk a DeliveryOrder forward through the state machine by invoking the
+ * same Livewire action a human would click. One step = one transition.
+ */
+function advanceDeliveryOrderStatus(
+    \App\Models\Delivery\DeliveryOrder $deliveryOrder,
+    \App\Models\User $user,
+    int $steps = 1
+): void {
+    for ($i = 0; $i < $steps; $i++) {
+        \Livewire\Livewire::actingAs($user)
+            ->test(\App\Livewire\Delivery\Orders\Form::class, ['id' => $deliveryOrder->id])
+            ->call('openStatusTransitionModal')
+            ->call('confirmStatusTransition');
+
+        $deliveryOrder->refresh();
+    }
+}

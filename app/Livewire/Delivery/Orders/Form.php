@@ -85,10 +85,18 @@ class Form extends Component
     public ?string $signature_image = null;
     public ?string $delivery_photo = null;
     public string $received_by = '';
-    
-    // Feedback fields
+
+    // Feedback fields. customer_rating defaults to 5 so the rating slider has
+    // a sensible initial position in the modal — it does NOT mean "5 stars
+    // were recorded". Use $hasFeedbackCaptured below to tell those apart.
     public int $customer_rating = 5;
     public string $customer_feedback = '';
+
+    // Action-completion flags. Drive the "hide button after action is done"
+    // gating in the action bar. Hydrated on mount from the underlying record
+    // and flipped after savePod/saveFeedback succeed.
+    public bool $hasPodCaptured = false;
+    public bool $hasFeedbackCaptured = false;
     
     // Partial delivery fields
     public array $partial_items = [];
@@ -776,11 +784,15 @@ class Form extends Component
         $this->signature_image = $delivery->signature_image;
         $this->delivery_photo = $delivery->delivery_photo;
         $this->received_by = $delivery->received_by ?? '';
-        
+        $this->hasPodCaptured = filled($delivery->signature_image)
+            || filled($delivery->delivery_photo)
+            || filled($delivery->received_by);
+
         // Feedback fields
         $this->customer_rating = $delivery->customer_rating ?? 5;
         $this->customer_feedback = $delivery->customer_feedback ?? '';
-        
+        $this->hasFeedbackCaptured = $delivery->customer_rating !== null;
+
         $this->createdAt = $delivery->created_at->format('M d, Y \a\t H:i');
         $this->updatedAt = $delivery->updated_at->format('M d, Y \a\t H:i');
     }
@@ -1012,6 +1024,7 @@ class Form extends Component
             'delivery_photo' => $this->delivery_photo,
         ]);
 
+        $this->hasPodCaptured = true;
         $this->showPodModal = false;
         session()->flash('success', 'Proof of delivery recorded successfully.');
     }
@@ -1059,6 +1072,7 @@ class Form extends Component
             'customer_feedback' => $this->customer_feedback,
         ]);
 
+        $this->hasFeedbackCaptured = true;
         $this->showFeedbackModal = false;
         session()->flash('success', 'Customer feedback recorded successfully.');
     }

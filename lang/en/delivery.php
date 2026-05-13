@@ -96,6 +96,8 @@ return [
     'first_attempt_success' => 'First Attempt Success',
     'record_pod' => 'Record Proof of Delivery',
     'record_feedback' => 'Record Feedback',
+    'pod_recorded' => 'Proof of delivery captured',
+    'feedback_recorded' => 'Feedback captured',
     'create_partial' => 'Create Partial Delivery',
     'track_delivery' => 'Track Delivery',
     'delivery_timeline' => 'Delivery Timeline',
