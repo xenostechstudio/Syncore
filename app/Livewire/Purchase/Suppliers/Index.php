@@ -156,6 +156,20 @@ class Index extends Component
         return Excel::download(new SuppliersExport($this->selected ?: null), $filename);
     }
 
+    /**
+     * Restore an archived (soft-deleted) supplier. The recovery half of
+     * the Archive action — see "Destructive actions" in CLAUDE.md. This
+     * index has no row-selection UI, so restore is per-row.
+     */
+    public function restore(int $id): void
+    {
+        $this->authorizePermission('purchase.edit');
+
+        Supplier::onlyTrashed()->whereKey($id)->restore();
+
+        session()->flash('success', 'Supplier restored.');
+    }
+
     protected function getQuery()
     {
         return Supplier::query()
@@ -164,7 +178,10 @@ class Index extends Component
                 ->orWhere('email', 'like', "%{$this->search}%")
                 ->orWhere('contact_person', 'like', "%{$this->search}%")))
             ->when($this->status === 'active', fn ($q) => $q->where('is_active', true))
-            ->when($this->status === 'inactive', fn ($q) => $q->where('is_active', false));
+            ->when($this->status === 'inactive', fn ($q) => $q->where('is_active', false))
+            // "Archived" is the soft-delete (deleted_at) state — distinct
+            // from the 'inactive' is_active flag. Shows only archived.
+            ->when($this->status === 'archived', fn ($q) => $q->onlyTrashed());
     }
 
     protected function getModelClass(): string

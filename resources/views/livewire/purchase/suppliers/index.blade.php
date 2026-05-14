@@ -40,6 +40,7 @@
                                 'all' => 'All Suppliers',
                                 'active' => 'Active',
                                 'inactive' => 'Inactive',
+                                'archived' => 'Archived',
                             ] as $value => $label)
                                 <button type="button" wire:click="$set('status', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                     <span>{{ $label }}</span>
@@ -123,8 +124,11 @@
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @forelse($suppliers as $supplier)
-                            <tr onclick="window.location.href='{{ route('purchase.suppliers.edit', $supplier->id) }}'"
-                                class="group cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                            {{-- Archived rows aren't navigable — their edit route
+                                 404s (the model is soft-deleted). They expose a
+                                 Restore action instead. --}}
+                            <tr @if(!$supplier->trashed()) onclick="window.location.href='{{ route('purchase.suppliers.edit', $supplier->id) }}'" @endif
+                                class="group transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50 {{ $supplier->trashed() ? '' : 'cursor-pointer' }}">
                                 @if($visibleColumns['supplier'])
                                     <td class="py-4 pl-4 pr-4 sm:pl-6 lg:pl-8">
                                         <div class="flex items-center gap-3">
@@ -160,9 +164,16 @@
                                     </td>
                                 @endif
                                 <td class="py-4 pr-4 sm:pr-6 lg:pr-8" onclick="event.stopPropagation()">
-                                    <a href="{{ route('purchase.suppliers.edit', $supplier->id) }}" wire:navigate class="inline-flex rounded-md p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
-                                        <flux:icon name="pencil-square" class="size-4" />
-                                    </a>
+                                    @if($supplier->trashed())
+                                        <button type="button" wire:click="restore({{ $supplier->id }})" class="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                                            <flux:icon name="arrow-uturn-left" class="size-4" />
+                                            <span>{{ __('common.restore') }}</span>
+                                        </button>
+                                    @else
+                                        <a href="{{ route('purchase.suppliers.edit', $supplier->id) }}" wire:navigate class="inline-flex rounded-md p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300">
+                                            <flux:icon name="pencil-square" class="size-4" />
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -187,7 +198,12 @@
             {{-- Grid View --}}
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @forelse($suppliers as $supplier)
-                    <a href="{{ route('purchase.suppliers.edit', $supplier->id) }}" wire:navigate class="relative block rounded-lg border border-zinc-200 bg-white p-3 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+                    {{-- Archived cards aren't navigable (edit route 404s on a
+                         soft-deleted model); they expose a Restore button. --}}
+                    <div
+                        @if(! $supplier->trashed()) onclick="window.location.href='{{ route('purchase.suppliers.edit', $supplier->id) }}'" @endif
+                        class="relative block rounded-lg border border-zinc-200 bg-white p-3 transition-all hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 {{ $supplier->trashed() ? '' : 'cursor-pointer' }}"
+                    >
                         <span class="absolute right-2 top-2 inline-flex h-2 w-2 rounded-full {{ $supplier->is_active ? 'bg-emerald-500' : 'bg-zinc-400' }}"></span>
                         <div class="flex items-start gap-3">
                             <div class="relative flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-sm font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
@@ -199,7 +215,13 @@
                                 <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">{{ $supplier->city ?? 'N/A' }}</p>
                             </div>
                         </div>
-                    </a>
+                        @if($supplier->trashed())
+                            <button type="button" wire:click="restore({{ $supplier->id }})" class="mt-3 inline-flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                <flux:icon name="arrow-uturn-left" class="size-3.5" />
+                                <span>{{ __('common.restore') }}</span>
+                            </button>
+                        @endif
+                    </div>
                 @empty
                     <div class="col-span-full rounded-lg border border-zinc-200 bg-white px-5 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900">
                         <flux:icon name="building-storefront" class="mx-auto size-12 text-zinc-300 dark:text-zinc-600" />

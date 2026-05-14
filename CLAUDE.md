@@ -147,13 +147,19 @@ on a true hard delete, never on a soft delete or a state transition.
 Status: all transactional documents migrated — Sales Order, Invoice,
 Delivery Order, Vendor Bill, Purchase RFQ / Order, Payroll Run, Leave
 Request. (Purchase Receipt already complied — only a state-gated Cancel,
-no Delete or Archive.) Master-data Archive side: **Customer is the
-pilot** — the form's destructive action is now `archive()` (honest
-soft-delete naming), the index has a `filterArchived` toggle
-(`onlyTrashed()`) and a `bulkRestore()`, so Archive is recoverable
-rather than a black hole. Replicate that shape to Product, Supplier,
-Lead, Opportunity, Employee when you next touch their form/index. A
-true hard Delete (only when unreferenced) is deferred.
+no Delete or Archive.)
+
+Master-data Archive side — migrated: **Customer, Supplier**. The form's
+destructive action is `archive()` (honest soft-delete naming + a
+permission check); the index lets you see and recover archived rows.
+Two reference shapes depending on the index's UI:
+- **Customer** — index has row-selection: a `filterArchived` checkbox +
+  `bulkRestore()`.
+- **Supplier** — index has no selection UI: an "Archived" option on the
+  status filter + a per-row `restore(int $id)` (archived rows are made
+  non-navigable since their edit route 404s).
+Replicate whichever shape fits to Product, Lead, Opportunity, Employee.
+A true hard Delete (only when unreferenced) is still deferred.
 
 ## Driver-aware status-enum migrations
 

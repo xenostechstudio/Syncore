@@ -3,6 +3,7 @@
 namespace App\Livewire\Purchase\Suppliers;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Purchase\Supplier;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,7 +13,7 @@ use Livewire\Component;
 #[Title('Supplier')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $supplierId = null;
     public string $name = '';
@@ -86,15 +87,25 @@ class Form extends Component
         }
     }
 
-    public function delete(): void
+    /**
+     * Archive (soft-delete) the supplier. Master data is never hard
+     * "deleted" from the form — it's retired with Archive, which keeps
+     * the row so historical purchase orders / bills still resolve, and
+     * is recoverable from the Archived filter on the index. See
+     * "Destructive actions" in CLAUDE.md.
+     */
+    public function archive(): void
     {
-        if (!$this->supplierId) {
+        $this->authorizePermission('purchase.delete');
+
+        if (! $this->supplierId) {
             return;
         }
 
-        Supplier::destroy($this->supplierId);
+        $supplier = Supplier::findOrFail($this->supplierId);
+        $supplier->archive();
 
-        session()->flash('success', 'Supplier deleted successfully.');
+        session()->flash('success', 'Supplier archived. Find and restore it via the Archived filter on the suppliers list.');
         $this->redirect(route('purchase.suppliers.index'), navigate: true);
     }
 

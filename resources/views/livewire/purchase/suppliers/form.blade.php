@@ -24,9 +24,11 @@
                                     <flux:icon name="cog-6-tooth" class="size-4" />
                                 </button>
                                 <flux:menu class="w-40">
+                                    {{-- Master data is Archived (recoverable soft delete),
+                                         never hard-deleted from the form. See CLAUDE.md. --}}
                                     <button type="button" @click="showDeleteModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
+                                        <flux:icon name="archive-box" class="size-4" />
+                                        <span>{{ __('common.archive') }}</span>
                                     </button>
                                 </flux:menu>
                             </flux:dropdown>
@@ -129,31 +131,31 @@
         >
             <div class="mb-4 flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                    <flux:icon name="trash" class="size-5 text-red-600 dark:text-red-400" />
+                    <flux:icon name="archive-box" class="size-5 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Delete Supplier</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">This action cannot be undone.</p>
+                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Archive Supplier</h3>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">The supplier is hidden, not deleted — it can be restored.</p>
                 </div>
             </div>
             <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
-                Are you sure you want to delete this supplier? All associated data will be permanently removed.
+                Archive this supplier? It will be hidden from the suppliers list, but historical purchase orders and bills keep working. You can restore it any time from the Archived filter.
             </p>
             <div class="flex justify-end gap-3">
-                <button 
+                <button
                     type="button"
                     @click="showDeleteModal = false"
                     class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                 >
                     Cancel
                 </button>
-                <button 
+                <button
                     type="button"
-                    wire:click="delete"
+                    wire:click="archive"
                     @click="showDeleteModal = false"
                     class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                 >
-                    Delete
+                    {{ __('common.archive') }}
                 </button>
             </div>
         </div>
