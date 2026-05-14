@@ -71,8 +71,10 @@
                 </div>
             </div>
 
-            {{-- Right Group: Related Documents (Delivery first, then Invoice) --}}
-            @if($orderId && $status === \App\Enums\SalesOrderState::SALES_ORDER->value)
+            {{-- Right Group: Related Documents (Delivery first, then Invoice).
+                 Shown for SALES_ORDER and DONE — a locked/DONE order still
+                 has invoices + deliveries the operator needs to reach. --}}
+            @if($orderId && in_array($status, [\App\Enums\SalesOrderState::SALES_ORDER->value, \App\Enums\SalesOrderState::DONE->value], true))
                 <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     @foreach($deliveries as $delivery)
                         <x-ui.related-resource
