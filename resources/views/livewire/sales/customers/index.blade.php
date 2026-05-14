@@ -33,13 +33,22 @@
                                             <flux:icon name="printer" class="size-4" />
                                             <span>{{ __('common.print') }}</span>
                                         </button>
-                
+
+                                        {{-- When viewing archived customers, the only destructive
+                                             action is Restore. Otherwise the actions dropdown offers
+                                             Archive. --}}
+                                        @if($filterArchived)
+                                        <button type="button" wire:click="bulkRestore" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
+                                            <flux:icon name="arrow-uturn-left" class="size-4" />
+                                            <span>{{ __('common.restore') }}</span>
+                                        </button>
+                                        @else
                                         {{-- Actions Dropdown --}}
                                         <flux:dropdown position="bottom" align="center">
                                             <button class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700">
                                                 <flux:icon name="ellipsis-horizontal" class="size-4" />
                                             </button>
-                
+
                                             <flux:menu class="w-56">
                                                 <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                     <flux:icon name="document-duplicate" class="size-4" />
@@ -55,11 +64,12 @@
                                                 </button>
                                                 <flux:menu.separator />
                                                 <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                                    <flux:icon name="trash" class="size-4" />
-                                                    <span>{{ __('common.delete') }}</span>
+                                                    <flux:icon name="archive-box" class="size-4" />
+                                                    <span>{{ __('common.archive') }}</span>
                                                 </button>
                                             </flux:menu>
                                         </flux:dropdown>
+                                        @endif
                                 </x-ui.selection-toolbar>
                             @else
                                 <x-ui.searchbox-dropdown placeholder="{{ __('sales.search_customers') }}" widthClass="w-[520px]" width="520px" :activeFilterCount="$this->getActiveFilterCount()" clearAction="clearFilters">
@@ -98,6 +108,16 @@
                                                         <span>{{ __('common.my_customers') }}</span>
                                                     </div>
                                                     @if(!empty($filterMine))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </label>
+                                                {{-- Archived = soft-deleted customers. Toggling this on
+                                                     shows only archived records, where the selection
+                                                     toolbar offers Restore. --}}
+                                                <label class="flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <input type="checkbox" wire:model.live="filterArchived" class="sr-only" />
+                                                        <span>{{ __('common.archived') }}</span>
+                                                    </div>
+                                                    @if(!empty($filterArchived))<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                                 </label>
                                             </div>
                                         </div>
@@ -344,12 +364,13 @@
         @endif
     </div>
 
-    {{-- Delete Confirmation Modal --}}
+    {{-- Archive Confirmation Modal (Customer soft-deletes, so this is a
+         recoverable archive — not a permanent delete). --}}
     @isset($showDeleteConfirm)
-        <x-ui.delete-confirm-modal 
+        <x-ui.delete-confirm-modal
             wire:model="showDeleteConfirm"
             :validation="$deleteValidation ?? []"
-            title="Confirm Delete"
+            title="Archive customers"
             itemLabel="customers"
         />
     @endisset

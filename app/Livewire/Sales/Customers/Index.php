@@ -20,6 +20,7 @@ class Index extends Component
     public bool $filterActive = false;
     public bool $filterInactive = false;
     public bool $filterWithOrders = false;
+    public bool $filterArchived = false;
 
     public array $visibleColumns = [
         'customer' => true,
@@ -32,9 +33,27 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'status', 'sort', 'filterActive', 'filterInactive', 'filterWithOrders', 'groupBy']);
+        $this->reset(['search', 'status', 'sort', 'filterActive', 'filterInactive', 'filterWithOrders', 'filterArchived', 'groupBy']);
         $this->resetPage();
         $this->clearSelection();
+    }
+
+    /**
+     * Restore archived (soft-deleted) customers. The recovery half of
+     * the Archive action — see "Destructive actions" in CLAUDE.md.
+     */
+    public function bulkRestore(): void
+    {
+        $this->authorizePermission('customers.edit');
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Customer::onlyTrashed()->whereIn('id', $this->selected)->restore();
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} customer(s) restored.");
     }
 
     public function confirmBulkDelete(): void
@@ -87,15 +106,17 @@ class Index extends Component
         $deletableIds = array_diff($this->selected, array_map('strval', $customersWithOrders));
 
         if (empty($deletableIds)) {
-            session()->flash('error', 'No customers can be deleted. All selected customers have active orders.');
+            session()->flash('error', 'No customers can be archived. All selected customers have active orders.');
             $this->cancelDelete();
             return;
         }
 
+        // Customer uses HasSoftDeletes — ->delete() here is the archive
+        // (soft delete). Restorable from the Archived filter.
         $count = Customer::whereIn('id', $deletableIds)->delete();
 
         $this->cancelDelete();
-        session()->flash('success', "{$count} customers deleted successfully.");
+        session()->flash('success', "{$count} customer(s) archived.");
     }
 
     public function bulkActivate(): void
@@ -146,7 +167,11 @@ class Index extends Component
             ->when($this->status, fn ($q) => $q->where('status', $this->status))
             ->when($this->filterActive, fn ($q) => $q->where('status', 'active'))
             ->when($this->filterInactive, fn ($q) => $q->where('status', 'inactive'))
-            ->when($this->filterWithOrders, fn ($q) => $q->has('salesOrders'));
+            ->when($this->filterWithOrders, fn ($q) => $q->has('salesOrders'))
+            // "Archived" is the soft-delete (deleted_at) state — distinct
+            // from the business 'inactive' status. Off by default;
+            // toggling it on shows *only* archived customers.
+            ->when($this->filterArchived, fn ($q) => $q->onlyTrashed());
     }
 
     protected function getModelClass(): string

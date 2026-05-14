@@ -28,6 +28,7 @@ return [
     'deselect_all' => 'Deselect All',
     'duplicate' => 'Duplicate',
     'archive' => 'Archive',
+    'archived' => 'Archived',
     'restore' => 'Restore',
     'send' => 'Send',
     'approve' => 'Approve',

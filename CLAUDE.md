@@ -147,9 +147,13 @@ on a true hard delete, never on a soft delete or a state transition.
 Status: all transactional documents migrated — Sales Order, Invoice,
 Delivery Order, Vendor Bill, Purchase RFQ / Order, Payroll Run, Leave
 Request. (Purchase Receipt already complied — only a state-gated Cancel,
-no Delete or Archive.) The master-data Archive side (Customer, Product,
-Supplier, etc. — soft delete + a "show archived" filter + restore) is
-the remaining piece; migrate when you next touch those form components.
+no Delete or Archive.) Master-data Archive side: **Customer is the
+pilot** — the form's destructive action is now `archive()` (honest
+soft-delete naming), the index has a `filterArchived` toggle
+(`onlyTrashed()`) and a `bulkRestore()`, so Archive is recoverable
+rather than a black hole. Replicate that shape to Product, Supplier,
+Lead, Opportunity, Employee when you next touch their form/index. A
+true hard Delete (only when unreferenced) is deferred.
 
 ## Driver-aware status-enum migrations
 

@@ -28,6 +28,7 @@ return [
     'deselect_all' => 'Batalkan Pilihan',
     'duplicate' => 'Duplikat',
     'archive' => 'Arsipkan',
+    'archived' => 'Diarsipkan',
     'restore' => 'Pulihkan',
     'send' => 'Kirim',
     'approve' => 'Setujui',

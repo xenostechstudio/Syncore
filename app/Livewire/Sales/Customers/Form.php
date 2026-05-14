@@ -3,6 +3,7 @@
 namespace App\Livewire\Sales\Customers;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Sales\PaymentTerm;
 use App\Models\Sales\Pricelist;
 use App\Models\Sales\Customer;
@@ -15,7 +16,7 @@ use Livewire\Component;
 #[Title('Customer')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $customerId = null;
     
@@ -119,13 +120,26 @@ class Form extends Component
         }
     }
 
-    public function delete(): void
+    /**
+     * Archive (soft-delete) the customer. Master data is never hard
+     * "deleted" from the form — it's retired with Archive, which keeps
+     * the row so historical orders/invoices still resolve, and is
+     * recoverable from the Archived filter on the index. See
+     * "Destructive actions" in CLAUDE.md.
+     */
+    public function archive(): void
     {
-        if ($this->customerId) {
-            Customer::destroy($this->customerId);
-            session()->flash('success', 'Customer deleted successfully.');
-            $this->redirect(route('sales.customers.index'), navigate: true);
+        $this->authorizePermission('customers.delete');
+
+        if (! $this->customerId) {
+            return;
         }
+
+        $customer = Customer::findOrFail($this->customerId);
+        $customer->archive();
+
+        session()->flash('success', 'Customer archived. Find and restore it via the Archived filter on the customers list.');
+        $this->redirect(route('sales.customers.index'), navigate: true);
     }
 
     public function render()
