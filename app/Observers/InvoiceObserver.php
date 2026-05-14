@@ -6,10 +6,16 @@ use App\Models\Invoicing\Invoice;
 use App\Services\SalesOrderFulfillmentService;
 
 /**
- * Recompute invoiced counters on the parent SO when an invoice flips
- * to/from 'cancelled' (a cancelled invoice's items don't count toward
- * fulfillment). The InvoiceItem observer covers the item-level changes;
- * this one covers the parent status change that doesn't touch items.
+ * Recompute the parent SO's fulfillment state when an invoice's status
+ * crosses a boundary the SO cares about:
+ *   - to/from 'cancelled' — a cancelled invoice's items stop counting
+ *     toward the invoiced quantity.
+ *   - to/from 'paid' — the SO auto-locks to DONE only once every
+ *     invoice is paid (see SalesOrderFulfillmentService::shouldLock),
+ *     so settling the last invoice has to re-trigger the lock check.
+ *
+ * The InvoiceItem observer covers item-level quantity changes; this one
+ * covers the parent status change that doesn't touch items.
  */
 class InvoiceObserver
 {
@@ -26,7 +32,10 @@ class InvoiceObserver
         $original = $invoice->getOriginal('status');
         $current = $invoice->status;
 
-        if ($original !== 'cancelled' && $current !== 'cancelled') {
+        $crossesBoundary = in_array('cancelled', [$original, $current], true)
+            || in_array('paid', [$original, $current], true);
+
+        if (! $crossesBoundary) {
             return;
         }
 

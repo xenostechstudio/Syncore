@@ -56,11 +56,14 @@ class SalesOrderFulfillmentService
 
     /**
      * Predicate: would this SO get auto-locked to DONE if the service
-     * ran against it right now? The reconcile command also calls this
-     * to surface "legacy" orders that are fully fulfilled but never got
-     * the lock applied (because the auto-lock was added after they
-     * reached the fully-fulfilled state, or because raw inserts bypassed
-     * the observer path).
+     * ran against it right now? An order is DONE once it is fully paid
+     * AND fully delivered — money in, goods out. (Fully *invoiced* is a
+     * prerequisite of fully *paid*; see SalesOrder::isFullyPaid().)
+     *
+     * The reconcile command also calls this to surface "legacy" orders
+     * that are fully fulfilled but never got the lock applied (because
+     * the auto-lock was added after they reached that state, or because
+     * raw inserts bypassed the observer path).
      */
     public function shouldLock(SalesOrder $order): bool
     {
@@ -70,7 +73,7 @@ class SalesOrderFulfillmentService
         if ($order->items->isEmpty()) {
             return false;
         }
-        return $order->isFullyInvoiced() && $order->isFullyDelivered();
+        return $order->isFullyPaid() && $order->isFullyDelivered();
     }
 
     public function recomputeForSalesOrderItem(SalesOrderItem $item, ?SalesOrder $order = null): void

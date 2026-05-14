@@ -196,12 +196,14 @@ php artisan sales-orders:reconcile-fulfillment --order=10
 ```
 
 The command also catches a second kind of drift: a Sales Order that is
-fully invoiced *and* fully delivered but still sits in the `SALES_ORDER`
-(processing) state — i.e. it should have auto-locked to `DONE` but never
-did, because it reached the fully-fulfilled state before the auto-lock
-was added (or a raw insert bypassed the observers). Reconcile reports
-these as `SO #N state: SALES_ORDER → DONE` and flips them so the revenue
-dashboards (which filter on `status = 'delivered'`) count them.
+fully **paid** *and* fully **delivered** but still sits in the
+`SALES_ORDER` (processing) state — i.e. it should have auto-locked to
+`DONE` but never did, because it reached that state before the
+auto-lock was added (or a raw insert bypassed the observers). Reconcile
+reports these as `SO #N state: SALES_ORDER → DONE` and flips them so the
+revenue dashboards (which filter on `status = 'delivered'`) count them.
+An SO that is fully delivered but whose invoice is still unpaid stays in
+`SALES_ORDER` — that's not drift, it's an open receivable.
 
 Safe to re-run — the command is idempotent.
 

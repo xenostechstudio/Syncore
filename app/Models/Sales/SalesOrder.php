@@ -230,6 +230,32 @@ class SalesOrder extends Model
     }
 
     /**
+     * Check if the order is fully paid: every ordered line is covered by
+     * an invoice AND every non-cancelled invoice for this order has
+     * settled to the 'paid' status. This is the money-side gate for the
+     * auto-lock to DONE — an order isn't "done" until it's both
+     * delivered and collected.
+     *
+     * Keyed on the invoice 'paid' status (not paid_amount) so that
+     * Invoice::markAsPaid() — an operator declaring an invoice settled
+     * without itemised Payment rows — also counts.
+     */
+    public function isFullyPaid(): bool
+    {
+        if (!$this->isFullyInvoiced()) {
+            return false;
+        }
+
+        $activeInvoices = $this->invoices->where('status', '!=', 'cancelled');
+
+        if ($activeInvoices->isEmpty()) {
+            return false;
+        }
+
+        return $activeInvoices->every(fn($invoice) => $invoice->status === 'paid');
+    }
+
+    /**
      * Get total quantity to invoice across all items
      */
     public function getTotalQuantityToInvoiceAttribute(): int

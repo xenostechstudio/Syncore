@@ -239,7 +239,7 @@ it('soft-deleting then restoring an Invoice drops then restores the counter', fu
     expect((int) $s['soItem']->refresh()->quantity_invoiced)->toBe(3);
 });
 
-it('locks the SO to DONE once every line is fully invoiced AND fully delivered', function () {
+it('locks the SO to DONE once every line is fully paid AND fully delivered', function () {
     $s = makeObserverScenario(orderedQty: 5);
 
     // Confirm the SO so it lands in SALES_ORDER (the gate state for lock()).
@@ -279,10 +279,54 @@ it('locks the SO to DONE once every line is fully invoiced AND fully delivered',
     // DO not yet delivered — still NOT locked.
     expect($s['salesOrder']->fresh()->status)->toBe('processing');
 
-    // The status flip is the last event needed.
     $do->update(['status' => 'delivered']);
 
+    // Fully invoiced + fully delivered, but the invoice is still 'sent'
+    // (unpaid) — the money side isn't settled, so it must NOT lock.
+    expect($s['salesOrder']->fresh()->status)->toBe('processing');
+
+    // Settling the invoice is the last event needed.
+    $invoice->update(['status' => 'paid']);
+
     expect($s['salesOrder']->fresh()->status)->toBe('delivered'); // = SalesOrderState::DONE
+});
+
+it('does NOT lock an SO that is fully invoiced and fully delivered but unpaid', function () {
+    $s = makeObserverScenario(orderedQty: 4);
+    $s['salesOrder']->update(['status' => 'processing']);
+
+    $invoice = makeInvoiceFor($s, 'sent');
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'product_id' => $s['product']->id,
+        'description' => 'full',
+        'quantity' => 4,
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => 400,
+    ]);
+
+    $do = DeliveryOrder::create([
+        'sales_order_id' => $s['salesOrder']->id,
+        'warehouse_id' => $s['warehouse']->id,
+        'user_id' => $s['user']->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'status' => 'delivered',
+        'shipping_address' => 'addr',
+        'recipient_name' => 'r',
+    ]);
+    DeliveryOrderItem::create([
+        'delivery_order_id' => $do->id,
+        'sales_order_item_id' => $s['soItem']->id,
+        'product_id' => $s['product']->id,
+        'quantity' => 4,
+        'quantity_delivered' => 4,
+    ]);
+
+    // Goods are out and the full quantity is invoiced — but the invoice
+    // is 'sent', not 'paid'. The SO stays open until it's collected.
+    expect($s['salesOrder']->fresh()->status)->toBe('processing');
+    expect($s['salesOrder']->fresh()->isFullyDelivered())->toBeTrue();
 });
 
 it('does NOT lock a partially-fulfilled SO', function () {
@@ -353,6 +397,11 @@ it('lock is one-way: cancelling an invoice after lock leaves SO in DONE (with dr
         'quantity_delivered' => 2,
     ]);
 
+    // Fully invoiced + delivered but unpaid — not locked yet.
+    expect($s['salesOrder']->fresh()->status)->toBe('processing');
+
+    // Settle the invoice → SO locks to DONE.
+    $invoice->update(['status' => 'paid']);
     expect($s['salesOrder']->fresh()->status)->toBe('delivered'); // locked
 
     // Cancel the invoice. The counter drops to 0 but the SO stays DONE.
