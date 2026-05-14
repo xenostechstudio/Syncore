@@ -82,12 +82,41 @@ class Index extends Component
             return;
         }
 
+        // Lead uses HasSoftDeletes — ->delete() here is the archive
+        // (soft delete). Restorable from the Archived filter.
         $count = Lead::whereIn('id', $this->selected)
             ->where('status', '!=', 'converted')
             ->delete();
 
         $this->cancelDelete();
-        session()->flash('success', "{$count} leads deleted successfully.");
+        session()->flash('success', "{$count} lead(s) archived.");
+    }
+
+    /**
+     * Restore archived (soft-deleted) leads — the recovery half of the
+     * Archive action. See "Destructive actions" in CLAUDE.md.
+     */
+    public function bulkRestore(): void
+    {
+        $this->authorizePermission('crm.edit');
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Lead::onlyTrashed()->whereIn('id', $this->selected)->restore();
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} lead(s) restored.");
+    }
+
+    public function restore(int $id): void
+    {
+        $this->authorizePermission('crm.edit');
+
+        Lead::onlyTrashed()->whereKey($id)->restore();
+
+        session()->flash('success', 'Lead restored.');
     }
 
     public function bulkUpdateStatus(string $status): void
@@ -133,7 +162,11 @@ class Index extends Component
                 ->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%")
                 ->orWhere('company_name', 'like', "%{$this->search}%")))
-            ->when($this->status, fn ($q) => $q->where('status', $this->status))
+            // 'archived' is a pseudo-status: it's the soft-delete state,
+            // not a real lead status, so it bypasses the status column
+            // filter and shows only trashed rows instead.
+            ->when($this->status && $this->status !== 'archived', fn ($q) => $q->where('status', $this->status))
+            ->when($this->status === 'archived', fn ($q) => $q->onlyTrashed())
             ->when($this->source, fn ($q) => $q->where('source', $this->source));
     }
 

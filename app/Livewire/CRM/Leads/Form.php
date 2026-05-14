@@ -3,6 +3,7 @@
 namespace App\Livewire\CRM\Leads;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\CRM\Lead;
 use App\Models\User;
 use Livewire\Attributes\Layout;
@@ -13,7 +14,7 @@ use Livewire\Component;
 #[Title('Lead')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $leadId = null;
     public ?Lead $lead = null;
@@ -146,12 +147,23 @@ class Form extends Component
         $this->redirect(route('crm.leads.edit', $newLead->id), navigate: true);
     }
 
-    public function delete(): void
+    /**
+     * Archive (soft-delete) the lead. Master data is never hard
+     * "deleted" from the form — it's retired with Archive, which keeps
+     * the row and is recoverable from the Archived filter on the index.
+     * See "Destructive actions" in CLAUDE.md.
+     */
+    public function archive(): void
     {
-        if (!$this->lead) return;
+        $this->authorizePermission('crm.delete');
 
-        $this->lead->delete();
-        session()->flash('success', 'Lead deleted successfully.');
+        if (! $this->lead) {
+            return;
+        }
+
+        $this->lead->archive();
+
+        session()->flash('success', 'Lead archived. Find and restore it via the Archived filter on the leads list.');
         $this->redirect(route('crm.leads.index'), navigate: true);
     }
 

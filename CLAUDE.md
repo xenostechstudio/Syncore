@@ -149,17 +149,21 @@ Delivery Order, Vendor Bill, Purchase RFQ / Order, Payroll Run, Leave
 Request. (Purchase Receipt already complied — only a state-gated Cancel,
 no Delete or Archive.)
 
-Master-data Archive side — migrated: **Customer, Supplier**. The form's
-destructive action is `archive()` (honest soft-delete naming + a
+Master-data Archive side — migrated: **Customer, Supplier, Lead**. The
+form's destructive action is `archive()` (honest soft-delete naming + a
 permission check); the index lets you see and recover archived rows.
-Two reference shapes depending on the index's UI:
-- **Customer** — index has row-selection: a `filterArchived` checkbox +
+Reference shapes depending on the index's UI:
+- **Customer** — row-selection index: a `filterArchived` checkbox +
   `bulkRestore()`.
-- **Supplier** — index has no selection UI: an "Archived" option on the
-  status filter + a per-row `restore(int $id)` (archived rows are made
-  non-navigable since their edit route 404s).
-Replicate whichever shape fits to Product, Lead, Opportunity, Employee.
-A true hard Delete (only when unreferenced) is still deferred.
+- **Supplier** — no selection UI: an "Archived" option on the status
+  filter + a per-row `restore(int $id)`.
+- **Lead** — hybrid (radio status filter *and* a selection toolbar):
+  "Archived" on the status filter, plus both `bulkRestore()` (list
+  toolbar) and `restore(int $id)` (grid cards).
+In all shapes, archived rows are made non-navigable since their edit
+route 404s on a soft-deleted model. Replicate whichever fits to
+Product, Opportunity, Employee. A true hard Delete (only when
+unreferenced) is still deferred.
 
 ## Driver-aware status-enum migrations
 

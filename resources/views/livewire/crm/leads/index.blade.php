@@ -49,10 +49,19 @@
                                                     <span>Convert to Customer</span>
                                                 </button>
                                                 <flux:menu.separator />
-                                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                                    <flux:icon name="trash" class="size-4" />
-                                                    <span>Delete</span>
+                                                {{-- Archived view: the only destructive action is
+                                                     Restore. Otherwise it's Archive. --}}
+                                                @if($status === 'archived')
+                                                <button type="button" wire:click="bulkRestore" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <flux:icon name="arrow-uturn-left" class="size-4" />
+                                                    <span>{{ __('common.restore') }}</span>
                                                 </button>
+                                                @else
+                                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                                    <flux:icon name="archive-box" class="size-4" />
+                                                    <span>{{ __('common.archive') }}</span>
+                                                </button>
+                                                @endif
                                             </flux:menu>
                                         </flux:dropdown>
                                 </x-ui.selection-toolbar>
@@ -106,6 +115,16 @@
                                                     </div>
                                                     @if($status === 'lost')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                                 </button>
+                                                {{-- "Archived" is the soft-delete state, not a real
+                                                     lead status — selecting it shows only archived
+                                                     leads, where the toolbar offers Restore. --}}
+                                                <button type="button" wire:click="$set('status', 'archived')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <div class="flex items-center gap-2">
+                                                        <flux:icon name="archive-box" class="size-3.5 text-zinc-400" />
+                                                        <span>{{ __('common.archived') }}</span>
+                                                    </div>
+                                                    @if($status === 'archived')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                                </button>
                                             </div>
                                         </div>
 
@@ -151,7 +170,12 @@
             <div class="-mx-4 -mt-6 -mb-6 bg-white p-4 sm:-mx-6 sm:p-6 lg:-mx-8 lg:p-8 dark:bg-zinc-900">
                 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     @foreach($leads as $lead)
-                        <a href="{{ route('crm.leads.edit', $lead->id) }}" wire:navigate class="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+                        {{-- Archived cards aren't navigable (edit route 404s on a
+                             soft-deleted model); they expose a Restore button. --}}
+                        <div
+                            @if(!$lead->trashed()) onclick="window.Livewire.navigate('{{ route('crm.leads.edit', $lead->id) }}')" @endif
+                            class="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 {{ $lead->trashed() ? '' : 'cursor-pointer' }}"
+                        >
                             <div class="flex items-start justify-between">
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
@@ -176,7 +200,13 @@
                                     <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $lead->phone }}</p>
                                 @endif
                             </div>
-                        </a>
+                            @if($lead->trashed())
+                                <button type="button" wire:click="restore({{ $lead->id }})" class="mt-3 inline-flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                    <flux:icon name="arrow-uturn-left" class="size-3.5" />
+                                    <span>{{ __('common.restore') }}</span>
+                                </button>
+                            @endif
+                        </div>
                     @endforeach
                 </div>
             </div>
@@ -200,7 +230,10 @@
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @foreach($leads as $lead)
                             @php $isSelected = in_array($lead->id, $selected); @endphp
-                            <tr wire:key="lead-{{ $lead->id }}" onclick="window.Livewire.navigate('{{ route('crm.leads.edit', $lead->id) }}')" class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}">
+                            {{-- Archived rows aren't navigable — their edit route
+                                 404s on a soft-deleted model. Recover them by
+                                 selecting + Restore from the toolbar. --}}
+                            <tr wire:key="lead-{{ $lead->id }}" @if(!$lead->trashed()) onclick="window.Livewire.navigate('{{ route('crm.leads.edit', $lead->id) }}')" @endif class="group transition-all duration-150 {{ $lead->trashed() ? '' : 'cursor-pointer' }} {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}">
                                 <td class="relative py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
                                     <div class="absolute inset-y-0 left-0 w-0.5 transition-all duration-150 {{ $isSelected ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700' }}"></div>
                                     <input type="checkbox" wire:model.live="selected" value="{{ $lead->id }}" class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}">
@@ -240,12 +273,13 @@
         @endif
     </div>
 
-    {{-- Delete Confirmation Modal --}}
+    {{-- Archive Confirmation Modal (Lead soft-deletes, so this is a
+         recoverable archive — not a permanent delete). --}}
     @isset($showDeleteConfirm)
-        <x-ui.delete-confirm-modal 
+        <x-ui.delete-confirm-modal
             wire:model="showDeleteConfirm"
             :validation="$deleteValidation ?? []"
-            title="Confirm Delete"
+            title="Archive leads"
             itemLabel="leads"
         />
     @endisset
