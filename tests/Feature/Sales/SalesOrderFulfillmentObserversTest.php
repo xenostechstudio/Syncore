@@ -436,3 +436,72 @@ it('observer caps counters at SO item quantity even when invoice items overflow'
 
     expect((int) $s['soItem']->refresh()->quantity_invoiced)->toBe(5);
 });
+
+/**
+ * The fulfillment observers must never lazy-load their way back to the
+ * parent SO. The real write paths re-fetch existing rows and save them:
+ * Delivery\Orders\Form does `$delivery->load('items')` then `save()`s
+ * each item, editing an invoice line does the same. With lazy loading
+ * disabled (PerformanceServiceProvider does this off-production), a
+ * relation hop inside the observer throws "Attempted to lazy load [...]
+ * but lazy loading is disabled".
+ *
+ * These tests set `$item->preventsLazyLoading = true` on the saved
+ * instance explicitly. The static Model::preventLazyLoading() flag does
+ * not propagate to model instances under the test harness, so without
+ * this the guard is inert in tests and the regression can't be pinned.
+ */
+it('recomputes from a persisted DeliveryOrderItem without lazy-loading the parent SO', function () {
+    $s = makeObserverScenario(orderedQty: 5);
+    $s['salesOrder']->update(['status' => 'processing']);
+
+    // The DO is already 'delivered' when the items are saved — that's
+    // the real order of operations in Delivery\Orders\Form: persist the
+    // status flip, then load('items') and save() each with its planned
+    // quantity_delivered.
+    $do = DeliveryOrder::create([
+        'sales_order_id' => $s['salesOrder']->id,
+        'warehouse_id' => $s['warehouse']->id,
+        'user_id' => $s['user']->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'status' => 'delivered',
+        'shipping_address' => 'addr',
+        'recipient_name' => 'r',
+    ]);
+    $created = DeliveryOrderItem::create([
+        'delivery_order_id' => $do->id,
+        'sales_order_item_id' => $s['soItem']->id,
+        'product_id' => $s['product']->id,
+        'quantity' => 5,
+        'quantity_delivered' => 0,
+    ]);
+
+    // Re-fetch fresh (no relations loaded) and arm the lazy-load guard.
+    $doItem = DeliveryOrderItem::findOrFail($created->id);
+    $doItem->preventsLazyLoading = true;
+    $doItem->quantity_delivered = 5;
+    $doItem->save(); // must not throw a LazyLoadingViolationException
+
+    expect((int) $s['soItem']->fresh()->quantity_delivered)->toBe(5);
+});
+
+it('recomputes from a persisted InvoiceItem without lazy-loading the parent SO', function () {
+    $s = makeObserverScenario(orderedQty: 5);
+    $invoice = makeInvoiceFor($s);
+    $created = InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'product_id' => $s['product']->id,
+        'description' => 'line',
+        'quantity' => 2,
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => 200,
+    ]);
+
+    $item = InvoiceItem::findOrFail($created->id);
+    $item->preventsLazyLoading = true;
+    $item->quantity = 4;
+    $item->save(); // must not throw a LazyLoadingViolationException
+
+    expect((int) $s['soItem']->fresh()->quantity_invoiced)->toBe(4);
+});

@@ -23,6 +23,8 @@ class DeliveryOrderItemObserver
 
     private function recompute(DeliveryOrderItem $item): void
     {
+        $item->loadMissing('deliveryOrder.salesOrder');
+
         $order = $item->deliveryOrder?->salesOrder;
         if (! $order) {
             return;

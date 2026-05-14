@@ -23,6 +23,8 @@ class InvoiceItemObserver
 
     private function recompute(InvoiceItem $item): void
     {
+        $item->loadMissing('invoice.salesOrder');
+
         $order = $item->invoice?->salesOrder;
         if (! $order) {
             return;
