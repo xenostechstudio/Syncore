@@ -49,16 +49,28 @@ class SalesOrderFulfillmentService
      */
     protected function maybeLockOnFullFulfillment(SalesOrder $order): void
     {
+        if ($this->shouldLock($order)) {
+            $order->lock();
+        }
+    }
+
+    /**
+     * Predicate: would this SO get auto-locked to DONE if the service
+     * ran against it right now? The reconcile command also calls this
+     * to surface "legacy" orders that are fully fulfilled but never got
+     * the lock applied (because the auto-lock was added after they
+     * reached the fully-fulfilled state, or because raw inserts bypassed
+     * the observer path).
+     */
+    public function shouldLock(SalesOrder $order): bool
+    {
         if ($order->state !== SalesOrderState::SALES_ORDER) {
-            return;
+            return false;
         }
         if ($order->items->isEmpty()) {
-            return;
+            return false;
         }
-        if (! $order->isFullyInvoiced() || ! $order->isFullyDelivered()) {
-            return;
-        }
-        $order->lock();
+        return $order->isFullyInvoiced() && $order->isFullyDelivered();
     }
 
     public function recomputeForSalesOrderItem(SalesOrderItem $item, ?SalesOrder $order = null): void

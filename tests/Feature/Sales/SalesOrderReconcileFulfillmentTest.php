@@ -320,6 +320,122 @@ it('locks SO to DONE when reconcile repairs counters into a fully-fulfilled stat
     expect($s['salesOrder']->refresh()->status)->toBe('delivered');
 });
 
+it('locks legacy SOs whose counters are already correct but state is stuck in SALES_ORDER', function () {
+    // Mirrors the production case: an SO that reached fully-fulfilled
+    // state BEFORE the auto-lock landed. Counters are correct, the SO
+    // is fully invoiced + fully delivered, but the SALES_ORDER → DONE
+    // transition never fired because nothing has touched an observer
+    // since. Reconcile should catch and repair this.
+    $s = makeReconcileScenario();
+
+    $invoice = Invoice::create([
+        'invoice_number' => 'INV-'.uniqid(),
+        'customer_id' => $s['customer']->id,
+        'sales_order_id' => $s['salesOrder']->id,
+        'user_id' => $s['user']->id,
+        'invoice_date' => now()->format('Y-m-d'),
+        'due_date' => now()->addDays(30)->format('Y-m-d'),
+        'status' => 'paid',
+        'subtotal' => 500,
+        'tax' => 0,
+        'discount' => 0,
+        'total' => 500,
+    ]);
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'product_id' => $s['product']->id,
+        'description' => 'full',
+        'quantity' => 5,
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => 500,
+    ]);
+
+    $deliveredDo = DeliveryOrder::create([
+        'sales_order_id' => $s['salesOrder']->id,
+        'warehouse_id' => $s['warehouse']->id,
+        'user_id' => $s['user']->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'status' => 'delivered',
+        'shipping_address' => 'addr',
+        'recipient_name' => 'someone',
+    ]);
+    DeliveryOrderItem::create([
+        'delivery_order_id' => $deliveredDo->id,
+        'sales_order_item_id' => $s['soItem']->id,
+        'product_id' => $s['product']->id,
+        'quantity' => 5,
+        'quantity_delivered' => 5,
+    ]);
+
+    // After observer fan-out the SO would be DONE. Unwind state to
+    // recreate the legacy snapshot: counters correct, but status is
+    // still 'processing'. Bypass the model so HasStateMachine doesn't
+    // refuse the transition.
+    DB::table('sales_orders')->where('id', $s['salesOrder']->id)->update(['status' => 'processing']);
+    expect($s['salesOrder']->refresh()->status)->toBe('processing');
+    expect((int) $s['soItem']->refresh()->quantity_invoiced)->toBe(5);
+    expect((int) $s['soItem']->refresh()->quantity_delivered)->toBe(5);
+
+    $this->artisan('sales-orders:reconcile-fulfillment')
+        ->expectsOutputToContain('SALES_ORDER → DONE')
+        ->expectsOutputToContain('Locked 1 order(s) to DONE')
+        ->assertExitCode(0);
+
+    expect($s['salesOrder']->refresh()->status)->toBe('delivered');
+});
+
+it('--dry-run reports the legacy-lock without writing', function () {
+    $s = makeReconcileScenario();
+
+    $invoice = Invoice::create([
+        'invoice_number' => 'INV-'.uniqid(),
+        'customer_id' => $s['customer']->id,
+        'sales_order_id' => $s['salesOrder']->id,
+        'user_id' => $s['user']->id,
+        'invoice_date' => now()->format('Y-m-d'),
+        'due_date' => now()->addDays(30)->format('Y-m-d'),
+        'status' => 'paid',
+        'subtotal' => 500,
+        'tax' => 0,
+        'discount' => 0,
+        'total' => 500,
+    ]);
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'product_id' => $s['product']->id,
+        'description' => 'full',
+        'quantity' => 5,
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => 500,
+    ]);
+    $deliveredDo = DeliveryOrder::create([
+        'sales_order_id' => $s['salesOrder']->id,
+        'warehouse_id' => $s['warehouse']->id,
+        'user_id' => $s['user']->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'status' => 'delivered',
+        'shipping_address' => 'addr',
+        'recipient_name' => 'someone',
+    ]);
+    DeliveryOrderItem::create([
+        'delivery_order_id' => $deliveredDo->id,
+        'sales_order_item_id' => $s['soItem']->id,
+        'product_id' => $s['product']->id,
+        'quantity' => 5,
+        'quantity_delivered' => 5,
+    ]);
+    DB::table('sales_orders')->where('id', $s['salesOrder']->id)->update(['status' => 'processing']);
+
+    $this->artisan('sales-orders:reconcile-fulfillment', ['--dry-run' => true])
+        ->expectsOutputToContain('Would lock 1 order(s) to DONE')
+        ->assertExitCode(0);
+
+    // Status untouched on dry-run.
+    expect($s['salesOrder']->refresh()->status)->toBe('processing');
+});
+
 it('--dry-run reports drift but does not write', function () {
     $s = makeReconcileScenario();
 

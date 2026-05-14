@@ -56,6 +56,7 @@ class ReconcileSalesOrderFulfillment extends Command
 
         $touchedItems = 0;
         $touchedOrders = 0;
+        $lockedOrders = 0;
 
         foreach ($orders as $order) {
             $orderChanged = false;
@@ -85,12 +86,23 @@ class ReconcileSalesOrderFulfillment extends Command
                 $orderChanged = true;
             }
 
+            // Legacy lock case: counters are already correct but the SO
+            // is fully fulfilled and still in SALES_ORDER (e.g. it
+            // reached fully-fulfilled state before the auto-lock landed).
+            // Without this branch, $orderChanged would stay false and
+            // these SOs would never get repaired by this command.
+            $needsLock = ! $orderChanged && $service->shouldLock($order);
+            if ($needsLock) {
+                $this->line(sprintf(
+                    '  SO #%d state: SALES_ORDER → DONE (fully fulfilled, never auto-locked)',
+                    $order->id,
+                ));
+                $lockedOrders++;
+            }
+
             // Apply writes through the service so the auto-lock-to-DONE
-            // check fires on the reconcile path too. Without this, an SO
-            // whose counters get repaired into a fully-fulfilled state
-            // would still stay in SALES_ORDER and never count toward
-            // revenue dashboards.
-            if ($orderChanged && ! $dryRun) {
+            // check fires on the reconcile path too.
+            if (($orderChanged || $needsLock) && ! $dryRun) {
                 $service->recomputeForSalesOrder($order);
             }
 
@@ -100,13 +112,19 @@ class ReconcileSalesOrderFulfillment extends Command
         }
 
         $this->newLine();
-        if ($touchedItems === 0) {
+        if ($touchedItems === 0 && $lockedOrders === 0) {
             $this->info('All sales orders are consistent. Nothing to do.');
             return Command::SUCCESS;
         }
 
         $verb = $dryRun ? 'Would update' : 'Updated';
-        $this->info(sprintf('%s %d item(s) across %d order(s).', $verb, $touchedItems, $touchedOrders));
+        if ($touchedItems > 0) {
+            $this->info(sprintf('%s %d item(s) across %d order(s).', $verb, $touchedItems, $touchedOrders));
+        }
+        if ($lockedOrders > 0) {
+            $lockVerb = $dryRun ? 'Would lock' : 'Locked';
+            $this->info(sprintf('%s %d order(s) to DONE.', $lockVerb, $lockedOrders));
+        }
         return Command::SUCCESS;
     }
 
