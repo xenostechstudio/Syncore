@@ -9,7 +9,6 @@ use App\Models\Invoicing\InvoiceItem;
 use App\Models\Invoicing\Payment;
 use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
-use App\Models\Sales\SalesOrderItem;
 use App\Services\XenditService;
 use App\Mail\InvoiceNotification;
 use Illuminate\Support\Facades\Mail;
@@ -164,18 +163,8 @@ class Form extends Component
         }
 
         DB::transaction(function () use ($invoice) {
-            // Decrement quantity_invoiced on sales order items
-            if ($invoice->sales_order_id) {
-                foreach ($invoice->items as $invoiceItem) {
-                    if ($invoiceItem->product_id) {
-                        SalesOrderItem::query()
-                            ->where('sales_order_id', $invoice->sales_order_id)
-                            ->where('product_id', $invoiceItem->product_id)
-                            ->decrement('quantity_invoiced', $invoiceItem->quantity);
-                    }
-                }
-            }
-
+            // quantity_invoiced on the related SO items is recomputed by
+            // InvoiceObserver when status flips to 'cancelled'.
             $invoice->update([
                 'status' => 'cancelled',
                 'xendit_status' => $invoice->xendit_status ?? 'cancelled',

@@ -15,7 +15,6 @@ use App\Models\Inventory\InventoryStock;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\SalesOrder;
-use App\Models\Sales\SalesOrderItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -145,17 +144,8 @@ class Form extends Component
         }
 
         DB::transaction(function () use ($delivery) {
-            // Only decrement quantity_delivered if DO was already delivered
-            if ($delivery->status === DeliveryOrderState::DELIVERED) {
-                foreach ($delivery->items as $deliveryItem) {
-                    if ($deliveryItem->sales_order_item_id) {
-                        SalesOrderItem::query()
-                            ->where('id', $deliveryItem->sales_order_item_id)
-                            ->decrement('quantity_delivered', $deliveryItem->quantity_delivered);
-                    }
-                }
-            }
-
+            // quantity_delivered on the SO is recomputed by
+            // DeliveryOrderObserver from the status flip.
             $delivery->update(['status' => DeliveryOrderState::CANCELLED]);
         });
 
@@ -545,21 +535,14 @@ class Form extends Component
             $delivery = $this->persist(postWarehouseOut: $postWarehouseOut);
 
             if ($markDelivered) {
-                // Update quantity_delivered on DO items
-                DeliveryOrderItem::query()
-                    ->where('delivery_order_id', $delivery->id)
-                    ->update([
-                        'quantity_delivered' => DB::raw('quantity'),
-                    ]);
-
-                // Update quantity_delivered on Sales Order items
+                // Set each DO item's quantity_delivered to its planned
+                // quantity via per-row save() so DeliveryOrderItemObserver
+                // fires and recomputes the parent SO. DeliveryOrderObserver
+                // also recomputes once when the status flip below lands.
                 $delivery->load('items');
                 foreach ($delivery->items as $doItem) {
-                    if ($doItem->sales_order_item_id) {
-                        SalesOrderItem::query()
-                            ->where('id', $doItem->sales_order_item_id)
-                            ->increment('quantity_delivered', $doItem->quantity);
-                    }
+                    $doItem->quantity_delivered = $doItem->quantity;
+                    $doItem->save();
                 }
             }
 

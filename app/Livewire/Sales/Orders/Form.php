@@ -817,7 +817,8 @@ class Form extends Component
                     : null,
             ]);
 
-            // Create invoice items and update quantity_invoiced
+            // Create invoice items; quantity_invoiced on the SO item is
+            // recomputed by InvoiceItemObserver.
             if ($this->invoiceType === 'regular') {
                 foreach ($order->items as $orderItem) {
                     $qtyToInvoice = $orderItem->quantity_to_invoice;
@@ -835,9 +836,6 @@ class Form extends Component
                         'discount' => $orderItem->discount,
                         'total' => $qtyToInvoice * $orderItem->unit_price - $orderItem->discount,
                     ]);
-
-                    // Update quantity_invoiced on sales order item
-                    $orderItem->increment('quantity_invoiced', $qtyToInvoice);
                 }
             } else {
                 // For down payments, create a single line item (no quantity tracking)

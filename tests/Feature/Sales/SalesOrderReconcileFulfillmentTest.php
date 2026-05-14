@@ -1,11 +1,16 @@
 <?php
 
 /**
- * Covers the sales-orders:reconcile-fulfillment artisan command. The
- * command exists to repair drift between Invoice/DeliveryOrder records
- * and the quantity_invoiced/quantity_delivered counters on SO items —
- * drift that the "Create Invoice" / "Create Delivery" buttons silently
- * surface as still-clickable affordances on already-fulfilled orders.
+ * Covers the sales-orders:reconcile-fulfillment artisan command. With
+ * observer-driven recompute now in place, the regular flow never
+ * produces drift — InvoiceItemObserver, DeliveryOrderItemObserver, and
+ * the parent Invoice/DeliveryOrder observers keep the SO counters in
+ * sync. The command exists for the cases observers can't catch:
+ * raw DB::table()->insert(), legacy migrations, manual repair.
+ *
+ * To exercise the command we *manufacture* drift by writing to the SO
+ * item via a raw query that bypasses observers, then assert the
+ * command corrects it.
  */
 
 use App\Models\Delivery\DeliveryOrder;
@@ -18,6 +23,7 @@ use App\Models\Sales\Customer;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderItem;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 function makeReconcileScenario(): array
 {
@@ -66,11 +72,24 @@ function makeReconcileScenario(): array
         'unit_price' => 100,
         'discount' => 0,
         'total' => 500,
-        // Intentionally leave quantity_invoiced and quantity_delivered at 0
-        // to mimic the seeded-drift starting state.
     ]);
 
     return compact('user', 'warehouse', 'product', 'customer', 'salesOrder', 'soItem');
+}
+
+/**
+ * Force the SO item's counters to a known-wrong value by writing
+ * directly via the query builder — this bypasses Eloquent events, which
+ * is exactly the situation reconcile-fulfillment exists to repair.
+ */
+function manufactureDrift(SalesOrderItem $item, int $invoiced = 0, int $delivered = 0): void
+{
+    DB::table('sales_order_items')
+        ->where('id', $item->id)
+        ->update([
+            'quantity_invoiced' => $invoiced,
+            'quantity_delivered' => $delivered,
+        ]);
 }
 
 it('reconciles quantity_invoiced from invoice items linked by sales_order_id + product_id', function () {
@@ -100,6 +119,8 @@ it('reconciles quantity_invoiced from invoice items linked by sales_order_id + p
         'total' => 300,
     ]);
 
+    // Force drift after the observer-driven write.
+    manufactureDrift($s['soItem'], invoiced: 0);
     expect((int) $s['soItem']->refresh()->quantity_invoiced)->toBe(0);
 
     $this->artisan('sales-orders:reconcile-fulfillment')
@@ -112,7 +133,6 @@ it('reconciles quantity_invoiced from invoice items linked by sales_order_id + p
 it('reconciles quantity_delivered from DELIVERED delivery orders only', function () {
     $s = makeReconcileScenario();
 
-    // A non-delivered DO should NOT contribute (status=pending).
     $pendingDo = DeliveryOrder::create([
         'sales_order_id' => $s['salesOrder']->id,
         'warehouse_id' => $s['warehouse']->id,
@@ -130,7 +150,6 @@ it('reconciles quantity_delivered from DELIVERED delivery orders only', function
         'quantity_delivered' => 0,
     ]);
 
-    // A DELIVERED DO with the actual movement
     $deliveredDo = DeliveryOrder::create([
         'sales_order_id' => $s['salesOrder']->id,
         'warehouse_id' => $s['warehouse']->id,
@@ -147,6 +166,8 @@ it('reconciles quantity_delivered from DELIVERED delivery orders only', function
         'quantity' => 4,
         'quantity_delivered' => 4,
     ]);
+
+    manufactureDrift($s['soItem'], delivered: 0);
 
     $this->artisan('sales-orders:reconcile-fulfillment')
         ->assertExitCode(0);
@@ -171,8 +192,6 @@ it('caps reconciled quantities at the SO item quantity (never over-counts)', fun
         'total' => 1000,
     ]);
 
-    // Two invoice items adding up to 10 — more than the SO item quantity (5).
-    // Reconcile should cap at the SO line, not flow into "negative remaining".
     InvoiceItem::create([
         'invoice_id' => $invoice->id,
         'product_id' => $s['product']->id,
@@ -191,6 +210,10 @@ it('caps reconciled quantities at the SO item quantity (never over-counts)', fun
         'discount' => 0,
         'total' => 400,
     ]);
+
+    // Observer would already cap at 5, but force drift to verify
+    // the command's own capping logic.
+    manufactureDrift($s['soItem'], invoiced: 99);
 
     $this->artisan('sales-orders:reconcile-fulfillment')
         ->assertExitCode(0);
@@ -223,6 +246,8 @@ it('is idempotent — running twice produces the same result as running once', f
         'discount' => 0,
         'total' => 200,
     ]);
+
+    manufactureDrift($s['soItem'], invoiced: 0);
 
     $this->artisan('sales-orders:reconcile-fulfillment')->assertExitCode(0);
     $afterFirst = (int) $s['soItem']->refresh()->quantity_invoiced;
@@ -259,6 +284,8 @@ it('--dry-run reports drift but does not write', function () {
         'discount' => 0,
         'total' => 100,
     ]);
+
+    manufactureDrift($s['soItem'], invoiced: 0);
 
     $this->artisan('sales-orders:reconcile-fulfillment', ['--dry-run' => true])
         ->expectsOutputToContain('Would update')

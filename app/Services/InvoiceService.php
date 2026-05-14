@@ -65,8 +65,7 @@ class InvoiceService
                     'total' => $lineTotal + $lineTax - ($orderItem->discount ?? 0),
                 ]);
 
-                // Update invoiced quantity on sales order item
-                $orderItem->increment('quantity_invoiced', $quantity);
+                // quantity_invoiced is kept in sync by InvoiceItemObserver.
 
                 $subtotal += $lineTotal;
                 $tax += $lineTax;
@@ -162,13 +161,8 @@ class InvoiceService
         }
 
         return DB::transaction(function () use ($invoice, $reason) {
-            // Reverse invoiced quantities on sales order items
-            foreach ($invoice->items as $item) {
-                if ($item->sales_order_item_id) {
-                    $item->salesOrderItem?->decrement('quantity_invoiced', $item->quantity);
-                }
-            }
-
+            // quantity_invoiced is recomputed by InvoiceObserver when
+            // the status flips to 'cancelled'.
             return $invoice->cancelInvoice();
         });
     }

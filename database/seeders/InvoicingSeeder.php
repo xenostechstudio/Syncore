@@ -71,10 +71,9 @@ class InvoicingSeeder extends Seeder
                 'notes'          => $idx % 4 === 0 ? 'Mohon transfer ke rekening yang tertera.' : null,
             ]);
 
-            // Mirror the order items onto the invoice AND bump the SO's
-            // quantity_invoiced counter — the "Create Invoice" button on
-            // the SO form gates on this, and skipping it leaves the
-            // button visible on fully-invoiced orders.
+            // Mirror the order items onto the invoice. The SO's
+            // quantity_invoiced counter is recomputed by
+            // InvoiceItemObserver.
             foreach ($order->items as $item) {
                 InvoiceItem::create([
                     'invoice_id'  => $invoice->id,
@@ -85,10 +84,6 @@ class InvoicingSeeder extends Seeder
                     'discount'    => $item->discount,
                     'total'       => $item->total,
                 ]);
-
-                if ($status !== 'cancelled') {
-                    $item->increment('quantity_invoiced', $item->quantity);
-                }
             }
 
             // Apply payments for paid / partial states.

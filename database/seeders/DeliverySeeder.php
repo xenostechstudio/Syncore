@@ -63,10 +63,9 @@ class DeliverySeeder extends Seeder
                 'notes' => $index % 4 === 0 ? 'Handle with care' : null,
             ]);
 
-            // Add delivery items AND, for delivered orders, bump the SO
-            // item's quantity_delivered counter — the "Create Delivery"
-            // button on the SO form gates on this. Skipping the increment
-            // leaves the button visible on fully-delivered orders.
+            // Add delivery items; the SO item's quantity_delivered
+            // counter is recomputed by DeliveryOrderItemObserver (and the
+            // delivered-status filter is enforced inside the service).
             foreach ($salesOrder->items as $item) {
                 DeliveryOrderItem::create([
                     'delivery_order_id' => $delivery->id,
@@ -75,10 +74,6 @@ class DeliverySeeder extends Seeder
                     'quantity' => $item->quantity,
                     'quantity_delivered' => $status === 'delivered' ? $item->quantity : 0,
                 ]);
-
-                if ($status === 'delivered') {
-                    $item->increment('quantity_delivered', $item->quantity);
-                }
             }
         }
     }

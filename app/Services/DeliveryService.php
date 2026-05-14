@@ -259,18 +259,12 @@ class DeliveryService
     }
 
     /**
-     * Handle delivery completed - update quantities and dispatch event.
+     * Handle delivery completed - dispatch event. quantity_delivered on
+     * SO items is recomputed by DeliveryOrderObserver from the status
+     * flip to 'delivered'.
      */
     protected function handleDeliveryCompleted(DeliveryOrder $deliveryOrder): void
     {
-        // Update delivered quantities on sales order items
-        foreach ($deliveryOrder->items as $item) {
-            if ($item->sales_order_item_id) {
-                $item->salesOrderItem?->increment('quantity_delivered', $item->quantity);
-            }
-        }
-
-        // Dispatch event for inventory update and notifications
         DeliveryCompleted::dispatch($deliveryOrder);
     }
 }

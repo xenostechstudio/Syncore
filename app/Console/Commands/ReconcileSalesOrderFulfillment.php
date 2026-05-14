@@ -2,19 +2,21 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Invoicing\InvoiceItem;
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderItem;
+use App\Services\SalesOrderFulfillmentService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Recomputes quantity_invoiced and quantity_delivered on every
- * SalesOrderItem from the related Invoice + DeliveryOrder records. The
- * "Create Invoice" and "Create Delivery" buttons on the SO form gate on
- * these stored counters — when seeders or other write paths skip the
- * increment, the buttons stay visible on top of already-fulfilled
- * orders.
+ * SalesOrderItem from the related Invoice + DeliveryOrder records.
+ *
+ * Day-to-day, the SalesOrderFulfillmentService observer fan-out keeps
+ * these counters in sync automatically — this command exists as a
+ * safety net for:
+ *   - One-off data repair after seeders / imports that bypass observers
+ *     (e.g. DB::table()->insert(), raw migrations).
+ *   - Verifying no drift via --dry-run.
  *
  * Idempotent. Safe to re-run.
  *
@@ -31,7 +33,7 @@ class ReconcileSalesOrderFulfillment extends Command
 
     protected $description = 'Recompute quantity_invoiced and quantity_delivered on SO items from related invoices and deliveries';
 
-    public function handle(): int
+    public function handle(SalesOrderFulfillmentService $service): int
     {
         $dryRun = (bool) $this->option('dry-run');
         $orderId = $this->option('order') !== null ? (int) $this->option('order') : null;
@@ -60,8 +62,8 @@ class ReconcileSalesOrderFulfillment extends Command
             $orderChanged = false;
 
             foreach ($order->items as $item) {
-                $expectedInvoiced = $this->computeInvoicedQty($order, $item);
-                $expectedDelivered = $this->computeDeliveredQty($order, $item);
+                $expectedInvoiced = $service->computeInvoicedQty($order, $item);
+                $expectedDelivered = $service->computeDeliveredQty($order, $item);
 
                 $invoicedDrift = (int) $item->quantity_invoiced !== $expectedInvoiced;
                 $deliveredDrift = (int) $item->quantity_delivered !== $expectedDelivered;
@@ -109,44 +111,4 @@ class ReconcileSalesOrderFulfillment extends Command
         return Command::SUCCESS;
     }
 
-    /**
-     * Sum invoiced quantity for one SO item. invoice_items has no
-     * sales_order_item_id column, so we attribute by product across
-     * invoices linked to this SO. Capped at the SO item's quantity to
-     * avoid over-counting when multiple SO items share a product.
-     */
-    protected function computeInvoicedQty(SalesOrder $order, SalesOrderItem $item): int
-    {
-        $invoicedForProduct = InvoiceItem::query()
-            ->whereHas('invoice', function ($q) use ($order) {
-                $q->where('sales_order_id', $order->id)
-                  ->where('status', '!=', 'cancelled');
-            })
-            ->where('product_id', $item->product_id)
-            ->sum('quantity');
-
-        return (int) min($invoicedForProduct, $item->quantity);
-    }
-
-    /**
-     * Sum delivered quantity for one SO item from delivered (non-returned,
-     * non-cancelled) DOs. Delivery items already carry sales_order_item_id
-     * reliably across both seeded and runtime paths, so this is a direct
-     * sum — no fallback needed.
-     */
-    protected function computeDeliveredQty(SalesOrder $order, SalesOrderItem $item): int
-    {
-        $delivered = 0;
-        foreach ($order->deliveryOrders as $do) {
-            if (! in_array($do->status, ['delivered'], true)) {
-                continue;
-            }
-            foreach ($do->items as $doItem) {
-                if ($doItem->sales_order_item_id === $item->id) {
-                    $delivered += (int) $doItem->quantity_delivered;
-                }
-            }
-        }
-        return (int) min($delivered, $item->quantity);
-    }
 }
