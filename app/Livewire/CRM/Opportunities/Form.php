@@ -191,12 +191,22 @@ class Form extends Component
         $this->redirect(route('crm.opportunities.edit', $newOpportunity->id), navigate: true);
     }
 
-    public function delete(): void
+    /**
+     * Archive (soft-delete) the opportunity. Master data is never hard
+     * "deleted" from the form — it's retired with Archive, which keeps
+     * the row and is recoverable from the Archived filter on the index.
+     * See "Destructive actions" in CLAUDE.md.
+     */
+    public function archive(): void
     {
-        if (!$this->opportunity) return;
+        $this->authorizePermission('crm.delete');
 
-        $this->opportunity->delete();
-        session()->flash('success', 'Opportunity deleted successfully.');
+        if (!$this->opportunity) {
+            return;
+        }
+
+        $this->opportunity->archive();
+        session()->flash('success', 'Opportunity archived. Find and restore it via the Archived filter on the opportunities list.');
         $this->redirect(route('crm.opportunities.index'), navigate: true);
     }
 

@@ -71,6 +71,17 @@
                                                     @if($stage == $pipeline->id)<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                                 </button>
                                             @endforeach
+                                            {{-- "Archived" is the soft-delete state, not a real
+                                                 pipeline stage — it shows only archived
+                                                 opportunities in the list view, each with a
+                                                 per-row Restore action. --}}
+                                            <button type="button" wire:click="$set('stage', 'archived')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <flux:icon name="archive-box" class="size-3.5 text-zinc-400" />
+                                                    <span>{{ __('common.archived') }}</span>
+                                                </div>
+                                                @if($stage === 'archived')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -114,7 +125,10 @@
 
     {{-- Content --}}
     <div>
-        @if($view === 'kanban')
+        {{-- Archived opportunities always render in the list view (the
+             recovery surface) — never the pipeline-grouped kanban,
+             whose card links would 404 on a soft-deleted model. --}}
+        @if($view === 'kanban' && $stage !== 'archived')
             {{-- Kanban View with Drag & Drop --}}
             <div class="flex gap-4 overflow-x-auto pb-4">
                 @foreach($pipelines as $pipeline)
@@ -191,11 +205,17 @@
                                 <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Expected Revenue</th>
                                 <th scope="col" class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Probability</th>
                                 <th scope="col" class="px-4 py-3 pr-4 text-left text-xs font-bold uppercase tracking-wider text-zinc-500 sm:pr-6 lg:pr-8 dark:text-zinc-400">Assigned</th>
+                                @if($stage === 'archived')
+                                    <th scope="col" class="w-10 py-3 pr-4 sm:pr-6 lg:pr-8"></th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                             @foreach($opportunities as $opp)
-                                <tr wire:key="opp-{{ $opp->id }}" onclick="window.Livewire.navigate('{{ route('crm.opportunities.edit', $opp->id) }}')" class="group cursor-pointer transition-all duration-150 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                                {{-- Archived rows aren't navigable — their edit route
+                                     404s on a soft-deleted model; they expose a
+                                     per-row Restore action instead. --}}
+                                <tr wire:key="opp-{{ $opp->id }}" @if(!$opp->trashed()) onclick="window.Livewire.navigate('{{ route('crm.opportunities.edit', $opp->id) }}')" @endif class="group transition-all duration-150 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 {{ $opp->trashed() ? '' : 'cursor-pointer' }}">
                                     <td class="relative py-3 pl-4 pr-4 sm:pl-6 lg:pl-8">
                                         <div class="absolute inset-y-0 left-0 w-0.5 bg-transparent transition-all duration-150 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700"></div>
                                         <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $opp->name }}</p>
@@ -220,6 +240,14 @@
                                     <td class="px-4 py-3 pr-4 sm:pr-6 lg:pr-8">
                                         <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $opp->assignedTo?->name ?? '-' }}</span>
                                     </td>
+                                    @if($stage === 'archived')
+                                        <td class="py-3 pr-4 sm:pr-6 lg:pr-8" onclick="event.stopPropagation()">
+                                            <button type="button" wire:click="restore({{ $opp->id }})" class="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                                                <flux:icon name="arrow-uturn-left" class="size-4" />
+                                                <span>{{ __('common.restore') }}</span>
+                                            </button>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>

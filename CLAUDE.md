@@ -150,9 +150,10 @@ Request. (Purchase Receipt already complied — only a state-gated Cancel,
 no Delete or Archive.)
 
 Master-data Archive side — migrated: **Customer, Supplier, Lead,
-Employee**. The form's destructive action is `archive()` (honest
-soft-delete naming + a permission check); the index lets you see and
-recover archived rows. Reference shapes depending on the index's UI:
+Employee, Opportunity**. The form's destructive action is `archive()`
+(honest soft-delete naming + a permission check); the index lets you
+see and recover archived rows. Reference shapes depending on the
+index's UI:
 - **Customer** — row-selection index: a `filterArchived` checkbox +
   `bulkRestore()`.
 - **Supplier** — no selection UI: an "Archived" option on the status
@@ -160,16 +161,18 @@ recover archived rows. Reference shapes depending on the index's UI:
 - **Lead** — hybrid (radio status filter *and* a selection toolbar):
   "Archived" on the status filter, plus both `bulkRestore()` (list
   toolbar) and `restore(int $id)` (grid cards).
-- **Employee** — like Lead, plus it has kanban/grid views: the list
-  branch's `@if` also fires when `status === 'archived'`, so archived
-  always renders the list view (the recovery surface) and the
-  kanban/grid card links never 404.
+- **Employee** — like Lead, plus kanban/grid views: the list branch's
+  `@if` also fires when `status === 'archived'`, so archived always
+  renders the list view (the recovery surface).
+- **Opportunity** — kanban-default, no selection UI: "Archived" on the
+  stage filter; the kanban `@if` is gated `&& stage !== 'archived'`
+  (in the blade *and* `render()`) so archived always lists; a per-row
+  `restore(int $id)` in an Actions column shown only when archived.
 In all shapes, archived rows are made non-navigable since their edit
-route 404s on a soft-deleted model. Still to migrate: **Opportunity**
-(kanban-default, no bulk-delete UI — needs its own look) and
-**Product** (two forms + two indexes + colliding `products.*` route
-names — needs the route collision untangled first). A true hard Delete
-(only when unreferenced) is still deferred.
+route 404s on a soft-deleted model. Still to migrate: **Product** (two
+forms + two indexes + colliding `products.*` route names — needs the
+route collision untangled first). A true hard Delete (only when
+unreferenced) is still deferred.
 
 ## Driver-aware status-enum migrations
 

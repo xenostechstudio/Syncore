@@ -145,11 +145,29 @@ class Index extends Component
         ];
     }
 
+    /**
+     * Restore an archived (soft-deleted) opportunity. The recovery half
+     * of the Archive action — see "Destructive actions" in CLAUDE.md.
+     * This index has no row-selection UI, so restore is per-row.
+     */
+    public function restore(int $id): void
+    {
+        $this->authorizePermission('crm.edit');
+
+        Opportunity::onlyTrashed()->whereKey($id)->restore();
+
+        session()->flash('success', 'Opportunity restored.');
+    }
+
     protected function getQuery()
     {
         return Opportunity::query()
             ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
-            ->when($this->stage, fn ($q) => $q->where('pipeline_id', $this->stage));
+            // 'archived' is a pseudo-stage: the soft-delete state, not a
+            // real pipeline — it bypasses the pipeline filter and shows
+            // only trashed rows instead.
+            ->when($this->stage && $this->stage !== 'archived', fn ($q) => $q->where('pipeline_id', $this->stage))
+            ->when($this->stage === 'archived', fn ($q) => $q->onlyTrashed());
     }
 
     protected function getModelClass(): string
@@ -163,7 +181,9 @@ class Index extends Component
 
         $opportunitiesQuery = $this->getQuery()->with(['customer', 'pipeline', 'assignedTo']);
 
-        if ($this->view === 'kanban') {
+        // Archived opportunities always render in the list view (the
+        // recovery surface) — never the pipeline-grouped kanban.
+        if ($this->view === 'kanban' && $this->stage !== 'archived') {
             $opportunities = $opportunitiesQuery->orderByDesc('expected_revenue')->get()->groupBy('pipeline_id');
         } else {
             $opportunities = $opportunitiesQuery->orderByDesc('created_at')->paginate(20, ['*'], 'page', $this->page);
