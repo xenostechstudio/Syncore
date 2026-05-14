@@ -295,22 +295,54 @@ class Form extends Component
     {
         $this->authorizePermission('purchase.edit');
 
-        if ($this->billId) {
-            $bill = VendorBill::findOrFail($this->billId);
-            $bill->update(['status' => VendorBillState::CANCELLED->value]);
-            
-            session()->flash('success', 'Bill cancelled.');
-            $this->redirect(route('purchase.bills.index'), navigate: true);
+        if (! $this->billId) {
+            return;
         }
+
+        $bill = VendorBill::findOrFail($this->billId);
+
+        if (! $bill->state->canCancel()) {
+            session()->flash('error', 'This bill can no longer be cancelled.');
+            return;
+        }
+
+        $bill->update(['status' => VendorBillState::CANCELLED->value]);
+
+        session()->flash('success', 'Bill cancelled.');
+        $this->redirect(route('purchase.bills.index'), navigate: true);
     }
 
+    /**
+     * Hard-delete a never-confirmed draft bill. Anything that became
+     * real — a confirmed bill, or one carrying payments — is not
+     * deletable; it must be Cancelled instead, which keeps the record
+     * for audit. See "Destructive actions" in CLAUDE.md.
+     */
     public function delete(): void
     {
-        if ($this->billId) {
-            VendorBill::destroy($this->billId);
-            session()->flash('success', 'Bill deleted.');
-            $this->redirect(route('purchase.bills.index'), navigate: true);
+        $this->authorizePermission('purchase.delete');
+
+        if (! $this->billId) {
+            return;
         }
+
+        $bill = VendorBill::findOrFail($this->billId);
+
+        if (! $bill->state->canBeDeleted()) {
+            session()->flash('error', 'This bill has been confirmed — cancel it instead of deleting.');
+            return;
+        }
+
+        if ($bill->payments()->exists()) {
+            session()->flash('error', 'This bill has recorded payments — cancel it instead of deleting.');
+            return;
+        }
+
+        $bill->items()->delete();
+        $bill->forceDelete();
+
+        session()->flash('success', 'Draft bill deleted permanently.');
+        $this->redirect(route('purchase.bills.index'), navigate: true);
     }
 
     public function duplicate(): void
@@ -362,9 +394,17 @@ class Form extends Component
             ->orderByDesc('order_date')
             ->get();
 
+        // Cancel and Delete are mutually exclusive by state: a
+        // never-confirmed draft is Deleted, a confirmed (pending) bill
+        // is Cancelled, anything further is neither. See "Destructive
+        // actions" in CLAUDE.md.
+        $billState = $this->billId ? VendorBillState::tryFrom($this->status) : null;
+
         return view('livewire.purchase.bills.form', [
             'suppliers' => $suppliers,
             'purchaseOrders' => $purchaseOrders,
+            'canDeleteBill' => (bool) ($billState && $billState->canBeDeleted()),
+            'canCancelBill' => (bool) ($billState && $billState === VendorBillState::PENDING),
         ]);
     }
 }

@@ -85,6 +85,15 @@ enum PurchaseOrderState: string implements HasDisplayMetadata
         return in_array($this, [self::RFQ, self::RFQ_SENT]);
     }
 
+    public function canBeDeleted(): bool
+    {
+        // Hard delete is only for an RFQ that was never confirmed into a
+        // Purchase Order — it carries no audit weight. Once it's a PO
+        // (or further) it must be Cancelled, never deleted. See
+        // "Destructive actions" in CLAUDE.md.
+        return in_array($this, [self::RFQ, self::RFQ_SENT]);
+    }
+
     public function isTerminal(): bool
     {
         return in_array($this, [self::BILLED, self::CANCELLED]);

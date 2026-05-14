@@ -24,11 +24,16 @@
                                         <flux:icon name="document-duplicate" class="size-4" />
                                         <span>Duplicate</span>
                                     </button>
+                                    {{-- Cancel-vs-Delete taxonomy (see CLAUDE.md):
+                                         a never-confirmed draft can be Deleted
+                                         (hard); a confirmed bill is Cancelled. --}}
+                                    @if($canDeleteBill)
                                     <flux:menu.separator />
-                                    <button type="button" wire:click="delete" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <button type="button" wire:click="delete" wire:confirm="Delete this draft bill permanently? It has not been confirmed, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                         <flux:icon name="trash" class="size-4" />
                                         <span>Delete</span>
                                     </button>
+                                    @endif
                                 </flux:menu>
                             </flux:dropdown>
                         @endif
@@ -113,7 +118,7 @@
                             Register Payment
                         </button>
                     @endif
-                    @if($billId && $status !== 'cancelled' && $status !== 'paid')
+                    @if($canCancelBill)
                         <button type="button" @click="showCancelModal = true"
                             class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
                             <flux:icon name="x-mark" class="size-4" />

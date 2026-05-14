@@ -18,30 +18,31 @@
                             {{ $rfqId ? $reference : 'New RFQ' }}
                         </span>
 
-                        {{-- Header actions dropdown (Duplicate, Archive, Delete) --}}
+                        {{-- Destructive actions follow the Cancel-vs-Delete
+                             taxonomy (see CLAUDE.md): a never-confirmed RFQ can
+                             be Deleted (hard); once it's a Purchase Order it is
+                             Cancelled instead. Mutually exclusive by state. --}}
+                        @if($rfqId)
                         <flux:dropdown position="bottom" align="start">
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
 
                             <flux:menu class="w-40">
-                                @if($rfqId)
                                 <button type="button" wire:click="duplicate" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
-                                @endif
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="archive-box" class="size-4" />
-                                    <span>Archive</span>
-                                </button>
+                                @if($canDeleteRfq)
                                 <flux:menu.separator />
-                                <button type="button" wire:click="delete" wire:confirm="Are you sure you want to delete this RFQ?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <button type="button" wire:click="delete" wire:confirm="Delete this RFQ permanently? It has not been confirmed into a Purchase Order, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>
+                                @endif
                             </flux:menu>
                         </flux:dropdown>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -158,14 +159,14 @@
                         <flux:icon name="printer" class="size-4" />
                         Print
                     </button>
-                    @if($rfqId && $status !== 'cancelled')
-                        <button 
+                    @if($canCancelRfq)
+                        <button
                             type="button"
                             @click="showCancelModal = true"
                             class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
                         >
                             <flux:icon name="x-mark" class="size-4" />
-                            Cancel RFQ
+                            Cancel
                         </button>
                     @endif
                 </div>

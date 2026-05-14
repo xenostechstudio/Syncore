@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Purchase\Rfq;
 
+use App\Enums\PurchaseOrderState;
 use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
 use App\Models\Purchase\PurchaseRfq;
@@ -350,6 +351,13 @@ class Form extends Component
             return;
         }
 
+        $rfq = PurchaseRfq::findOrFail($this->rfqId);
+
+        if (! $rfq->state->canCancel()) {
+            session()->flash('error', 'This document can no longer be cancelled.');
+            return;
+        }
+
         DB::table('purchase_rfqs')
             ->where('id', $this->rfqId)
             ->update([
@@ -357,19 +365,34 @@ class Form extends Component
                 'updated_at' => now(),
             ]);
 
-        session()->flash('success', 'RFQ cancelled.');
+        session()->flash('success', 'Cancelled.');
         $this->redirect(route('purchase.rfq.index'), navigate: true);
     }
 
+    /**
+     * Hard-delete an RFQ that was never confirmed into a Purchase Order.
+     * Once confirmed (PO or further) it carries audit weight and must be
+     * Cancelled instead. See "Destructive actions" in CLAUDE.md.
+     */
     public function delete(): void
     {
+        $this->authorizePermission('purchase.delete');
+
         if (!$this->rfqId) {
             return;
         }
 
-        DB::table('purchase_rfqs')->where('id', $this->rfqId)->delete();
+        $rfq = PurchaseRfq::findOrFail($this->rfqId);
 
-        session()->flash('success', 'RFQ deleted successfully.');
+        if (! $rfq->state->canBeDeleted()) {
+            session()->flash('error', 'This has been confirmed as a Purchase Order — cancel it instead of deleting.');
+            return;
+        }
+
+        $rfq->items()->delete();
+        $rfq->forceDelete();
+
+        session()->flash('success', 'RFQ deleted permanently.');
         $this->redirect(route('purchase.rfq.index'), navigate: true);
     }
 
@@ -426,6 +449,12 @@ class Form extends Component
             ];
         }
 
+        // Cancel and Delete are mutually exclusive by state: a
+        // never-confirmed RFQ is Deleted, a confirmed Purchase Order is
+        // Cancelled, anything further is neither. See "Destructive
+        // actions" in CLAUDE.md.
+        $state = $this->rfqId ? PurchaseOrderState::tryFrom($this->status) : null;
+
         return [
             'suppliers' => $suppliers,
             'selectedSupplier' => $selectedSupplier,
@@ -434,6 +463,8 @@ class Form extends Component
                 ->orderBy('name')
                 ->limit(50)
                 ->get(),
+            'canDeleteRfq' => (bool) ($state && $state->canBeDeleted()),
+            'canCancelRfq' => (bool) ($state && $state === PurchaseOrderState::PURCHASE_ORDER),
         ];
     }
 
