@@ -56,7 +56,7 @@ QUOTATION ──sendQuotation()──→ QUOTATION_SENT
 Triggered by:
 - `QUOTATION → QUOTATION_SENT`: `SalesOrder::sendQuotation()` (email + status flip)
 - `QUOTATION / QUOTATION_SENT → SALES_ORDER`: `SalesOrder::confirm()` — exposed from the SO form's *Confirm* button. Refuses if `stock_check_mode` setting blocks it and stock is short.
-- `SALES_ORDER → DONE`: `SalesOrder::lock()` — fires when every line is fully delivered + fully invoiced (the same gating that hides the *Create Invoice* / *Create Delivery* buttons).
+- `SALES_ORDER → DONE`: **automatic** via `SalesOrderFulfillmentService::maybeLockOnFullFulfillment()`. Every time an Invoice/DeliveryOrder observer recomputes the SO's fulfillment counters, the service checks whether the SO is now fully invoiced *and* fully delivered — if so, it calls `lock()` to flip to DONE. One-way: cancelling an invoice or delivery *after* lock won't reverse the DONE state (the counters will reflect the cancellation but the SO stays terminal — by design).
 - `→ CANCELLED`: `SalesOrder::cancelOrder()` — refuses if non-cancelled invoices or deliveries exist.
 
 Side-effects: the `quantity_invoiced` / `quantity_delivered` counters

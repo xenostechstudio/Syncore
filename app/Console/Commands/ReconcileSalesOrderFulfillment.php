@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\Sales\SalesOrder;
-use App\Models\Sales\SalesOrderItem;
 use App\Services\SalesOrderFulfillmentService;
 use Illuminate\Console\Command;
 
@@ -82,17 +81,17 @@ class ReconcileSalesOrderFulfillment extends Command
                     $expectedDelivered,
                 ));
 
-                if (! $dryRun) {
-                    SalesOrderItem::query()
-                        ->where('id', $item->id)
-                        ->update([
-                            'quantity_invoiced' => $expectedInvoiced,
-                            'quantity_delivered' => $expectedDelivered,
-                        ]);
-                }
-
                 $touchedItems++;
                 $orderChanged = true;
+            }
+
+            // Apply writes through the service so the auto-lock-to-DONE
+            // check fires on the reconcile path too. Without this, an SO
+            // whose counters get repaired into a fully-fulfilled state
+            // would still stay in SALES_ORDER and never count toward
+            // revenue dashboards.
+            if ($orderChanged && ! $dryRun) {
+                $service->recomputeForSalesOrder($order);
             }
 
             if ($orderChanged) {

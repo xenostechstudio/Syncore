@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\SalesOrderState;
 use App\Models\Delivery\DeliveryOrder;
 use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\InvoiceItem;
@@ -30,6 +31,34 @@ class SalesOrderFulfillmentService
         foreach ($order->items as $item) {
             $this->recomputeForSalesOrderItem($item, $order);
         }
+
+        $this->maybeLockOnFullFulfillment($order);
+    }
+
+    /**
+     * Once every line on an SO is fully invoiced AND fully delivered, the
+     * order is complete — flip it to DONE so revenue dashboards
+     * (Sales/Index and Sales/Reports/Index, which filter on status =
+     * 'delivered') actually count it.
+     *
+     * Conservative: only fires from SALES_ORDER, never reverses. If an
+     * invoice is cancelled after lock, the SO stays DONE but the
+     * fulfillment counters reflect the cancellation. Use the reconcile
+     * command to inspect counter drift; manual intervention is needed
+     * to re-open a DONE order (by design — DONE is terminal).
+     */
+    protected function maybeLockOnFullFulfillment(SalesOrder $order): void
+    {
+        if ($order->state !== SalesOrderState::SALES_ORDER) {
+            return;
+        }
+        if ($order->items->isEmpty()) {
+            return;
+        }
+        if (! $order->isFullyInvoiced() || ! $order->isFullyDelivered()) {
+            return;
+        }
+        $order->lock();
     }
 
     public function recomputeForSalesOrderItem(SalesOrderItem $item, ?SalesOrder $order = null): void

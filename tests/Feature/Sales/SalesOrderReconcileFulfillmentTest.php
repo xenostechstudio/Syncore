@@ -259,6 +259,67 @@ it('is idempotent — running twice produces the same result as running once', f
     expect($afterSecond)->toBe(2);
 });
 
+it('locks SO to DONE when reconcile repairs counters into a fully-fulfilled state', function () {
+    $s = makeReconcileScenario(); // soItem.quantity = 5
+
+    // Fully-paid invoice covering the entire SO line.
+    $invoice = Invoice::create([
+        'invoice_number' => 'INV-'.uniqid(),
+        'customer_id' => $s['customer']->id,
+        'sales_order_id' => $s['salesOrder']->id,
+        'user_id' => $s['user']->id,
+        'invoice_date' => now()->format('Y-m-d'),
+        'due_date' => now()->addDays(30)->format('Y-m-d'),
+        'status' => 'paid',
+        'subtotal' => 500,
+        'tax' => 0,
+        'discount' => 0,
+        'total' => 500,
+    ]);
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'product_id' => $s['product']->id,
+        'description' => 'full',
+        'quantity' => 5,
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => 500,
+    ]);
+
+    // Fully-delivered DO covering the entire SO line.
+    $deliveredDo = DeliveryOrder::create([
+        'sales_order_id' => $s['salesOrder']->id,
+        'warehouse_id' => $s['warehouse']->id,
+        'user_id' => $s['user']->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'status' => 'delivered',
+        'shipping_address' => 'addr',
+        'recipient_name' => 'someone',
+    ]);
+    DeliveryOrderItem::create([
+        'delivery_order_id' => $deliveredDo->id,
+        'sales_order_item_id' => $s['soItem']->id,
+        'product_id' => $s['product']->id,
+        'quantity' => 5,
+        'quantity_delivered' => 5,
+    ]);
+
+    // Bypass observers + reset the SO status to mimic a pre-observer
+    // legacy state: counters wrong, SO still in processing despite
+    // being fully fulfilled.
+    manufactureDrift($s['soItem'], invoiced: 0, delivered: 0);
+    DB::table('sales_orders')->where('id', $s['salesOrder']->id)->update(['status' => 'processing']);
+
+    expect($s['salesOrder']->refresh()->status)->toBe('processing');
+
+    $this->artisan('sales-orders:reconcile-fulfillment')->assertExitCode(0);
+
+    // Counters repaired and auto-lock fired on the reconcile path.
+    expect((int) $s['soItem']->refresh()->quantity_invoiced)->toBe(5);
+    expect((int) $s['soItem']->refresh()->quantity_delivered)->toBe(5);
+    expect($s['salesOrder']->refresh()->status)->toBe('delivered');
+});
+
 it('--dry-run reports drift but does not write', function () {
     $s = makeReconcileScenario();
 

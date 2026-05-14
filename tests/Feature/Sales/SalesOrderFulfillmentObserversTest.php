@@ -239,6 +239,129 @@ it('soft-deleting then restoring an Invoice drops then restores the counter', fu
     expect((int) $s['soItem']->refresh()->quantity_invoiced)->toBe(3);
 });
 
+it('locks the SO to DONE once every line is fully invoiced AND fully delivered', function () {
+    $s = makeObserverScenario(orderedQty: 5);
+
+    // Confirm the SO so it lands in SALES_ORDER (the gate state for lock()).
+    $s['salesOrder']->update(['status' => 'processing']);
+
+    $invoice = makeInvoiceFor($s, 'sent');
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'product_id' => $s['product']->id,
+        'description' => 'full',
+        'quantity' => 5,
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => 500,
+    ]);
+
+    // Fully invoiced but not yet delivered — must NOT lock.
+    expect($s['salesOrder']->fresh()->status)->toBe('processing');
+
+    $do = DeliveryOrder::create([
+        'sales_order_id' => $s['salesOrder']->id,
+        'warehouse_id' => $s['warehouse']->id,
+        'user_id' => $s['user']->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'status' => 'in_transit',
+        'shipping_address' => 'addr',
+        'recipient_name' => 'r',
+    ]);
+    DeliveryOrderItem::create([
+        'delivery_order_id' => $do->id,
+        'sales_order_item_id' => $s['soItem']->id,
+        'product_id' => $s['product']->id,
+        'quantity' => 5,
+        'quantity_delivered' => 5,
+    ]);
+
+    // DO not yet delivered — still NOT locked.
+    expect($s['salesOrder']->fresh()->status)->toBe('processing');
+
+    // The status flip is the last event needed.
+    $do->update(['status' => 'delivered']);
+
+    expect($s['salesOrder']->fresh()->status)->toBe('delivered'); // = SalesOrderState::DONE
+});
+
+it('does NOT lock a partially-fulfilled SO', function () {
+    $s = makeObserverScenario(orderedQty: 5);
+    $s['salesOrder']->update(['status' => 'processing']);
+
+    $invoice = makeInvoiceFor($s, 'sent');
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'product_id' => $s['product']->id,
+        'description' => 'half',
+        'quantity' => 3, // partial
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => 300,
+    ]);
+
+    $do = DeliveryOrder::create([
+        'sales_order_id' => $s['salesOrder']->id,
+        'warehouse_id' => $s['warehouse']->id,
+        'user_id' => $s['user']->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'status' => 'delivered',
+        'shipping_address' => 'addr',
+        'recipient_name' => 'r',
+    ]);
+    DeliveryOrderItem::create([
+        'delivery_order_id' => $do->id,
+        'sales_order_item_id' => $s['soItem']->id,
+        'product_id' => $s['product']->id,
+        'quantity' => 5,
+        'quantity_delivered' => 5,
+    ]);
+
+    // Fully delivered but only partially invoiced → SO stays in SALES_ORDER.
+    expect($s['salesOrder']->fresh()->status)->toBe('processing');
+});
+
+it('lock is one-way: cancelling an invoice after lock leaves SO in DONE (with drift)', function () {
+    $s = makeObserverScenario(orderedQty: 2);
+    $s['salesOrder']->update(['status' => 'processing']);
+
+    $invoice = makeInvoiceFor($s, 'sent');
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'product_id' => $s['product']->id,
+        'description' => 'full',
+        'quantity' => 2,
+        'unit_price' => 100,
+        'discount' => 0,
+        'total' => 200,
+    ]);
+
+    $do = DeliveryOrder::create([
+        'sales_order_id' => $s['salesOrder']->id,
+        'warehouse_id' => $s['warehouse']->id,
+        'user_id' => $s['user']->id,
+        'delivery_date' => now()->format('Y-m-d'),
+        'status' => 'delivered',
+        'shipping_address' => 'addr',
+        'recipient_name' => 'r',
+    ]);
+    DeliveryOrderItem::create([
+        'delivery_order_id' => $do->id,
+        'sales_order_item_id' => $s['soItem']->id,
+        'product_id' => $s['product']->id,
+        'quantity' => 2,
+        'quantity_delivered' => 2,
+    ]);
+
+    expect($s['salesOrder']->fresh()->status)->toBe('delivered'); // locked
+
+    // Cancel the invoice. The counter drops to 0 but the SO stays DONE.
+    $invoice->update(['status' => 'cancelled']);
+
+    expect($s['salesOrder']->fresh()->status)->toBe('delivered');
+    expect((int) $s['soItem']->fresh()->quantity_invoiced)->toBe(0);
+});
+
 it('observer caps counters at SO item quantity even when invoice items overflow', function () {
     $s = makeObserverScenario(orderedQty: 5);
     $invoice = makeInvoiceFor($s);
