@@ -2,22 +2,44 @@
 <html>
 <head>
     <meta charset="utf-8">
+    @php
+        $primaryColor = $settings->primary_color ?? "#18181b";
+        $accentColor  = $settings->accent_color  ?? "#10b981";
+        $dateFormat   = $settings->date_format   ?? "M d, Y";
+    @endphp
+
     <title>Leave Request</title>
     <style>
+
+        /* Watermark for draft/cancelled */
+        .watermark {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.06);
+            text-transform: uppercase;
+            z-index: -1;
+            white-space: nowrap;
+        }
+        .logo-left { text-align: left; }
+        .logo-center { text-align: center; }
+        .logo-right { text-align: right; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 12px; color: #333; line-height: 1.5; }
-        .container { padding: 40px; }
-        .company-name { font-size: 24px; font-weight: bold; color: #111; margin-bottom: 8px; }
+        .container { padding: 40px;  position: relative;}
+        .company-name { font-size: 24px; font-weight: bold; color: {{ $primaryColor }}; margin-bottom: 8px; }
         .company-details { color: #666; font-size: 11px; }
-        .doc-title { font-size: 28px; font-weight: bold; color: #111; margin-bottom: 8px; }
+        .doc-title { font-size: 28px; font-weight: bold; color: {{ $primaryColor }}; margin-bottom: 8px; }
         .doc-meta { margin-top: 16px; }
         .doc-meta p { margin-bottom: 4px; }
-        .doc-meta strong { color: #111; }
+        .doc-meta strong { color: {{ $primaryColor }}; }
         .section { margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px; }
         .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 12px; }
         .info-row { display: flex; margin-bottom: 8px; }
         .info-label { width: 150px; color: #666; }
-        .info-value { font-weight: 500; color: #111; }
+        .info-value { font-weight: 500; color: {{ $primaryColor }}; }
         .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
         .status-draft { background: #f3f4f6; color: #6b7280; }
         .status-pending { background: #fef3c7; color: #d97706; }
@@ -32,10 +54,20 @@
 </head>
 <body>
     <div class="container">
+
+        {{-- Watermark for draft/cancelled --}}
+        @if(($settings->show_watermark ?? true) && in_array($leaveRequest->status, ['draft', 'cancelled']))
+            <div class="watermark">{{ $leaveRequest->status === 'cancelled' ? 'CANCELLED' : ($settings->watermark_text ?? 'DRAFT') }}</div>
+        @endif
         {{-- Header --}}
         <table style="margin-bottom: 40px; width: 100%;">
             <tr>
                 <td style="width: 50%; vertical-align: top; border: none; padding: 0;">
+                    @if(($settings->show_logo ?? true) && $company["logo"])
+                        <div class="logo-{{ $settings->logo_position ?? "left" }}" style="margin-bottom: 10px;">
+                            <img src="{{ $company["logo"] }}" alt="{{ $company["name"] }}" style="max-width: {{ $settings->logo_size ?? 120 }}px; height: auto;" />
+                        </div>
+                    @endif
                     <div class="company-name">{{ $company['name'] ?? config('app.name') }}</div>
                     <div class="company-details">
                         @if($company['address'] ?? false){{ $company['address'] }}<br>@endif
@@ -46,12 +78,14 @@
                 <td style="width: 50%; vertical-align: top; text-align: right; border: none; padding: 0;">
                     <div class="doc-title">LEAVE REQUEST</div>
                     <div class="doc-meta">
-                        <p><strong>Date:</strong> {{ $leaveRequest->created_at->format('M d, Y') }}</p>
+                        <p><strong>Date:</strong> {{ $leaveRequest->created_at->format($dateFormat) }}</p>
+                        @if($settings->show_status_badge ?? true)
                         <p>
                             <span class="status-badge status-{{ $leaveRequest->status }}">
                                 {{ ucfirst($leaveRequest->status) }}
                             </span>
                         </p>
+                        @endif
                     </div>
                 </td>
             </tr>
@@ -101,11 +135,11 @@
                 <tr>
                     <td style="border: none; padding: 4px 0;">
                         <span class="info-label">Start Date:</span>
-                        <span class="info-value">{{ $leaveRequest->start_date->format('M d, Y') }}</span>
+                        <span class="info-value">{{ $leaveRequest->start_date->format($dateFormat) }}</span>
                     </td>
                     <td style="border: none; padding: 4px 0;">
                         <span class="info-label">End Date:</span>
-                        <span class="info-value">{{ $leaveRequest->end_date->format('M d, Y') }}</span>
+                        <span class="info-value">{{ $leaveRequest->end_date->format($dateFormat) }}</span>
                     </td>
                 </tr>
             </table>

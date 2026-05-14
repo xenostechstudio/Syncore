@@ -2,13 +2,35 @@
 <html>
 <head>
     <meta charset="utf-8">
+    @php
+        $primaryColor = $settings->primary_color ?? "#18181b";
+        $accentColor  = $settings->accent_color  ?? "#10b981";
+        $dateFormat   = $settings->date_format   ?? "M d, Y";
+    @endphp
+
     <title>Payroll Slip - {{ $payrollItem->employee?->name }}</title>
     <style>
+
+        /* Watermark for draft/cancelled */
+        .watermark {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.06);
+            text-transform: uppercase;
+            z-index: -1;
+            white-space: nowrap;
+        }
+        .logo-left { text-align: left; }
+        .logo-center { text-align: center; }
+        .logo-right { text-align: right; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; line-height: 1.4; color: #333; }
-        .container { padding: 30px; max-width: 800px; margin: 0 auto; }
+        .container { padding: 30px; max-width: 800px; margin: 0 auto;  position: relative;}
         .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #333; }
-        .company-name { font-size: 20px; font-weight: bold; color: #1a1a1a; margin-bottom: 5px; }
+        .company-name { font-size: 20px; font-weight: bold; color: {{ $primaryColor }}; margin-bottom: 5px; }
         .document-title { font-size: 16px; color: #666; margin-top: 10px; text-transform: uppercase; letter-spacing: 2px; }
         .period-info { margin-top: 10px; font-size: 14px; font-weight: bold; color: #333; }
         .employee-section { background: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
@@ -52,7 +74,17 @@
 </head>
 <body>
     <div class="container">
+
+        {{-- Watermark for draft/cancelled --}}
+        @if(($settings->show_watermark ?? true) && in_array($payrollItem->status, ['draft', 'cancelled']))
+            <div class="watermark">{{ $payrollItem->status === 'cancelled' ? 'CANCELLED' : ($settings->watermark_text ?? 'DRAFT') }}</div>
+        @endif
         <div class="header">
+            @if(($settings->show_logo ?? true) && $company['logo'])
+                <div class="logo-{{ $settings->logo_position ?? 'center' }}" style="margin-bottom: 10px;">
+                    <img src="{{ $company['logo'] }}" alt="{{ $company['name'] }}" style="max-width: {{ $settings->logo_size ?? 120 }}px; height: auto;" />
+                </div>
+            @endif
             <div class="company-name">{{ $company['name'] }}</div>
             @if($company['address'])<div style="font-size: 10px; color: #666;">{{ $company['address'] }}</div>@endif
             <div class="document-title">Payroll Slip</div>
@@ -84,11 +116,11 @@
                 <tr>
                     <td style="padding: 5px 10px; border: none;">
                         <div class="employee-label">Join Date</div>
-                        <div class="employee-value">{{ $payrollItem->employee?->join_date?->format('M d, Y') ?? '-' }}</div>
+                        <div class="employee-value">{{ $payrollItem->employee?->join_date?->format($dateFormat) ?? '-' }}</div>
                     </td>
                     <td style="padding: 5px 10px; border: none;">
                         <div class="employee-label">Payment Date</div>
-                        <div class="employee-value">{{ $payrollItem->payment_date?->format('M d, Y') ?? '-' }}</div>
+                        <div class="employee-value">{{ $payrollItem->payment_date?->format($dateFormat) ?? '-' }}</div>
                     </td>
                 </tr>
             </table>
@@ -101,19 +133,19 @@
                     <table class="details">
                         <tr>
                             <td>Basic Salary</td>
-                            <td>Rp {{ number_format($payrollItem->basic_salary ?? 0, 0, ',', '.') }}</td>
+                            <td>{{ $settings->formatCurrency($payrollItem->basic_salary ?? 0) }}</td>
                         </tr>
                         @if($payrollItem->details)
                             @foreach($payrollItem->details->where('type', 'allowance') as $detail)
                             <tr>
                                 <td>{{ $detail->component?->name ?? $detail->description }}</td>
-                                <td>Rp {{ number_format($detail->amount ?? 0, 0, ',', '.') }}</td>
+                                <td>{{ $settings->formatCurrency($detail->amount ?? 0) }}</td>
                             </tr>
                             @endforeach
                         @endif
                         <tr style="background: #f0f0f0;">
                             <td style="font-weight: bold;">Total Earnings</td>
-                            <td style="font-weight: bold;">Rp {{ number_format(($payrollItem->basic_salary ?? 0) + ($payrollItem->total_allowances ?? 0), 0, ',', '.') }}</td>
+                            <td style="font-weight: bold;">{{ $settings->formatCurrency(($payrollItem->basic_salary ?? 0) + ($payrollItem->total_allowances ?? 0)) }}</td>
                         </tr>
                     </table>
                 </td>
@@ -124,7 +156,7 @@
                             @foreach($payrollItem->details->where('type', 'deduction') as $detail)
                             <tr>
                                 <td>{{ $detail->component?->name ?? $detail->description }}</td>
-                                <td>Rp {{ number_format($detail->amount ?? 0, 0, ',', '.') }}</td>
+                                <td>{{ $settings->formatCurrency($detail->amount ?? 0) }}</td>
                             </tr>
                             @endforeach
                         @endif
@@ -135,7 +167,7 @@
                         @endif
                         <tr style="background: #f0f0f0;">
                             <td style="font-weight: bold;">Total Deductions</td>
-                            <td style="font-weight: bold;">Rp {{ number_format($payrollItem->total_deductions ?? 0, 0, ',', '.') }}</td>
+                            <td style="font-weight: bold;">{{ $settings->formatCurrency($payrollItem->total_deductions ?? 0) }}</td>
                         </tr>
                     </table>
                 </td>
@@ -144,22 +176,22 @@
 
         <div class="net-pay-box">
             <div class="net-pay-label">Net Pay</div>
-            <div class="net-pay-amount">Rp {{ number_format($payrollItem->net_salary ?? 0, 0, ',', '.') }}</div>
+            <div class="net-pay-amount">{{ $settings->formatCurrency($payrollItem->net_salary ?? 0) }}</div>
         </div>
 
         <table style="width: 100%; background: #f8f8f8; margin-bottom: 25px;">
             <tr>
                 <td style="width: 33.33%; text-align: center; padding: 15px; border: none;">
                     <div style="font-size: 9px; text-transform: uppercase; color: #666;">Gross Salary</div>
-                    <div style="font-size: 16px; font-weight: bold; margin-top: 5px;">Rp {{ number_format($payrollItem->gross_salary ?? 0, 0, ',', '.') }}</div>
+                    <div style="font-size: 16px; font-weight: bold; margin-top: 5px;">{{ $settings->formatCurrency($payrollItem->gross_salary ?? 0) }}</div>
                 </td>
                 <td style="width: 33.33%; text-align: center; padding: 15px; border: none;">
                     <div style="font-size: 9px; text-transform: uppercase; color: #666;">Total Deductions</div>
-                    <div style="font-size: 16px; font-weight: bold; margin-top: 5px; color: #dc2626;">Rp {{ number_format($payrollItem->total_deductions ?? 0, 0, ',', '.') }}</div>
+                    <div style="font-size: 16px; font-weight: bold; margin-top: 5px; color: #dc2626;">{{ $settings->formatCurrency($payrollItem->total_deductions ?? 0) }}</div>
                 </td>
                 <td style="width: 33.33%; text-align: center; padding: 15px; border: none;">
                     <div style="font-size: 9px; text-transform: uppercase; color: #666;">Net Salary</div>
-                    <div style="font-size: 16px; font-weight: bold; margin-top: 5px; color: #059669;">Rp {{ number_format($payrollItem->net_salary ?? 0, 0, ',', '.') }}</div>
+                    <div style="font-size: 16px; font-weight: bold; margin-top: 5px; color: #059669;">{{ $settings->formatCurrency($payrollItem->net_salary ?? 0) }}</div>
                 </td>
             </tr>
         </table>

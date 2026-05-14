@@ -2,16 +2,38 @@
 <html>
 <head>
     <meta charset="utf-8">
+    @php
+        $primaryColor = $settings->primary_color ?? "#18181b";
+        $accentColor  = $settings->accent_color  ?? "#10b981";
+        $dateFormat   = $settings->date_format   ?? "M d, Y";
+    @endphp
+
     <title>Delivery Order {{ $delivery->delivery_number }}</title>
     <style>
+
+        /* Watermark for draft/cancelled */
+        .watermark {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.06);
+            text-transform: uppercase;
+            z-index: -1;
+            white-space: nowrap;
+        }
+        .logo-left { text-align: left; }
+        .logo-center { text-align: center; }
+        .logo-right { text-align: right; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; color: #333; line-height: 1.5; }
-        .container { padding: 40px; }
-        .company-name { font-size: 24px; font-weight: bold; color: #111; }
-        .document-title { font-size: 28px; font-weight: bold; color: #111; text-align: right; }
+        .container { padding: 40px;  position: relative;}
+        .company-name { font-size: 24px; font-weight: bold; color: {{ $primaryColor }}; }
+        .document-title { font-size: 28px; font-weight: bold; color: {{ $primaryColor }}; text-align: right; }
         .document-number { color: #666; text-align: right; margin-top: 5px; }
         .info-label { font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 5px; }
-        .info-value { font-size: 12px; color: #111; }
+        .info-value { font-size: 12px; color: {{ $primaryColor }}; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
         th { background: #f5f5f5; padding: 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #666; border-bottom: 2px solid #ddd; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
@@ -29,17 +51,29 @@
 </head>
 <body>
     <div class="container">
+
+        {{-- Watermark for draft/cancelled --}}
+        @if(($settings->show_watermark ?? true) && in_array($delivery->status, ['draft', 'cancelled']))
+            <div class="watermark">{{ $delivery->status === 'cancelled' ? 'CANCELLED' : ($settings->watermark_text ?? 'DRAFT') }}</div>
+        @endif
         <table style="margin-bottom: 40px;">
             <tr>
                 <td style="border: none; padding: 0;">
+                    @if(($settings->show_logo ?? true) && $company["logo"])
+                        <div class="logo-{{ $settings->logo_position ?? "left" }}" style="margin-bottom: 10px;">
+                            <img src="{{ $company["logo"] }}" alt="{{ $company["name"] }}" style="max-width: {{ $settings->logo_size ?? 120 }}px; height: auto;" />
+                        </div>
+                    @endif
                     <div class="company-name">{{ config('app.name') }}</div>
                 </td>
                 <td style="border: none; padding: 0; text-align: right;">
                     <div class="document-title">DELIVERY ORDER</div>
                     <div class="document-number">#{{ $delivery->delivery_number }}</div>
+                    @if($settings->show_status_badge ?? true)
                     <div style="margin-top: 10px;">
                         <span class="status status-{{ str_replace(' ', '_', strtolower($delivery->status ?? 'pending')) }}">{{ ucfirst($delivery->status ?? 'Pending') }}</span>
                     </div>
+                    @endif
                 </td>
             </tr>
         </table>
@@ -57,7 +91,7 @@
                 <td style="border: none; padding: 0; width: 50%; vertical-align: top; text-align: right;">
                     <div class="info-label">Delivery Details</div>
                     <div class="info-value">
-                        Delivery Date: {{ $delivery->delivery_date?->format('M d, Y') }}<br>
+                        Delivery Date: {{ $delivery->delivery_date?->format($dateFormat) }}<br>
                         @if($delivery->salesOrder)
                         Sales Order: {{ $delivery->salesOrder->order_number }}<br>
                         @endif

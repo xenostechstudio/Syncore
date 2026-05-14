@@ -2,17 +2,39 @@
 <html>
 <head>
     <meta charset="utf-8">
+    @php
+        $primaryColor = $settings->primary_color ?? "#18181b";
+        $accentColor  = $settings->accent_color  ?? "#10b981";
+        $dateFormat   = $settings->date_format   ?? "M d, Y";
+    @endphp
+
     <title>Vendor Bill - {{ $bill->bill_number }}</title>
     <style>
+
+        /* Watermark for draft/cancelled */
+        .watermark {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.06);
+            text-transform: uppercase;
+            z-index: -1;
+            white-space: nowrap;
+        }
+        .logo-left { text-align: left; }
+        .logo-center { text-align: center; }
+        .logo-right { text-align: right; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; line-height: 1.4; color: #333; }
-        .container { padding: 30px; }
+        .container { padding: 30px;  position: relative;}
         .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
         .company-info { max-width: 50%; }
-        .company-name { font-size: 20px; font-weight: bold; color: #1a1a1a; margin-bottom: 5px; }
+        .company-name { font-size: 20px; font-weight: bold; color: {{ $primaryColor }}; margin-bottom: 5px; }
         .company-details { font-size: 10px; color: #666; }
         .document-info { text-align: right; }
-        .document-title { font-size: 24px; font-weight: bold; color: #1a1a1a; margin-bottom: 10px; }
+        .document-title { font-size: 24px; font-weight: bold; color: {{ $primaryColor }}; margin-bottom: 10px; }
         .document-number { font-size: 14px; color: #666; }
         .parties { display: flex; justify-content: space-between; margin-bottom: 30px; }
         .party-box { width: 48%; }
@@ -43,9 +65,19 @@
 </head>
 <body>
     <div class="container">
+
+        {{-- Watermark for draft/cancelled --}}
+        @if(($settings->show_watermark ?? true) && in_array($bill->status, ['draft', 'cancelled']))
+            <div class="watermark">{{ $bill->status === 'cancelled' ? 'CANCELLED' : ($settings->watermark_text ?? 'DRAFT') }}</div>
+        @endif
         <table style="width: 100%; margin-bottom: 30px;">
             <tr>
                 <td style="width: 50%; vertical-align: top; border: none;">
+                    @if(($settings->show_logo ?? true) && $company["logo"])
+                        <div class="logo-{{ $settings->logo_position ?? "left" }}" style="margin-bottom: 10px;">
+                            <img src="{{ $company["logo"] }}" alt="{{ $company["name"] }}" style="max-width: {{ $settings->logo_size ?? 120 }}px; height: auto;" />
+                        </div>
+                    @endif
                     <div class="company-name">{{ $company['name'] }}</div>
                     <div class="company-details">
                         @if($company['address']){{ $company['address'] }}<br>@endif
@@ -56,9 +88,11 @@
                 <td style="width: 50%; text-align: right; vertical-align: top; border: none;">
                     <div class="document-title">VENDOR BILL</div>
                     <div class="document-number">#{{ $bill->bill_number }}</div>
+                    @if($settings->show_status_badge ?? true)
                     <div style="margin-top: 10px;">
                         <span class="status-badge status-{{ $bill->status }}">{{ ucfirst($bill->status) }}</span>
                     </div>
+                    @endif
                 </td>
             </tr>
         </table>
@@ -89,11 +123,11 @@
             <tr>
                 <td style="width: 25%; text-align: center; padding: 15px; border: none;">
                     <div class="info-label">Bill Date</div>
-                    <div class="info-value">{{ $bill->bill_date?->format('M d, Y') ?? '-' }}</div>
+                    <div class="info-value">{{ $bill->bill_date?->format($dateFormat) ?? '-' }}</div>
                 </td>
                 <td style="width: 25%; text-align: center; padding: 15px; border: none;">
                     <div class="info-label">Due Date</div>
-                    <div class="info-value">{{ $bill->due_date?->format('M d, Y') ?? '-' }}</div>
+                    <div class="info-value">{{ $bill->due_date?->format($dateFormat) ?? '-' }}</div>
                 </td>
                 <td style="width: 25%; text-align: center; padding: 15px; border: none;">
                     <div class="info-label">Vendor Reference</div>
@@ -125,8 +159,8 @@
                         @if($item->product?->sku)<br><span style="font-size: 10px; color: #666;">SKU: {{ $item->product->sku }}</span>@endif
                     </td>
                     <td class="text-center">{{ number_format($item->quantity) }}</td>
-                    <td class="text-right">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
-                    <td class="text-right">Rp {{ number_format($item->total, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ $settings->formatCurrency($item->unit_price) }}</td>
+                    <td class="text-right">{{ $settings->formatCurrency($item->total) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -135,24 +169,24 @@
         <table style="width: 300px; margin-left: auto;">
             <tr>
                 <td style="border: none; padding: 8px 0;">Subtotal</td>
-                <td style="border: none; padding: 8px 0; text-align: right;">Rp {{ number_format($bill->subtotal, 0, ',', '.') }}</td>
+                <td style="border: none; padding: 8px 0; text-align: right;">{{ $settings->formatCurrency($bill->subtotal) }}</td>
             </tr>
             <tr>
                 <td style="border: none; padding: 8px 0;">Tax</td>
-                <td style="border: none; padding: 8px 0; text-align: right;">Rp {{ number_format($bill->tax, 0, ',', '.') }}</td>
+                <td style="border: none; padding: 8px 0; text-align: right;">{{ $settings->formatCurrency($bill->tax) }}</td>
             </tr>
             <tr>
                 <td style="border: none; padding: 12px 0; font-size: 14px; font-weight: bold; border-top: 2px solid #333;">Total</td>
-                <td style="border: none; padding: 12px 0; text-align: right; font-size: 14px; font-weight: bold; border-top: 2px solid #333;">Rp {{ number_format($bill->total, 0, ',', '.') }}</td>
+                <td style="border: none; padding: 12px 0; text-align: right; font-size: 14px; font-weight: bold; border-top: 2px solid #333;">{{ $settings->formatCurrency($bill->total) }}</td>
             </tr>
             @if($bill->paid_amount > 0)
             <tr>
                 <td style="border: none; padding: 8px 0; color: #059669;">Paid Amount</td>
-                <td style="border: none; padding: 8px 0; text-align: right; color: #059669;">Rp {{ number_format($bill->paid_amount, 0, ',', '.') }}</td>
+                <td style="border: none; padding: 8px 0; text-align: right; color: #059669;">{{ $settings->formatCurrency($bill->paid_amount) }}</td>
             </tr>
             <tr>
                 <td style="border: none; padding: 8px 0; font-weight: bold;">Balance Due</td>
-                <td style="border: none; padding: 8px 0; text-align: right; font-weight: bold;">Rp {{ number_format($bill->balance_due, 0, ',', '.') }}</td>
+                <td style="border: none; padding: 8px 0; text-align: right; font-weight: bold;">{{ $settings->formatCurrency($bill->balance_due) }}</td>
             </tr>
             @endif
         </table>
