@@ -73,6 +73,15 @@ enum SalesOrderState: string implements HasDisplayMetadata
         return in_array($this, [self::QUOTATION, self::QUOTATION_SENT, self::SALES_ORDER]);
     }
 
+    public function canBeDeleted(): bool
+    {
+        // Hard delete is only for quotations that were never confirmed
+        // into a real order — they carry no audit weight. Once an order
+        // reaches SALES_ORDER (or DONE / CANCELLED) it must be Cancelled,
+        // never deleted. See "Destructive actions" in CLAUDE.md.
+        return in_array($this, [self::QUOTATION, self::QUOTATION_SENT]);
+    }
+
     public function isTerminal(): bool
     {
         return in_array($this, [self::DONE, self::CANCELLED]);

@@ -28,14 +28,20 @@
                             @endif
                         </span>
 
-                        {{-- Header actions dropdown (Duplicate, Archive, Delete) --}}
+                        {{-- Header actions dropdown. Destructive actions follow
+                             the Cancel-vs-Delete taxonomy (see CLAUDE.md): a
+                             never-confirmed quotation can be Deleted (hard,
+                             gone); anything that became a real order is
+                             Cancelled (state transition, record kept). The
+                             two are mutually exclusive by state, so the user
+                             only ever sees the one that applies. --}}
+                        @if($orderId)
                         <flux:dropdown position="bottom" align="start">
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
 
                             <flux:menu class="w-40">
-                                @if($orderId)
                                 <button type="button" wire:click="downloadPdf" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="arrow-down-tray" wire:loading.remove wire:target="downloadPdf" class="size-4" />
                                     <flux:icon name="arrow-path" wire:loading wire:target="downloadPdf" class="size-4 animate-spin" />
@@ -46,27 +52,24 @@
                                     <flux:icon name="arrow-path" wire:loading wire:target="duplicate" class="size-4 animate-spin" />
                                     <span>Duplicate</span>
                                 </button>
-                                @endif
-                                <button type="button" wire:click="archive" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="archive-box" wire:loading.remove wire:target="archive" class="size-4" />
-                                    <flux:icon name="arrow-path" wire:loading wire:target="archive" class="size-4 animate-spin" />
-                                    <span>Archive</span>
-                                </button>
-                                @if($orderId)
+                                @if($canCancelOrder || $canDeleteOrder)
                                 <flux:menu.separator />
-                                @if($status !== 'cancelled')
+                                @endif
+                                @if($canCancelOrder)
                                 <button type="button" @click="showCancelModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="x-mark" class="size-4" />
                                     <span>Cancel Order</span>
                                 </button>
                                 @endif
-                                <button type="button" wire:click="delete" wire:confirm="Are you sure you want to delete this order? This action cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                @if($canDeleteOrder)
+                                <button type="button" wire:click="delete" wire:confirm="Delete this quotation permanently? It has not been confirmed into an order, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>
                                 @endif
                             </flux:menu>
                         </flux:dropdown>
+                        @endif
                     </div>
                 </div>
             </div>

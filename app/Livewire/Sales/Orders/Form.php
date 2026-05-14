@@ -961,42 +961,40 @@ class Form extends Component
         }
     }
 
-    public function archive(): void
+    /**
+     * Hard-delete a quotation that was never confirmed into a real
+     * order. Anything that became real — a confirmed SALES_ORDER, or an
+     * order carrying invoices / deliveries — is not deletable; it must
+     * be Cancelled instead, which keeps the record for audit. See
+     * "Destructive actions" in CLAUDE.md.
+     */
+    public function delete(): void
     {
         $this->authorizePermission('sales.delete');
 
         if (!$this->orderId) {
-            session()->flash('error', 'Please save the order first.');
             return;
         }
 
         $order = SalesOrder::findOrFail($this->orderId);
-        
-        // Use soft delete as archive
-        $order->delete();
-        
-        session()->flash('success', 'Order archived successfully.');
-        $this->redirect(route('sales.orders.index'), navigate: true);
-    }
 
-    public function delete(): void
-    {
-        if (!$this->orderId) {
+        if (!$order->state->canBeDeleted()) {
+            session()->flash('error', 'This order has been confirmed — cancel it instead of deleting.');
             return;
         }
 
-        $order = SalesOrder::findOrFail($this->orderId);
-        
-        // Check if order has related invoices or deliveries
+        // Defensive: quotation states can't reach the invoice/delivery
+        // flow, but a raw insert or future state change could. Never
+        // hard-delete an order that other documents point at.
         if ($order->invoices()->exists() || $order->deliveryOrders()->exists()) {
-            session()->flash('error', 'Cannot delete order with related invoices or delivery orders.');
+            session()->flash('error', 'This order has related invoices or delivery orders — cancel it instead of deleting.');
             return;
         }
 
         $order->items()->delete();
         $order->forceDelete();
-        
-        session()->flash('success', 'Order deleted permanently.');
+
+        session()->flash('success', 'Quotation deleted permanently.');
         $this->redirect(route('sales.orders.index'), navigate: true);
     }
 
@@ -1323,6 +1321,12 @@ Best regards,
             'order' => $order,
             'activities' => $this->activitiesAndNotes,
             'availablePromotions' => $availablePromotions,
+            // Cancel and Delete are mutually exclusive by state: a
+            // never-confirmed quotation is Deleted, a real (confirmed)
+            // order is Cancelled, a terminal order is neither. See
+            // "Destructive actions" in CLAUDE.md.
+            'canCancelOrder' => (bool) ($order && $order->state === SalesOrderState::SALES_ORDER),
+            'canDeleteOrder' => (bool) ($order && $order->state->canBeDeleted()),
         ]);
     }
 }

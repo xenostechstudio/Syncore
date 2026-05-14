@@ -112,6 +112,42 @@ Domain models compose from `App\Traits\*`:
 - `HasStateMachine` — for state-enum models. The model's `status` column stays a raw string; `$model->state` is the enum-cast accessor. Set `protected string $stateEnum = MyState::class;`.
 - `HasYearlySequenceNumber`, `HasAttachments`, `Searchable` — domain-specific.
 
+## Destructive actions: Cancel vs Delete (not Archive)
+
+A record's destructive actions depend on **what kind of record it is** —
+never offer three overlapping ones. The taxonomy:
+
+**Transactional documents** (anything with a state-machine enum:
+SalesOrder, Invoice, DeliveryOrder, PurchaseOrder, VendorBill, RFQ,
+Payroll, LeaveRequest):
+- **Cancel** — a state transition to the enum's `CANCELLED` case. The
+  record stays in the DB with its audit trail and a Cancelled badge.
+  This is for documents that *became real*.
+- **Delete** — a hard delete (`forceDelete()`), allowed **only** while
+  the document is still a never-confirmed draft with no child records.
+  Drafts carry no audit weight. Gate it on an enum predicate like
+  `SalesOrderState::canBeDeleted()` (true only for the pre-confirmation
+  cases) plus a defensive child-existence check.
+- **No "Archive."** If a document became real you don't archive it —
+  you Cancel it. Cancel and Delete are mutually exclusive by state, so
+  the UI shows whichever one applies, never both.
+
+**Master data** (no lifecycle, referenced by FKs: Customer, Product,
+Supplier, SalesTeam, Lead):
+- **Archive** — the `HasSoftDeletes` soft delete (`archive()` /
+  `unarchive()`), restorable, surfaced with a "show archived" filter +
+  restore action on the index. For retiring a record without breaking
+  historical references.
+- **Delete** — hard delete, only when nothing references it.
+- **No "Cancel."** Master data has no lifecycle to cancel.
+
+Don't write a `wire:confirm` that lies — "cannot be undone" belongs only
+on a true hard delete, never on a soft delete or a state transition.
+
+Status: piloted on the Sales Order form. Other modules still carry the
+old ad-hoc mix — migrate them to this taxonomy when you next touch their
+form component.
+
 ## Driver-aware status-enum migrations
 
 When realigning a state-enum's allowed values:
