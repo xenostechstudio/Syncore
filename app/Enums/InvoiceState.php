@@ -71,6 +71,15 @@ enum InvoiceState: string implements HasDisplayMetadata
         return $this === self::DRAFT;
     }
 
+    public function canBeDeleted(): bool
+    {
+        // Hard delete is only for a never-sent draft — it carries no
+        // audit weight. A sent invoice is a real document the customer
+        // has seen; void it via Cancel, never delete it. See
+        // "Destructive actions" in CLAUDE.md.
+        return $this === self::DRAFT;
+    }
+
     public function isTerminal(): bool
     {
         return in_array($this, [self::PAID, self::CANCELLED]);

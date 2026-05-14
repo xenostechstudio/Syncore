@@ -85,6 +85,16 @@ enum DeliveryOrderState: string implements HasDisplayMetadata
         return in_array($this, [self::DELIVERED, self::FAILED, self::RETURNED, self::CANCELLED], true);
     }
 
+    public function canBeDeleted(): bool
+    {
+        // Hard delete is only for a PENDING delivery — nothing has
+        // shipped and no stock has moved (warehouse-out is posted on the
+        // PICKED transition). Once picked / in transit it's a real
+        // movement; void it via Cancel. See "Destructive actions" in
+        // CLAUDE.md.
+        return $this === self::PENDING;
+    }
+
     public static function values(): array
     {
         return array_map(fn(self $s) => $s->value, self::cases());

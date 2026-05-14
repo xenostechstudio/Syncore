@@ -954,13 +954,33 @@ class Form extends Component
         $this->redirect(route('delivery.orders.edit', $newDelivery->id), navigate: true);
     }
 
+    /**
+     * Hard-delete a still-PENDING delivery order — nothing has shipped
+     * and no stock has moved. A delivery that has been picked / sent
+     * (or is otherwise terminal) is not deletable; it must be Cancelled
+     * instead, which keeps the record for audit. See "Destructive
+     * actions" in CLAUDE.md.
+     */
     public function delete(): void
     {
-        if ($this->deliveryId) {
-            DeliveryOrder::destroy($this->deliveryId);
-            session()->flash('success', 'Delivery order deleted successfully.');
-            $this->redirect(route('delivery.orders.index'), navigate: true);
+        $this->authorizePermission('delivery.delete');
+
+        if (! $this->deliveryId) {
+            return;
         }
+
+        $delivery = DeliveryOrder::findOrFail($this->deliveryId);
+
+        if (! $delivery->state->canBeDeleted()) {
+            session()->flash('error', 'This delivery has already been picked or shipped — cancel it instead of deleting.');
+            return;
+        }
+
+        $delivery->items()->delete();
+        $delivery->forceDelete();
+
+        session()->flash('success', 'Pending delivery order deleted permanently.');
+        $this->redirect(route('delivery.orders.index'), navigate: true);
     }
 
     // POD Methods
@@ -1161,6 +1181,12 @@ class Form extends Component
             'returns' => $returns,
             'outboundAdjustment' => $outboundAdjustment,
             'activities' => $this->activitiesAndNotes,
+            // Cancel and Delete are mutually exclusive by state: a still
+            // PENDING delivery is Deleted, a picked / in-transit one is
+            // Cancelled, a terminal one is neither. See "Destructive
+            // actions" in CLAUDE.md.
+            'canDeleteDelivery' => (bool) ($delivery && $delivery->state->canBeDeleted()),
+            'canCancelDelivery' => (bool) ($delivery && ! $delivery->state->isTerminal() && $delivery->state !== DeliveryOrderState::PENDING),
         ]);
     }
 }

@@ -33,12 +33,18 @@
                                 <span class="text-zinc-400 dark:text-zinc-500">({{ $invoice->salesOrder->order_number }})</span>
                             @endif
                         </span>
+                        {{-- Destructive actions follow the Cancel-vs-Delete
+                             taxonomy (see CLAUDE.md): a never-sent draft can be
+                             Deleted (hard, gone); a sent invoice is Cancelled
+                             (state transition, record kept). They are mutually
+                             exclusive by state — Cancel lives in the action bar
+                             below, Delete here. --}}
+                        @if($invoiceId)
                         <flux:dropdown position="bottom" align="start">
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
                             <flux:menu class="w-40">
-                                @if($invoiceId)
                                 <button type="button" wire:click="duplicate" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-duplicate" wire:loading.remove wire:target="duplicate" class="size-4" />
                                     <flux:icon name="arrow-path" wire:loading wire:target="duplicate" class="size-4 animate-spin" />
@@ -48,15 +54,17 @@
                                     <flux:icon name="arrow-down-tray" class="size-4" />
                                     <span>Download PDF</span>
                                 </a>
-                                @endif
+                                @if($canDeleteInvoice)
                                 <flux:menu.separator />
-                                <button type="button" wire:click="delete" wire:confirm="Are you sure?" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <button type="button" wire:click="delete" wire:confirm="Delete this draft invoice permanently? It has not been sent, so there is nothing to keep — this cannot be undone." wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" wire:loading.remove wire:target="delete" class="size-4" />
                                     <flux:icon name="arrow-path" wire:loading wire:target="delete" class="size-4 animate-spin" />
                                     <span>Delete</span>
                                 </button>
+                                @endif
                             </flux:menu>
                         </flux:dropdown>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -125,7 +133,7 @@
                             Send
                         </button>
                     @endif
-                    @if($invoiceId && $status !== 'cancelled')
+                    @if($canCancelInvoice)
                         <button type="button" @click="showCancelModal = true" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
                             <flux:icon name="x-mark" class="size-4" />
                             Cancel

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Invoicing\Invoices;
 
+use App\Enums\InvoiceState;
 use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
 use App\Models\Invoicing\Invoice;
@@ -138,13 +139,39 @@ class Form extends Component
         }
     }
 
+    /**
+     * Hard-delete a never-sent draft invoice. Anything that became real
+     * — a sent invoice, or one carrying payments — is not deletable; it
+     * must be Cancelled instead, which keeps the record for audit. See
+     * "Destructive actions" in CLAUDE.md.
+     */
     public function delete(): void
     {
-        if ($this->invoiceId) {
-            Invoice::destroy($this->invoiceId);
-            session()->flash('success', 'Invoice deleted successfully.');
-            $this->redirect(route('invoicing.invoices.index'), navigate: true);
+        $this->authorizePermission('invoicing.delete');
+
+        if (! $this->invoiceId) {
+            return;
         }
+
+        $invoice = Invoice::findOrFail($this->invoiceId);
+
+        if (! $invoice->state->canBeDeleted()) {
+            session()->flash('error', 'This invoice has been sent — cancel it instead of deleting.');
+            return;
+        }
+
+        // Defensive: a draft can't normally hold payments (a payment
+        // moves it off draft), but never hard-delete one that does.
+        if ($invoice->payments()->exists()) {
+            session()->flash('error', 'This invoice has recorded payments — cancel it instead of deleting.');
+            return;
+        }
+
+        $invoice->items()->delete();
+        $invoice->forceDelete();
+
+        session()->flash('success', 'Draft invoice deleted permanently.');
+        $this->redirect(route('invoicing.invoices.index'), navigate: true);
     }
 
     public function cancel(): void
@@ -445,6 +472,12 @@ class Form extends Component
             'paidAmount' => $paidAmount,
             'remainingAmount' => $remainingAmount,
             'activities' => $this->activitiesAndNotes,
+            // Cancel and Delete are mutually exclusive by state: a
+            // never-sent draft is Deleted, a real (sent/partial/overdue)
+            // invoice is Cancelled, a terminal one is neither. See
+            // "Destructive actions" in CLAUDE.md.
+            'canDeleteInvoice' => (bool) ($invoice && $invoice->state->canBeDeleted()),
+            'canCancelInvoice' => (bool) ($invoice && ! $invoice->state->isTerminal() && $invoice->state !== InvoiceState::DRAFT),
         ]);
     }
 }

@@ -36,12 +36,18 @@
                                 <span class="text-zinc-400 dark:text-zinc-500">({{ $soNumber }})</span>
                             @endif
                         </span>
+                        {{-- Destructive actions follow the Cancel-vs-Delete
+                             taxonomy (see CLAUDE.md): a still-PENDING delivery
+                             can be Deleted (hard, gone); a picked / in-transit
+                             one is Cancelled (state transition, record kept).
+                             They are mutually exclusive by state — Cancel lives
+                             in the action bar below, Delete here. --}}
+                        @if($deliveryId)
                         <flux:dropdown position="bottom" align="start">
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
                             <flux:menu class="w-40">
-                                @if($deliveryId)
                                 <button type="button" wire:click="duplicate" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
@@ -50,14 +56,16 @@
                                     <flux:icon name="arrow-down-tray" class="size-4" />
                                     <span>Download PDF</span>
                                 </a>
-                                @endif
+                                @if($canDeleteDelivery)
                                 <flux:menu.separator />
-                                <button type="button" wire:click="delete" wire:confirm="Are you sure?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <button type="button" wire:click="delete" wire:confirm="Delete this pending delivery order permanently? Nothing has shipped, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>
+                                @endif
                             </flux:menu>
                         </flux:dropdown>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -230,7 +238,7 @@
                             Download PDF
                         </a>
                     @endif
-                    @if($deliveryId && !in_array($status, [\App\Enums\DeliveryOrderState::DELIVERED->value, \App\Enums\DeliveryOrderState::RETURNED->value, \App\Enums\DeliveryOrderState::CANCELLED->value]))
+                    @if($canCancelDelivery)
                         <button type="button" @click="showCancelModal = true" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
                             <flux:icon name="x-mark" class="size-4" />
                             Cancel
