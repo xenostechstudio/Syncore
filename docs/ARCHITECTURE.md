@@ -68,6 +68,12 @@ If the model casts its status column to an enum (e.g. `Opportunity::$status`),
 
 ## State enums and status display
 
+The full per-document state diagram (every state, every transition, every
+trigger) lives in [STATE_MACHINES.md](STATE_MACHINES.md) — go there when
+you want to answer "what happens when I click Confirm on a sales order?"
+or "why is this invoice stuck in `sent`?". The notes below cover the
+*mechanism*; the linked page covers the *content*.
+
 State enums implement `App\Enums\Contracts\HasDisplayMetadata` (`label()`,
 `color()`, `icon()`) and use the `ProvidesOptions` trait for select dropdowns.
 Render via:

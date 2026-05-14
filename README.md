@@ -58,7 +58,10 @@ CI runs Pint but the auto-commit step is disabled — fix style issues only on f
 
 Day-to-day rules live in [CLAUDE.md](./CLAUDE.md); the cross-cutting
 architecture (notification pipeline, ResourceType, audit scripts, query
-budgets, driver caveats) is in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+budgets, driver caveats) is in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md);
+every document state machine (SO, Invoice, DO, PO, Payment, Transfer,
+Leave, Payroll, Lead, Opportunity) with its transitions and triggers
+is diagrammed in [docs/STATE_MACHINES.md](./docs/STATE_MACHINES.md).
 Headlines:
 
 - **Validation lives in Livewire components**, not FormRequests. There are no FormRequest classes — put rules in `rules()` on the component.
