@@ -85,12 +85,41 @@ class Index extends Component
             return;
         }
 
+        // Employee uses HasSoftDeletes — ->delete() here is the archive
+        // (soft delete). Restorable from the Archived filter.
         $count = Employee::whereIn('id', $this->selected)
             ->where('status', 'inactive')
             ->delete();
 
         $this->cancelDelete();
-        session()->flash('success', "{$count} employees deleted successfully.");
+        session()->flash('success', "{$count} employee(s) archived.");
+    }
+
+    /**
+     * Restore archived (soft-deleted) employees — the recovery half of
+     * the Archive action. See "Destructive actions" in CLAUDE.md.
+     */
+    public function bulkRestore(): void
+    {
+        $this->authorizePermission('hr.edit');
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Employee::onlyTrashed()->whereIn('id', $this->selected)->restore();
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} employee(s) restored.");
+    }
+
+    public function restore(int $id): void
+    {
+        $this->authorizePermission('hr.edit');
+
+        Employee::onlyTrashed()->whereKey($id)->restore();
+
+        session()->flash('success', 'Employee restored.');
     }
 
     public function bulkUpdateStatus(string $status): void
@@ -138,7 +167,11 @@ class Index extends Component
                 ->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%")))
             ->when($this->departmentId, fn ($q) => $q->where('department_id', $this->departmentId))
-            ->when($this->status, fn ($q) => $q->where('status', $this->status));
+            // 'archived' is a pseudo-status: the soft-delete state, not a
+            // real employee status — it bypasses the status column
+            // filter and shows only trashed rows instead.
+            ->when($this->status && $this->status !== 'archived', fn ($q) => $q->where('status', $this->status))
+            ->when($this->status === 'archived', fn ($q) => $q->onlyTrashed());
     }
 
     protected function getModelClass(): string

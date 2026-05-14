@@ -42,10 +42,19 @@
                                                     <span>Set Inactive</span>
                                                 </button>
                                                 <flux:menu.separator />
-                                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                                    <flux:icon name="trash" class="size-4" />
-                                                    <span>Delete</span>
+                                                {{-- Archived view: the only destructive action is
+                                                     Restore. Otherwise it's Archive. --}}
+                                                @if($status === 'archived')
+                                                <button type="button" wire:click="bulkRestore" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                    <flux:icon name="arrow-uturn-left" class="size-4" />
+                                                    <span>{{ __('common.restore') }}</span>
                                                 </button>
+                                                @else
+                                                <button type="button" wire:click="confirmBulkDelete" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                                    <flux:icon name="archive-box" class="size-4" />
+                                                    <span>{{ __('common.archive') }}</span>
+                                                </button>
+                                                @endif
                                             </flux:menu>
                                         </flux:dropdown>
                                 </x-ui.selection-toolbar>
@@ -95,6 +104,16 @@
                                                     <span>Inactive</span>
                                                 </div>
                                                 @if($status === 'inactive')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            {{-- "Archived" is the soft-delete state, not a real
+                                                 employee status — it shows only archived employees,
+                                                 where the toolbar offers Restore. --}}
+                                            <button type="button" wire:click="$set('status', 'archived')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <flux:icon name="archive-box" class="size-3.5 text-zinc-400" />
+                                                    <span>{{ __('common.archived') }}</span>
+                                                </div>
+                                                @if($status === 'archived')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                             </button>
                                             <div class="my-2 border-t border-zinc-100 dark:border-zinc-700"></div>
                                             <div class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Department</div>
@@ -217,7 +236,10 @@
                 actionLabel="New Employee"
             />
     @else
-        @if($view === 'list')
+        {{-- Archived employees always render in the list view — its
+             selection toolbar is the recovery path, and the kanban /
+             grid card links would 404 on a soft-deleted model. --}}
+        @if($view === 'list' || $status === 'archived')
             <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
                 <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
                     <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
@@ -236,7 +258,10 @@
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @foreach($employees as $employee)
                             @php $isSelected = in_array($employee->id, $selected); @endphp
-                            <tr wire:key="emp-{{ $employee->id }}" onclick="window.Livewire.navigate('{{ route('hr.employees.edit', $employee->id) }}')" class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}">
+                            {{-- Archived rows aren't navigable — their edit route
+                                 404s on a soft-deleted model. Recover them by
+                                 selecting + Restore from the toolbar. --}}
+                            <tr wire:key="emp-{{ $employee->id }}" @if(!$employee->trashed()) onclick="window.Livewire.navigate('{{ route('hr.employees.edit', $employee->id) }}')" @endif class="group transition-all duration-150 {{ $employee->trashed() ? '' : 'cursor-pointer' }} {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}">
                                 <td class="relative py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
                                     <div class="absolute inset-y-0 left-0 w-0.5 transition-all duration-150 {{ $isSelected ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-transparent group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700' }}"></div>
                                     <input type="checkbox" wire:model.live="selected" value="{{ $employee->id }}" class="rounded border-zinc-300 bg-white text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:ring-zinc-600 {{ $isSelected ? 'ring-1 ring-zinc-900/20 dark:ring-zinc-100/20' : '' }}">
@@ -350,12 +375,13 @@
         @endif
     @endif
 
-    {{-- Delete Confirmation Modal --}}
+    {{-- Archive Confirmation Modal (Employee soft-deletes, so this is a
+         recoverable archive — not a permanent delete). --}}
     @isset($showDeleteConfirm)
-        <x-ui.delete-confirm-modal 
+        <x-ui.delete-confirm-modal
             wire:model="showDeleteConfirm"
             :validation="$deleteValidation ?? []"
-            title="Confirm Delete"
+            title="Archive employees"
             itemLabel="employees"
         />
     @endisset

@@ -3,6 +3,7 @@
 namespace App\Livewire\HR\Employees;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\HR\Department;
 use App\Models\HR\Employee;
 use App\Models\HR\EmployeeSalaryComponent;
@@ -18,7 +19,7 @@ use Livewire\Component;
 #[Title('Employee')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $employeeId = null;
     public ?Employee $employee = null;
@@ -432,12 +433,23 @@ class Form extends Component
         $this->redirect(route('hr.employees.edit', $newEmployee->id), navigate: true);
     }
 
-    public function delete(): void
+    /**
+     * Archive (soft-delete) the employee. Master data is never hard
+     * "deleted" from the form — it's retired with Archive, which keeps
+     * the row so historical payroll / attendance still resolve, and is
+     * recoverable from the Archived filter on the index. See
+     * "Destructive actions" in CLAUDE.md.
+     */
+    public function archive(): void
     {
-        if (!$this->employee) return;
+        $this->authorizePermission('hr.delete');
 
-        $this->employee->delete();
-        session()->flash('success', 'Employee deleted successfully.');
+        if (!$this->employee) {
+            return;
+        }
+
+        $this->employee->archive();
+        session()->flash('success', 'Employee archived. Find and restore them via the Archived filter on the employees list.');
         $this->redirect(route('hr.employees.index'), navigate: true);
     }
 
