@@ -148,7 +148,7 @@ wires `$this->activitiesAndNotes` and `$this->addNote()`.
 | `WithBulkActions` | `$selected[]`, `selectAll()`, `clearSelection()` |
 | `WithManualPagination` | `goToPreviousPage` / `goToNextPage` (wired by index-header pagination chevrons) |
 | `WithNotes` | `addNote()` + `$activitiesAndNotes` |
-| `WithImport`, `WithExport` | XLSX/CSV import-modal + export-selected helpers |
+| `WithImport`, `WithExport` | XLSX/CSV import-modal + export-selected helpers. Every shipped import class implements `SkipsOnFailure` — invalid rows are collected, valid rows continue to import. Per-importer column reference: [IMPORTS.md](IMPORTS.md). |
 | `WithPermissions` | `can('module.action')`, `authorizePermission('module.action')` |
 
 ## Authorization

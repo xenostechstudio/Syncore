@@ -61,7 +61,9 @@ architecture (notification pipeline, ResourceType, audit scripts, query
 budgets, driver caveats) is in [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md);
 every document state machine (SO, Invoice, DO, PO, Payment, Transfer,
 Leave, Payroll, Lead, Opportunity) with its transitions and triggers
-is diagrammed in [docs/STATE_MACHINES.md](./docs/STATE_MACHINES.md).
+is diagrammed in [docs/STATE_MACHINES.md](./docs/STATE_MACHINES.md);
+the operator-facing reference for every Excel/CSV importer (required
+columns, lookup keys, default values) is in [docs/IMPORTS.md](./docs/IMPORTS.md).
 Headlines:
 
 - **Validation lives in Livewire components**, not FormRequests. There are no FormRequest classes — put rules in `rules()` on the component.
