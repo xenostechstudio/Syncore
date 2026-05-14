@@ -72,6 +72,14 @@ enum LeaveRequestState: string implements HasDisplayMetadata
         return in_array($this, [self::DRAFT, self::PENDING]);
     }
 
+    public function canBeDeleted(): bool
+    {
+        // Hard delete is only for a never-submitted draft — it carries
+        // no audit weight. A submitted (pending) request is Cancelled
+        // instead. See "Destructive actions" in CLAUDE.md.
+        return $this === self::DRAFT;
+    }
+
     public function isTerminal(): bool
     {
         return in_array($this, [self::APPROVED, self::REJECTED, self::CANCELLED]);

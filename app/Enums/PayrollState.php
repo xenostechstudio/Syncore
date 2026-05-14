@@ -72,6 +72,15 @@ enum PayrollState: string implements HasDisplayMetadata
         return $this === self::DRAFT;
     }
 
+    public function canBeDeleted(): bool
+    {
+        // Hard delete is only for a never-approved draft run — it
+        // carries no audit weight. Once approved (or further) it must
+        // be Cancelled, never deleted. See "Destructive actions" in
+        // CLAUDE.md.
+        return $this === self::DRAFT;
+    }
+
     public function canResetToDraft(): bool
     {
         return in_array($this, [self::APPROVED, self::CANCELLED]);

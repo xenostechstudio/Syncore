@@ -144,11 +144,12 @@ Supplier, SalesTeam, Lead):
 Don't write a `wire:confirm` that lies — "cannot be undone" belongs only
 on a true hard delete, never on a soft delete or a state transition.
 
-Status: migrated — Sales Order, Invoice, Delivery Order, Vendor Bill,
-Purchase RFQ / Order. Remaining transactional docs (Purchase Receipt,
-Payroll, LeaveRequest) and the master-data Archive side still carry the
-old ad-hoc mix — migrate them to this taxonomy when you next touch
-their form component.
+Status: all transactional documents migrated — Sales Order, Invoice,
+Delivery Order, Vendor Bill, Purchase RFQ / Order, Payroll Run, Leave
+Request. (Purchase Receipt already complied — only a state-gated Cancel,
+no Delete or Archive.) The master-data Archive side (Customer, Product,
+Supplier, etc. — soft delete + a "show archived" filter + restore) is
+the remaining piece; migrate when you next touch those form components.
 
 ## Driver-aware status-enum migrations
 

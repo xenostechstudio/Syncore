@@ -2,6 +2,7 @@
 
 namespace App\Livewire\HR\Payroll;
 
+use App\Enums\PayrollState;
 use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
 use App\Models\HR\Employee;
@@ -199,7 +200,12 @@ class Form extends Component
     {
         $this->authorizePermission('payroll.process');
 
-        if (!$this->period || in_array($this->period->status, ['paid', 'cancelled'])) return;
+        if (!$this->period) return;
+
+        if (!$this->period->state->canCancel()) {
+            session()->flash('error', 'This payroll run can no longer be cancelled.');
+            return;
+        }
 
         $this->period->update(['status' => 'cancelled']);
         $this->status = 'cancelled';
@@ -219,12 +225,25 @@ class Form extends Component
         session()->flash('success', 'Payroll reset to draft.');
     }
 
+    /**
+     * Hard-delete a never-approved draft payroll run. Once approved (or
+     * further) the run carries audit weight and must be Cancelled
+     * instead. See "Destructive actions" in CLAUDE.md.
+     */
     public function delete(): void
     {
+        $this->authorizePermission('payroll.process');
+
         if (!$this->period) return;
 
+        if (!$this->period->state->canBeDeleted()) {
+            session()->flash('error', 'This payroll run has been approved — cancel it instead of deleting.');
+            return;
+        }
+
+        $this->period->items()->delete();
         $this->period->delete();
-        session()->flash('success', 'Payroll period deleted.');
+        session()->flash('success', 'Draft payroll run deleted permanently.');
         $this->redirect(route('hr.payroll.index'), navigate: true);
     }
 
@@ -316,6 +335,12 @@ class Form extends Component
             'totalItemsCount' => $allItems->count(),
             'activities' => $this->getActivities(),
             'periodCreatedAt' => $this->period?->created_at?->format('H:i'),
+            // Cancel and Delete are mutually exclusive by state: a
+            // never-approved draft is Deleted, an approved run is
+            // Cancelled, anything further is neither. See "Destructive
+            // actions" in CLAUDE.md.
+            'canCancelPayroll' => (bool) ($this->period && $this->period->state === PayrollState::APPROVED),
+            'canDeletePayroll' => (bool) ($this->period && $this->period->state->canBeDeleted()),
         ]);
     }
 }

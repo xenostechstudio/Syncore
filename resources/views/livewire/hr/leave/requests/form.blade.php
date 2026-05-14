@@ -9,16 +9,29 @@
                     <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Leave Request</span>
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $requestId ? 'LR-' . str_pad($requestId, 5, '0', STR_PAD_LEFT) : 'New Request' }}</span>
-                        @if($requestId)
+                        {{-- Destructive actions follow the Cancel-vs-Delete
+                             taxonomy (see CLAUDE.md): a never-submitted draft
+                             can be Deleted (hard); a submitted (pending)
+                             request is Cancelled (state transition, record
+                             kept). Mutually exclusive by state. --}}
+                        @if($canDeleteLeave || $canCancelLeave)
                             <flux:dropdown position="bottom" align="start">
                                 <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                                     <flux:icon name="cog-6-tooth" class="size-4" />
                                 </button>
                                 <flux:menu class="w-40">
-                                    <button type="button" wire:click="delete" wire:confirm="Delete this leave request?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    @if($canCancelLeave)
+                                    <button type="button" wire:click="cancel" wire:confirm="Cancel this leave request?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <flux:icon name="x-mark" class="size-4" />
+                                        <span>Cancel Request</span>
+                                    </button>
+                                    @endif
+                                    @if($canDeleteLeave)
+                                    <button type="button" wire:click="delete" wire:confirm="Delete this draft leave request permanently? It has not been submitted, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                         <flux:icon name="trash" class="size-4" />
                                         <span>Delete</span>
                                     </button>
+                                    @endif
                                 </flux:menu>
                             </flux:dropdown>
                         @endif

@@ -176,12 +176,24 @@ class Form extends Component
         }
     }
 
+    /**
+     * Hard-delete a never-submitted draft leave request. A submitted
+     * (pending) request carries audit weight and must be Cancelled
+     * instead. See "Destructive actions" in CLAUDE.md.
+     */
     public function delete(): void
     {
+        $this->authorizePermission('leave.delete');
+
         if (!$this->leaveRequest) return;
 
+        if (!$this->leaveRequest->state->canBeDeleted()) {
+            session()->flash('error', 'This request has been submitted — cancel it instead of deleting.');
+            return;
+        }
+
         $this->leaveRequest->delete();
-        session()->flash('success', 'Leave request deleted successfully.');
+        session()->flash('success', 'Draft leave request deleted permanently.');
         $this->redirect(route('hr.leave.requests.index'), navigate: true);
     }
 
@@ -242,6 +254,12 @@ class Form extends Component
             'employees' => Employee::where('status', 'active')->orderBy('name')->get(),
             'leaveTypes' => LeaveType::where('is_active', true)->orderBy('name')->get(),
             'activities' => $this->getActivities(),
+            // Cancel and Delete are mutually exclusive by state: a
+            // never-submitted draft is Deleted, a submitted (pending)
+            // request is Cancelled, anything further is neither. See
+            // "Destructive actions" in CLAUDE.md.
+            'canCancelLeave' => (bool) ($this->leaveRequest && $this->leaveRequest->state === LeaveRequestState::PENDING),
+            'canDeleteLeave' => (bool) ($this->leaveRequest && $this->leaveRequest->state->canBeDeleted()),
         ]);
     }
 }
