@@ -9,6 +9,7 @@
  */
 
 use App\Livewire\Sales\Configuration\Taxes\Index;
+use App\Models\Sales\Tax;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -72,6 +73,64 @@ it('streams a CSV of failed rows with original values for re-upload', function (
     // open the file, fix the failing column, and re-upload.
     expect($body)->toContain('BAD');
     expect($body)->toContain('name');
+});
+
+it('with SkipsOnFailure, valid rows import alongside invalid ones (collect-and-continue)', function () {
+    // 3 rows: 2 valid, 1 with empty name (fails the required|string rule).
+    // With SkipsOnFailure on the import class, the valid rows must land in
+    // the DB and the bad row's failure must show up in the errors array —
+    // both behaviors at once.
+    $csv = "name,code,rate,type,scope\n"
+        . "ValidA,SOF-A,11,percentage,sales\n"
+        . ",BAD,5,percentage,sales\n"
+        . "ValidB,SOF-B,12,percentage,sales\n";
+
+    $file = UploadedFile::fake()->createWithContent('taxes.csv', $csv);
+
+    Livewire::test(Index::class)
+        ->call('openImportModal')
+        ->set('importFile', $file)
+        ->call('import')
+        ->tap(function ($component) {
+            $errors = $component->get('importErrors');
+
+            // Exactly one structured error for the bad row.
+            expect($errors)->toHaveCount(1)
+                ->and($errors[0]['attribute'])->toBe('name');
+
+            // Both valid rows landed despite the failure in between.
+            expect(Tax::where('code', 'SOF-A')->exists())->toBeTrue();
+            expect(Tax::where('code', 'SOF-B')->exists())->toBeTrue();
+        });
+});
+
+it('emits one entry per failing rule (not one joined entry per attribute)', function () {
+    // The `name` field has TWO rules: required|string|max:255. An empty value
+    // fails `required` only (one entry). A 300-character value fails `max:255`
+    // only (one entry). Both behaviors must be uniform across trait-using and
+    // inline-onFailure imports so the error CSV count is stable.
+    //
+    // We can verify the per-message expansion via the modal's $importErrors
+    // array — every entry has a single message string, not a "; "-joined blob.
+    $longName = str_repeat('A', 300); // exceeds max:255
+    $csv = "name,code,rate,type,scope\n"
+        . $longName . ",TOOLONG,10,percentage,sales\n";
+
+    $file = UploadedFile::fake()->createWithContent('taxes.csv', $csv);
+
+    Livewire::test(Index::class)
+        ->call('openImportModal')
+        ->set('importFile', $file)
+        ->call('import')
+        ->tap(function ($component) {
+            $errors = $component->get('importErrors');
+            expect($errors)->not->toBeEmpty();
+            // Per-message shape: the message field is a single rule's text,
+            // never a "; "-joined blob from multiple rules.
+            foreach ($errors as $err) {
+                expect($err['message'])->not->toContain('; ');
+            }
+        });
 });
 
 it('keeps closing the modal cleanly when there are no errors', function () {

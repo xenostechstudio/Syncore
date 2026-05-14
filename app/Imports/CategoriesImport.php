@@ -6,9 +6,10 @@ use App\Models\Inventory\Category;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class CategoriesImport implements ToCollection, WithHeadingRow, WithValidation
+class CategoriesImport implements ToCollection, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     public int $imported = 0;
     public int $updated = 0;
@@ -80,5 +81,18 @@ class CategoriesImport implements ToCollection, WithHeadingRow, WithValidation
         
         $value = strtolower(trim((string) $value));
         return in_array($value, ['1', 'true', 'yes', 'active', 'y'], true);
+    }
+    public function onFailure(\Maatwebsite\Excel\Validators\Failure ...$failures): void
+    {
+        foreach ($failures as $failure) {
+            foreach ($failure->errors() as $message) {
+                $this->errors[] = [
+                    "row"       => $failure->row(),
+                    "attribute" => $failure->attribute(),
+                    "message"   => $message,
+                    "values"    => $failure->values(),
+                ];
+            }
+        }
     }
 }

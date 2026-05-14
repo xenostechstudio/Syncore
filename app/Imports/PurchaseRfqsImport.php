@@ -7,9 +7,10 @@ use App\Models\Purchase\Supplier;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class PurchaseRfqsImport implements ToCollection, WithHeadingRow, WithValidation
+class PurchaseRfqsImport implements ToCollection, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     public int $imported = 0;
     public int $updated = 0;
@@ -70,5 +71,18 @@ class PurchaseRfqsImport implements ToCollection, WithHeadingRow, WithValidation
             'total' => 'nullable|numeric|min:0',
             'status' => 'nullable|in:rfq,purchase_order,done,cancelled',
         ];
+    }
+    public function onFailure(\Maatwebsite\Excel\Validators\Failure ...$failures): void
+    {
+        foreach ($failures as $failure) {
+            foreach ($failure->errors() as $message) {
+                $this->errors[] = [
+                    "row"       => $failure->row(),
+                    "attribute" => $failure->attribute(),
+                    "message"   => $message,
+                    "values"    => $failure->values(),
+                ];
+            }
+        }
     }
 }

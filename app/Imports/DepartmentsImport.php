@@ -6,9 +6,10 @@ use App\Models\HR\Department;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class DepartmentsImport implements ToCollection, WithHeadingRow, WithValidation
+class DepartmentsImport implements ToCollection, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     public int $imported = 0;
     public int $updated = 0;
@@ -53,5 +54,18 @@ class DepartmentsImport implements ToCollection, WithHeadingRow, WithValidation
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
         ];
+    }
+    public function onFailure(\Maatwebsite\Excel\Validators\Failure ...$failures): void
+    {
+        foreach ($failures as $failure) {
+            foreach ($failure->errors() as $message) {
+                $this->errors[] = [
+                    "row"       => $failure->row(),
+                    "attribute" => $failure->attribute(),
+                    "message"   => $message,
+                    "values"    => $failure->values(),
+                ];
+            }
+        }
     }
 }

@@ -7,9 +7,10 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class LeadsImport implements ToCollection, WithHeadingRow, WithValidation
+class LeadsImport implements ToCollection, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     public int $imported = 0;
     public int $updated = 0;
@@ -77,5 +78,18 @@ class LeadsImport implements ToCollection, WithHeadingRow, WithValidation
             'source' => 'nullable|in:website,referral,cold_call,social_media,advertisement,trade_show,email_campaign,other',
             'status' => 'nullable|in:new,contacted,qualified,converted,lost',
         ];
+    }
+    public function onFailure(\Maatwebsite\Excel\Validators\Failure ...$failures): void
+    {
+        foreach ($failures as $failure) {
+            foreach ($failure->errors() as $message) {
+                $this->errors[] = [
+                    "row"       => $failure->row(),
+                    "attribute" => $failure->attribute(),
+                    "message"   => $message,
+                    "values"    => $failure->values(),
+                ];
+            }
+        }
     }
 }

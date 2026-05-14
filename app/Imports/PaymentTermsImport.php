@@ -6,9 +6,10 @@ use App\Models\Sales\PaymentTerm;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class PaymentTermsImport implements ToCollection, WithHeadingRow, WithValidation
+class PaymentTermsImport implements ToCollection, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     public int $imported = 0;
     public int $updated = 0;
@@ -56,5 +57,18 @@ class PaymentTermsImport implements ToCollection, WithHeadingRow, WithValidation
             'code' => 'nullable|string|max:50',
             'days' => 'nullable|integer|min:0',
         ];
+    }
+    public function onFailure(\Maatwebsite\Excel\Validators\Failure ...$failures): void
+    {
+        foreach ($failures as $failure) {
+            foreach ($failure->errors() as $message) {
+                $this->errors[] = [
+                    "row"       => $failure->row(),
+                    "attribute" => $failure->attribute(),
+                    "message"   => $message,
+                    "values"    => $failure->values(),
+                ];
+            }
+        }
     }
 }

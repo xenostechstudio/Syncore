@@ -10,9 +10,10 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class ProductsImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading
+class ProductsImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading, SkipsOnFailure
 {
     use HasImportTracking;
 

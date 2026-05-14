@@ -7,9 +7,10 @@ use App\Models\Purchase\VendorBill;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class VendorBillsImport implements ToCollection, WithHeadingRow, WithValidation
+class VendorBillsImport implements ToCollection, WithHeadingRow, WithValidation, SkipsOnFailure
 {
     public int $imported = 0;
     public int $updated = 0;
@@ -70,5 +71,18 @@ class VendorBillsImport implements ToCollection, WithHeadingRow, WithValidation
             'total' => 'nullable|numeric|min:0',
             'status' => 'nullable|in:draft,pending,paid,cancelled',
         ];
+    }
+    public function onFailure(\Maatwebsite\Excel\Validators\Failure ...$failures): void
+    {
+        foreach ($failures as $failure) {
+            foreach ($failure->errors() as $message) {
+                $this->errors[] = [
+                    "row"       => $failure->row(),
+                    "attribute" => $failure->attribute(),
+                    "message"   => $message,
+                    "values"    => $failure->values(),
+                ];
+            }
+        }
     }
 }

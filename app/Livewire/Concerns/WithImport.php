@@ -50,9 +50,11 @@ trait WithImport
         try {
             Excel::import($import, $this->importFile->getRealPath());
         } catch (ExcelValidationException $e) {
-            // WithValidation throws here when an import class doesn't also
-            // implement SkipsOnFailure (most don't yet). Unspool the failures
-            // into structured errors so the modal can render row + field +
+            // Defense-in-depth: every shipped Import class now implements
+            // SkipsOnFailure, so WithValidation routes failures through
+            // onFailure() instead of throwing here. This branch stays as a
+            // safety net for any future Import that forgets the interface —
+            // structured errors so the modal still renders row + field +
             // message instead of a stringified-exception wall of text.
             foreach ($e->failures() as $failure) {
                 if (method_exists($import, 'addValidationFailure')) {

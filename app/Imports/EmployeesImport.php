@@ -10,9 +10,10 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class EmployeesImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading
+class EmployeesImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading, SkipsOnFailure
 {
     use HasImportTracking;
 

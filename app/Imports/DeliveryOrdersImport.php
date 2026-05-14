@@ -12,9 +12,10 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class DeliveryOrdersImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading
+class DeliveryOrdersImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading, SkipsOnFailure
 {
     use HasImportTracking;
 

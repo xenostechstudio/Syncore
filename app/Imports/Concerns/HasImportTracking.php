@@ -41,9 +41,12 @@ trait HasImportTracking
 
     /**
      * Convert a Maatwebsite validation Failure into a structured error.
-     * Called by WithImport::import() when WithValidation throws — without
-     * SkipsOnFailure on every import class, the trait catches the exception
-     * and unspools failures into the same structured array.
+     * Called from two places:
+     *   - onFailure() below, when the import class implements
+     *     SkipsOnFailure: invalid rows are collected, valid rows keep
+     *     processing.
+     *   - WithImport::import()'s catch block, as a fallback for import
+     *     classes that don't yet implement SkipsOnFailure.
      */
     public function addValidationFailure(Failure $failure): void
     {
@@ -54,6 +57,21 @@ trait HasImportTracking
                 'message'   => $message,
                 'values'    => $failure->values(),
             ];
+        }
+    }
+
+    /**
+     * Satisfies Maatwebsite\Excel\Concerns\SkipsOnFailure. With this in
+     * the shared trait, an import class only needs to add the interface
+     * to its `implements` list to flip from abort-on-first-error to
+     * collect-and-continue behavior.
+     *
+     * @param \Maatwebsite\Excel\Validators\Failure ...$failures
+     */
+    public function onFailure(Failure ...$failures): void
+    {
+        foreach ($failures as $failure) {
+            $this->addValidationFailure($failure);
         }
     }
 
