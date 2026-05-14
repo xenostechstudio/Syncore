@@ -31,6 +31,7 @@ class Index extends Component
     {
         if (in_array($groupId, $this->openGroups, true)) {
             $this->openGroups = array_values(array_filter($this->openGroups, fn ($id) => $id !== $groupId));
+
             return;
         }
 
@@ -79,7 +80,34 @@ class Index extends Component
 
         $count = Product::whereIn('id', $this->selected)->delete();
         $this->clearSelection();
-        session()->flash('success', "{$count} products deleted.");
+        session()->flash('success', "{$count} products archived.");
+    }
+
+    /**
+     * Restore an archived (soft-deleted) product — the recovery half of
+     * the Archive action. See "Destructive actions" in CLAUDE.md.
+     */
+    public function restore(int $id): void
+    {
+        $this->authorizePermission('sales.edit');
+
+        Product::onlyTrashed()->whereKey($id)->restore();
+
+        session()->flash('success', 'Product restored.');
+    }
+
+    public function bulkRestore(): void
+    {
+        $this->authorizePermission('sales.edit');
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Product::onlyTrashed()->whereIn('id', $this->selected)->restore();
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} products restored.");
     }
 
     public function toggleFavorite(int $id): void
@@ -93,13 +121,14 @@ class Index extends Component
     {
         if (empty($this->selected)) {
             session()->flash('error', 'Please select at least one product to export.');
+
             return;
         }
 
         $ids = array_map('intval', $this->selected);
         $this->clearSelection();
 
-        return Excel::download(new ProductsExport($ids), 'products-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new ProductsExport($ids), 'products-'.now()->format('Y-m-d').'.xlsx');
     }
 
     protected function getQuery()
@@ -109,7 +138,11 @@ class Index extends Component
             ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
                 ->where('name', 'like', "%{$this->search}%")
                 ->orWhere('sku', 'like', "%{$this->search}%")))
-            ->when($this->status, fn ($q) => $q->where('status', $this->status));
+            // 'archived' is a pseudo-status: the soft-delete state, not a
+            // real stock level — it bypasses the status filter and shows
+            // only trashed rows instead.
+            ->when($this->status && $this->status !== 'archived', fn ($q) => $q->where('status', $this->status))
+            ->when($this->status === 'archived', fn ($q) => $q->onlyTrashed());
     }
 
     protected function getModelClass(): string
@@ -189,7 +222,9 @@ class Index extends Component
             default => $this->getQuery()->latest(),
         };
 
-        if ($this->view === 'kanban') {
+        // Archived products always render in the list view (the recovery
+        // surface) — never the status-grouped kanban.
+        if ($this->view === 'kanban' && $this->status !== 'archived') {
             $allProducts = $query->get();
             $groupedProducts = [
                 'in_stock' => $allProducts->where('status', 'in_stock')->values(),

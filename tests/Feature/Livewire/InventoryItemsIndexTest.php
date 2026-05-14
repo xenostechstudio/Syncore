@@ -60,22 +60,23 @@ describe('Inventory Items Index', function () {
             ->assertViewHas('items', fn ($p) => $p->total() === 3);
     });
 
-    it('delete refuses products with stock', function () {
+    it('archive refuses products with stock', function () {
         $w = Warehouse::factory()->create();
         $p = Product::factory()->create();
         setStock($p->id, $w->id, 5);
 
-        Livewire::test(Index::class)->call('delete', $p->id);
+        Livewire::test(Index::class)->call('archive', $p->id);
 
         expect(Product::find($p->id))->not->toBeNull();
     });
 
-    it('delete removes products with zero stock', function () {
+    it('archive soft-deletes products with zero stock', function () {
         $p = Product::factory()->create();
 
-        Livewire::test(Index::class)->call('delete', $p->id);
+        Livewire::test(Index::class)->call('archive', $p->id);
 
         expect(Product::find($p->id))->toBeNull();
+        expect(Product::withTrashed()->find($p->id)->trashed())->toBeTrue();
     });
 
     it('confirmBulkDelete splits products by stock totals', function () {

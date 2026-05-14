@@ -150,7 +150,7 @@ Request. (Purchase Receipt already complied — only a state-gated Cancel,
 no Delete or Archive.)
 
 Master-data Archive side — migrated: **Customer, Supplier, Lead,
-Employee, Opportunity**. The form's destructive action is `archive()`
+Employee, Opportunity, Product**. The form's destructive action is `archive()`
 (honest soft-delete naming + a permission check); the index lets you
 see and recover archived rows. Reference shapes depending on the
 index's UI:
@@ -168,10 +168,15 @@ index's UI:
   stage filter; the kanban `@if` is gated `&& stage !== 'archived'`
   (in the blade *and* `render()`) so archived always lists; a per-row
   `restore(int $id)` in an Actions column shown only when archived.
+- **Product** — one model surfaced through two modules (`Inventory\Items\Index`
+  + `Inventory\Products\Form` and `Sales\Products\Index` + `Sales\Products\Form`,
+  routes `inventory.products.*` / `sales.products.*` — no collision). Both
+  indexes: "Archived" on the status filter, kanban gated `&& status !== 'archived'`
+  (blade *and* `render()`), per-row `restore(int $id)` + `bulkRestore()`.
+  The Inventory index keeps its pre-existing stock guard — `archive(int $id)`
+  and the bulk path refuse a product with units in `inventory_stocks`.
 In all shapes, archived rows are made non-navigable since their edit
-route 404s on a soft-deleted model. Still to migrate: **Product** (two
-forms + two indexes + colliding `products.*` route names — needs the
-route collision untangled first). A true hard Delete (only when
+route 404s on a soft-deleted model. A true hard Delete (only when
 unreferenced) is still deferred.
 
 ## Driver-aware status-enum migrations

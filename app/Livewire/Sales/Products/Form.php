@@ -3,6 +3,7 @@
 namespace App\Livewire\Sales\Products;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Tax;
@@ -15,9 +16,10 @@ use Livewire\Component;
 #[Title('Product')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?Product $item = null;
+
     public bool $editing = false;
 
     #[Validate('required|string|max:255')]
@@ -68,6 +70,7 @@ class Form extends Component
     public ?string $internal_notes = null;
 
     public ?string $createdAt = null;
+
     public ?string $updatedAt = null;
 
     protected function getNotableModel()
@@ -100,7 +103,7 @@ class Form extends Component
     {
         $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $this->name), 0, 3));
         $random = strtoupper(substr(uniqid(), -4));
-        $this->sku = $prefix . '-' . $random;
+        $this->sku = $prefix.'-'.$random;
     }
 
     public function save(): void
@@ -108,7 +111,7 @@ class Form extends Component
         $rules = $this->getRules();
 
         if ($this->editing && $this->item) {
-            $rules['sku'] = 'nullable|string|max:50|unique:products,sku,' . $this->item->id;
+            $rules['sku'] = 'nullable|string|max:50|unique:products,sku,'.$this->item->id;
         }
 
         $validated = $this->validate($rules);
@@ -146,6 +149,25 @@ class Form extends Component
             session()->flash('success', 'Product created successfully.');
             $this->redirect(route('sales.products.edit', $this->item->id), navigate: true);
         }
+    }
+
+    /**
+     * Archive (soft-delete) the product. Master data is retired with
+     * Archive, not hard-deleted — the row stays and is recoverable from
+     * the Archived filter on the products list. See "Destructive
+     * actions" in CLAUDE.md.
+     */
+    public function archive(): void
+    {
+        $this->authorizePermission('sales.delete');
+
+        if (! $this->item) {
+            return;
+        }
+
+        $this->item->archive();
+        session()->flash('success', 'Product archived. Find and restore it via the Archived filter on the products list.');
+        $this->redirect(route('sales.products.index'), navigate: true);
     }
 
     public function render()

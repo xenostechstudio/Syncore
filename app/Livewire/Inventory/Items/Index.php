@@ -51,20 +51,48 @@ class Index extends Component
         $product->update(['is_favorite' => ! $product->is_favorite]);
     }
 
-    public function delete(int $id): void
+    public function archive(int $id): void
     {
         $product = Product::findOrFail($id);
 
         $totalStock = DB::table('inventory_stocks')->where('product_id', $id)->sum('quantity');
 
         if ($totalStock > 0) {
-            session()->flash('error', "Cannot delete '{$product->name}'. Product has {$totalStock} units in stock.");
+            session()->flash('error', "Cannot archive '{$product->name}'. Product has {$totalStock} units in stock.");
+
             return;
         }
 
-        $product->delete();
+        $product->archive();
         $this->selected = array_filter($this->selected, fn ($s) => $s != $id);
-        session()->flash('success', "Product '{$product->name}' deleted successfully.");
+        session()->flash('success', "Product '{$product->name}' archived.");
+    }
+
+    /**
+     * Restore an archived (soft-deleted) product — the recovery half of
+     * the Archive action. See "Destructive actions" in CLAUDE.md.
+     */
+    public function restore(int $id): void
+    {
+        $this->authorizePermission('inventory.edit');
+
+        Product::onlyTrashed()->whereKey($id)->restore();
+
+        session()->flash('success', 'Product restored.');
+    }
+
+    public function bulkRestore(): void
+    {
+        $this->authorizePermission('inventory.edit');
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $count = Product::onlyTrashed()->whereIn('id', $this->selected)->restore();
+
+        $this->clearSelection();
+        session()->flash('success', "{$count} products restored.");
     }
 
     public function confirmBulkDelete(): void
@@ -127,15 +155,16 @@ class Index extends Component
         $deletableIds = array_diff($this->selected, array_map('strval', $productsWithStock));
 
         if (empty($deletableIds)) {
-            session()->flash('error', 'No products can be deleted. All selected products have stock.');
+            session()->flash('error', 'No products can be archived. All selected products have stock.');
             $this->cancelDelete();
+
             return;
         }
 
         $count = Product::whereIn('id', $deletableIds)->delete();
 
         $this->cancelDelete();
-        session()->flash('success', "{$count} products deleted successfully.");
+        session()->flash('success', "{$count} products archived.");
     }
 
     public function bulkActivate(): void
@@ -167,8 +196,8 @@ class Index extends Component
     public function exportSelected()
     {
         $filename = empty($this->selected)
-            ? 'products-' . now()->format('Y-m-d') . '.xlsx'
-            : 'products-selected-' . now()->format('Y-m-d') . '.xlsx';
+            ? 'products-'.now()->format('Y-m-d').'.xlsx'
+            : 'products-selected-'.now()->format('Y-m-d').'.xlsx';
 
         return Excel::download(new ProductsExport($this->selected ?: null), $filename);
     }
@@ -180,7 +209,11 @@ class Index extends Component
             ->when($this->search, fn ($q) => $q->where(fn ($sub) => $sub
                 ->where('name', 'like', "%{$this->search}%")
                 ->orWhere('sku', 'like', "%{$this->search}%")))
-            ->when($this->status, fn ($q) => $q->where('status', $this->status));
+            // 'archived' is a pseudo-status: the soft-delete state, not a
+            // real stock level — it bypasses the status filter and shows
+            // only trashed rows instead.
+            ->when($this->status && $this->status !== 'archived', fn ($q) => $q->where('status', $this->status))
+            ->when($this->status === 'archived', fn ($q) => $q->onlyTrashed());
     }
 
     protected function getModelClass(): string
@@ -211,8 +244,10 @@ class Index extends Component
             $this->injectStockAttributes($products, $this->warehouse_id);
         }
 
+        // Archived products always render in the list view (the recovery
+        // surface) — never the status-grouped kanban.
         $productsByStatus = null;
-        if ($this->view === 'kanban') {
+        if ($this->view === 'kanban' && $this->status !== 'archived') {
             $productsByStatus = $this->getQuery()->get()->groupBy('status');
         }
 

@@ -3,12 +3,12 @@
 namespace App\Livewire\Inventory\Products;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Category;
 use App\Models\Inventory\InventoryAdjustment;
 use App\Models\Inventory\InventoryAdjustmentItem;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\ProductPricelistRule;
-use App\Models\Inventory\InventoryStock;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Pricelist;
 use App\Models\User;
@@ -20,14 +20,17 @@ use Livewire\Component;
 #[Title('Product')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $productId = null;
+
     public ?Product $product = null;
+
     public bool $editing = false;
 
     // Timestamps
     public ?string $createdAt = null;
+
     public ?string $updatedAt = null;
 
     protected function getNotableModel()
@@ -37,47 +40,75 @@ class Form extends Component
 
     // General Info
     public string $name = '';
+
     public string $sku = '';
+
     public ?string $barcode = null;
+
     public string $product_type = 'goods';
+
     public ?string $internal_reference = null;
+
     public ?string $description = null;
+
     public ?int $category_id = null;
+
     public bool $is_favorite = false;
 
     // Pricing
     public ?float $cost_price = null;
+
     public ?float $selling_price = null;
 
     // Inventory/Logistics
     public int $quantity = 0;
+
     public ?int $warehouse_id = null;
+
     public int $forecast_in = 0;
+
     public int $forecast_out = 0;
+
     public int $forecast_available = 0;
+
     public ?int $responsible_id = null;
+
     public ?float $weight = null;
+
     public ?float $volume = null;
+
     public int $customer_lead_time = 0;
 
     // Notes
     public ?string $receipt_note = null;
+
     public ?string $delivery_note = null;
+
     public ?string $internal_notes = null;
 
     // Pricelist Rules Modal
     public bool $showPriceModal = false;
+
     public bool $showForecastModal = false;
+
     public ?int $editingRuleId = null;
+
     public string $rule_price_type = 'fixed';
+
     public ?float $rule_fixed_price = null;
+
     public ?float $rule_discount_percentage = null;
+
     public int $rule_min_quantity = 1;
+
     public ?string $rule_date_start = null;
+
     public ?string $rule_date_end = null;
+
     public ?int $rule_pricelist_id = null;
 
     public array $forecast_wh_in = [];
+
     public array $forecast_wh_out = [];
 
     public function mount(?int $id = null): void
@@ -196,14 +227,14 @@ class Form extends Component
     {
         $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $this->name), 0, 3));
         $random = strtoupper(substr(uniqid(), -4));
-        $this->sku = $prefix . '-' . $random;
+        $this->sku = $prefix.'-'.$random;
     }
 
     public function save(): void
     {
         $validated = $this->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'nullable|string|max:50|unique:products,sku,' . $this->productId,
+            'sku' => 'nullable|string|max:50|unique:products,sku,'.$this->productId,
             'barcode' => 'nullable|string|max:100',
             'product_type' => 'required|in:goods,service',
             'internal_reference' => 'nullable|string|max:100',
@@ -230,7 +261,7 @@ class Form extends Component
         if (empty($validated['sku'])) {
             $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $validated['name']), 0, 3));
             $random = strtoupper(substr(uniqid(), -4));
-            $validated['sku'] = $prefix . '-' . $random;
+            $validated['sku'] = $prefix.'-'.$random;
         }
 
         if ($this->editing && $this->product) {
@@ -253,11 +284,12 @@ class Form extends Component
     {
         if (! $this->productId) {
             session()->flash('error', 'Please save the product first before setting pricelist prices.');
+
             return;
         }
 
         $this->resetPriceModal();
-        
+
         if ($ruleId) {
             $rule = ProductPricelistRule::query()
                 ->where('product_id', $this->productId)
@@ -273,7 +305,7 @@ class Form extends Component
                 $this->rule_pricelist_id = $rule->pricelist_id;
             }
         }
-        
+
         $this->showPriceModal = true;
     }
 
@@ -293,6 +325,7 @@ class Form extends Component
     {
         if (! $this->productId || ! $this->product) {
             session()->flash('error', 'Please save the product first before setting pricelist prices.');
+
             return;
         }
 
@@ -343,6 +376,7 @@ class Form extends Component
     {
         if (! $this->productId || ! $this->product) {
             session()->flash('error', 'Please save the product first before modifying pricelist prices.');
+
             return;
         }
 
@@ -352,6 +386,25 @@ class Form extends Component
             ?->delete();
 
         $this->product->refresh();
+    }
+
+    /**
+     * Archive (soft-delete) the product. Master data is retired with
+     * Archive, not hard-deleted — the row stays and is recoverable from
+     * the Archived filter on the products list. See "Destructive
+     * actions" in CLAUDE.md.
+     */
+    public function archive(): void
+    {
+        $this->authorizePermission('inventory.delete');
+
+        if (! $this->product) {
+            return;
+        }
+
+        $this->product->archive();
+        session()->flash('success', 'Product archived. Find and restore it via the Archived filter on the products list.');
+        $this->redirect(route('inventory.products.index'), navigate: true);
     }
 
     public function render()

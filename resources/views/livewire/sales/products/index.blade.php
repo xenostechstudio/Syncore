@@ -27,22 +27,33 @@
                                         <span>{{ count($selected) }} Selected</span>
                                     </button>
                                     <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600"></div>
-                                    <button wire:click="bulkActivate" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
-                                        <flux:icon name="check-circle" class="size-4" />
-                                        Activate
-                                    </button>
-                                    <button wire:click="bulkDeactivate" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
-                                        <flux:icon name="pause-circle" class="size-4" />
-                                        Deactivate
-                                    </button>
-                                    <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
-                                        <flux:icon name="arrow-up-tray" class="size-4" />
-                                        Export
-                                    </button>
-                                    <button wire:click="bulkDelete" wire:confirm="Are you sure you want to delete {{ count($selected) }} product(s)?" class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        Delete
-                                    </button>
+                                    @if($status === 'archived')
+                                        <button wire:click="bulkRestore" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                                            <flux:icon name="arrow-uturn-left" class="size-4" />
+                                            {{ __('common.restore') }}
+                                        </button>
+                                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                                            <flux:icon name="arrow-up-tray" class="size-4" />
+                                            Export
+                                        </button>
+                                    @else
+                                        <button wire:click="bulkActivate" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-zinc-800 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                                            <flux:icon name="check-circle" class="size-4" />
+                                            Activate
+                                        </button>
+                                        <button wire:click="bulkDeactivate" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                                            <flux:icon name="pause-circle" class="size-4" />
+                                            Deactivate
+                                        </button>
+                                        <button wire:click="exportSelected" class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+                                            <flux:icon name="arrow-up-tray" class="size-4" />
+                                            Export
+                                        </button>
+                                        <button wire:click="bulkDelete" wire:confirm="Archive {{ count($selected) }} product(s)? They can be restored from the Archived filter." class="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-50 dark:border-amber-800 dark:bg-zinc-800 dark:text-amber-400 dark:hover:bg-amber-900/20">
+                                            <flux:icon name="archive-box" class="size-4" />
+                                            {{ __('common.archive') }}
+                                        </button>
+                                    @endif
                                 </div>
                             @else
                             {{-- Wrapper for searchbox + dropdown to center dropdown on searchbox --}}
@@ -79,6 +90,13 @@
                                                     <span>Out of Stock</span>
                                                 </div>
                                                 @if($status === 'out_of_stock')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
+                                            </button>
+                                            <button type="button" wire:click="$set('status', 'archived')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                <div class="flex items-center gap-2">
+                                                    <flux:icon name="archive-box" class="size-3.5 text-zinc-400" />
+                                                    <span>{{ __('common.archived') }}</span>
+                                                </div>
+                                                @if($status === 'archived')<flux:icon name="check" class="size-3.5 text-violet-500" />@endif
                                             </button>
                                         </div>
                                     </div>
@@ -150,7 +168,9 @@
 
     {{-- Content --}}
     <div>
-        @if($view === 'kanban')
+        {{-- Archived products always render in the list view (the recovery
+             surface) — never the status-grouped kanban. --}}
+        @if($view === 'kanban' && $status !== 'archived')
             {{-- Kanban View --}}
             <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-zinc-100 p-6 sm:-mx-6 lg:-mx-8 dark:bg-zinc-950">
                 <div class="flex gap-4" style="min-width: max-content;">
@@ -287,9 +307,9 @@
                     </div>
                 </div>
             </div>
-        @elseif($view === 'list')
+        @elseif($view === 'list' || $status === 'archived')
             @php
-                $isGroupedList = !empty($groupBy);
+                $isGroupedList = !empty($groupBy) && $status !== 'archived';
                 $columnsCount = 3;
                 if($visibleColumns['name']) $columnsCount++;
                 if($visibleColumns['sku']) $columnsCount++;
@@ -395,9 +415,9 @@
                                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                                             @forelse($group['items'] as $product)
                                                 @php $isSelected = in_array($product->id, $selected); @endphp
-                                                <tr 
-                                                    onclick="window.location.href='{{ route('sales.products.edit', $product->id) }}'"
-                                                    class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}"
+                                                <tr
+                                                    @if($status !== 'archived') onclick="window.location.href='{{ route('sales.products.edit', $product->id) }}'" @endif
+                                                    class="group transition-all duration-150 {{ $status !== 'archived' ? 'cursor-pointer' : '' }} {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}"
                                                 >
                                                     {{-- Row selection --}}
                                                     <td class="relative py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
@@ -478,8 +498,15 @@
                                                         </td>
                                                     @endif
 
-                                                    {{-- Empty cell for alignment with header actions --}}
-                                                    <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
+                                                    {{-- Per-row restore action (archived only) --}}
+                                                    <td class="py-3 pr-4 text-right sm:pr-6 lg:pr-8" onclick="event.stopPropagation()">
+                                                        @if($status === 'archived')
+                                                            <button type="button" wire:click="restore({{ $product->id }})" class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                                                                <flux:icon name="arrow-uturn-left" class="size-3.5" />
+                                                                <span>{{ __('common.restore') }}</span>
+                                                            </button>
+                                                        @endif
+                                                    </td>
                                                 </tr>
                                             @empty
                                                 <tr>
@@ -589,9 +616,9 @@
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                             @forelse($products as $product)
                                 @php $isSelected = in_array($product->id, $selected); @endphp
-                                <tr 
-                                    onclick="window.location.href='{{ route('sales.products.edit', $product->id) }}'"
-                                    class="group cursor-pointer transition-all duration-150 {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}"
+                                <tr
+                                    @if($status !== 'archived') onclick="window.location.href='{{ route('sales.products.edit', $product->id) }}'" @endif
+                                    class="group transition-all duration-150 {{ $status !== 'archived' ? 'cursor-pointer' : '' }} {{ $isSelected ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}"
                                 >
                                     {{-- Row selection --}}
                                     <td class="relative py-3 pl-4 pr-2 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
@@ -671,8 +698,15 @@
                                         </td>
                                     @endif
 
-                                    {{-- Empty cell for alignment with header actions --}}
-                                    <td class="py-3 pr-4 sm:pr-6 lg:pr-8"></td>
+                                    {{-- Per-row restore action (archived only) --}}
+                                    <td class="py-3 pr-4 text-right sm:pr-6 lg:pr-8" onclick="event.stopPropagation()">
+                                        @if($status === 'archived')
+                                            <button type="button" wire:click="restore({{ $product->id }})" class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                                                <flux:icon name="arrow-uturn-left" class="size-3.5" />
+                                                <span>{{ __('common.restore') }}</span>
+                                            </button>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>

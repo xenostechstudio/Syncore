@@ -35,23 +35,30 @@
                                             </button>
                 
                                             <flux:menu class="w-56">
-                                                <button type="button" wire:click="bulkActivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <flux:icon name="check-circle" class="size-4 text-emerald-500" />
-                                                    <span>{{ __('common.activate') }}</span>
-                                                </button>
-                                                <button type="button" wire:click="bulkDeactivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                                                    <flux:icon name="pause-circle" class="size-4 text-zinc-400" />
-                                                    <span>{{ __('common.deactivate') }}</span>
-                                                </button>
-                                                <flux:menu.separator />
-                                                <button 
-                                                    type="button" 
-                                                    wire:click="confirmBulkDelete"
-                                                    class="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                                >
-                                                    <flux:icon name="trash" class="size-4" />
-                                                    <span>{{ __('common.delete') }}</span>
-                                                </button>
+                                                @if($status === 'archived')
+                                                    <button type="button" wire:click="bulkRestore" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                        <flux:icon name="arrow-uturn-left" class="size-4 text-emerald-500" />
+                                                        <span>{{ __('common.restore') }}</span>
+                                                    </button>
+                                                @else
+                                                    <button type="button" wire:click="bulkActivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                        <flux:icon name="check-circle" class="size-4 text-emerald-500" />
+                                                        <span>{{ __('common.activate') }}</span>
+                                                    </button>
+                                                    <button type="button" wire:click="bulkDeactivate" class="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                                                        <flux:icon name="pause-circle" class="size-4 text-zinc-400" />
+                                                        <span>{{ __('common.deactivate') }}</span>
+                                                    </button>
+                                                    <flux:menu.separator />
+                                                    <button
+                                                        type="button"
+                                                        wire:click="confirmBulkDelete"
+                                                        class="flex w-full items-center gap-2 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                                                    >
+                                                        <flux:icon name="archive-box" class="size-4" />
+                                                        <span>{{ __('common.archive') }}</span>
+                                                    </button>
+                                                @endif
                                             </flux:menu>
                                         </flux:dropdown>
                                 </x-ui.selection-toolbar>
@@ -75,6 +82,7 @@
                                                     'in_stock' => __('common.in_stock'),
                                                     'low_stock' => __('common.low_stock'),
                                                     'out_of_stock' => __('common.out_of_stock'),
+                                                    'archived' => __('common.archived'),
                                                 ] as $value => $label)
                                                     <button type="button" wire:click="$set('status', '{{ $value }}')" class="flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800">
                                                         <span>{{ $label }}</span>
@@ -114,7 +122,9 @@
 
     {{-- Content --}}
     <div>
-        @if($view === 'list')
+        {{-- Archived products always render in the list view (the recovery
+             surface) — never the status-grouped kanban. --}}
+        @if($view === 'list' || $status === 'archived')
             {{-- List View --}}
             <div class="-mx-4 -mt-6 -mb-6 overflow-x-auto bg-white sm:-mx-6 lg:-mx-8 dark:bg-zinc-900">
                 <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -190,10 +200,10 @@
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @forelse ($items as $item)
                             @php $isSelected = in_array($item->id, $selected); @endphp
-                            <tr 
-                                onclick="window.location.href='{{ route('inventory.products.edit', $item->id) }}'"
-                                class="group cursor-pointer transition-all duration-150 {{ $isSelected 
-                                    ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]' 
+                            <tr
+                                @if($status !== 'archived') onclick="window.location.href='{{ route('inventory.products.edit', $item->id) }}'" @endif
+                                class="group transition-all duration-150 {{ $status !== 'archived' ? 'cursor-pointer' : '' }} {{ $isSelected
+                                    ? 'bg-zinc-900/[0.03] dark:bg-zinc-100/[0.03]'
                                     : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' }}"
                             >
                                 <td class="relative py-4 pl-4 pr-1 sm:pl-6 lg:pl-8" onclick="event.stopPropagation()">
@@ -292,7 +302,28 @@
                                         <x-ui.status-badge :status="$item->stockLevel" class="px-2.5 py-0.5" />
                                     </td>
                                 @endif
-                                <td class="py-4 pr-4 sm:pr-6 lg:pr-8"></td>
+                                <td class="py-4 pr-4 sm:pr-6 lg:pr-8 text-right" onclick="event.stopPropagation()">
+                                    @if($status === 'archived')
+                                        <button
+                                            type="button"
+                                            wire:click="restore({{ $item->id }})"
+                                            class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                                        >
+                                            <flux:icon name="arrow-uturn-left" class="size-3.5" />
+                                            <span>{{ __('common.restore') }}</span>
+                                        </button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            wire:click="archive({{ $item->id }})"
+                                            wire:confirm="{{ __('Archive this product? It can be restored from the Archived filter.') }}"
+                                            class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                        >
+                                            <flux:icon name="archive-box" class="size-3.5" />
+                                            <span>{{ __('common.archive') }}</span>
+                                        </button>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -449,10 +480,10 @@
 
     {{-- Delete Confirmation Modal --}}
     @isset($showDeleteConfirm)
-        <x-ui.delete-confirm-modal 
+        <x-ui.delete-confirm-modal
             wire:model="showDeleteConfirm"
             :validation="$deleteValidation ?? []"
-            title="Confirm Delete"
+            title="Confirm Archive"
             itemLabel="products"
         />
     @endisset

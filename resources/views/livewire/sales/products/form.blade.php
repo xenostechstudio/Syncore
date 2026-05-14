@@ -36,15 +36,12 @@
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="archive-box" class="size-4" />
-                                    <span>Archive</span>
-                                </button>
-                                <flux:menu.separator />
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
-                                </button>
+                                @if($editing && $item)
+                                    <button type="button" wire:click="archive" wire:confirm="Archive this product? It will be hidden from the list but can be restored from the Archived filter." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="archive-box" class="size-4" />
+                                        <span>Archive</span>
+                                    </button>
+                                @endif
                             </flux:menu>
                         </flux:dropdown>
                     </div>
