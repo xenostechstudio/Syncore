@@ -5,10 +5,11 @@ Syncore is a single Laravel install organised one Livewire namespace per module
 Settings). This document is the canonical reference for the conventions and
 shared pipelines that span those modules. Module-by-module feature lists live
 in [APPLICATION_GUIDE.md](APPLICATION_GUIDE.md); user-facing setup lives in
-[CONFIGURATION.md](CONFIGURATION.md); developer onboarding lives in
-[DEVELOPMENT.md](DEVELOPMENT.md). Day-to-day rules already encoded as project
-instructions live in [`CLAUDE.md`](../CLAUDE.md) — this doc cross-links it
-rather than restating it.
+[CONFIGURATION.md](CONFIGURATION.md); the operator runbook (deploys,
+monitoring, incident response) is in [RUNBOOK.md](RUNBOOK.md); developer
+onboarding lives in [DEVELOPMENT.md](DEVELOPMENT.md). Day-to-day rules
+already encoded as project instructions live in [`CLAUDE.md`](../CLAUDE.md)
+— this doc cross-links it rather than restating it.
 
 ## Stack
 
