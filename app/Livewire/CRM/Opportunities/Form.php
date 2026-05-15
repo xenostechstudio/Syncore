@@ -20,19 +20,28 @@ class Form extends Component
     use WithNotes, WithPermissions;
 
     public ?int $opportunityId = null;
+
     public ?Opportunity $opportunity = null;
 
     public string $name = '';
+
     public ?int $leadId = null;
+
     public ?int $pipelineId = null;
+
     public float $expectedRevenue = 0;
+
     public float $probability = 10;
+
     public ?string $expectedCloseDate = null;
+
     public string $description = '';
+
     public ?int $assignedTo = null;
 
     // Timestamps
     public ?string $createdAt = null;
+
     public ?string $updatedAt = null;
 
     protected function getNotableModel()
@@ -85,7 +94,7 @@ class Form extends Component
         } else {
             $this->pipelineId = Pipeline::orderBy('sequence')->first()?->id;
             $this->probability = 10;
-            
+
             // Pre-fill lead from URL parameter
             if (request()->has('lead_id')) {
                 $lead = Lead::find(request()->get('lead_id'));
@@ -127,7 +136,9 @@ class Form extends Component
     {
         $this->authorizePermission('crm.edit');
 
-        if (!$this->opportunity) return;
+        if (! $this->opportunity) {
+            return;
+        }
 
         $this->opportunity->markAsWon();
         event(new \App\Events\OpportunityWon($this->opportunity->fresh()));
@@ -137,17 +148,20 @@ class Form extends Component
 
     public function convertLeadToCustomer(): void
     {
-        if (!$this->opportunity || !$this->opportunity->lead) return;
+        if (! $this->opportunity || ! $this->opportunity->lead) {
+            return;
+        }
 
         $lead = $this->opportunity->lead;
-        
+
         if ($lead->status === 'converted') {
             session()->flash('error', 'Lead is already converted to customer.');
+
             return;
         }
 
         $customer = $lead->convertToCustomer();
-        
+
         if ($customer) {
             session()->flash('success', "Lead '{$lead->name}' converted to Customer '{$customer->name}'.");
         } else {
@@ -159,7 +173,9 @@ class Form extends Component
     {
         $this->authorizePermission('crm.edit');
 
-        if (!$this->opportunity) return;
+        if (! $this->opportunity) {
+            return;
+        }
 
         $this->opportunity->markAsLost();
         event(new \App\Events\OpportunityLost($this->opportunity->fresh(), $this->opportunity->lost_reason ?? ''));
@@ -169,15 +185,16 @@ class Form extends Component
 
     public function duplicate(): void
     {
-        if (!$this->opportunityId) {
+        if (! $this->opportunityId) {
             session()->flash('error', 'Please save the opportunity first.');
+
             return;
         }
 
         $opportunity = Opportunity::findOrFail($this->opportunityId);
 
         $newOpportunity = Opportunity::create([
-            'name' => $opportunity->name . ' (Copy)',
+            'name' => $opportunity->name.' (Copy)',
             'lead_id' => $opportunity->lead_id,
             'pipeline_id' => Pipeline::orderBy('sequence')->first()?->id,
             'expected_revenue' => $opportunity->expected_revenue,
@@ -201,12 +218,43 @@ class Form extends Component
     {
         $this->authorizePermission('crm.delete');
 
-        if (!$this->opportunity) {
+        if (! $this->opportunity) {
             return;
         }
 
         $this->opportunity->archive();
         session()->flash('success', 'Opportunity archived. Find and restore it via the Archived filter on the opportunities list.');
+        $this->redirect(route('crm.opportunities.index'), navigate: true);
+    }
+
+    /**
+     * Whether this opportunity can be hard-deleted. Nothing in the
+     * schema carries an `opportunity_id` FK — the won-link is on the
+     * opportunity's own `sales_order_id` — so a saved opportunity is
+     * always safe to hard-delete. See "Destructive actions" in CLAUDE.md.
+     */
+    #[Computed]
+    public function canDelete(): bool
+    {
+        return (bool) $this->opportunity;
+    }
+
+    /**
+     * Permanently delete the opportunity. This is a true hard delete,
+     * not the recoverable Archive. See "Destructive actions" in CLAUDE.md.
+     */
+    public function delete(): void
+    {
+        $this->authorizePermission('crm.delete');
+
+        if (! $this->opportunity) {
+            return;
+        }
+
+        $this->opportunity->activities()->delete();
+        $this->opportunity->forceDelete();
+
+        session()->flash('success', 'Opportunity deleted permanently.');
         $this->redirect(route('crm.opportunities.index'), navigate: true);
     }
 

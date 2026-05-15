@@ -176,8 +176,26 @@ index's UI:
   The Inventory index keeps its pre-existing stock guard — `archive(int $id)`
   and the bulk path refuse a product with units in `inventory_stocks`.
 In all shapes, archived rows are made non-navigable since their edit
-route 404s on a soft-deleted model. A true hard Delete (only when
-unreferenced) is still deferred.
+route 404s on a soft-deleted model.
+
+Master-data hard **Delete** — migrated for all six (Customer, Supplier,
+Lead, Employee, Opportunity, Product ×2 forms). It's a form-only action
+(not on the index bulk paths, which still soft-delete). Each form has a
+`#[Computed] canDelete` running reverse-FK existence checks, and the
+gear menu shows the Delete entry only when it returns true; `delete()`
+re-checks defensively, then `forceDelete()`. The reference gate is what
+*prevents* silent cascade destruction — most child FKs are
+`cascadeOnDelete`, so an ungated hard delete would wipe orders/stock.
+Blocking refs: Customer → orders/invoices; Supplier → purchase
+orders/vendor bills; Lead → opportunities; Employee →
+subordinates/leave/attendance/payroll/schedules/salary components;
+Opportunity → nothing (no inbound `opportunity_id` FK exists, so it's
+always deletable); Product → `Product::isReferenced()` checks the 11
+`product_id` tables (order/invoice/delivery/inventory items + stock +
+pricelist items + promotion rewards), excluding owned
+`product_pricelist_rules`. Hard Delete reuses the same `module.delete`
+permission as Archive — deliberate, matching the transactional-document
+scheme where Cancel and Delete also share one permission.
 
 ## Driver-aware status-enum migrations
 

@@ -14,14 +14,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, LogsActivity, HasNotes, HasSoftDeletes, Searchable, HasAttachments;
+    use HasAttachments, HasFactory, HasNotes, HasSoftDeletes, LogsActivity, Searchable;
 
     protected array $logActions = ['created', 'updated', 'deleted'];
-    
+
     protected array $searchable = ['name', 'sku', 'barcode', 'internal_reference'];
 
     protected $table = 'products';
@@ -82,5 +83,41 @@ class Product extends Model
     public function pricelistRules(): HasMany
     {
         return $this->hasMany(ProductPricelistRule::class, 'product_id');
+    }
+
+    /**
+     * Tables that carry a `product_id` FK to this product, excluding
+     * `product_pricelist_rules` (owned config, cascades on delete).
+     * A reference in any of these means a hard delete would corrupt or
+     * orphan a real document, so it must be Archived instead. See
+     * "Destructive actions" in CLAUDE.md.
+     */
+    private const REFERENCING_TABLES = [
+        'sales_order_items',
+        'invoice_items',
+        'delivery_order_items',
+        'purchase_rfq_items',
+        'vendor_bill_items',
+        'purchase_receipt_items',
+        'inventory_stocks',
+        'inventory_transfer_items',
+        'inventory_adjustment_items',
+        'pricelist_items',
+        'promotion_rewards',
+    ];
+
+    /**
+     * Whether any document or stock record references this product.
+     * Used to gate the form's hard Delete action — see CLAUDE.md.
+     */
+    public function isReferenced(): bool
+    {
+        foreach (self::REFERENCING_TABLES as $table) {
+            if (DB::table($table)->where('product_id', $this->id)->exists()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

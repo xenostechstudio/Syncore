@@ -4,10 +4,11 @@ namespace App\Livewire\Sales\Customers;
 
 use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
+use App\Models\Sales\Customer;
 use App\Models\Sales\PaymentTerm;
 use App\Models\Sales\Pricelist;
-use App\Models\Sales\Customer;
 use App\Models\User;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -19,25 +20,39 @@ class Form extends Component
     use WithNotes, WithPermissions;
 
     public ?int $customerId = null;
-    
+
     // Customer fields
     public string $type = 'person';
+
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $address = '';
+
     public string $city = '';
+
     public string $country = '';
+
     public string $notes = '';
+
     public ?int $salesperson_id = null;
+
     public ?int $payment_term_id = null;
+
     public string $payment_method = '';
+
     public ?int $pricelist_id = null;
+
     public string $banks = '';
+
     public string $status = 'active';
 
     // Timestamps
     public ?string $createdAt = null;
+
     public ?string $updatedAt = null;
 
     protected function getNotableModel()
@@ -50,7 +65,7 @@ class Form extends Component
         if ($id) {
             $this->customerId = $id;
             $customer = Customer::findOrFail($id);
-            
+
             $this->type = $customer->type ?? 'person';
             $this->name = $customer->name;
             $this->email = $customer->email ?? '';
@@ -139,6 +154,53 @@ class Form extends Component
         $customer->archive();
 
         session()->flash('success', 'Customer archived. Find and restore it via the Archived filter on the customers list.');
+        $this->redirect(route('sales.customers.index'), navigate: true);
+    }
+
+    /**
+     * Whether this customer can be hard-deleted — true only when nothing
+     * references it. A customer with orders or invoices must be Archived
+     * instead (forceDelete would cascade-destroy those documents). See
+     * "Destructive actions" in CLAUDE.md.
+     */
+    #[Computed]
+    public function canDelete(): bool
+    {
+        if (! $this->customerId) {
+            return false;
+        }
+
+        $customer = Customer::find($this->customerId);
+
+        return $customer
+            && ! $customer->salesOrders()->exists()
+            && ! $customer->invoices()->exists();
+    }
+
+    /**
+     * Permanently delete the customer — only allowed when unreferenced
+     * (see canDelete). This is a true hard delete, not the recoverable
+     * Archive. See "Destructive actions" in CLAUDE.md.
+     */
+    public function delete(): void
+    {
+        $this->authorizePermission('customers.delete');
+
+        if (! $this->customerId) {
+            return;
+        }
+
+        $customer = Customer::findOrFail($this->customerId);
+
+        if ($customer->salesOrders()->exists() || $customer->invoices()->exists()) {
+            session()->flash('error', 'This customer has orders or invoices — archive it instead of deleting.');
+
+            return;
+        }
+
+        $customer->forceDelete();
+
+        session()->flash('success', 'Customer deleted permanently.');
         $this->redirect(route('sales.customers.index'), navigate: true);
     }
 

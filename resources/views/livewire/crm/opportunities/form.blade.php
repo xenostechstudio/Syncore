@@ -27,13 +27,20 @@
                                         <flux:icon name="document-duplicate" class="size-4" />
                                         <span>Duplicate</span>
                                     </button>
-                                    {{-- Master data is Archived (recoverable soft delete),
-                                         never hard-deleted from the form. See CLAUDE.md. --}}
+                                    {{-- Master data is Archived (recoverable soft delete);
+                                         a saved opportunity carries no inbound FK, so hard
+                                         Delete is always available. See CLAUDE.md. --}}
                                     <flux:menu.separator />
-                                    <button type="button" wire:click="archive" wire:confirm="Archive this opportunity? It will be hidden from the list but can be restored from the Archived filter." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <button type="button" wire:click="archive" wire:confirm="Archive this opportunity? It will be hidden from the list but can be restored from the Archived filter." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                         <flux:icon name="archive-box" class="size-4" />
                                         <span>{{ __('common.archive') }}</span>
                                     </button>
+                                    @if($this->canDelete)
+                                        <button type="button" wire:click="delete" wire:confirm="Permanently delete this opportunity? This cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                            <flux:icon name="trash" class="size-4" />
+                                            <span>{{ __('common.delete') }}</span>
+                                        </button>
+                                    @endif
                                 </flux:menu>
                             </flux:dropdown>
                         @endif

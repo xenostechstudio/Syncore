@@ -22,10 +22,12 @@ class Form extends Component
     use WithNotes, WithPermissions;
 
     public ?int $employeeId = null;
+
     public ?Employee $employee = null;
 
     // Timestamps
     public ?string $createdAt = null;
+
     public ?string $updatedAt = null;
 
     protected function getNotableModel()
@@ -35,50 +37,78 @@ class Form extends Component
 
     // Basic Info
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $mobile = '';
 
     // Work Info
     public ?int $departmentId = null;
+
     public ?int $positionId = null;
+
     public ?int $managerId = null;
+
     public ?string $hireDate = null;
+
     public ?string $contractEndDate = null;
+
     public string $employmentType = 'permanent';
+
     public string $status = 'active';
 
     // Personal Info
     public ?string $birthDate = null;
+
     public string $gender = '';
+
     public string $maritalStatus = '';
+
     public string $nationality = '';
+
     public string $idNumber = '';
+
     public string $address = '';
+
     public string $city = '';
+
     public string $postalCode = '';
+
     public string $emergencyContactName = '';
+
     public string $emergencyContactPhone = '';
+
     public string $emergencyContactRelation = '';
 
     // Payroll
     public float $basicSalary = 0;
+
     public string $bankName = '';
+
     public string $bankAccountNumber = '';
+
     public string $bankAccountName = '';
+
     public string $taxId = '';
 
     // Settings
     public ?int $userId = null;
+
     public ?int $hrResponsibleId = null;
+
     public string $pinCode = '';
 
     public string $notes = '';
 
     // Create User Modal
     public bool $showCreateUserModal = false;
+
     public string $newUserName = '';
+
     public string $newUserEmail = '';
+
     public string $newUserPassword = '';
 
     // Salary Components
@@ -113,7 +143,7 @@ class Form extends Component
         $this->userId = $user->id;
         $this->showCreateUserModal = false;
         $this->reset(['newUserName', 'newUserEmail', 'newUserPassword']);
-        
+
         session()->flash('success', 'User created and linked successfully.');
     }
 
@@ -136,12 +166,15 @@ class Form extends Component
     public function selectComponent(int $index, int $componentId): void
     {
         $salaryComponent = SalaryComponent::find($componentId);
-        if (!$salaryComponent) return;
+        if (! $salaryComponent) {
+            return;
+        }
 
         // Check if component already exists (except current index)
         foreach ($this->employeeSalaryComponents as $i => $existing) {
             if ($i !== $index && $existing['salary_component_id'] == $componentId) {
                 session()->flash('error', 'This salary component is already added.');
+
                 return;
             }
         }
@@ -189,15 +222,16 @@ class Form extends Component
 
     protected function loadEmployeeSalaryComponents(): void
     {
-        if (!$this->employeeId) {
+        if (! $this->employeeId) {
             $this->employeeSalaryComponents = [];
+
             return;
         }
 
         $this->employeeSalaryComponents = EmployeeSalaryComponent::where('employee_id', $this->employeeId)
             ->with('salaryComponent')
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'id' => $item->id,
                 'salary_component_id' => $item->salary_component_id,
                 'component_name' => $item->salaryComponent->name,
@@ -213,7 +247,9 @@ class Form extends Component
 
     protected function saveEmployeeSalaryComponents(): void
     {
-        if (!$this->employeeId) return;
+        if (! $this->employeeId) {
+            return;
+        }
 
         $existingIds = collect($this->employeeSalaryComponents)
             ->pluck('id')
@@ -250,6 +286,7 @@ class Form extends Component
                 ->orderBy('name')
                 ->get();
         }
+
         return Position::where('is_active', true)->orderBy('name')->get();
     }
 
@@ -333,7 +370,7 @@ class Form extends Component
             $this->notes = $this->employee->notes ?? '';
             $this->createdAt = $this->employee->created_at->format('M d, Y \a\t H:i');
             $this->updatedAt = $this->employee->updated_at->format('M d, Y \a\t H:i');
-            
+
             $this->loadEmployeeSalaryComponents();
         } else {
             $this->hireDate = now()->format('Y-m-d');
@@ -393,15 +430,16 @@ class Form extends Component
 
     public function duplicate(): void
     {
-        if (!$this->employeeId) {
+        if (! $this->employeeId) {
             session()->flash('error', 'Please save the employee first.');
+
             return;
         }
 
         $employee = Employee::with('employeeSalaryComponents')->findOrFail($this->employeeId);
 
         $newEmployee = Employee::create([
-            'name' => $employee->name . ' (Copy)',
+            'name' => $employee->name.' (Copy)',
             'email' => null, // Don't duplicate email
             'phone' => $employee->phone,
             'mobile' => $employee->mobile,
@@ -444,12 +482,61 @@ class Form extends Component
     {
         $this->authorizePermission('hr.delete');
 
-        if (!$this->employee) {
+        if (! $this->employee) {
             return;
         }
 
         $this->employee->archive();
         session()->flash('success', 'Employee archived. Find and restore them via the Archived filter on the employees list.');
+        $this->redirect(route('hr.employees.index'), navigate: true);
+    }
+
+    /**
+     * Whether the employee carries any HR records that a hard delete
+     * would cascade-destroy (subordinates, leave, attendance, payroll,
+     * schedules, salary components). True hard delete is allowed only
+     * when none exist — otherwise Archive. See "Destructive actions" in
+     * CLAUDE.md.
+     */
+    protected function hasHrReferences(Employee $employee): bool
+    {
+        return $employee->subordinates()->exists()
+            || $employee->leaveRequests()->exists()
+            || $employee->leaveBalances()->exists()
+            || $employee->employeeSalaryComponents()->exists()
+            || $employee->attendances()->exists()
+            || $employee->employeeSchedules()->exists()
+            || \Illuminate\Support\Facades\DB::table('payroll_items')->where('employee_id', $employee->id)->exists();
+    }
+
+    #[Computed]
+    public function canDelete(): bool
+    {
+        return $this->employee && ! $this->hasHrReferences($this->employee);
+    }
+
+    /**
+     * Permanently delete the employee — only allowed when no HR records
+     * reference them (see canDelete). This is a true hard delete, not
+     * the recoverable Archive. See "Destructive actions" in CLAUDE.md.
+     */
+    public function delete(): void
+    {
+        $this->authorizePermission('hr.delete');
+
+        if (! $this->employee) {
+            return;
+        }
+
+        if ($this->hasHrReferences($this->employee)) {
+            session()->flash('error', 'This employee has HR records (leave, attendance, payroll, or reports) — archive them instead of deleting.');
+
+            return;
+        }
+
+        $this->employee->forceDelete();
+
+        session()->flash('success', 'Employee deleted permanently.');
         $this->redirect(route('hr.employees.index'), navigate: true);
     }
 

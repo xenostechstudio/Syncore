@@ -6,6 +6,7 @@ use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
 use App\Models\CRM\Lead;
 use App\Models\User;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -17,22 +18,34 @@ class Form extends Component
     use WithNotes, WithPermissions;
 
     public ?int $leadId = null;
+
     public ?Lead $lead = null;
 
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $companyName = '';
+
     public string $jobTitle = '';
+
     public string $website = '';
+
     public string $address = '';
+
     public string $leadSource = '';
+
     public string $leadStatus = 'new';
+
     public string $notes = '';
+
     public ?int $assignedTo = null;
 
     // Timestamps
     public ?string $createdAt = null;
+
     public ?string $updatedAt = null;
 
     protected function getNotableModel()
@@ -109,7 +122,9 @@ class Form extends Component
 
     public function convertToCustomer(): void
     {
-        if (!$this->lead) return;
+        if (! $this->lead) {
+            return;
+        }
 
         $customer = $this->lead->convertToCustomer();
 
@@ -122,15 +137,16 @@ class Form extends Component
 
     public function duplicate(): void
     {
-        if (!$this->leadId) {
+        if (! $this->leadId) {
             session()->flash('error', 'Please save the lead first.');
+
             return;
         }
 
         $lead = Lead::findOrFail($this->leadId);
 
         $newLead = Lead::create([
-            'name' => $lead->name . ' (Copy)',
+            'name' => $lead->name.' (Copy)',
             'email' => null, // Don't duplicate email to avoid conflicts
             'phone' => $lead->phone,
             'company_name' => $lead->company_name,
@@ -164,6 +180,43 @@ class Form extends Component
         $this->lead->archive();
 
         session()->flash('success', 'Lead archived. Find and restore it via the Archived filter on the leads list.');
+        $this->redirect(route('crm.leads.index'), navigate: true);
+    }
+
+    /**
+     * Whether this lead can be hard-deleted — true only when nothing
+     * references it. A lead with opportunities must be Archived instead.
+     * See "Destructive actions" in CLAUDE.md.
+     */
+    #[Computed]
+    public function canDelete(): bool
+    {
+        return $this->lead && ! $this->lead->opportunities()->exists();
+    }
+
+    /**
+     * Permanently delete the lead — only allowed when unreferenced (see
+     * canDelete). This is a true hard delete, not the recoverable
+     * Archive. See "Destructive actions" in CLAUDE.md.
+     */
+    public function delete(): void
+    {
+        $this->authorizePermission('crm.delete');
+
+        if (! $this->lead) {
+            return;
+        }
+
+        if ($this->lead->opportunities()->exists()) {
+            session()->flash('error', 'This lead has opportunities — archive it instead of deleting.');
+
+            return;
+        }
+
+        $this->lead->activities()->delete();
+        $this->lead->forceDelete();
+
+        session()->flash('success', 'Lead deleted permanently.');
         $this->redirect(route('crm.leads.index'), navigate: true);
     }
 

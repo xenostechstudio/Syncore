@@ -7,6 +7,7 @@ use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Tax;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
@@ -167,6 +168,43 @@ class Form extends Component
 
         $this->item->archive();
         session()->flash('success', 'Product archived. Find and restore it via the Archived filter on the products list.');
+        $this->redirect(route('sales.products.index'), navigate: true);
+    }
+
+    /**
+     * Whether this product can be hard-deleted — true only when no
+     * document or stock record references it (see Product::isReferenced).
+     * A referenced product must be Archived instead. See "Destructive
+     * actions" in CLAUDE.md.
+     */
+    #[Computed]
+    public function canDelete(): bool
+    {
+        return $this->item && ! $this->item->isReferenced();
+    }
+
+    /**
+     * Permanently delete the product — only allowed when unreferenced
+     * (see canDelete). This is a true hard delete, not the recoverable
+     * Archive. See "Destructive actions" in CLAUDE.md.
+     */
+    public function delete(): void
+    {
+        $this->authorizePermission('sales.delete');
+
+        if (! $this->item) {
+            return;
+        }
+
+        if ($this->item->isReferenced()) {
+            session()->flash('error', 'This product is used by orders, stock, or other records — archive it instead of deleting.');
+
+            return;
+        }
+
+        $this->item->forceDelete();
+
+        session()->flash('success', 'Product deleted permanently.');
         $this->redirect(route('sales.products.index'), navigate: true);
     }
 

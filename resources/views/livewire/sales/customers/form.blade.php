@@ -31,11 +31,23 @@
                                         type="button"
                                         wire:click="archive"
                                         wire:confirm="Archive this customer? It will be hidden from the list but can be restored from the Archived filter."
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
                                     >
                                         <flux:icon name="archive-box" class="size-4" />
                                         <span>{{ __('common.archive') }}</span>
                                     </button>
+                                    @if($this->canDelete)
+                                        <flux:menu.separator />
+                                        <button
+                                            type="button"
+                                            wire:click="delete"
+                                            wire:confirm="Permanently delete this customer? This cannot be undone."
+                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                        >
+                                            <flux:icon name="trash" class="size-4" />
+                                            <span>{{ __('common.delete') }}</span>
+                                        </button>
+                                    @endif
                                 @else
                                     <div class="px-2 py-1.5 text-sm text-zinc-500 dark:text-zinc-400">
                                         {{ __('common.no_actions') }}
@@ -108,11 +120,22 @@
                             type="button"
                             wire:click="archive"
                             wire:confirm="Archive this customer? It will be hidden from the list but can be restored from the Archived filter."
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
                             <flux:icon name="archive-box" class="size-4" />
                             {{ __('common.archive') }}
                         </button>
+                        @if($this->canDelete)
+                            <button
+                                type="button"
+                                wire:click="delete"
+                                wire:confirm="Permanently delete this customer? This cannot be undone."
+                                class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-zinc-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                            >
+                                <flux:icon name="trash" class="size-4" />
+                                {{ __('common.delete') }}
+                            </button>
+                        @endif
                     @endif
                 </div>
             </div>

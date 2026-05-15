@@ -5,6 +5,7 @@ namespace App\Livewire\Purchase\Suppliers;
 use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
 use App\Models\Purchase\Supplier;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -16,16 +17,25 @@ class Form extends Component
     use WithNotes, WithPermissions;
 
     public ?int $supplierId = null;
+
     public string $name = '';
+
     public string $contact_person = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $address = '';
+
     public string $city = '';
+
     public string $country = '';
+
     public bool $is_active = true;
 
     public ?string $createdAt = null;
+
     public ?string $updatedAt = null;
 
     protected function getNotableModel()
@@ -106,6 +116,53 @@ class Form extends Component
         $supplier->archive();
 
         session()->flash('success', 'Supplier archived. Find and restore it via the Archived filter on the suppliers list.');
+        $this->redirect(route('purchase.suppliers.index'), navigate: true);
+    }
+
+    /**
+     * Whether this supplier can be hard-deleted — true only when nothing
+     * references it. A supplier with purchase orders or vendor bills
+     * must be Archived instead (forceDelete would cascade-destroy those
+     * documents). See "Destructive actions" in CLAUDE.md.
+     */
+    #[Computed]
+    public function canDelete(): bool
+    {
+        if (! $this->supplierId) {
+            return false;
+        }
+
+        $supplier = Supplier::find($this->supplierId);
+
+        return $supplier
+            && ! $supplier->purchaseOrders()->exists()
+            && ! $supplier->vendorBills()->exists();
+    }
+
+    /**
+     * Permanently delete the supplier — only allowed when unreferenced
+     * (see canDelete). This is a true hard delete, not the recoverable
+     * Archive. See "Destructive actions" in CLAUDE.md.
+     */
+    public function delete(): void
+    {
+        $this->authorizePermission('purchase.delete');
+
+        if (! $this->supplierId) {
+            return;
+        }
+
+        $supplier = Supplier::findOrFail($this->supplierId);
+
+        if ($supplier->purchaseOrders()->exists() || $supplier->vendorBills()->exists()) {
+            session()->flash('error', 'This supplier has purchase orders or vendor bills — archive it instead of deleting.');
+
+            return;
+        }
+
+        $supplier->forceDelete();
+
+        session()->flash('success', 'Supplier deleted permanently.');
         $this->redirect(route('purchase.suppliers.index'), navigate: true);
     }
 
