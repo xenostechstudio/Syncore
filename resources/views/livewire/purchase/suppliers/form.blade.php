@@ -33,10 +33,14 @@
                                     </button>
                                     @if($this->canDelete)
                                         <flux:menu.separator />
+                                        {{-- wire:click here would silently fail —
+                                             <x-slot:header> renders outside the
+                                             component's wire:id, so the listener
+                                             is the #[On('deleteSupplier')] on
+                                             Form.php (Settings c030520 precedent). --}}
                                         <button
                                             type="button"
-                                            wire:click="delete"
-                                            wire:confirm="Permanently delete this supplier? This cannot be undone."
+                                            x-on:click="if (confirm('Permanently delete this supplier? This cannot be undone.')) Livewire.dispatch('deleteSupplier')"
                                             class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                                         >
                                             <flux:icon name="trash" class="size-4" />

@@ -10,6 +10,7 @@ use App\Models\Settings\PurchaseOrderSetting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -373,7 +374,11 @@ class Form extends Component
      * Hard-delete an RFQ that was never confirmed into a Purchase Order.
      * Once confirmed (PO or further) it carries audit weight and must be
      * Cancelled instead. See "Destructive actions" in CLAUDE.md.
+     *
+     * Inherited by Purchase\Orders\Form, so the same #[On('deleteRfq')]
+     * listener fires from either the RFQ or PO blade.
      */
+    #[On('deleteRfq')]
     public function delete(): void
     {
         $this->authorizePermission('purchase.delete');
@@ -473,6 +478,7 @@ class Form extends Component
         return view('livewire.purchase.rfq.form', $this->getViewData());
     }
 
+    #[On('duplicateRfq')]
     public function duplicate(): void
     {
         if (!$this->rfqId) {

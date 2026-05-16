@@ -13,6 +13,7 @@ use App\Models\Purchase\VendorBillItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -318,6 +319,7 @@ class Form extends Component
      * deletable; it must be Cancelled instead, which keeps the record
      * for audit. See "Destructive actions" in CLAUDE.md.
      */
+    #[On('deleteBill')]
     public function delete(): void
     {
         $this->authorizePermission('purchase.delete');

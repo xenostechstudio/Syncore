@@ -47,18 +47,28 @@
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
+                            {{-- Items use Alpine dispatch — <x-slot:header>
+                                 renders outside wire:id so wire:click here
+                                 delegates to nothing (Settings c030520 /
+                                 SaveButtonInScopeTest). Listeners:
+                                 #[On('duplicateDelivery')] / #[On('deleteDelivery')]
+                                 on Form.php. --}}
                             <flux:menu class="w-40">
-                                <button type="button" wire:click="duplicate" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                <button type="button"
+                                    x-on:click="Livewire.dispatch('duplicateDelivery')"
+                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
-                                <a href="{{ route('pdf.delivery-order', $deliveryId) }}" target="_blank" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                <a href="{{ route('pdf.delivery-order', $deliveryId) }}" target="_blank" rel="noopener" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="arrow-down-tray" class="size-4" />
                                     <span>Download PDF</span>
                                 </a>
                                 @if($canDeleteDelivery)
                                 <flux:menu.separator />
-                                <button type="button" wire:click="delete" wire:confirm="Delete this pending delivery order permanently? Nothing has shipped, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <button type="button"
+                                    x-on:click="if (confirm('Delete this pending delivery order permanently? Nothing has shipped, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteDelivery')"
+                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>

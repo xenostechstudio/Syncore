@@ -29,7 +29,13 @@
                                          (hard); a confirmed bill is Cancelled. --}}
                                     @if($canDeleteBill)
                                     <flux:menu.separator />
-                                    <button type="button" wire:click="delete" wire:confirm="Delete this draft bill permanently? It has not been confirmed, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    {{-- Alpine dispatch — wire:click in
+                                         <x-slot:header> delegates to nothing
+                                         (Settings c030520 / SaveButtonInScopeTest).
+                                         Listener: #[On('deleteBill')] on Form.php. --}}
+                                    <button type="button"
+                                        x-on:click="if (confirm('Delete this draft bill permanently? It has not been confirmed, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteBill')"
+                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                         <flux:icon name="trash" class="size-4" />
                                         <span>Delete</span>
                                     </button>
