@@ -21,16 +21,28 @@
                                         <flux:icon name="document-duplicate" class="size-4" />
                                         <span>Duplicate</span>
                                     </button>
-                                    {{-- Master data is Archived (recoverable soft delete);
-                                         hard Delete is offered only when nothing references
-                                         the lead. See CLAUDE.md. --}}
+                                    {{-- Master data is Archived (recoverable
+                                         soft delete); hard Delete is offered
+                                         only when nothing references the lead.
+                                         See CLAUDE.md.
+
+                                         Items use Alpine dispatch — <x-slot:header>
+                                         renders outside wire:id so wire:click
+                                         here delegates to nothing (Settings
+                                         c030520 / SaveButtonInScopeTest).
+                                         Listeners: #[On('archiveLead')] /
+                                         #[On('deleteLead')] on Form. --}}
                                     <flux:menu.separator />
-                                    <button type="button" wire:click="archive" wire:confirm="Archive this lead? It will be hidden from the list but can be restored from the Archived filter." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <button type="button"
+                                        x-on:click="if (confirm('Archive this lead? It will be hidden from the list but can be restored from the Archived filter.')) Livewire.dispatch('archiveLead')"
+                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                         <flux:icon name="archive-box" class="size-4" />
                                         <span>{{ __('common.archive') }}</span>
                                     </button>
                                     @if($this->canDelete)
-                                        <button type="button" wire:click="delete" wire:confirm="Permanently delete this lead? This cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <button type="button"
+                                            x-on:click="if (confirm('Permanently delete this lead? This cannot be undone.')) Livewire.dispatch('deleteLead')"
+                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                             <flux:icon name="trash" class="size-4" />
                                             <span>{{ __('common.delete') }}</span>
                                         </button>

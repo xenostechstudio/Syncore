@@ -28,7 +28,13 @@
                                     </button>
                                     @unless($account?->is_system)
                                         <flux:menu.separator />
-                                        <button type="button" wire:click="delete" wire:confirm="Delete this account?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        {{-- Alpine dispatch — wire:click in
+                                             <x-slot:header> delegates to nothing
+                                             (Settings c030520 / SaveButtonInScopeTest).
+                                             Listener: #[On('deleteAccount')] on Form. --}}
+                                        <button type="button"
+                                            x-on:click="if (confirm('Delete this account?')) Livewire.dispatch('deleteAccount')"
+                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                             <flux:icon name="trash" class="size-4" />
                                             <span>Delete</span>
                                         </button>

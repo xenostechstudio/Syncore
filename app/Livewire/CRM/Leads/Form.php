@@ -8,6 +8,7 @@ use App\Models\CRM\Lead;
 use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -169,6 +170,7 @@ class Form extends Component
      * the row and is recoverable from the Archived filter on the index.
      * See "Destructive actions" in CLAUDE.md.
      */
+    #[On('archiveLead')]
     public function archive(): void
     {
         $this->authorizePermission('crm.delete');
@@ -199,6 +201,7 @@ class Form extends Component
      * canDelete). This is a true hard delete, not the recoverable
      * Archive. See "Destructive actions" in CLAUDE.md.
      */
+    #[On('deleteLead')]
     public function delete(): void
     {
         $this->authorizePermission('crm.delete');

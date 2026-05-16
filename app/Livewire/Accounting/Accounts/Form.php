@@ -6,6 +6,7 @@ use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
 use App\Models\Accounting\Account;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -82,6 +83,7 @@ class Form extends Component
         $this->redirect(route('accounting.accounts.index'), navigate: true);
     }
 
+    #[On('deleteAccount')]
     public function delete(): void
     {
         $this->authorizePermission('accounting.delete');
