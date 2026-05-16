@@ -11,24 +11,9 @@
                 </a>
                 <div class="flex flex-col">
                     <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Tax</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            {{ $taxId ? $name : 'New Tax' }}
-                        </span>
-                        @if($taxId)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                <flux:menu class="w-40">
-                                    <button type="button" wire:click="delete" wire:confirm="Are you sure you want to delete this tax?" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
-                                    </button>
-                                </flux:menu>
-                            </flux:dropdown>
-                        @endif
-                    </div>
+                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        {{ $taxId ? $name : 'New Tax' }}
+                    </span>
                 </div>
             </div>
         </div>

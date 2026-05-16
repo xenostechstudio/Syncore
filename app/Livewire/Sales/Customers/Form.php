@@ -87,6 +87,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $this->authorizePermission($this->customerId === null ? 'customers.create' : 'customers.edit');
+
         $this->validate([
             'type' => 'required|in:person,company',
             'name' => 'required|string|max:255',

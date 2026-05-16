@@ -15,47 +15,9 @@
                     <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                         {{ __('common.customer') }}
                     </span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            {{ $customerId ? $name : __('common.new_customer') }}
-                        </span>
-
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-
-                            <flux:menu class="w-40">
-                                @if($customerId)
-                                    <button
-                                        type="button"
-                                        wire:click="archive"
-                                        wire:confirm="Archive this customer? It will be hidden from the list but can be restored from the Archived filter."
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                                    >
-                                        <flux:icon name="archive-box" class="size-4" />
-                                        <span>{{ __('common.archive') }}</span>
-                                    </button>
-                                    @if($this->canDelete)
-                                        <flux:menu.separator />
-                                        <button
-                                            type="button"
-                                            wire:click="delete"
-                                            wire:confirm="Permanently delete this customer? This cannot be undone."
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                        >
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>{{ __('common.delete') }}</span>
-                                        </button>
-                                    @endif
-                                @else
-                                    <div class="px-2 py-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-                                        {{ __('common.no_actions') }}
-                                    </div>
-                                @endif
-                            </flux:menu>
-                        </flux:dropdown>
-                    </div>
+                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        {{ $customerId ? $name : __('common.new_customer') }}
+                    </span>
                 </div>
             </div>
         </div>

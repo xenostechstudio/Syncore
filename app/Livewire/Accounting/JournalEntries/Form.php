@@ -3,6 +3,7 @@
 namespace App\Livewire\Accounting\JournalEntries;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Accounting\Account;
 use App\Models\Accounting\JournalEntry;
 use App\Models\Accounting\JournalLine;
@@ -15,7 +16,7 @@ use Livewire\Component;
 #[Title('Journal Entry')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $entryId = null;
     public ?JournalEntry $entry = null;
@@ -98,6 +99,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $this->authorizePermission($this->entryId === null ? 'accounting.create' : 'accounting.edit');
+
         $this->validate();
 
         if (!$this->isBalanced()) {

@@ -3,6 +3,7 @@
 namespace App\Livewire\Sales\Configuration\PaymentTerms;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Sales\PaymentTerm;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,7 +13,7 @@ use Livewire\Component;
 #[Title('Payment Term')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $paymentTermId = null;
     
@@ -51,6 +52,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $this->authorizePermission($this->paymentTermId === null ? 'sales.create' : 'sales.edit');
+
         $this->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:payment_terms,code,' . $this->paymentTermId,
@@ -93,6 +96,8 @@ class Form extends Component
 
     public function delete(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if ($this->paymentTermId) {
             PaymentTerm::destroy($this->paymentTermId);
             session()->flash('success', 'Payment term deleted successfully.');

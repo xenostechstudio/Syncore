@@ -3,6 +3,7 @@
 namespace App\Livewire\Sales\Configuration\Promotions;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Sales\Promotion;
 use App\Models\Sales\PromotionRule;
 use App\Models\Sales\PromotionReward;
@@ -18,7 +19,7 @@ use Livewire\Component;
 #[Title('Promotion')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $promotionId = null;
 
@@ -364,6 +365,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $this->authorizePermission($this->promotionId === null ? 'sales.create' : 'sales.edit');
+
         $this->validate([
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50|unique:promotions,code,' . $this->promotionId,
@@ -465,6 +468,8 @@ class Form extends Component
 
     public function delete(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if ($this->promotionId) {
             Promotion::destroy($this->promotionId);
             session()->flash('success', 'Promotion deleted successfully.');

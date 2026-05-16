@@ -3,6 +3,7 @@
 namespace App\Livewire\Sales\Configuration\Pricelists;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Sales\Pricelist;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,7 +13,7 @@ use Livewire\Component;
 #[Title('Pricelist')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $pricelistId = null;
     
@@ -55,6 +56,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $this->authorizePermission($this->pricelistId === null ? 'sales.create' : 'sales.edit');
+
         $this->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:pricelists,code,' . $this->pricelistId,
@@ -102,6 +105,8 @@ class Form extends Component
 
     public function delete(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if ($this->pricelistId) {
             Pricelist::destroy($this->pricelistId);
             session()->flash('success', 'Pricelist deleted successfully.');

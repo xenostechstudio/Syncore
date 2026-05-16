@@ -3,6 +3,7 @@
 namespace App\Livewire\Accounting\Accounts;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Accounting\Account;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,7 +13,7 @@ use Livewire\Component;
 #[Title('Account')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
     public ?int $accountId = null;
     public ?Account $account = null;
 
@@ -57,6 +58,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $this->authorizePermission($this->accountId === null ? 'accounting.create' : 'accounting.edit');
+
         $this->validate();
 
         $data = [
@@ -81,6 +84,8 @@ class Form extends Component
 
     public function delete(): void
     {
+        $this->authorizePermission('accounting.delete');
+
         if (!$this->account) return;
 
         if ($this->account->is_system) {

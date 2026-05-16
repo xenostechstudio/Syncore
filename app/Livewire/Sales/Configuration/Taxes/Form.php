@@ -3,6 +3,7 @@
 namespace App\Livewire\Sales\Configuration\Taxes;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Sales\Tax;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,7 +13,7 @@ use Livewire\Component;
 #[Title('Tax')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
 
     public ?int $taxId = null;
     
@@ -55,6 +56,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $this->authorizePermission($this->taxId === null ? 'sales.create' : 'sales.edit');
+
         $this->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:taxes,code,' . $this->taxId,
@@ -101,6 +104,8 @@ class Form extends Component
 
     public function delete(): void
     {
+        $this->authorizePermission('sales.delete');
+
         if ($this->taxId) {
             Tax::destroy($this->taxId);
             session()->flash('success', 'Tax deleted successfully.');
