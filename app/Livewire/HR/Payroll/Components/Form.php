@@ -7,6 +7,7 @@ use App\Models\HR\SalaryComponent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -104,6 +105,7 @@ class Form extends Component
         }
     }
 
+    #[On('deletePayrollComponent')]
     public function delete(): void
     {
         if (!$this->component) return;

@@ -11,6 +11,7 @@ use App\Models\HR\LeaveType;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -162,6 +163,7 @@ class Form extends Component
         }
     }
 
+    #[On('cancelLeaveRequest')]
     public function cancel(): void
     {
         $this->authorizePermission('leave.edit');
@@ -181,6 +183,7 @@ class Form extends Component
      * (pending) request carries audit weight and must be Cancelled
      * instead. See "Destructive actions" in CLAUDE.md.
      */
+    #[On('deleteLeaveRequest')]
     public function delete(): void
     {
         $this->authorizePermission('leave.delete');

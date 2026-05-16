@@ -6,6 +6,7 @@ use App\Livewire\Concerns\WithNotes;
 use App\Models\HR\Department;
 use App\Models\HR\Position;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -83,6 +84,7 @@ class Form extends Component
         }
     }
 
+    #[On('deletePosition')]
     public function delete(): void
     {
         if (!$this->position) return;

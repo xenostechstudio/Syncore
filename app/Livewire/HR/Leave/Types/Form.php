@@ -7,6 +7,7 @@ use App\Models\HR\LeaveType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -86,6 +87,7 @@ class Form extends Component
         }
     }
 
+    #[On('deleteLeaveType')]
     public function delete(): void
     {
         if (!$this->leaveType) return;

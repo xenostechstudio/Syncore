@@ -20,7 +20,16 @@
                                     <flux:icon name="cog-6-tooth" class="size-4" />
                                 </button>
                                 <flux:menu class="w-40">
-                                    <button type="button" wire:click="delete" wire:confirm="Delete this draft payroll run permanently? It has not been approved, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    {{-- Alpine dispatch — wire:click in
+                                         <x-slot:header> delegates to nothing
+                                         (Settings c030520 / SaveButtonInScopeTest).
+                                         Listener: #[On('deletePayroll')] on Form.
+                                         The Cancel button further down lives
+                                         in the body action bar so wire:click
+                                         is fine there. --}}
+                                    <button type="button"
+                                        x-on:click="if (confirm('Delete this draft payroll run permanently? It has not been approved, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deletePayroll')"
+                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                         <flux:icon name="trash" class="size-4" />
                                         <span>Delete</span>
                                     </button>

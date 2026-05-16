@@ -15,18 +15,29 @@
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
+                            {{-- Master data is Archived (recoverable soft
+                                 delete); hard Delete is offered only when no
+                                 HR records reference the employee. See CLAUDE.md.
+
+                                 Items use Alpine dispatch — <x-slot:header>
+                                 renders outside wire:id so wire:click here
+                                 delegates to nothing (Settings c030520 /
+                                 SaveButtonInScopeTest). Listeners:
+                                 #[On('archiveEmployee')] / #[On('deleteEmployee')]
+                                 on Form. --}}
                             <flux:menu class="w-40">
                                 @if($employeeId)
-                                    {{-- Master data is Archived (recoverable soft delete);
-                                         hard Delete is offered only when no HR records
-                                         reference the employee. See CLAUDE.md. --}}
-                                    <button type="button" wire:click="archive" wire:confirm="Archive this employee? They will be hidden from the list but can be restored from the Archived filter." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <button type="button"
+                                        x-on:click="if (confirm('Archive this employee? They will be hidden from the list but can be restored from the Archived filter.')) Livewire.dispatch('archiveEmployee')"
+                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                         <flux:icon name="archive-box" class="size-4" />
                                         <span>{{ __('common.archive') }}</span>
                                     </button>
                                     @if($this->canDelete)
                                         <flux:menu.separator />
-                                        <button type="button" wire:click="delete" wire:confirm="Permanently delete this employee? This cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                        <button type="button"
+                                            x-on:click="if (confirm('Permanently delete this employee? This cannot be undone.')) Livewire.dispatch('deleteEmployee')"
+                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                             <flux:icon name="trash" class="size-4" />
                                             <span>{{ __('common.delete') }}</span>
                                         </button>
