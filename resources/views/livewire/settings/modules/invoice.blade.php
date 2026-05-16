@@ -90,11 +90,11 @@
                                 <div class="flex gap-3 pl-7">
                                     <div>
                                         <label class="mb-1 block text-xs text-zinc-500">Position</label>
-                                        <select wire:model.live="logo_position" class="rounded-lg border border-zinc-200 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                                        <x-ui.select wire:model.live="logo_position" class="w-32">
                                             <option value="left">Left</option>
                                             <option value="center">Center</option>
                                             <option value="right">Right</option>
-                                        </select>
+                                        </x-ui.select>
                                     </div>
                                     <div>
                                         <label class="mb-1 block text-xs text-zinc-500">Size (px)</label>
@@ -140,28 +140,28 @@
                                 </div>
                                 <div class="flex-1">
                                     <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Position</label>
-                                    <select wire:model="currency_position" class="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                                    <x-ui.select wire:model="currency_position">
                                         <option value="before">Before</option>
                                         <option value="after">After</option>
-                                    </select>
+                                    </x-ui.select>
                                 </div>
                             </div>
                             <div class="flex gap-3">
                                 <div class="flex-1">
                                     <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Date Format</label>
-                                    <select wire:model="date_format" class="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                                    <x-ui.select wire:model="date_format">
                                         <option value="M d, Y">Jan 12, 2026</option>
                                         <option value="d M Y">12 Jan 2026</option>
                                         <option value="d/m/Y">12/01/2026</option>
                                         <option value="Y-m-d">2026-01-12</option>
-                                    </select>
+                                    </x-ui.select>
                                 </div>
                                 <div class="flex-1">
                                     <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Number Format</label>
-                                    <select wire:model="number_format" class="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                                    <x-ui.select wire:model="number_format">
                                         <option value="id">1.000.000</option>
                                         <option value="en">1,000,000.00</option>
-                                    </select>
+                                    </x-ui.select>
                                 </div>
                             </div>
                         </div>

@@ -36,12 +36,6 @@
             'pattern' => 'settings.company*',
         ],
         [
-            'label' => 'Localization',
-            'route' => 'settings.localization.index',
-            'icon' => 'globe-alt',
-            'pattern' => 'settings.localization*',
-        ],
-        [
             'label' => 'Email',
             'route' => 'settings.email.index',
             'icon' => 'envelope',

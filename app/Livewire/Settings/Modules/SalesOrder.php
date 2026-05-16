@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings\Modules;
 
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Sales\PaymentTerm;
 use App\Models\Settings\SalesOrderSetting;
 use Livewire\Attributes\Layout;
@@ -13,6 +14,8 @@ use Livewire\Component;
 #[Title('Sales Order Settings')]
 class SalesOrder extends Component
 {
+    use WithPermissions;
+
     // Document numbering
     public string $doc_number_prefix = 'SO';
     public string $doc_number_separator = '';
@@ -83,27 +86,34 @@ class SalesOrder extends Component
     #[On('saveSalesOrderSettings')]
     public function save(): void
     {
-        $this->validate();
+        $this->authorizePermission('settings.edit');
 
-        $settings = SalesOrderSetting::instance();
-        $settings->update([
-            'doc_number_prefix'       => $this->doc_number_prefix,
-            'doc_number_separator'    => $this->doc_number_separator ?? '',
-            'doc_number_padding'      => $this->doc_number_padding,
-            'doc_number_yearly_reset' => $this->doc_number_yearly_reset,
-            'quotation_validity_days' => $this->quotation_validity_days,
-            'default_terms'           => $this->default_terms,
-            'default_notes'           => $this->default_notes,
-            'auto_send_on_confirm'    => $this->auto_send_on_confirm,
-            'stock_check_mode'        => $this->stock_check_mode,
-            'default_payment_term_id' => $this->default_payment_term_id,
-        ]);
+        // try/finally so the Alpine "Saving…" spinner resets even when
+        // validate() throws — same pattern as the Company / Email saves.
+        try {
+            $this->validate();
 
-        // Bust the per-process cache so the new values take effect.
-        SalesOrderSetting::clearCache();
+            $settings = SalesOrderSetting::instance();
+            $settings->update([
+                'doc_number_prefix'       => $this->doc_number_prefix,
+                'doc_number_separator'    => $this->doc_number_separator ?? '',
+                'doc_number_padding'      => $this->doc_number_padding,
+                'doc_number_yearly_reset' => $this->doc_number_yearly_reset,
+                'quotation_validity_days' => $this->quotation_validity_days,
+                'default_terms'           => $this->default_terms,
+                'default_notes'           => $this->default_notes,
+                'auto_send_on_confirm'    => $this->auto_send_on_confirm,
+                'stock_check_mode'        => $this->stock_check_mode,
+                'default_payment_term_id' => $this->default_payment_term_id,
+            ]);
 
-        session()->flash('success', 'Sales Order settings saved.');
-        $this->dispatch('sales-order-saved');
+            // Bust the per-process cache so the new values take effect.
+            SalesOrderSetting::clearCache();
+
+            session()->flash('success', 'Sales Order settings saved.');
+        } finally {
+            $this->dispatch('sales-order-saved');
+        }
     }
 
     public function render()

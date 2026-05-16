@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings\Modules;
 
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Inventory\Warehouse;
 use App\Models\Settings\PurchaseOrderSetting;
 use Livewire\Attributes\Layout;
@@ -13,6 +14,8 @@ use Livewire\Component;
 #[Title('Purchase Order Settings')]
 class PurchaseOrder extends Component
 {
+    use WithPermissions;
+
     // Document numbering
     public string $doc_number_prefix = 'RFQ';
     public string $doc_number_separator = '-';
@@ -79,26 +82,31 @@ class PurchaseOrder extends Component
     #[On('savePurchaseOrderSettings')]
     public function save(): void
     {
-        $this->validate();
+        $this->authorizePermission('settings.edit');
 
-        $settings = PurchaseOrderSetting::instance();
-        $settings->update([
-            'doc_number_prefix'       => $this->doc_number_prefix,
-            'doc_number_separator'    => $this->doc_number_separator ?? '',
-            'doc_number_padding'      => $this->doc_number_padding,
-            'doc_number_yearly_reset' => $this->doc_number_yearly_reset,
-            'default_warehouse_id'    => $this->default_warehouse_id,
-            'default_lead_time_days'  => $this->default_lead_time_days,
-            'auto_send_to_supplier'   => $this->auto_send_to_supplier,
-            'approval_threshold'      => $this->approval_threshold,
-            'default_terms'           => $this->default_terms,
-            'default_notes'           => $this->default_notes,
-        ]);
+        try {
+            $this->validate();
 
-        PurchaseOrderSetting::clearCache();
+            $settings = PurchaseOrderSetting::instance();
+            $settings->update([
+                'doc_number_prefix'       => $this->doc_number_prefix,
+                'doc_number_separator'    => $this->doc_number_separator ?? '',
+                'doc_number_padding'      => $this->doc_number_padding,
+                'doc_number_yearly_reset' => $this->doc_number_yearly_reset,
+                'default_warehouse_id'    => $this->default_warehouse_id,
+                'default_lead_time_days'  => $this->default_lead_time_days,
+                'auto_send_to_supplier'   => $this->auto_send_to_supplier,
+                'approval_threshold'      => $this->approval_threshold,
+                'default_terms'           => $this->default_terms,
+                'default_notes'           => $this->default_notes,
+            ]);
 
-        session()->flash('success', 'Purchase Order settings saved.');
-        $this->dispatch('purchase-order-saved');
+            PurchaseOrderSetting::clearCache();
+
+            session()->flash('success', 'Purchase Order settings saved.');
+        } finally {
+            $this->dispatch('purchase-order-saved');
+        }
     }
 
     public function render()

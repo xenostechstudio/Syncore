@@ -28,7 +28,11 @@ class CompanyProfile extends Model
         'tax_id',
         'logo',
         'currency',
+        'currency_symbol',
         'timezone',
+        'language',
+        'date_format',
+        'time_format',
     ];
 
     protected static function booted(): void

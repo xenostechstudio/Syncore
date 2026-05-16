@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -143,7 +144,20 @@ class Form extends Component
         }
     }
 
+    #[On('saveRoleForm')]
     public function save(): void
+    {
+        // Always dispatch the completion event so the Alpine spinner resets
+        // when validation fails or an early-return path is hit. Successful
+        // saves redirect (navigate: true) before this runs, which is fine.
+        try {
+            $this->saveImpl();
+        } finally {
+            $this->dispatch('role-form-save-complete');
+        }
+    }
+
+    protected function saveImpl(): void
     {
         $this->validate([
             'roleName' => 'required|string|max:255',
@@ -222,23 +236,31 @@ class Form extends Component
         $this->redirect(route('settings.roles.edit', $role->id), navigate: true);
     }
 
+    #[On('deleteRoleForm')]
     public function delete(): void
     {
-        $this->authorizePermission('roles.delete');
+        // Same pattern as save(): the success path redirects, but early
+        // returns (no roleId, role not found, missing package) would otherwise
+        // leave the Alpine "Deleting…" spinner stuck on.
+        try {
+            $this->authorizePermission('roles.delete');
 
-        if (! $this->roleId || ! class_exists('\Spatie\Permission\Models\Role')) {
-            return;
+            if (! $this->roleId || ! class_exists('\Spatie\Permission\Models\Role')) {
+                return;
+            }
+
+            $role = \Spatie\Permission\Models\Role::find($this->roleId);
+            if (! $role) {
+                return;
+            }
+
+            $role->delete();
+
+            session()->flash('success', 'Role deleted successfully.');
+            $this->redirect(route('settings.roles.index'), navigate: true);
+        } finally {
+            $this->dispatch('role-form-delete-complete');
         }
-
-        $role = \Spatie\Permission\Models\Role::find($this->roleId);
-        if (! $role) {
-            return;
-        }
-
-        $role->delete();
-
-        session()->flash('success', 'Role deleted successfully.');
-        $this->redirect(route('settings.roles.index'), navigate: true);
     }
 
     public function togglePermission(string $permission): void

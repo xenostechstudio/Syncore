@@ -3,6 +3,7 @@
 namespace App\Livewire\Settings\Users;
 
 use App\Livewire\Concerns\WithNotes;
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,7 @@ use Livewire\Component;
 #[Title('User')]
 class Form extends Component
 {
-    use WithNotes;
+    use WithNotes, WithPermissions;
     public ?int $userId = null;
     public string $name = '';
     public string $email = '';
@@ -192,6 +193,11 @@ class Form extends Component
 
     public function save(): void
     {
+        // Gate on the right action — creating vs editing a user have different
+        // permissions. The route is already protected by `access.settings`, but
+        // without this a Manager (settings.view only) could POST mutations.
+        $this->authorizePermission($this->userId === null ? 'users.create' : 'users.edit');
+
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -261,8 +267,12 @@ class Form extends Component
 
         $user->save();
 
-        // Sync role (single role) and log the change
-        if (class_exists('\Spatie\Permission\Models\Role')) {
+        // Sync role (single role) and log the change. Role assignment is a
+        // separate permission from generic user-edit — someone with users.edit
+        // can rename a user but not change which role they have. Skip the
+        // sync silently if the actor lacks users.assign_roles; their other
+        // edits still persist above.
+        if (class_exists('\Spatie\Permission\Models\Role') && $this->can('users.assign_roles')) {
             $oldRoles = $user->roles->pluck('name')->toArray();
             $newRoles = $this->selectedRole ? [$this->selectedRole] : [];
             
@@ -304,6 +314,8 @@ class Form extends Component
 
     public function delete(): void
     {
+        $this->authorizePermission('users.delete');
+
         if ($this->userId === null) {
             return;
         }

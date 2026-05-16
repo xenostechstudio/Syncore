@@ -2,11 +2,12 @@
 
 namespace App\Livewire\Settings\Email;
 
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Settings\EmailConfiguration;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use App\Livewire\Concerns\WithPermissions;
 
 #[Layout('components.layouts.settings')]
 #[Title('Email Configuration')]
@@ -54,49 +55,60 @@ class Index extends Component
         $this->effectiveFromAddress = EmailConfiguration::get('mail.from.address', '');
     }
 
+    #[On('saveEmailSettings')]
     public function save()
     {
-        $this->validate([
-            'mailer' => 'required|in:smtp,sendmail,mailgun,ses,postmark,log',
-            'host' => 'nullable|string|max:255',
-            'port' => 'nullable|integer|min:1|max:65535',
-            'username' => 'nullable|string|max:255',
-            'password' => 'nullable|string|max:255',
-            'encryption' => 'nullable|in:tls,ssl,',
-            'fromAddress' => 'nullable|email|max:255',
-            'fromName' => 'nullable|string|max:255',
-        ]);
+        $this->authorizePermission('settings.edit');
 
-        $config = EmailConfiguration::getConfiguration();
+        // Always dispatch the completion event so the Alpine spinner resets,
+        // even when validate() throws. See Company\Index::save() for the why.
+        try {
+            $this->validate([
+                'mailer' => 'required|in:smtp,sendmail,mailgun,ses,postmark,log',
+                'host' => 'nullable|string|max:255',
+                'port' => 'nullable|integer|min:1|max:65535',
+                'username' => 'nullable|string|max:255',
+                'password' => 'nullable|string|max:255',
+                'encryption' => 'nullable|in:tls,ssl,',
+                'fromAddress' => 'nullable|email|max:255',
+                'fromName' => 'nullable|string|max:255',
+            ]);
 
-        $config->mailer = $this->mailer;
-        $config->host = $this->host ?: null;
-        $config->port = $this->port ?: 587;
-        $config->username = $this->username ?: null;
-        
-        // Only update password if provided
-        if ($this->password) {
-            $config->password = $this->password;
+            $config = EmailConfiguration::getConfiguration();
+
+            $config->mailer = $this->mailer;
+            $config->host = $this->host ?: null;
+            $config->port = $this->port ?: 587;
+            $config->username = $this->username ?: null;
+
+            // Only update password if provided
+            if ($this->password) {
+                $config->password = $this->password;
+            }
+
+            $config->encryption = $this->encryption ?: null;
+            $config->from_address = $this->fromAddress ?: null;
+            $config->from_name = $this->fromName ?: null;
+            $config->is_active = $this->isActive;
+
+            $config->save();
+
+            // Apply new config immediately
+            EmailConfiguration::applyToConfig();
+
+            $this->password = ''; // Clear password field
+            $this->loadEffectiveConfig();
+
+            session()->flash('success', 'Email configuration saved successfully!');
+        } finally {
+            $this->dispatch('email-settings-saved');
         }
-        
-        $config->encryption = $this->encryption ?: null;
-        $config->from_address = $this->fromAddress ?: null;
-        $config->from_name = $this->fromName ?: null;
-        $config->is_active = $this->isActive;
-
-        $config->save();
-
-        // Apply new config immediately
-        EmailConfiguration::applyToConfig();
-
-        $this->password = ''; // Clear password field
-        $this->loadEffectiveConfig();
-
-        session()->flash('success', 'Email configuration saved successfully!');
     }
 
     public function toggleActive()
     {
+        $this->authorizePermission('settings.edit');
+
         $this->isActive = !$this->isActive;
         
         // Auto-save when toggling

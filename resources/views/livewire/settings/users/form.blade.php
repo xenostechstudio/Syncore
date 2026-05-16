@@ -188,11 +188,11 @@
 
                     {{-- Tab Nav --}}
                     <div class="border-b border-zinc-100 px-5 dark:border-zinc-800">
-                        <nav class="-mb-px flex gap-1 text-sm">
+                        <nav class="-mb-px flex space-x-4 text-sm">
                             <button
                                 type="button"
                                 @click="activeTab = 'access'"
-                                class="whitespace-nowrap border-b-2 px-3 pb-2.5 pt-2 font-medium transition-colors"
+                                class="whitespace-nowrap border-b-2 px-3 pb-2 pt-1"
                                 :class="activeTab === 'access'
                                     ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
                                     : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
@@ -202,7 +202,7 @@
                             <button
                                 type="button"
                                 @click="activeTab = 'preferences'"
-                                class="whitespace-nowrap border-b-2 px-3 pb-2.5 pt-2 font-medium transition-colors"
+                                class="whitespace-nowrap border-b-2 px-3 pb-2 pt-1"
                                 :class="activeTab === 'preferences'
                                     ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
                                     : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
@@ -212,7 +212,7 @@
                             <button
                                 type="button"
                                 @click="activeTab = 'schedule'"
-                                class="whitespace-nowrap border-b-2 px-3 pb-2.5 pt-2 font-medium transition-colors"
+                                class="whitespace-nowrap border-b-2 px-3 pb-2 pt-1"
                                 :class="activeTab === 'schedule'
                                     ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
                                     : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
@@ -223,7 +223,7 @@
                                 <button
                                     type="button"
                                     @click="activeTab = 'security'"
-                                    class="whitespace-nowrap border-b-2 px-3 pb-2.5 pt-2 font-medium transition-colors"
+                                    class="whitespace-nowrap border-b-2 px-3 pb-2 pt-1"
                                     :class="activeTab === 'security'
                                         ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
                                         : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
@@ -249,15 +249,12 @@
                                             No roles available. <a href="{{ route('settings.roles.create') }}" wire:navigate class="text-blue-600 hover:underline dark:text-blue-400">Create a role</a> first.
                                         </div>
                                     @else
-                                        <select
-                                            wire:model.live="selectedRole"
-                                            class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                                        >
+                                        <x-ui.select wire:model.live="selectedRole">
                                             <option value="">No role assigned</option>
                                             @foreach($availableRoles as $role)
                                                 <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
                                             @endforeach
-                                        </select>
+                                        </x-ui.select>
 
                                         @if($selectedRole)
                                             @php
@@ -338,22 +335,22 @@
                                 <div class="grid flex-1 gap-3 sm:grid-cols-2">
                                     <div>
                                         <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Language</label>
-                                        <select wire:model="language" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                                        <x-ui.select wire:model="language">
                                             <option value="en">English</option>
                                             <option value="id">Indonesian</option>
                                             <option value="es">Spanish</option>
                                             <option value="fr">French</option>
-                                        </select>
+                                        </x-ui.select>
                                     </div>
                                     <div>
                                         <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Timezone</label>
-                                        <select wire:model="timezone" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
+                                        <x-ui.select wire:model="timezone">
                                             <option value="Asia/Jakarta">Asia/Jakarta (GMT+7)</option>
                                             <option value="Asia/Singapore">Asia/Singapore (GMT+8)</option>
                                             <option value="America/New_York">America/New York (EST)</option>
                                             <option value="Europe/London">Europe/London (GMT)</option>
                                             <option value="UTC">UTC</option>
-                                        </select>
+                                        </x-ui.select>
                                     </div>
                                 </div>
                             </div>

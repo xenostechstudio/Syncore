@@ -133,13 +133,14 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Default payment term</label>
-                    <select wire:model.live="default_payment_term_id"
-                        class="mt-1 block w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                        <option value="">— Ask every time —</option>
-                        @foreach($paymentTerms as $term)
-                            <option value="{{ $term->id }}">{{ $term->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="mt-1">
+                        <x-ui.select wire:model.live="default_payment_term_id">
+                            <option value="">— Ask every time —</option>
+                            @foreach($paymentTerms as $term)
+                                <option value="{{ $term->id }}">{{ $term->name }}</option>
+                            @endforeach
+                        </x-ui.select>
+                    </div>
                 </div>
 
                 <div>

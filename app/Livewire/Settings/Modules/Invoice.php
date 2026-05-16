@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings\Modules;
 
+use App\Livewire\Concerns\WithPermissions;
 use App\Models\Settings\InvoiceSetting;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -12,6 +13,8 @@ use Livewire\Component;
 #[Title('Invoice Settings')]
 class Invoice extends Component
 {
+    use WithPermissions;
+
     // Payment Gateway - Xendit
     public bool $xenditEnabled = false;
     public string $xenditPublicKey = '';
@@ -94,44 +97,49 @@ class Invoice extends Component
     #[On('saveInvoiceSettings')]
     public function save()
     {
-        $settings = InvoiceSetting::instance();
-        
-        $settings->update([
-            'template_style' => $this->template_style,
-            'primary_color' => $this->primary_color,
-            'accent_color' => $this->accent_color,
-            'show_logo' => $this->show_logo,
-            'logo_position' => $this->logo_position,
-            'logo_size' => $this->logo_size,
-            'invoice_title' => $this->invoice_title,
-            'show_status_badge' => $this->show_status_badge,
-            'show_payment_info' => $this->show_payment_info,
-            'bank_name' => $this->bank_name,
-            'bank_account' => $this->bank_account,
-            'bank_holder' => $this->bank_holder,
-            'bank_name_2' => $this->bank_name_2,
-            'bank_account_2' => $this->bank_account_2,
-            'bank_holder_2' => $this->bank_holder_2,
-            'show_qr_code' => $this->show_qr_code,
-            'qr_code_content' => $this->qr_code_content,
-            'default_notes' => $this->default_notes,
-            'default_terms' => $this->default_terms,
-            'footer_text' => $this->footer_text,
-            'show_tax_breakdown' => $this->show_tax_breakdown,
-            'show_discount' => $this->show_discount,
-            'currency_symbol' => $this->currency_symbol,
-            'currency_position' => $this->currency_position,
-            'date_format' => $this->date_format,
-            'number_format' => $this->number_format,
-            'show_watermark' => $this->show_watermark,
-            'watermark_text' => $this->watermark_text,
-            'show_signature' => $this->show_signature,
-            'signature_label' => $this->signature_label,
-        ]);
+        $this->authorizePermission('settings.edit');
 
-        $this->dispatch('notify', type: 'success', message: 'Invoice settings saved successfully!');
-        $this->dispatch('invoice-saved');
-        session()->flash('success', 'Invoice settings saved successfully!');
+        try {
+            $settings = InvoiceSetting::instance();
+
+            $settings->update([
+                'template_style' => $this->template_style,
+                'primary_color' => $this->primary_color,
+                'accent_color' => $this->accent_color,
+                'show_logo' => $this->show_logo,
+                'logo_position' => $this->logo_position,
+                'logo_size' => $this->logo_size,
+                'invoice_title' => $this->invoice_title,
+                'show_status_badge' => $this->show_status_badge,
+                'show_payment_info' => $this->show_payment_info,
+                'bank_name' => $this->bank_name,
+                'bank_account' => $this->bank_account,
+                'bank_holder' => $this->bank_holder,
+                'bank_name_2' => $this->bank_name_2,
+                'bank_account_2' => $this->bank_account_2,
+                'bank_holder_2' => $this->bank_holder_2,
+                'show_qr_code' => $this->show_qr_code,
+                'qr_code_content' => $this->qr_code_content,
+                'default_notes' => $this->default_notes,
+                'default_terms' => $this->default_terms,
+                'footer_text' => $this->footer_text,
+                'show_tax_breakdown' => $this->show_tax_breakdown,
+                'show_discount' => $this->show_discount,
+                'currency_symbol' => $this->currency_symbol,
+                'currency_position' => $this->currency_position,
+                'date_format' => $this->date_format,
+                'number_format' => $this->number_format,
+                'show_watermark' => $this->show_watermark,
+                'watermark_text' => $this->watermark_text,
+                'show_signature' => $this->show_signature,
+                'signature_label' => $this->signature_label,
+            ]);
+
+            $this->dispatch('notify', type: 'success', message: 'Invoice settings saved successfully!');
+            session()->flash('success', 'Invoice settings saved successfully!');
+        } finally {
+            $this->dispatch('invoice-saved');
+        }
     }
 
     public function render()
