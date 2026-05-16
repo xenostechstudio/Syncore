@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL as UrlFacade;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -968,6 +969,7 @@ class Form extends Component
      * be Cancelled instead, which keeps the record for audit. See
      * "Destructive actions" in CLAUDE.md.
      */
+    #[On('deleteOrder')]
     public function delete(): void
     {
         $this->authorizePermission('sales.delete');
@@ -1182,6 +1184,7 @@ Best regards,
         return SalesOrderState::tryFrom($this->status) ?? SalesOrderState::QUOTATION;
     }
 
+    #[On('duplicateOrder')]
     public function duplicate(): void
     {
         if (!$this->orderId) {

@@ -34,7 +34,16 @@
                              gone); anything that became a real order is
                              Cancelled (state transition, record kept). The
                              two are mutually exclusive by state, so the user
-                             only ever sees the one that applies. --}}
+                             only ever sees the one that applies.
+
+                             Header sits inside <x-slot:header>, which renders
+                             outside the wire:id <div>, so wire:click delegates
+                             to nothing — every item here uses Alpine dispatch
+                             instead (matches Settings c030520 + the parametrised
+                             SaveButtonInScopeTest). Download PDF goes through
+                             the named pdf.sales-order route since dispatched
+                             events can't return a StreamedResponse to the
+                             browser. --}}
                         @if($orderId)
                         <flux:dropdown position="bottom" align="start">
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
@@ -42,14 +51,14 @@
                             </button>
 
                             <flux:menu class="w-40">
-                                <button type="button" wire:click="downloadPdf" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="arrow-down-tray" wire:loading.remove wire:target="downloadPdf" class="size-4" />
-                                    <flux:icon name="arrow-path" wire:loading wire:target="downloadPdf" class="size-4 animate-spin" />
+                                <a href="{{ route('pdf.sales-order', $orderId) }}" target="_blank" rel="noopener" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="arrow-down-tray" class="size-4" />
                                     <span>Download PDF</span>
-                                </button>
-                                <button type="button" wire:click="duplicate" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" wire:loading.remove wire:target="duplicate" class="size-4" />
-                                    <flux:icon name="arrow-path" wire:loading wire:target="duplicate" class="size-4 animate-spin" />
+                                </a>
+                                <button type="button"
+                                    x-on:click="Livewire.dispatch('duplicateOrder')"
+                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
                                 @if($canCancelOrder || $canDeleteOrder)
@@ -62,7 +71,9 @@
                                 </button>
                                 @endif
                                 @if($canDeleteOrder)
-                                <button type="button" wire:click="delete" wire:confirm="Delete this quotation permanently? It has not been confirmed into an order, so there is nothing to keep — this cannot be undone." class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                <button type="button"
+                                    x-on:click="if (confirm('Delete this quotation permanently? It has not been confirmed into an order, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteOrder')"
+                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
                                     <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>

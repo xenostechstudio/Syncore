@@ -38,27 +38,36 @@
                              Deleted (hard, gone); a sent invoice is Cancelled
                              (state transition, record kept). They are mutually
                              exclusive by state — Cancel lives in the action bar
-                             below, Delete here. --}}
+                             below, Delete here.
+
+                             Header sits inside <x-slot:header>, which renders
+                             outside the wire:id <div>, so wire:click delegates
+                             to nothing — items use Alpine dispatch instead
+                             (matches Settings c030520 + SaveButtonInScopeTest).
+                             Download PDF stays as an <a href> to the named
+                             pdf.invoice route. --}}
                         @if($invoiceId)
                         <flux:dropdown position="bottom" align="start">
                             <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
                             <flux:menu class="w-40">
-                                <button type="button" wire:click="duplicate" wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" wire:loading.remove wire:target="duplicate" class="size-4" />
-                                    <flux:icon name="arrow-path" wire:loading wire:target="duplicate" class="size-4 animate-spin" />
+                                <button type="button"
+                                    x-on:click="Livewire.dispatch('duplicateInvoice')"
+                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <flux:icon name="document-duplicate" class="size-4" />
                                     <span>Duplicate</span>
                                 </button>
-                                <a href="{{ route('pdf.invoice', $invoiceId) }}" target="_blank" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                <a href="{{ route('pdf.invoice', $invoiceId) }}" target="_blank" rel="noopener" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                     <flux:icon name="arrow-down-tray" class="size-4" />
                                     <span>Download PDF</span>
                                 </a>
                                 @if($canDeleteInvoice)
                                 <flux:menu.separator />
-                                <button type="button" wire:click="delete" wire:confirm="Delete this draft invoice permanently? It has not been sent, so there is nothing to keep — this cannot be undone." wire:loading.attr="disabled" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" wire:loading.remove wire:target="delete" class="size-4" />
-                                    <flux:icon name="arrow-path" wire:loading wire:target="delete" class="size-4 animate-spin" />
+                                <button type="button"
+                                    x-on:click="if (confirm('Delete this draft invoice permanently? It has not been sent, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteInvoice')"
+                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
+                                    <flux:icon name="trash" class="size-4" />
                                     <span>Delete</span>
                                 </button>
                                 @endif
