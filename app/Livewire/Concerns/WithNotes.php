@@ -52,15 +52,18 @@ trait WithNotes
             ->get()
             ->map(fn($activity) => [
                 'type' => 'activity',
+                // Flat user_id + user_name are what x-ui.activity-item reads —
+                // it builds its own $causer object from those fields. Prefer the
+                // live `users.name` (causer_name) when the user still exists, so
+                // a rename is reflected; fall back to the snapshot stored on the
+                // log row, which survives user deletion.
                 'data' => (object) [
                     'id' => $activity->id,
                     'action' => $activity->action,
                     'description' => $activity->description,
                     'properties' => json_decode($activity->properties ?? '{}', true),
-                    'causer' => (object) [
-                        'id' => $activity->user_id,
-                        'name' => $activity->causer_name ?? $activity->user_name ?? 'System',
-                    ],
+                    'user_id' => $activity->user_id,
+                    'user_name' => $activity->causer_name ?? $activity->user_name ?? 'System',
                     'created_at' => \Carbon\Carbon::parse($activity->created_at),
                 ],
                 'created_at' => \Carbon\Carbon::parse($activity->created_at),
