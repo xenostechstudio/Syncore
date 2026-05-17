@@ -8,7 +8,6 @@ use App\Models\Sales\SalesTeam;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -157,7 +156,6 @@ class Form extends Component
      * cloning a User row makes no sense; the menu hides the action when
      * editing a salesperson.
      */
-    #[On('duplicateSalesTeam')]
     public function duplicate(): void
     {
         if (! $this->teamId) {

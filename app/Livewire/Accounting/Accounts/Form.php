@@ -6,7 +6,6 @@ use App\Livewire\Concerns\WithNotes;
 use App\Livewire\Concerns\WithPermissions;
 use App\Models\Accounting\Account;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -89,7 +88,6 @@ class Form extends Component
      * collisions; small linear probe is fine). System accounts can't be
      * duplicated — they're seeded singletons.
      */
-    #[On('duplicateAccount')]
     public function duplicate(): void
     {
         $this->authorizePermission('accounting.create');
@@ -123,7 +121,6 @@ class Form extends Component
         $this->redirect(route('accounting.accounts.edit', $new->id), navigate: true);
     }
 
-    #[On('deleteAccount')]
     public function delete(): void
     {
         $this->authorizePermission('accounting.delete');

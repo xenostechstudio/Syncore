@@ -1,12 +1,14 @@
-<div x-data="{ 
+<div x-data="{
     activeTab: 'details',
     showSendMessage: false,
     showLogNote: false,
-    showScheduleActivity: false
+    showScheduleActivity: false,
+    showDuplicateModal: false,
 }"
 @open-archive-modal.window="$wire.openArchiveModal()"
 @open-delete-modal.window="$wire.openDeleteModal()"
 @restore-team.window="$wire.restore()"
+@open-duplicate-modal.window="showDuplicateModal = true"
 >
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
@@ -23,41 +25,50 @@
                             {{ $teamId ? $name : 'New Sales Team' }}
                         </span>
                         @if($teamId)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                <flux:menu class="w-48">
-                                    @if($is_active)
-                                        <button type="button" @click="$dispatch('open-archive-modal')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20">
-                                            <flux:icon name="archive-box" class="size-4" />
-                                            <span>Archive</span>
-                                        </button>
-                                        <button type="button"
-                                            x-on:click="Livewire.dispatch('duplicateSalesTeam')"
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <flux:icon name="document-duplicate" class="size-4" />
-                                            <span>Duplicate</span>
-                                        </button>
-                                    @else
-                                        <button type="button" @click="$dispatch('restore-team')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
-                                            <flux:icon name="archive-box-arrow-down" class="size-4" />
-                                            <span>Restore</span>
-                                        </button>
-                                        <button type="button"
-                                            x-on:click="Livewire.dispatch('duplicateSalesTeam')"
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                            <flux:icon name="document-duplicate" class="size-4" />
-                                            <span>Duplicate</span>
-                                        </button>
-                                        <flux:menu.separator />
-                                        <button type="button" @click="$dispatch('open-delete-modal')" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>Delete Permanently</span>
-                                        </button>
-                                    @endif
-                                </flux:menu>
-                            </flux:dropdown>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
+                                    </button>
+                                    <flux:menu class="w-48">
+                                        @if($is_active)
+                                            <flux:menu.item
+                                                icon="archive-box"
+                                                x-on:click="$dispatch('open-archive-modal')"
+                                            >
+                                                Archive
+                                            </flux:menu.item>
+                                            <flux:menu.item
+                                                icon="document-duplicate"
+                                                x-on:click="$dispatch('open-duplicate-modal')"
+                                            >
+                                                Duplicate
+                                            </flux:menu.item>
+                                        @else
+                                            <flux:menu.item
+                                                icon="archive-box-arrow-down"
+                                                x-on:click="$dispatch('restore-team')"
+                                            >
+                                                Restore
+                                            </flux:menu.item>
+                                            <flux:menu.item
+                                                icon="document-duplicate"
+                                                x-on:click="$dispatch('open-duplicate-modal')"
+                                            >
+                                                Duplicate
+                                            </flux:menu.item>
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-delete-modal')"
+                                            >
+                                                Delete Permanently
+                                            </flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -597,4 +608,19 @@
             </div>
         </div>
     </div>
+
+    @if($teamId)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Sales Team"
+            subtitle="A new team will be created from this one."
+            confirmLabel="Duplicate Team"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new team will copy the manager and member assignments. The team name gets a "(Copy)" suffix.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

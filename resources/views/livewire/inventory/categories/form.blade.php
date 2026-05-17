@@ -2,8 +2,10 @@
     showCancelModal: false,
     showSendMessage: false,
     showLogNote: false,
-    showScheduleActivity: false
-}">
+    showScheduleActivity: false,
+    showDuplicateModal: false,
+}"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -24,21 +26,21 @@
                         </span>
 
                         @if($categoryId)
-                            {{-- Header actions dropdown (Duplicate, Delete) --}}
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-
-                                <flux:menu class="w-40">
-                                    <button type="button"
-                                        x-on:click="Livewire.dispatch('duplicateCategory')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>Duplicate</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -366,4 +368,19 @@
             </a>
         </x-slot:actions>
     </x-ui.confirm-modal>
+
+    @if($categoryId)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Category"
+            subtitle="A new category will be created from this one."
+            confirmLabel="Duplicate Category"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The copy inherits the parent, color, and other attributes. Its code gets a suffix (-COPY, -COPY-2, ...) since codes are unique.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

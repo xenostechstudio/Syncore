@@ -7,7 +7,6 @@ use App\Models\Inventory\Warehouse;
 use App\Models\Inventory\InventoryStock;
 use App\Models\Inventory\InventoryAdjustment;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Illuminate\Support\Collection;
@@ -106,7 +105,6 @@ class Form extends Component
      * to the original warehouse_id — they are NOT carried; the new
      * warehouse starts empty.
      */
-    #[On('duplicateWarehouse')]
     public function duplicate(): void
     {
         if (! $this->warehouse) {

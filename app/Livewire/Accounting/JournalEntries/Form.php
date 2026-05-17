@@ -9,7 +9,6 @@ use App\Models\Accounting\JournalEntry;
 use App\Models\Accounting\JournalLine;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -166,7 +165,6 @@ class Form extends Component
      * draft. Lines are cloned but get fresh ids so they belong to the
      * new entry.
      */
-    #[On('duplicateJournalEntry')]
     public function duplicate(): void
     {
         $this->authorizePermission('accounting.create');
@@ -217,10 +215,7 @@ class Form extends Component
             return collect();
         }
 
-        $activities = $this->entry->activities()
-            ->with('causer')
-            ->latest()
-            ->get()
+        $activities = $this->entry->getActivities()
             ->map(fn ($activity) => [
                 'type' => 'activity',
                 'data' => $activity,

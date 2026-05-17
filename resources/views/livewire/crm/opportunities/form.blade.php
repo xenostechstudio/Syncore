@@ -1,4 +1,7 @@
-<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false }">
+<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false, showDuplicateModal: false, showArchiveModal: false, showDeleteModal: false }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-archive-modal.window="showArchiveModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
@@ -18,45 +21,37 @@
                             </a>
                         @endif
                         @if($opportunityId)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                <flux:menu class="w-40">
-                                    <button type="button"
-                                        x-on:click="Livewire.dispatch('duplicateOpportunity')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>Duplicate</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                    {{-- Master data is Archived (recoverable
-                                         soft delete); a saved opportunity carries
-                                         no inbound FK, so hard Delete is always
-                                         available. See CLAUDE.md.
-
-                                         Items use Alpine dispatch — <x-slot:header>
-                                         renders outside wire:id so wire:click
-                                         here delegates to nothing (Settings
-                                         c030520 / SaveButtonInScopeTest).
-                                         Listeners: #[On('archiveOpportunity')] /
-                                         #[On('deleteOpportunity')] on Form. --}}
-                                    <flux:menu.separator />
-                                    <button type="button"
-                                        x-on:click="if (confirm('Archive this opportunity? It will be hidden from the list but can be restored from the Archived filter.')) Livewire.dispatch('archiveOpportunity')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="archive-box" class="size-4" />
-                                        <span>{{ __('common.archive') }}</span>
-                                    </button>
-                                    @if($this->canDelete)
-                                        <button type="button"
-                                            x-on:click="if (confirm('Permanently delete this opportunity? This cannot be undone.')) Livewire.dispatch('deleteOpportunity')"
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>{{ __('common.delete') }}</span>
-                                        </button>
-                                    @endif
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                        <flux:menu.separator />
+                                        <flux:menu.item
+                                            icon="archive-box"
+                                            x-on:click="$dispatch('open-archive-modal')"
+                                        >
+                                            {{ __('common.archive') }}
+                                        </flux:menu.item>
+                                        @if($this->canDelete)
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-delete-modal')"
+                                            >
+                                                {{ __('common.delete') }}
+                                            </flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -457,4 +452,47 @@
             </div>
         </div>
     </div>
+
+    @if($opportunityId)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Opportunity"
+            subtitle="A new opportunity will be created from this one."
+            confirmLabel="Duplicate Opportunity"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new opportunity will copy the lead, customer, value, and stage. You'll be redirected to it to update any details.
+        </x-ui.action-confirm-modal>
+
+        <x-ui.action-confirm-modal
+            show="showArchiveModal"
+            icon="archive-box"
+            color="amber"
+            title="Archive Opportunity"
+            subtitle="The opportunity can be restored later."
+            confirmLabel="Archive Opportunity"
+            confirmLoadingLabel="Archiving..."
+            confirmMethod="archive"
+        >
+            Archiving hides this opportunity from the active list while keeping the record intact. You can restore it from the "Archived" filter on the opportunities index.
+        </x-ui.action-confirm-modal>
+
+        @if($this->canDelete)
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Opportunity"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Opportunity"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
+            >
+                Deleting permanently removes this opportunity. Use Archive instead if you might need to recover it.
+            </x-ui.action-confirm-modal>
+        @endif
+    @endif
 </div>

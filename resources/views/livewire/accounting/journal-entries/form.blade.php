@@ -1,4 +1,5 @@
-<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false }">
+<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false, showDuplicateModal: false }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -16,20 +17,21 @@
                         </span>
 
                         @if($entryId)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-
-                                <flux:menu class="w-40">
-                                    <button type="button"
-                                        x-on:click="Livewire.dispatch('duplicateJournalEntry')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>Duplicate</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -356,4 +358,19 @@
             </div>
         </div>
     </div>
+
+    @if($entryId)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Journal Entry"
+            subtitle="A new draft entry will be created from this one."
+            confirmLabel="Duplicate Entry"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new entry will copy all lines, accounts, debits, and credits. A fresh entry number is generated automatically.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

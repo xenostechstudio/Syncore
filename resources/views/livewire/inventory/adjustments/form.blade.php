@@ -1,4 +1,5 @@
-<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false }">
+<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showDuplicateModal: false }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -19,19 +20,23 @@
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                             {{ $editing && $adjustment ? $adjustment->adjustment_number : $newLabel }}
                         </span>
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-                            <flux:menu class="w-40">
-                                <button type="button"
-                                    x-on:click="Livewire.dispatch('duplicateAdjustment')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
-                                </button>
-                            </flux:menu>
-                        </flux:dropdown>
+                        @if($editing && $adjustment)
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
+                                    </button>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -474,4 +479,19 @@
             <a href="{{ route('inventory.adjustments.index') }}" wire:navigate class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600">Discard & leave</a>
         </x-slot:actions>
     </x-ui.confirm-modal>
+
+    @if($editing && $adjustment)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Inventory Adjustment"
+            subtitle="A new draft adjustment will be created from this one."
+            confirmLabel="Duplicate Adjustment"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new draft will copy the warehouse, type, and all line items. The adjustment number is regenerated.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

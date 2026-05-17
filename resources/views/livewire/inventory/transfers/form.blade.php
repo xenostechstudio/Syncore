@@ -1,4 +1,5 @@
-<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false }">
+<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showDuplicateModal: false }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -13,30 +14,26 @@
                             {{ $editing && $transfer ? $transfer->transfer_number : 'New Internal Transfer' }}
                         </span>
 
-                        {{-- Header actions dropdown --}}
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-
-                            <flux:menu class="w-40">
-                                <button type="button"
-                                    x-on:click="Livewire.dispatch('duplicateTransfer')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
-                                </button>
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="archive-box" class="size-4" />
-                                    <span>Archive</span>
-                                </button>
-                                <flux:menu.separator />
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
-                                </button>
-                            </flux:menu>
-                        </flux:dropdown>
+                        {{-- Header actions dropdown. Only Duplicate is wired —
+                             Archive/Delete on Transfer were placeholder UI with
+                             no methods on Form.php; they're stripped. --}}
+                        @if($editing && $transfer)
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
+                                    </button>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -460,4 +457,19 @@
             <a href="{{ route('inventory.transfers.index') }}" wire:navigate class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600">Cancel Transfer</a>
         </x-slot:actions>
     </x-ui.confirm-modal>
+
+    @if($editing && $transfer)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Internal Transfer"
+            subtitle="A new draft transfer will be created from this one."
+            confirmLabel="Duplicate Transfer"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new draft will copy the source and destination warehouses and all line items. The transfer number is regenerated.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

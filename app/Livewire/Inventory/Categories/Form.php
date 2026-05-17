@@ -5,7 +5,6 @@ namespace App\Livewire\Inventory\Categories;
 use App\Livewire\Concerns\WithNotes;
 use App\Models\Inventory\Category;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -71,7 +70,6 @@ class Form extends Component
      * Duplicate the category into a new draft. `code` is unique so the
      * copy gets a numeric suffix until a free code is found.
      */
-    #[On('duplicateCategory')]
     public function duplicate(): void
     {
         if (! $this->categoryId) {

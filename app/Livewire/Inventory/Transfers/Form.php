@@ -9,7 +9,6 @@ use App\Models\Inventory\Product;
 use App\Models\Inventory\Warehouse;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -151,7 +150,6 @@ class Form extends Component
         $this->redirect(route('inventory.transfers.edit', $transfer->id), navigate: true);
     }
 
-    #[On('duplicateTransfer')]
     public function duplicate(): void
     {
         if (!$this->transferId) {

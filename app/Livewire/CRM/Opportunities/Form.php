@@ -10,7 +10,6 @@ use App\Models\CRM\Pipeline;
 use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -184,7 +183,6 @@ class Form extends Component
         session()->flash('success', "'{$this->opportunity->name}' marked as Lost.");
     }
 
-    #[On('duplicateOpportunity')]
     public function duplicate(): void
     {
         if (! $this->opportunityId) {
@@ -216,7 +214,6 @@ class Form extends Component
      * the row and is recoverable from the Archived filter on the index.
      * See "Destructive actions" in CLAUDE.md.
      */
-    #[On('archiveOpportunity')]
     public function archive(): void
     {
         $this->authorizePermission('crm.delete');
@@ -246,7 +243,6 @@ class Form extends Component
      * Permanently delete the opportunity. This is a true hard delete,
      * not the recoverable Archive. See "Destructive actions" in CLAUDE.md.
      */
-    #[On('deleteOpportunity')]
     public function delete(): void
     {
         $this->authorizePermission('crm.delete');

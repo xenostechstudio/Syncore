@@ -1,11 +1,14 @@
-<div x-data="{ 
+<div x-data="{
     activeTab: 'details',
     showSendMessage: false,
     showLogNote: false,
     showScheduleActivity: false,
     showCancelModal: false,
-    showDeleteModal: false
-}">
+    showDuplicateModal: false,
+    showDeleteModal: false,
+}"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -21,24 +24,29 @@
                             {{ $editing && $warehouse ? $warehouse->name : 'New Warehouse' }}
                         </span>
                         @if($editing)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                <flux:menu class="w-40">
-                                    <button type="button"
-                                        x-on:click="Livewire.dispatch('duplicateWarehouse')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>Duplicate</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                    <flux:menu.separator />
-                                    <button type="button" @click="showDeleteModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
-                                    </button>
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                        <flux:menu.separator />
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            x-on:click="$dispatch('open-delete-modal')"
+                                        >
+                                            Delete
+                                        </flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -421,38 +429,31 @@
         </x-slot:actions>
     </x-ui.confirm-modal>
 
-    {{-- Delete Confirmation Modal --}}
-    <x-ui.confirm-modal show="showDeleteModal">
-        <x-slot:icon>
-            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                <flux:icon name="trash" class="size-6" />
-            </div>
-        </x-slot:icon>
+    @if($editing && $warehouse)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Warehouse"
+            subtitle="A new warehouse will be created from this one."
+            confirmLabel="Duplicate Warehouse"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new warehouse will copy name, address, and other attributes. Stock and historical movements stay with the original warehouse.
+        </x-ui.action-confirm-modal>
 
-        <x-slot:title>
-            Delete warehouse?
-        </x-slot:title>
-
-        <x-slot:description>
-            This action cannot be undone. All associated data will be permanently removed.
-        </x-slot:description>
-
-        <x-slot:actions>
-            <button 
-                type="button"
-                @click="showDeleteModal = false"
-                class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
-                Cancel
-            </button>
-
-            <button 
-                type="button"
-                wire:click="delete"
-                class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-            >
-                Delete
-            </button>
-        </x-slot:actions>
-    </x-ui.confirm-modal>
+        <x-ui.action-confirm-modal
+            show="showDeleteModal"
+            icon="trash"
+            color="red"
+            title="Delete Warehouse"
+            subtitle="This action cannot be undone."
+            confirmLabel="Delete Warehouse"
+            confirmLoadingLabel="Deleting..."
+            confirmMethod="delete"
+        >
+            Deleting permanently removes this warehouse. All associated stock and movement records will go with it.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

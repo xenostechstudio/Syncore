@@ -1,4 +1,6 @@
-<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false }">
+<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false, showDuplicateModal: false, showDeleteModal: false }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -16,33 +18,31 @@
                         </span>
 
                         @if($accountId)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-
-                                <flux:menu class="w-40">
-                                    <button type="button"
-                                        x-on:click="Livewire.dispatch('duplicateAccount')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>Duplicate</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                    @unless($account?->is_system)
-                                        <flux:menu.separator />
-                                        {{-- Alpine dispatch — wire:click in
-                                             <x-slot:header> delegates to nothing
-                                             (Settings c030520 / SaveButtonInScopeTest).
-                                             Listener: #[On('deleteAccount')] on Form. --}}
-                                        <button type="button"
-                                            x-on:click="if (confirm('Delete this account?')) Livewire.dispatch('deleteAccount')"
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>Delete</span>
-                                        </button>
-                                    @endunless
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                        @unless($account?->is_system)
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-delete-modal')"
+                                            >
+                                                Delete
+                                            </flux:menu.item>
+                                        @endunless
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -265,4 +265,34 @@
             </div>
         </div>
     </div>
+
+    @if($accountId)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Account"
+            subtitle="A new draft account will be created from this one."
+            confirmLabel="Duplicate Account"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new account will copy name, type, and other attributes. Its code gets a suffix (-COPY, -COPY-2, ...) since codes are unique.
+        </x-ui.action-confirm-modal>
+
+        @unless($account?->is_system)
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Account"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Account"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
+            >
+                Deleting permanently removes this account. System accounts (built into the chart of accounts seed) can never be deleted.
+            </x-ui.action-confirm-modal>
+        @endunless
+    @endif
 </div>
