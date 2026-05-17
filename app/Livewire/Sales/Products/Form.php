@@ -9,7 +9,6 @@ use App\Models\Inventory\Warehouse;
 use App\Models\Sales\Tax;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -159,7 +158,6 @@ class Form extends Component
      * the Archived filter on the products list. See "Destructive
      * actions" in CLAUDE.md.
      */
-    #[On('archiveProduct')]
     public function archive(): void
     {
         $this->authorizePermission('sales.delete');
@@ -190,7 +188,6 @@ class Form extends Component
      * (see canDelete). This is a true hard delete, not the recoverable
      * Archive. See "Destructive actions" in CLAUDE.md.
      */
-    #[On('deleteProduct')]
     public function delete(): void
     {
         $this->authorizePermission('sales.delete');

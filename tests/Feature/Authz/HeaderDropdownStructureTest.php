@@ -159,4 +159,18 @@ it('renders a working gear dropdown on a form edit page', function (string $rout
             return $lead->id;
         },
     ],
+    'inventory-products' => [
+        'inventory.products.edit',
+        function () {
+            $product = \App\Models\Inventory\Product::factory()->create();
+            return $product->id;
+        },
+    ],
+    'sales-products' => [
+        'sales.products.edit',
+        function () {
+            $product = \App\Models\Inventory\Product::factory()->create();
+            return $product->id;
+        },
+    ],
 ]);

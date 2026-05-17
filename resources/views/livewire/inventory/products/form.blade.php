@@ -1,4 +1,4 @@
-<div x-data="{ 
+<div x-data="{
     activeTab: 'general',
     showSendMessage: false,
     showLogNote: false,
@@ -6,9 +6,15 @@
     salesToggle: true,
     purchaseToggle: false,
     showCancelModal: false,
+    showDuplicateModal: false,
+    showArchiveModal: false,
+    showDeleteModal: false,
     showPriceModal: @entangle('showPriceModal'),
     showForecastModal: $wire.entangle('showForecastModal'),
-}">
+}"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-archive-modal.window="showArchiveModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -27,45 +33,44 @@
                             {{ $editing && $product ? $product->name : 'New Product' }}
                         </span>
 
-                        {{-- Header actions dropdown (Duplicate, Archive, Delete) --}}
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-
-                            {{-- Alpine dispatch — wire:click in
-                                 <x-slot:header> delegates to nothing
-                                 (Settings c030520 / SaveButtonInScopeTest).
-                                 Listeners: #[On('duplicateProduct')] /
-                                 #[On('archiveProduct')] / #[On('deleteProduct')]
-                                 on Form (Inventory + Sales Product forms share
-                                 the same event names — each is its own page). --}}
-                            <flux:menu class="w-40">
-                                @if($editing && $product)
-                                    <button type="button"
-                                        x-on:click="Livewire.dispatch('duplicateProduct')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>Duplicate</span>
+                        {{-- Header actions dropdown (Duplicate, Archive, Delete).
+                             <div x-data="{}"> wrapper gives Alpine scope inside
+                             the hoisted slot; OUTSIDE <flux:dropdown> so
+                             <ui-menu> stays a direct child of <ui-dropdown>
+                             (Flux popover anchoring). --}}
+                        @if($editing && $product)
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                    <button type="button"
-                                        x-on:click="if (confirm('Archive this product? It will be hidden from the list but can be restored from the Archived filter.')) Livewire.dispatch('archiveProduct')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="archive-box" class="size-4" />
-                                        <span>Archive</span>
-                                    </button>
-                                    @if($this->canDelete)
-                                        <flux:menu.separator />
-                                        <button type="button"
-                                            x-on:click="if (confirm('Permanently delete this product? This cannot be undone.')) Livewire.dispatch('deleteProduct')"
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>Delete</span>
-                                        </button>
-                                    @endif
-                                @endif
-                            </flux:menu>
-                        </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                        <flux:menu.item
+                                            icon="archive-box"
+                                            x-on:click="$dispatch('open-archive-modal')"
+                                        >
+                                            Archive
+                                        </flux:menu.item>
+                                        @if($this->canDelete)
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-delete-modal')"
+                                            >
+                                                Delete
+                                            </flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -1010,4 +1015,57 @@
             </div>
         </div>
     </div>
+
+    {{-- Duplicate / Archive / Delete Confirmation Modals.
+         Gear menu in <x-slot:header> dispatches open-X-modal as window
+         events; the listeners on the outer <div x-data> at the top of
+         this file flip showXModal state. --}}
+    @if($editing && $product)
+        <div
+            x-show="showDuplicateModal"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showDuplicateModal = false"></div>
+            @include('livewire.inventory.products.modals.duplicate')
+        </div>
+
+        <div
+            x-show="showArchiveModal"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showArchiveModal = false"></div>
+            @include('livewire.inventory.products.modals.archive')
+        </div>
+
+        @if($this->canDelete)
+            <div
+                x-show="showDeleteModal"
+                x-cloak
+                class="fixed inset-0 z-50 flex items-center justify-center"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+            >
+                <div class="absolute inset-0 bg-zinc-900/60" @click="showDeleteModal = false"></div>
+                @include('livewire.inventory.products.modals.delete')
+            </div>
+        @endif
+    @endif
 </div>
