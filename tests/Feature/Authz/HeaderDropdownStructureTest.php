@@ -187,4 +187,91 @@ it('renders a working gear dropdown on a form edit page', function (string $rout
             return $bill->id;
         },
     ],
+    'hr-departments' => [
+        'hr.departments.edit',
+        function () {
+            return \App\Models\HR\Department::create(['name' => 'Dept '.uniqid()])->id;
+        },
+    ],
+    'hr-positions' => [
+        'hr.positions.edit',
+        function () {
+            $dept = \App\Models\HR\Department::create(['name' => 'D '.uniqid()]);
+            return \App\Models\HR\Position::create(['name' => 'Pos '.uniqid(), 'department_id' => $dept->id])->id;
+        },
+    ],
+    'hr-payroll-components' => [
+        'hr.payroll.components.edit',
+        function () {
+            return \App\Models\HR\SalaryComponent::create([
+                'name' => 'Comp '.uniqid(),
+                'code' => 'C'.uniqid(),
+                'type' => 'earning',
+                'calculation_type' => 'fixed',
+                'default_amount' => 100,
+            ])->id;
+        },
+    ],
+    'hr-leave-types' => [
+        'hr.leave.types.edit',
+        function () {
+            return \App\Models\HR\LeaveType::create([
+                'name' => 'LT '.uniqid(),
+                'code' => 'L'.uniqid(),
+                'days_allowed' => 12,
+                'is_paid' => true,
+            ])->id;
+        },
+    ],
+    'hr-attendance-schedules' => [
+        'hr.attendance.schedules.edit',
+        function () {
+            return \App\Models\HR\WorkSchedule::create([
+                'name' => 'Sched '.uniqid(),
+                'code' => 'WS'.uniqid(),
+                'start_time' => '09:00',
+                'end_time' => '17:00',
+                'is_active' => true,
+            ])->id;
+        },
+    ],
+    'hr-employees' => [
+        'hr.employees.edit',
+        function () {
+            return \App\Models\HR\Employee::factory()->create()->id;
+        },
+    ],
+    'hr-payroll' => [
+        'hr.payroll.edit',
+        function () {
+            return \App\Models\HR\PayrollPeriod::create([
+                'name' => 'Run '.uniqid(),
+                'start_date' => now()->startOfMonth(),
+                'end_date' => now()->endOfMonth(),
+                'payment_date' => now()->endOfMonth()->addDays(5),
+                'status' => 'draft',
+            ])->id;
+        },
+    ],
+    'hr-leave-requests' => [
+        'hr.leave.requests.edit',
+        function () {
+            $emp = \App\Models\HR\Employee::factory()->create();
+            $type = \App\Models\HR\LeaveType::create([
+                'name' => 'LR '.uniqid(),
+                'code' => 'R'.uniqid(),
+                'days_allowed' => 12,
+                'is_paid' => true,
+            ]);
+            return \App\Models\HR\LeaveRequest::create([
+                'employee_id' => $emp->id,
+                'leave_type_id' => $type->id,
+                'start_date' => now(),
+                'end_date' => now()->addDays(2),
+                'days' => 3,
+                'reason' => 'struct',
+                'status' => 'draft',
+            ])->id;
+        },
+    ],
 ]);

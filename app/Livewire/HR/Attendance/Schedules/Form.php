@@ -4,7 +4,6 @@ namespace App\Livewire\HR\Attendance\Schedules;
 
 use App\Models\HR\WorkSchedule;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -99,7 +98,6 @@ class Form extends Component
         return $this->redirect(route('hr.attendance.schedules.index'), navigate: true);
     }
 
-    #[On('deleteSchedule')]
     public function delete(): mixed
     {
         if (!$this->scheduleId) {

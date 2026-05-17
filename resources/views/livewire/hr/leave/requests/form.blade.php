@@ -1,4 +1,6 @@
-<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false }">
+<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showDeleteModal: false }"
+     x-on:open-cancel-modal.window="showCancelModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -15,34 +17,33 @@
                              request is Cancelled (state transition, record
                              kept). Mutually exclusive by state. --}}
                         @if($canDeleteLeave || $canCancelLeave)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                {{-- Alpine dispatch — wire:click in
-                                     <x-slot:header> delegates to nothing
-                                     (Settings c030520 / SaveButtonInScopeTest).
-                                     Listeners: #[On('cancelLeaveRequest')] /
-                                     #[On('deleteLeaveRequest')] on Form. --}}
-                                <flux:menu class="w-40">
-                                    @if($canCancelLeave)
-                                    <button type="button"
-                                        x-on:click="if (confirm('Cancel this leave request?')) Livewire.dispatch('cancelLeaveRequest')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="x-mark" class="size-4" />
-                                        <span>Cancel Request</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                    @endif
-                                    @if($canDeleteLeave)
-                                    <button type="button"
-                                        x-on:click="if (confirm('Delete this draft leave request permanently? It has not been submitted, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteLeaveRequest')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
-                                    </button>
-                                    @endif
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        @if($canCancelLeave)
+                                            <flux:menu.item
+                                                icon="x-mark"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-cancel-modal')"
+                                            >
+                                                Cancel Request
+                                            </flux:menu.item>
+                                        @endif
+                                        @if($canDeleteLeave)
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-delete-modal')"
+                                            >
+                                                Delete
+                                            </flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -73,4 +74,34 @@
 
     {{-- Main Content --}}
     @include('livewire.hr.leave.requests._form-content')
+
+    @if($canCancelLeave)
+        <x-ui.action-confirm-modal
+            show="showCancelModal"
+            icon="x-mark"
+            color="red"
+            title="Cancel Leave Request"
+            subtitle="The request stays on the record for audit."
+            confirmLabel="Cancel Request"
+            confirmLoadingLabel="Cancelling..."
+            confirmMethod="cancel"
+        >
+            Cancelling this request marks it as cancelled but keeps the record for audit. Use this when a submitted request is no longer needed.
+        </x-ui.action-confirm-modal>
+    @endif
+
+    @if($canDeleteLeave)
+        <x-ui.action-confirm-modal
+            show="showDeleteModal"
+            icon="trash"
+            color="red"
+            title="Delete Draft Leave Request"
+            subtitle="This action cannot be undone."
+            confirmLabel="Delete Request"
+            confirmLoadingLabel="Deleting..."
+            confirmMethod="delete"
+        >
+            This draft has not been submitted, so there is nothing to keep. Once submitted, a leave request must be Cancelled instead.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

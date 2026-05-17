@@ -1,4 +1,5 @@
-<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false, showApproveModal: false }">
+<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false, showApproveModal: false, showDeleteModal: false }"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -15,26 +16,22 @@
                              Cancelled (action bar below). Mutually exclusive
                              by state. --}}
                         @if($canDeletePayroll)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                <flux:menu class="w-40">
-                                    {{-- Alpine dispatch — wire:click in
-                                         <x-slot:header> delegates to nothing
-                                         (Settings c030520 / SaveButtonInScopeTest).
-                                         Listener: #[On('deletePayroll')] on Form.
-                                         The Cancel button further down lives
-                                         in the body action bar so wire:click
-                                         is fine there. --}}
-                                    <button type="button"
-                                        x-on:click="if (confirm('Delete this draft payroll run permanently? It has not been approved, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deletePayroll')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>Delete</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            x-on:click="$dispatch('open-delete-modal')"
+                                        >
+                                            Delete
+                                        </flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -405,4 +402,19 @@
             </div>
         </div>
     </div>
+
+    @if($canDeletePayroll)
+        <x-ui.action-confirm-modal
+            show="showDeleteModal"
+            icon="trash"
+            color="red"
+            title="Delete Draft Payroll Run"
+            subtitle="This action cannot be undone."
+            confirmLabel="Delete Payroll"
+            confirmLoadingLabel="Deleting..."
+            confirmMethod="delete"
+        >
+            This payroll run has not been approved, so there is nothing to keep. The record and its line items will be permanently removed. Once approved, a payroll run must be Cancelled instead.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

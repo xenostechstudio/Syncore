@@ -12,7 +12,6 @@ use App\Models\HR\PayrollPeriod;
 use App\Models\HR\SalaryComponent;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -231,7 +230,6 @@ class Form extends Component
      * further) the run carries audit weight and must be Cancelled
      * instead. See "Destructive actions" in CLAUDE.md.
      */
-    #[On('deletePayroll')]
     public function delete(): void
     {
         $this->authorizePermission('payroll.process');

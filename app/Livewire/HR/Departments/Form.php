@@ -6,7 +6,6 @@ use App\Livewire\Concerns\WithNotes;
 use App\Models\HR\Department;
 use App\Models\User;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -80,7 +79,6 @@ class Form extends Component
         }
     }
 
-    #[On('deleteDepartment')]
     public function delete(): void
     {
         if (!$this->department) return;

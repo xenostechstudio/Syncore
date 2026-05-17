@@ -12,7 +12,6 @@ use App\Models\HR\SalaryComponent;
 use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -479,7 +478,6 @@ class Form extends Component
      * recoverable from the Archived filter on the index. See
      * "Destructive actions" in CLAUDE.md.
      */
-    #[On('archiveEmployee')]
     public function archive(): void
     {
         $this->authorizePermission('hr.delete');
@@ -522,7 +520,6 @@ class Form extends Component
      * reference them (see canDelete). This is a true hard delete, not
      * the recoverable Archive. See "Destructive actions" in CLAUDE.md.
      */
-    #[On('deleteEmployee')]
     public function delete(): void
     {
         $this->authorizePermission('hr.delete');

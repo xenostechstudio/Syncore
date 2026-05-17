@@ -1,4 +1,5 @@
-<div>
+<div x-data="{ showDeleteModal: false }"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -10,23 +11,22 @@
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $scheduleId ? $name : __('attendance.create_schedule') }}</span>
                         @if($scheduleId)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                <flux:menu class="w-40">
-                                    {{-- Alpine dispatch — wire:click in
-                                         <x-slot:header> delegates to nothing
-                                         (Settings c030520 / SaveButtonInScopeTest).
-                                         Listener: #[On('deleteSchedule')] on Form. --}}
-                                    <button type="button"
-                                        x-on:click="if (confirm('{{ __('common.are_you_sure') }}')) Livewire.dispatch('deleteSchedule')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                        <flux:icon name="trash" class="size-4" />
-                                        <span>{{ __('common.delete') }}</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            x-on:click="$dispatch('open-delete-modal')"
+                                        >
+                                            {{ __('common.delete') }}
+                                        </flux:menu.item>
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -196,4 +196,19 @@
             </div>
         </div>
     </div>
+
+    @if($scheduleId)
+        <x-ui.action-confirm-modal
+            show="showDeleteModal"
+            icon="trash"
+            color="red"
+            title="Delete Work Schedule"
+            subtitle="This action cannot be undone."
+            confirmLabel="{{ __('common.delete') }}"
+            confirmLoadingLabel="Deleting..."
+            confirmMethod="delete"
+        >
+            Deleting permanently removes this work schedule. Employees assigned to it will need a new schedule assigned.
+        </x-ui.action-confirm-modal>
+    @endif
 </div>

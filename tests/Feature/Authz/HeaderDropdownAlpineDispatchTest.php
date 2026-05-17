@@ -31,17 +31,7 @@ $cases = [
     'delivery-orders duplicate'    => ['resources/views/livewire/delivery/orders/form.blade.php',        \App\Livewire\Delivery\Orders\Form::class,       'duplicateDelivery'],
     'delivery-orders delete'       => ['resources/views/livewire/delivery/orders/form.blade.php',        \App\Livewire\Delivery\Orders\Form::class,       'deleteDelivery'],
 
-    // === Chunk 3: HR ===
-    'hr-departments delete'        => ['resources/views/livewire/hr/departments/form.blade.php',         \App\Livewire\HR\Departments\Form::class,        'deleteDepartment'],
-    'hr-positions delete'          => ['resources/views/livewire/hr/positions/form.blade.php',           \App\Livewire\HR\Positions\Form::class,          'deletePosition'],
-    'hr-payroll delete'            => ['resources/views/livewire/hr/payroll/form.blade.php',             \App\Livewire\HR\Payroll\Form::class,            'deletePayroll'],
-    'hr-payroll-components delete' => ['resources/views/livewire/hr/payroll/components/form.blade.php',  \App\Livewire\HR\Payroll\Components\Form::class, 'deletePayrollComponent'],
-    'hr-leave-types delete'        => ['resources/views/livewire/hr/leave/types/form.blade.php',         \App\Livewire\HR\Leave\Types\Form::class,        'deleteLeaveType'],
-    'hr-leave-requests cancel'     => ['resources/views/livewire/hr/leave/requests/form.blade.php',      \App\Livewire\HR\Leave\Requests\Form::class,     'cancelLeaveRequest'],
-    'hr-leave-requests delete'     => ['resources/views/livewire/hr/leave/requests/form.blade.php',      \App\Livewire\HR\Leave\Requests\Form::class,     'deleteLeaveRequest'],
-    'hr-attendance-schedules del'  => ['resources/views/livewire/hr/attendance/schedules/form.blade.php',\App\Livewire\HR\Attendance\Schedules\Form::class,'deleteSchedule'],
-    'hr-employees archive'         => ['resources/views/livewire/hr/employees/form.blade.php',           \App\Livewire\HR\Employees\Form::class,          'archiveEmployee'],
-    'hr-employees delete'          => ['resources/views/livewire/hr/employees/form.blade.php',           \App\Livewire\HR\Employees\Form::class,          'deleteEmployee'],
+    // === Chunk 3: HR === all swept to modal pattern.
 
     // === Chunk 4: Accounting + CRM + Inventory ===
     'accounting-accounts delete'   => ['resources/views/livewire/accounting/accounts/form.blade.php',    \App\Livewire\Accounting\Accounts\Form::class,   'deleteAccount'],

@@ -1,4 +1,6 @@
-<div x-data="{ activeTab: 'work', showLogNote: false }">
+<div x-data="{ activeTab: 'work', showLogNote: false, showArchiveModal: false, showDeleteModal: false }"
+     x-on:open-archive-modal.window="showArchiveModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -11,42 +13,35 @@
                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                             {{ $employeeId ? $name : 'New Employee' }}
                         </span>
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-                            {{-- Master data is Archived (recoverable soft
-                                 delete); hard Delete is offered only when no
-                                 HR records reference the employee. See CLAUDE.md.
-
-                                 Items use Alpine dispatch — <x-slot:header>
-                                 renders outside wire:id so wire:click here
-                                 delegates to nothing (Settings c030520 /
-                                 SaveButtonInScopeTest). Listeners:
-                                 #[On('archiveEmployee')] / #[On('deleteEmployee')]
-                                 on Form. --}}
-                            <flux:menu class="w-40">
-                                @if($employeeId)
-                                    <button type="button"
-                                        x-on:click="if (confirm('Archive this employee? They will be hidden from the list but can be restored from the Archived filter.')) Livewire.dispatch('archiveEmployee')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="archive-box" class="size-4" />
-                                        <span>{{ __('common.archive') }}</span>
-                                    </button>
-                                    @if($this->canDelete)
-                                        <flux:menu.separator />
-                                        <button type="button"
-                                            x-on:click="if (confirm('Permanently delete this employee? This cannot be undone.')) Livewire.dispatch('deleteEmployee')"
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>{{ __('common.delete') }}</span>
-                                        </button>
+                        <div x-data="{}">
+                            <flux:dropdown position="bottom" align="start">
+                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                    <flux:icon name="cog-6-tooth" class="size-4" />
+                                </button>
+                                <flux:menu class="w-40">
+                                    @if($employeeId)
+                                        <flux:menu.item
+                                            icon="archive-box"
+                                            x-on:click="$dispatch('open-archive-modal')"
+                                        >
+                                            {{ __('common.archive') }}
+                                        </flux:menu.item>
+                                        @if($this->canDelete)
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-delete-modal')"
+                                            >
+                                                {{ __('common.delete') }}
+                                            </flux:menu.item>
+                                        @endif
+                                    @else
+                                        <div class="px-2 py-1.5 text-sm text-zinc-500 dark:text-zinc-400">No actions</div>
                                     @endif
-                                @else
-                                    <div class="px-2 py-1.5 text-sm text-zinc-500 dark:text-zinc-400">No actions</div>
-                                @endif
-                            </flux:menu>
-                        </flux:dropdown>
+                                </flux:menu>
+                            </flux:dropdown>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -973,5 +968,35 @@
             </div>
         </div>
     </div>
+    @endif
+
+    @if($employeeId)
+        <x-ui.action-confirm-modal
+            show="showArchiveModal"
+            icon="archive-box"
+            color="amber"
+            title="Archive Employee"
+            subtitle="The employee can be restored later."
+            confirmLabel="Archive Employee"
+            confirmLoadingLabel="Archiving..."
+            confirmMethod="archive"
+        >
+            Archiving hides this employee from the active list while keeping the record intact. Payroll, attendance, and leave history remain. You can restore from the "Archived" filter on the employees index.
+        </x-ui.action-confirm-modal>
+
+        @if($this->canDelete)
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Employee"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Employee"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
+            >
+                Deleting permanently removes this employee. Only available because no HR records (payroll, leave, attendance, schedules) reference them. If you might need to recover them later, use Archive instead.
+            </x-ui.action-confirm-modal>
+        @endif
     @endif
 </div>
