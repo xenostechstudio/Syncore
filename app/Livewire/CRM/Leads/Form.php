@@ -136,6 +136,7 @@ class Form extends Component
         }
     }
 
+    #[On('duplicateLead')]
     public function duplicate(): void
     {
         if (! $this->leadId) {

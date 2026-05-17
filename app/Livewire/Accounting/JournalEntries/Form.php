@@ -9,6 +9,7 @@ use App\Models\Accounting\JournalEntry;
 use App\Models\Accounting\JournalLine;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -157,6 +158,51 @@ class Form extends Component
         if (!$this->entryId) {
             $this->redirect(route('accounting.journal-entries.edit', $entry->id), navigate: true);
         }
+    }
+
+    /**
+     * Duplicate the entry into a new draft. A fresh entry_number is
+     * generated; entry_date defaults to today; status is reset to
+     * draft. Lines are cloned but get fresh ids so they belong to the
+     * new entry.
+     */
+    #[On('duplicateJournalEntry')]
+    public function duplicate(): void
+    {
+        $this->authorizePermission('accounting.create');
+
+        if (! $this->entry) {
+            return;
+        }
+
+        $source = $this->entry->load('lines');
+
+        $new = JournalEntry::create([
+            'entry_number' => JournalEntry::generateNumber(),
+            'entry_date' => now()->format('Y-m-d'),
+            'reference' => null,
+            'reference_type' => 'manual',
+            'description' => $source->description,
+            'status' => 'draft',
+            'total_debit' => $source->total_debit,
+            'total_credit' => $source->total_credit,
+            'created_by' => auth()->id(),
+        ]);
+
+        foreach ($source->lines as $line) {
+            JournalLine::create([
+                'journal_entry_id' => $new->id,
+                'account_id' => $line->account_id,
+                'description' => $line->description,
+                'debit' => $line->debit,
+                'credit' => $line->credit,
+            ]);
+        }
+
+        $new->recalculateTotals();
+
+        session()->flash('success', 'Journal entry duplicated successfully.');
+        $this->redirect(route('accounting.journal-entries.edit', $new->id), navigate: true);
     }
 
     protected function getNotableModel()

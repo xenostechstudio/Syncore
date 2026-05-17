@@ -184,6 +184,7 @@ class Form extends Component
         session()->flash('success', "'{$this->opportunity->name}' marked as Lost.");
     }
 
+    #[On('duplicateOpportunity')]
     public function duplicate(): void
     {
         if (! $this->opportunityId) {

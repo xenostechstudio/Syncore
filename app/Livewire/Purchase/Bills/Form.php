@@ -347,6 +347,7 @@ class Form extends Component
         $this->redirect(route('purchase.bills.index'), navigate: true);
     }
 
+    #[On('duplicateBill')]
     public function duplicate(): void
     {
         if (!$this->billId) {

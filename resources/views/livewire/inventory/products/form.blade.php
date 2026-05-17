@@ -33,20 +33,21 @@
                                 <flux:icon name="cog-6-tooth" class="size-4" />
                             </button>
 
+                            {{-- Alpine dispatch — wire:click in
+                                 <x-slot:header> delegates to nothing
+                                 (Settings c030520 / SaveButtonInScopeTest).
+                                 Listeners: #[On('duplicateProduct')] /
+                                 #[On('archiveProduct')] / #[On('deleteProduct')]
+                                 on Form (Inventory + Sales Product forms share
+                                 the same event names — each is its own page). --}}
                             <flux:menu class="w-40">
-                                <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
-                                </button>
                                 @if($editing && $product)
-                                    {{-- Alpine dispatch — wire:click in
-                                         <x-slot:header> delegates to nothing
-                                         (Settings c030520 / SaveButtonInScopeTest).
-                                         Listeners: #[On('archiveProduct')] /
-                                         #[On('deleteProduct')] on Form
-                                         (Inventory + Sales Product forms share
-                                         the same event names — each is its
-                                         own page). --}}
+                                    <button type="button"
+                                        x-on:click="Livewire.dispatch('duplicateProduct')"
+                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <flux:icon name="document-duplicate" class="size-4" />
+                                        <span>Duplicate</span>
+                                    </button>
                                     <button type="button"
                                         x-on:click="if (confirm('Archive this product? It will be hidden from the list but can be restored from the Archived filter.')) Livewire.dispatch('archiveProduct')"
                                         class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">

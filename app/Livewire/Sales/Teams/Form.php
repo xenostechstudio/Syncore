@@ -8,6 +8,7 @@ use App\Models\Sales\SalesTeam;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -147,6 +148,37 @@ class Form extends Component
             session()->flash('success', 'Sales team created successfully.');
             $this->redirect(route('sales.teams.edit', $team->id), navigate: true);
         }
+    }
+
+    /**
+     * Duplicate the team and open the copy as a fresh draft. Members are
+     * cloned. Leader and target_amount carry over; the new team is
+     * created active. Salesperson-type rows aren't duplicable here —
+     * cloning a User row makes no sense; the menu hides the action when
+     * editing a salesperson.
+     */
+    #[On('duplicateSalesTeam')]
+    public function duplicate(): void
+    {
+        if (! $this->teamId) {
+            session()->flash('error', 'Please save the team first.');
+            return;
+        }
+
+        $team = SalesTeam::with('members')->findOrFail($this->teamId);
+
+        $newTeam = SalesTeam::create([
+            'name' => $team->name.' (Copy)',
+            'description' => $team->description,
+            'leader_id' => $team->leader_id,
+            'target_amount' => $team->target_amount,
+            'is_active' => true,
+        ]);
+
+        $newTeam->members()->sync($team->members->pluck('id')->all());
+
+        session()->flash('success', 'Sales team duplicated successfully.');
+        $this->redirect(route('sales.teams.edit', $newTeam->id), navigate: true);
     }
 
     public function addMember(int $userId): void

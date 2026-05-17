@@ -33,7 +33,9 @@
                                             <flux:icon name="archive-box" class="size-4" />
                                             <span>Archive</span>
                                         </button>
-                                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <button type="button"
+                                            x-on:click="Livewire.dispatch('duplicateSalesTeam')"
+                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <flux:icon name="document-duplicate" class="size-4" />
                                             <span>Duplicate</span>
                                         </button>
@@ -42,7 +44,9 @@
                                             <flux:icon name="archive-box-arrow-down" class="size-4" />
                                             <span>Restore</span>
                                         </button>
-                                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                        <button type="button"
+                                            x-on:click="Livewire.dispatch('duplicateSalesTeam')"
+                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                             <flux:icon name="document-duplicate" class="size-4" />
                                             <span>Duplicate</span>
                                         </button>

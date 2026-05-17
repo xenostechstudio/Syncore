@@ -83,6 +83,46 @@ class Form extends Component
         $this->redirect(route('accounting.accounts.index'), navigate: true);
     }
 
+    /**
+     * Duplicate the account into a new draft. `code` is unique so the
+     * copy is given a numeric suffix until a free code is found (rare
+     * collisions; small linear probe is fine). System accounts can't be
+     * duplicated — they're seeded singletons.
+     */
+    #[On('duplicateAccount')]
+    public function duplicate(): void
+    {
+        $this->authorizePermission('accounting.create');
+
+        if (! $this->account) {
+            return;
+        }
+
+        if ($this->account->is_system) {
+            session()->flash('error', 'System accounts cannot be duplicated.');
+            return;
+        }
+
+        $newCode = $this->account->code.'-COPY';
+        $suffix = 1;
+        while (Account::where('code', $newCode)->exists()) {
+            $suffix++;
+            $newCode = $this->account->code.'-COPY-'.$suffix;
+        }
+
+        $new = Account::create([
+            'code' => $newCode,
+            'name' => $this->account->name.' (Copy)',
+            'type' => $this->account->type,
+            'parent_id' => $this->account->parent_id,
+            'description' => $this->account->description,
+            'is_active' => $this->account->is_active,
+        ]);
+
+        session()->flash('success', 'Account duplicated successfully.');
+        $this->redirect(route('accounting.accounts.edit', $new->id), navigate: true);
+    }
+
     #[On('deleteAccount')]
     public function delete(): void
     {

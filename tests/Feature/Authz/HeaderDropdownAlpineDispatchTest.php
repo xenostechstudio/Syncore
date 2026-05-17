@@ -51,6 +51,19 @@ $cases = [
     'crm-opportunities delete'     => ['resources/views/livewire/crm/opportunities/form.blade.php',      \App\Livewire\CRM\Opportunities\Form::class,     'deleteOpportunity'],
     'inventory-products archive'   => ['resources/views/livewire/inventory/products/form.blade.php',     \App\Livewire\Inventory\Products\Form::class,    'archiveProduct'],
     'inventory-products delete'    => ['resources/views/livewire/inventory/products/form.blade.php',     \App\Livewire\Inventory\Products\Form::class,    'deleteProduct'],
+
+    // === Duplicate buttons newly wired (was static dead UI before) ===
+    'crm-leads duplicate'              => ['resources/views/livewire/crm/leads/form.blade.php',                    \App\Livewire\CRM\Leads\Form::class,                  'duplicateLead'],
+    'crm-opportunities duplicate'      => ['resources/views/livewire/crm/opportunities/form.blade.php',            \App\Livewire\CRM\Opportunities\Form::class,          'duplicateOpportunity'],
+    'inventory-transfers duplicate'    => ['resources/views/livewire/inventory/transfers/form.blade.php',          \App\Livewire\Inventory\Transfers\Form::class,        'duplicateTransfer'],
+    'inventory-adjustments duplicate'  => ['resources/views/livewire/inventory/adjustments/form.blade.php',        \App\Livewire\Inventory\Adjustments\Form::class,      'duplicateAdjustment'],
+    'purchase-bills duplicate'         => ['resources/views/livewire/purchase/bills/form.blade.php',               \App\Livewire\Purchase\Bills\Form::class,             'duplicateBill'],
+    'accounting-accounts duplicate'    => ['resources/views/livewire/accounting/accounts/form.blade.php',          \App\Livewire\Accounting\Accounts\Form::class,        'duplicateAccount'],
+    'accounting-journal duplicate'     => ['resources/views/livewire/accounting/journal-entries/form.blade.php',   \App\Livewire\Accounting\JournalEntries\Form::class,  'duplicateJournalEntry'],
+    'inventory-products duplicate'     => ['resources/views/livewire/inventory/products/form.blade.php',           \App\Livewire\Inventory\Products\Form::class,         'duplicateProduct'],
+    'sales-teams duplicate'            => ['resources/views/livewire/sales/teams/form.blade.php',                  \App\Livewire\Sales\Teams\Form::class,                'duplicateSalesTeam'],
+    'inventory-warehouses duplicate'   => ['resources/views/livewire/inventory/warehouses/form.blade.php',         \App\Livewire\Inventory\Warehouses\Form::class,       'duplicateWarehouse'],
+    'inventory-categories duplicate'   => ['resources/views/livewire/inventory/categories/form.blade.php',         \App\Livewire\Inventory\Categories\Form::class,       'duplicateCategory'],
 ];
 
 it('header dropdown dispatches a Livewire event the component listens for', function (string $bladePath, string $componentClass, string $event) {

@@ -12,6 +12,7 @@ use App\Models\Inventory\Warehouse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -278,6 +279,7 @@ class Form extends Component
         });
     }
 
+    #[On('duplicateAdjustment')]
     public function duplicate(): void
     {
         if (!$this->adjustmentId) {

@@ -22,17 +22,12 @@
                                 </button>
 
                                 <flux:menu class="w-40">
-                                    <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                                    <button type="button"
+                                        x-on:click="Livewire.dispatch('duplicateJournalEntry')"
+                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
                                         <flux:icon name="document-duplicate" class="size-4" />
                                         <span>Duplicate</span>
                                     </button>
-                                    @if($entry && $entry->status === 'draft')
-                                        <flux:menu.separator />
-                                        <button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>Delete</span>
-                                        </button>
-                                    @endif
                                 </flux:menu>
                             </flux:dropdown>
                         @endif

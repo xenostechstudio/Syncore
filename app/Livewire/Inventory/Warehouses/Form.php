@@ -7,6 +7,7 @@ use App\Models\Inventory\Warehouse;
 use App\Models\Inventory\InventoryStock;
 use App\Models\Inventory\InventoryAdjustment;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Illuminate\Support\Collection;
@@ -98,6 +99,28 @@ class Form extends Component
             $this->redirect(route('inventory.warehouses.edit', $warehouse->id), navigate: true);
             return;
         }
+    }
+
+    /**
+     * Duplicate the warehouse. Stock and historical adjustments belong
+     * to the original warehouse_id — they are NOT carried; the new
+     * warehouse starts empty.
+     */
+    #[On('duplicateWarehouse')]
+    public function duplicate(): void
+    {
+        if (! $this->warehouse) {
+            return;
+        }
+
+        $new = Warehouse::create([
+            'name' => $this->warehouse->name.' (Copy)',
+            'location' => $this->warehouse->location,
+            'contact_info' => $this->warehouse->contact_info,
+        ]);
+
+        session()->flash('success', 'Warehouse duplicated successfully.');
+        $this->redirect(route('inventory.warehouses.edit', $new->id), navigate: true);
     }
 
     public function delete(): void

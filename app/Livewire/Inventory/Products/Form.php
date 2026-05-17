@@ -391,6 +391,51 @@ class Form extends Component
     }
 
     /**
+     * Duplicate the product into a fresh row. sku is unique — set to
+     * null so the operator picks a new one (or scans a barcode). Stock
+     * is NOT carried: inventory_stocks rows belong to the original
+     * product_id; the copy starts at zero in every warehouse.
+     * Pricelist rules are intentionally not cloned either; pricing is
+     * set per-product on purpose.
+     */
+    #[On('duplicateProduct')]
+    public function duplicate(): void
+    {
+        $this->authorizePermission('inventory.create');
+
+        if (! $this->product) {
+            return;
+        }
+
+        $new = Product::create([
+            'name' => $this->product->name.' (Copy)',
+            'sku' => null,
+            'barcode' => null,
+            'product_type' => $this->product->product_type,
+            'internal_reference' => null,
+            'description' => $this->product->description,
+            'quantity' => 0,
+            'cost_price' => $this->product->cost_price,
+            'selling_price' => $this->product->selling_price,
+            'status' => 'out_of_stock',
+            'warehouse_id' => $this->product->warehouse_id,
+            'category_id' => $this->product->category_id,
+            'responsible_id' => $this->product->responsible_id,
+            'weight' => $this->product->weight,
+            'volume' => $this->product->volume,
+            'customer_lead_time' => $this->product->customer_lead_time,
+            'receipt_note' => $this->product->receipt_note,
+            'delivery_note' => $this->product->delivery_note,
+            'internal_notes' => $this->product->internal_notes,
+            'is_favorite' => false,
+            'sales_tax_id' => $this->product->sales_tax_id,
+        ]);
+
+        session()->flash('success', 'Product duplicated successfully.');
+        $this->redirect(route('inventory.products.edit', $new->id), navigate: true);
+    }
+
+    /**
      * Archive (soft-delete) the product. Master data is retired with
      * Archive, not hard-deleted — the row stays and is recoverable from
      * the Archived filter on the products list. See "Destructive
