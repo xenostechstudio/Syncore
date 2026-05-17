@@ -733,40 +733,34 @@
         </div>
     </div>
 
-    {{-- Duplicate / Delete Confirmation Modals.
-         Gear menu in <x-slot:header> dispatches open-X-modal as window
-         events; listeners on the outer <div x-data> flip showXModal state. --}}
+    {{-- Duplicate / Delete Confirmation Modals via shared helper. --}}
     @if($billId)
-        <div
-            x-show="showDuplicateModal"
-            x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Vendor Bill"
+            subtitle="A new draft bill will be created from this one."
+            confirmLabel="Duplicate Bill"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
         >
-            <div class="absolute inset-0 bg-zinc-900/60" @click="showDuplicateModal = false"></div>
-            @include('livewire.purchase.bills.modals.duplicate')
-        </div>
+            The new draft will copy the supplier and all line items. The bill number, payment records, and any attachments stay with the original.
+        </x-ui.action-confirm-modal>
 
         @if($canDeleteBill)
-            <div
-                x-show="showDeleteModal"
-                x-cloak
-                class="fixed inset-0 z-50 flex items-center justify-center"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Draft Bill"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Bill"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
             >
-                <div class="absolute inset-0 bg-zinc-900/60" @click="showDeleteModal = false"></div>
-                @include('livewire.purchase.bills.modals.delete')
-            </div>
+                This draft bill has not been confirmed and has no payments recorded, so there is nothing to keep. The record and its line items will be permanently removed. Once confirmed, a bill must be Cancelled instead.
+            </x-ui.action-confirm-modal>
         @endif
     @endif
 </div>

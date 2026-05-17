@@ -1016,56 +1016,48 @@
         </div>
     </div>
 
-    {{-- Duplicate / Archive / Delete Confirmation Modals.
-         Gear menu in <x-slot:header> dispatches open-X-modal as window
-         events; the listeners on the outer <div x-data> at the top of
-         this file flip showXModal state. --}}
+    {{-- Duplicate / Archive / Delete Confirmation Modals via the shared
+         action-confirm-modal helper. --}}
     @if($editing && $product)
-        <div
-            x-show="showDuplicateModal"
-            x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Product"
+            subtitle="A new product will be created from this one."
+            confirmLabel="Duplicate Product"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
         >
-            <div class="absolute inset-0 bg-zinc-900/60" @click="showDuplicateModal = false"></div>
-            @include('livewire.inventory.products.modals.duplicate')
-        </div>
+            The copy will inherit name, pricing, category, and other attributes, but not the SKU (unique) or stock (warehouse-specific). You'll be redirected to the new product to assign a SKU.
+        </x-ui.action-confirm-modal>
 
-        <div
-            x-show="showArchiveModal"
-            x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
+        <x-ui.action-confirm-modal
+            show="showArchiveModal"
+            icon="archive-box"
+            color="amber"
+            title="Archive Product"
+            subtitle="The product can be restored later."
+            confirmLabel="Archive Product"
+            confirmLoadingLabel="Archiving..."
+            confirmMethod="archive"
         >
-            <div class="absolute inset-0 bg-zinc-900/60" @click="showArchiveModal = false"></div>
-            @include('livewire.inventory.products.modals.archive')
-        </div>
+            Archiving hides this product from active lists and prevents new orders from using it. Existing documents that reference the product remain intact. You can restore it from the "Archived" filter on the products index.
+        </x-ui.action-confirm-modal>
 
         @if($this->canDelete)
-            <div
-                x-show="showDeleteModal"
-                x-cloak
-                class="fixed inset-0 z-50 flex items-center justify-center"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Product"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Product"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
             >
-                <div class="absolute inset-0 bg-zinc-900/60" @click="showDeleteModal = false"></div>
-                @include('livewire.inventory.products.modals.delete')
-            </div>
+                Deleting permanently removes this product. Only available because no orders, invoices, stock records, or other documents reference it. If you might need to recover it later, use Archive instead.
+            </x-ui.action-confirm-modal>
         @endif
     @endif
 </div>

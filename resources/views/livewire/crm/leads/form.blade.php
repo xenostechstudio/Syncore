@@ -366,57 +366,49 @@
         </div>
     </div>
 
-    {{-- Duplicate / Archive / Delete Confirmation Modals.
-         Header-slot gear menu items dispatch open-X-modal as window
-         events; listeners on the outer <div x-data> flip showXModal
-         state. Backdrop + positioning wrapper mirrors the Confirm
-         modal pattern used on Sales Order. --}}
+    {{-- Duplicate / Archive / Delete Confirmation Modals via the shared
+         action-confirm-modal helper. Header gear $dispatch'es open-X-modal
+         window events; listeners on the outer <div x-data> flip showXModal. --}}
     @if($leadId)
-        <div
-            x-show="showDuplicateModal"
-            x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Lead"
+            subtitle="A new lead will be created from this one."
+            confirmLabel="Duplicate Lead"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
         >
-            <div class="absolute inset-0 bg-zinc-900/60" @click="showDuplicateModal = false"></div>
-            @include('livewire.crm.leads.modals.duplicate')
-        </div>
+            The new lead will copy the contact details and notes, but not the email (it's unique). You'll be redirected to the new lead to fill in the rest.
+        </x-ui.action-confirm-modal>
 
-        <div
-            x-show="showArchiveModal"
-            x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
+        <x-ui.action-confirm-modal
+            show="showArchiveModal"
+            icon="archive-box"
+            color="amber"
+            title="Archive Lead"
+            subtitle="The lead can be restored later."
+            confirmLabel="Archive Lead"
+            confirmLoadingLabel="Archiving..."
+            confirmMethod="archive"
         >
-            <div class="absolute inset-0 bg-zinc-900/60" @click="showArchiveModal = false"></div>
-            @include('livewire.crm.leads.modals.archive')
-        </div>
+            Archiving hides this lead from the active list while keeping the record intact. You can restore it from the "Archived" filter on the leads index.
+        </x-ui.action-confirm-modal>
 
         @if($this->canDelete)
-            <div
-                x-show="showDeleteModal"
-                x-cloak
-                class="fixed inset-0 z-50 flex items-center justify-center"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Lead"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Lead"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
             >
-                <div class="absolute inset-0 bg-zinc-900/60" @click="showDeleteModal = false"></div>
-                @include('livewire.crm.leads.modals.delete')
-            </div>
+                Deleting permanently removes this lead and its activity log. Use Archive instead if you might need to recover it.
+            </x-ui.action-confirm-modal>
         @endif
     @endif
 </div>
