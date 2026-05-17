@@ -27,7 +27,7 @@ $cases = [
     'purchase-rfq delete'          => ['resources/views/livewire/purchase/rfq/form.blade.php',           \App\Livewire\Purchase\Rfq\Form::class,          'deleteRfq'],
     'purchase-orders duplicate'    => ['resources/views/livewire/purchase/orders/form.blade.php',        \App\Livewire\Purchase\Rfq\Form::class,          'duplicateRfq'], // Orders\Form extends Rfq\Form
     'purchase-orders delete'       => ['resources/views/livewire/purchase/orders/form.blade.php',        \App\Livewire\Purchase\Rfq\Form::class,          'deleteRfq'],
-    'purchase-bills delete'        => ['resources/views/livewire/purchase/bills/form.blade.php',         \App\Livewire\Purchase\Bills\Form::class,        'deleteBill'],
+    // purchase-bills delete swept to modal pattern.
     'delivery-orders duplicate'    => ['resources/views/livewire/delivery/orders/form.blade.php',        \App\Livewire\Delivery\Orders\Form::class,       'duplicateDelivery'],
     'delivery-orders delete'       => ['resources/views/livewire/delivery/orders/form.blade.php',        \App\Livewire\Delivery\Orders\Form::class,       'deleteDelivery'],
 
@@ -55,7 +55,7 @@ $cases = [
     'crm-opportunities duplicate'      => ['resources/views/livewire/crm/opportunities/form.blade.php',            \App\Livewire\CRM\Opportunities\Form::class,          'duplicateOpportunity'],
     'inventory-transfers duplicate'    => ['resources/views/livewire/inventory/transfers/form.blade.php',          \App\Livewire\Inventory\Transfers\Form::class,        'duplicateTransfer'],
     'inventory-adjustments duplicate'  => ['resources/views/livewire/inventory/adjustments/form.blade.php',        \App\Livewire\Inventory\Adjustments\Form::class,      'duplicateAdjustment'],
-    'purchase-bills duplicate'         => ['resources/views/livewire/purchase/bills/form.blade.php',               \App\Livewire\Purchase\Bills\Form::class,             'duplicateBill'],
+    // purchase-bills duplicate swept to modal pattern.
     'accounting-accounts duplicate'    => ['resources/views/livewire/accounting/accounts/form.blade.php',          \App\Livewire\Accounting\Accounts\Form::class,        'duplicateAccount'],
     'accounting-journal duplicate'     => ['resources/views/livewire/accounting/journal-entries/form.blade.php',   \App\Livewire\Accounting\JournalEntries\Form::class,  'duplicateJournalEntry'],
     // inventory-products duplicate swept to modal pattern.

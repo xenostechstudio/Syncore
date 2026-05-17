@@ -173,4 +173,18 @@ it('renders a working gear dropdown on a form edit page', function (string $rout
             return $product->id;
         },
     ],
+    'purchase-bills' => [
+        'purchase.bills.edit',
+        function () {
+            $supplier = \App\Models\Purchase\Supplier::factory()->create();
+            $bill = \App\Models\Purchase\VendorBill::create([
+                'bill_number' => 'STRUCT-'.uniqid(),
+                'supplier_id' => $supplier->id,
+                'bill_date' => now(),
+                'due_date' => now()->addDays(30),
+                'status' => 'draft',
+            ]);
+            return $bill->id;
+        },
+    ],
 ]);
