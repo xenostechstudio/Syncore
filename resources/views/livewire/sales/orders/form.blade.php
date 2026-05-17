@@ -1270,12 +1270,41 @@
     {{-- Cancel Order Confirmation Modal --}}
     @include('livewire.sales.orders.modals.cancel')
 
-    {{-- Duplicate / Delete Confirmation Modals (header-slot gear menu
-         dispatches open-duplicate-modal / open-delete-modal as window
-         events; the listeners are on the outer <div x-data> at the top
-         of this file). --}}
-    @include('livewire.sales.orders.modals.duplicate')
+    {{-- Duplicate / Delete Confirmation Modals.
+         Header-slot gear menu items dispatch open-duplicate-modal /
+         open-delete-modal as window events; the listeners on the outer
+         <div x-data> at the top of this file flip the showXModal state.
+         Backdrop + positioning wrapper mirrors the Confirm modal pattern
+         (lines 365-381). --}}
+    <div
+        x-show="showDuplicateModal"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div class="absolute inset-0 bg-zinc-900/60" @click="showDuplicateModal = false"></div>
+        @include('livewire.sales.orders.modals.duplicate')
+    </div>
+
     @if($canDeleteOrder)
-        @include('livewire.sales.orders.modals.delete')
+        <div
+            x-show="showDeleteModal"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showDeleteModal = false"></div>
+            @include('livewire.sales.orders.modals.delete')
+        </div>
     @endif
 </div>
