@@ -16,8 +16,9 @@ $cases = [
     // === Chunk 1: Sales + Invoicing ===
     'sales-products archive'       => ['resources/views/livewire/sales/products/form.blade.php',         \App\Livewire\Sales\Products\Form::class,        'archiveProduct'],
     'sales-products delete'        => ['resources/views/livewire/sales/products/form.blade.php',         \App\Livewire\Sales\Products\Form::class,        'deleteProduct'],
-    'sales-orders duplicate'       => ['resources/views/livewire/sales/orders/form.blade.php',           \App\Livewire\Sales\Orders\Form::class,          'duplicateOrder'],
-    'sales-orders delete'          => ['resources/views/livewire/sales/orders/form.blade.php',           \App\Livewire\Sales\Orders\Form::class,          'deleteOrder'],
+    // sales-orders Duplicate/Delete moved to styled confirm modals
+    // (window-event dispatch → form-level <x-ui.confirm-modal>) instead of
+    // browser confirm(). See livewire/sales/orders/modals/{duplicate,delete}.blade.php.
     'invoicing-invoices duplicate' => ['resources/views/livewire/invoicing/invoices/form.blade.php',     \App\Livewire\Invoicing\Invoices\Form::class,    'duplicateInvoice'],
     'invoicing-invoices delete'    => ['resources/views/livewire/invoicing/invoices/form.blade.php',     \App\Livewire\Invoicing\Invoices\Form::class,    'deleteInvoice'],
 
@@ -45,15 +46,15 @@ $cases = [
 
     // === Chunk 4: Accounting + CRM + Inventory ===
     'accounting-accounts delete'   => ['resources/views/livewire/accounting/accounts/form.blade.php',    \App\Livewire\Accounting\Accounts\Form::class,   'deleteAccount'],
-    'crm-leads archive'            => ['resources/views/livewire/crm/leads/form.blade.php',              \App\Livewire\CRM\Leads\Form::class,             'archiveLead'],
-    'crm-leads delete'             => ['resources/views/livewire/crm/leads/form.blade.php',              \App\Livewire\CRM\Leads\Form::class,             'deleteLead'],
+    // crm-leads archive/delete moved off Alpine-dispatch back to wire:click
+    // (premise reversal — see commit reverting B.2 for CRM Leads form).
     'crm-opportunities archive'    => ['resources/views/livewire/crm/opportunities/form.blade.php',      \App\Livewire\CRM\Opportunities\Form::class,     'archiveOpportunity'],
     'crm-opportunities delete'     => ['resources/views/livewire/crm/opportunities/form.blade.php',      \App\Livewire\CRM\Opportunities\Form::class,     'deleteOpportunity'],
     'inventory-products archive'   => ['resources/views/livewire/inventory/products/form.blade.php',     \App\Livewire\Inventory\Products\Form::class,    'archiveProduct'],
     'inventory-products delete'    => ['resources/views/livewire/inventory/products/form.blade.php',     \App\Livewire\Inventory\Products\Form::class,    'deleteProduct'],
 
     // === Duplicate buttons newly wired (was static dead UI before) ===
-    'crm-leads duplicate'              => ['resources/views/livewire/crm/leads/form.blade.php',                    \App\Livewire\CRM\Leads\Form::class,                  'duplicateLead'],
+    // crm-leads duplicate moved off Alpine-dispatch back to wire:click.
     'crm-opportunities duplicate'      => ['resources/views/livewire/crm/opportunities/form.blade.php',            \App\Livewire\CRM\Opportunities\Form::class,          'duplicateOpportunity'],
     'inventory-transfers duplicate'    => ['resources/views/livewire/inventory/transfers/form.blade.php',          \App\Livewire\Inventory\Transfers\Form::class,        'duplicateTransfer'],
     'inventory-adjustments duplicate'  => ['resources/views/livewire/inventory/adjustments/form.blade.php',        \App\Livewire\Inventory\Adjustments\Form::class,      'duplicateAdjustment'],

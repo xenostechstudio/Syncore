@@ -1,4 +1,7 @@
-<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showPreviewModal: false, showEmailModal: $wire.entangle('showEmailModal'), showInvoiceModal: $wire.entangle('showInvoiceModal'), showDeliveryModal: $wire.entangle('showDeliveryModal') }">
+<div x-data="{ activeTab: 'items', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showDuplicateModal: false, showDeleteModal: false, showPreviewModal: false, showEmailModal: $wire.entangle('showEmailModal'), showInvoiceModal: $wire.entangle('showInvoiceModal'), showDeliveryModal: $wire.entangle('showDeliveryModal') }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true"
+     x-on:open-cancel-modal.window="showCancelModal = true">
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -45,41 +48,63 @@
                              events can't return a StreamedResponse to the
                              browser. --}}
                         @if($orderId)
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-
-                            <flux:menu class="w-40">
-                                <a href="{{ route('pdf.sales-order', $orderId) }}" target="_blank" rel="noopener" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="arrow-down-tray" class="size-4" />
-                                    <span>Download PDF</span>
-                                </a>
-                                <button type="button"
-                                    x-on:click="Livewire.dispatch('duplicateOrder')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
+                        {{-- <x-slot:header> is hoisted by module.blade.php into
+                             <header>, OUTSIDE any wire:id wrapper AND outside
+                             the form's <div x-data>. So wire:click and bare
+                             x-on:click are both dead here. Wrapping the dropdown
+                             in <div x-data="{}"> gives Alpine a local root so
+                             x-on:click binds; Livewire.dispatch() is a global
+                             function that reaches the form's #[On] listener
+                             across the slot boundary. confirm() inline gives
+                             the native popup. The wrapper must sit OUTSIDE
+                             <flux:dropdown> so <ui-menu> stays a direct child
+                             of <ui-dropdown> (Flux wires popover anchoring
+                             between them — wrapping in between breaks the
+                             dropdown trigger). --}}
+                        <div x-data="{}">
+                            <flux:dropdown position="bottom" align="start">
+                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                    <flux:icon name="cog-6-tooth" class="size-4" />
                                 </button>
-                                @if($canCancelOrder || $canDeleteOrder)
-                                <flux:menu.separator />
-                                @endif
-                                @if($canCancelOrder)
-                                <button type="button" @click="showCancelModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="x-mark" class="size-4" />
-                                    <span>Cancel Order</span>
-                                </button>
-                                @endif
-                                @if($canDeleteOrder)
-                                <button type="button"
-                                    x-on:click="if (confirm('Delete this quotation permanently? It has not been confirmed into an order, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteOrder')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
-                                </button>
-                                @endif
-                            </flux:menu>
-                        </flux:dropdown>
+                                <flux:menu>
+                                    <flux:menu.item
+                                        icon="arrow-down-tray"
+                                        :href="route('pdf.sales-order', $orderId)"
+                                        target="_blank"
+                                        rel="noopener"
+                                    >
+                                        Download PDF
+                                    </flux:menu.item>
+                                    <flux:menu.item
+                                        icon="document-duplicate"
+                                        x-on:click="$dispatch('open-duplicate-modal')"
+                                    >
+                                        Duplicate
+                                    </flux:menu.item>
+                                    @if($canCancelOrder || $canDeleteOrder)
+                                        <flux:menu.separator />
+                                    @endif
+                                    @if($canCancelOrder)
+                                        <flux:menu.item
+                                            icon="x-mark"
+                                            variant="danger"
+                                            x-on:click="$dispatch('open-cancel-modal')"
+                                        >
+                                            Cancel Order
+                                        </flux:menu.item>
+                                    @endif
+                                    @if($canDeleteOrder)
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            x-on:click="$dispatch('open-delete-modal')"
+                                        >
+                                            Delete
+                                        </flux:menu.item>
+                                    @endif
+                                </flux:menu>
+                            </flux:dropdown>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -1244,4 +1269,13 @@
 
     {{-- Cancel Order Confirmation Modal --}}
     @include('livewire.sales.orders.modals.cancel')
+
+    {{-- Duplicate / Delete Confirmation Modals (header-slot gear menu
+         dispatches open-duplicate-modal / open-delete-modal as window
+         events; the listeners are on the outer <div x-data> at the top
+         of this file). --}}
+    @include('livewire.sales.orders.modals.duplicate')
+    @if($canDeleteOrder)
+        @include('livewire.sales.orders.modals.delete')
+    @endif
 </div>
