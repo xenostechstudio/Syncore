@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -916,7 +915,6 @@ class Form extends Component
         $adjustment->post();
     }
 
-    #[On('duplicateDelivery')]
     public function duplicate(): void
     {
         if (!$this->deliveryId) {
@@ -963,7 +961,6 @@ class Form extends Component
      * instead, which keeps the record for audit. See "Destructive
      * actions" in CLAUDE.md.
      */
-    #[On('deleteDelivery')]
     public function delete(): void
     {
         $this->authorizePermission('delivery.delete');

@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -146,7 +145,6 @@ class Form extends Component
      * must be Cancelled instead, which keeps the record for audit. See
      * "Destructive actions" in CLAUDE.md.
      */
-    #[On('deleteInvoice')]
     public function delete(): void
     {
         $this->authorizePermission('invoicing.delete');
@@ -406,7 +404,6 @@ class Form extends Component
         }
     }
 
-    #[On('duplicateInvoice')]
     public function duplicate(): void
     {
         if (!$this->invoiceId) {

@@ -18,18 +18,10 @@ $cases = [
     // sales-orders Duplicate/Delete moved to styled confirm modals
     // (window-event dispatch → form-level <x-ui.confirm-modal>) instead of
     // browser confirm(). See livewire/sales/orders/modals/{duplicate,delete}.blade.php.
-    'invoicing-invoices duplicate' => ['resources/views/livewire/invoicing/invoices/form.blade.php',     \App\Livewire\Invoicing\Invoices\Form::class,    'duplicateInvoice'],
-    'invoicing-invoices delete'    => ['resources/views/livewire/invoicing/invoices/form.blade.php',     \App\Livewire\Invoicing\Invoices\Form::class,    'deleteInvoice'],
+    // invoicing-invoices swept to modal pattern.
 
     // === Chunk 2: Purchase + Delivery ===
-    'purchase-suppliers delete'    => ['resources/views/livewire/purchase/suppliers/form.blade.php',     \App\Livewire\Purchase\Suppliers\Form::class,    'deleteSupplier'],
-    'purchase-rfq duplicate'       => ['resources/views/livewire/purchase/rfq/form.blade.php',           \App\Livewire\Purchase\Rfq\Form::class,          'duplicateRfq'],
-    'purchase-rfq delete'          => ['resources/views/livewire/purchase/rfq/form.blade.php',           \App\Livewire\Purchase\Rfq\Form::class,          'deleteRfq'],
-    'purchase-orders duplicate'    => ['resources/views/livewire/purchase/orders/form.blade.php',        \App\Livewire\Purchase\Rfq\Form::class,          'duplicateRfq'], // Orders\Form extends Rfq\Form
-    'purchase-orders delete'       => ['resources/views/livewire/purchase/orders/form.blade.php',        \App\Livewire\Purchase\Rfq\Form::class,          'deleteRfq'],
-    // purchase-bills delete swept to modal pattern.
-    'delivery-orders duplicate'    => ['resources/views/livewire/delivery/orders/form.blade.php',        \App\Livewire\Delivery\Orders\Form::class,       'duplicateDelivery'],
-    'delivery-orders delete'       => ['resources/views/livewire/delivery/orders/form.blade.php',        \App\Livewire\Delivery\Orders\Form::class,       'deleteDelivery'],
+    // purchase-suppliers / purchase-rfq / purchase-orders / purchase-bills / delivery-orders all swept to modal pattern.
 
     // === Chunk 3: HR === all swept to modal pattern.
 

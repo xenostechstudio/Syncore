@@ -1,12 +1,16 @@
-<div x-data="{ 
+<div x-data="{
     activeTab: 'lines',
     showSendMessage: false,
     showLogNote: false,
     showScheduleActivity: false,
     showCancelModal: false,
+    showDuplicateModal: false,
+    showDeleteModal: false,
     showShareModal: $wire.entangle('showShareModal'),
     showPaymentModal: $wire.entangle('showPaymentModal')
-}">
+}"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {{-- Left Group: Back Button, Title with SO Link, Gear Dropdown --}}
@@ -47,32 +51,39 @@
                              Download PDF stays as an <a href> to the named
                              pdf.invoice route. --}}
                         @if($invoiceId)
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-                            <flux:menu class="w-40">
-                                <button type="button"
-                                    x-on:click="Livewire.dispatch('duplicateInvoice')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
+                        <div x-data="{}">
+                            <flux:dropdown position="bottom" align="start">
+                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                    <flux:icon name="cog-6-tooth" class="size-4" />
                                 </button>
-                                <a href="{{ route('pdf.invoice', $invoiceId) }}" target="_blank" rel="noopener" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="arrow-down-tray" class="size-4" />
-                                    <span>Download PDF</span>
-                                </a>
-                                @if($canDeleteInvoice)
-                                <flux:menu.separator />
-                                <button type="button"
-                                    x-on:click="if (confirm('Delete this draft invoice permanently? It has not been sent, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteInvoice')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
-                                </button>
-                                @endif
-                            </flux:menu>
-                        </flux:dropdown>
+                                <flux:menu class="w-40">
+                                    <flux:menu.item
+                                        icon="arrow-down-tray"
+                                        :href="route('pdf.invoice', $invoiceId)"
+                                        target="_blank"
+                                        rel="noopener"
+                                    >
+                                        Download PDF
+                                    </flux:menu.item>
+                                    <flux:menu.item
+                                        icon="document-duplicate"
+                                        x-on:click="$dispatch('open-duplicate-modal')"
+                                    >
+                                        Duplicate
+                                    </flux:menu.item>
+                                    @if($canDeleteInvoice)
+                                        <flux:menu.separator />
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            x-on:click="$dispatch('open-delete-modal')"
+                                        >
+                                            Delete
+                                        </flux:menu.item>
+                                    @endif
+                                </flux:menu>
+                            </flux:dropdown>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -683,4 +694,34 @@
 
     {{-- Payment Modal --}}
     @include('livewire.invoicing.invoices.modals.payment')
+
+    @if($invoiceId)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Invoice"
+            subtitle="A new draft invoice will be created from this one."
+            confirmLabel="Duplicate Invoice"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new draft will copy the customer and all line items. The invoice number, payment records, and any attachments stay with the original.
+        </x-ui.action-confirm-modal>
+
+        @if($canDeleteInvoice)
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Draft Invoice"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Invoice"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
+            >
+                This draft invoice has not been sent, so there is nothing to keep. Once sent, an invoice must be Cancelled instead.
+            </x-ui.action-confirm-modal>
+        @endif
+    @endif
 </div>

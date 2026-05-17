@@ -1,4 +1,6 @@
-<div x-data="{ activeTab: 'products', showSendMessage: false, showLogNote: false, showScheduleActivity: false, showCancelModal: false }">
+<div x-data="{ activeTab: 'products', showSendMessage: false, showLogNote: false, showScheduleActivity: false, showCancelModal: false, showDuplicateModal: false, showDeleteModal: false }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -25,42 +27,42 @@
                              exclusive by state — in PO states only Cancel
                              shows. --}}
                         @if($rfqId)
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-
-                            {{-- Items use Alpine dispatch — <x-slot:header>
-                                 renders outside wire:id so wire:click here
-                                 delegates to nothing. Listeners
-                                 #[On('duplicateRfq')] / #[On('deleteRfq')]
-                                 live on Rfq\Form (this component extends it). --}}
-                            <flux:menu class="w-40">
-                                <button type="button"
-                                    x-on:click="Livewire.dispatch('duplicateRfq')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
+                        <div x-data="{}">
+                            <flux:dropdown position="bottom" align="start">
+                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                    <flux:icon name="cog-6-tooth" class="size-4" />
                                 </button>
-                                @if($canCancelRfq || $canDeleteRfq)
-                                <flux:menu.separator />
-                                @endif
-                                @if($canCancelRfq)
-                                <button type="button" @click="showCancelModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="x-mark" class="size-4" />
-                                    <span>Cancel Order</span>
-                                </button>
-                                @endif
-                                @if($canDeleteRfq)
-                                <button type="button"
-                                    x-on:click="if (confirm('Delete this permanently? It has not been confirmed as a Purchase Order, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteRfq')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
-                                </button>
-                                @endif
-                            </flux:menu>
-                        </flux:dropdown>
+                                <flux:menu class="w-40">
+                                    <flux:menu.item
+                                        icon="document-duplicate"
+                                        x-on:click="$dispatch('open-duplicate-modal')"
+                                    >
+                                        Duplicate
+                                    </flux:menu.item>
+                                    @if($canCancelRfq || $canDeleteRfq)
+                                        <flux:menu.separator />
+                                    @endif
+                                    @if($canCancelRfq)
+                                        <flux:menu.item
+                                            icon="x-mark"
+                                            variant="danger"
+                                            @click="showCancelModal = true"
+                                        >
+                                            Cancel Order
+                                        </flux:menu.item>
+                                    @endif
+                                    @if($canDeleteRfq)
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            x-on:click="$dispatch('open-delete-modal')"
+                                        >
+                                            Delete
+                                        </flux:menu.item>
+                                    @endif
+                                </flux:menu>
+                            </flux:dropdown>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -778,4 +780,34 @@
             </button>
         </x-slot:actions>
     </x-ui.confirm-modal>
+
+    @if($rfqId)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Purchase Order"
+            subtitle="A new draft will be created from this one."
+            confirmLabel="Duplicate"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new draft will copy the supplier and all line items. The PO number and any attachments stay with the original.
+        </x-ui.action-confirm-modal>
+
+        @if($canDeleteRfq)
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Purchase Order"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
+            >
+                This has not been confirmed as a Purchase Order, so there is nothing to keep. Once confirmed, it must be Cancelled instead.
+            </x-ui.action-confirm-modal>
+        @endif
+    @endif
 </div>

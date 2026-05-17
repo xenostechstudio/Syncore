@@ -1,9 +1,12 @@
-<div x-data="{ 
-    showSendMessage: false, 
-    showLogNote: false, 
+<div x-data="{
+    showSendMessage: false,
+    showLogNote: false,
     showScheduleActivity: false,
-    showDeleteModal: false 
-}">
+    showArchiveModal: false,
+    showDeleteModal: false,
+}"
+     x-on:open-archive-modal.window="showArchiveModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -19,36 +22,31 @@
                             {{ $supplierId ? $name : 'New Supplier' }}
                         </span>
                         @if($supplierId)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                <flux:menu class="w-40">
-                                    {{-- Master data is Archived (recoverable soft delete);
-                                         hard Delete is offered only when nothing references
-                                         the supplier. See CLAUDE.md. --}}
-                                    <button type="button" @click="showDeleteModal = true" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="archive-box" class="size-4" />
-                                        <span>{{ __('common.archive') }}</span>
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                    @if($this->canDelete)
-                                        <flux:menu.separator />
-                                        {{-- wire:click here would silently fail —
-                                             <x-slot:header> renders outside the
-                                             component's wire:id, so the listener
-                                             is the #[On('deleteSupplier')] on
-                                             Form.php (Settings c030520 precedent). --}}
-                                        <button
-                                            type="button"
-                                            x-on:click="if (confirm('Permanently delete this supplier? This cannot be undone.')) Livewire.dispatch('deleteSupplier')"
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="archive-box"
+                                            x-on:click="$dispatch('open-archive-modal')"
                                         >
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>{{ __('common.delete') }}</span>
-                                        </button>
-                                    @endif
-                                </flux:menu>
-                            </flux:dropdown>
+                                            {{ __('common.archive') }}
+                                        </flux:menu.item>
+                                        @if($this->canDelete)
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-delete-modal')"
+                                            >
+                                                {{ __('common.delete') }}
+                                            </flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -123,60 +121,35 @@
         </div>
     </div>
 
-    {{-- Delete Modal --}}
-    <div 
-        x-show="showDeleteModal" 
-        x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-    >
-        <div class="absolute inset-0 bg-zinc-900/60" @click="showDeleteModal = false"></div>
-        <div 
-            class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100 scale-100"
-            x-transition:leave-end="opacity-0 scale-95"
-            @click.outside="showDeleteModal = false"
+    @if($supplierId)
+        <x-ui.action-confirm-modal
+            show="showArchiveModal"
+            icon="archive-box"
+            color="amber"
+            title="Archive Supplier"
+            subtitle="The supplier can be restored later."
+            confirmLabel="Archive Supplier"
+            confirmLoadingLabel="Archiving..."
+            confirmMethod="archive"
         >
-            <div class="mb-4 flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                    <flux:icon name="archive-box" class="size-5 text-red-600 dark:text-red-400" />
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Archive Supplier</h3>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">The supplier is hidden, not deleted — it can be restored.</p>
-                </div>
-            </div>
-            <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
-                Archive this supplier? It will be hidden from the suppliers list, but historical purchase orders and bills keep working. You can restore it any time from the Archived filter.
-            </p>
-            <div class="flex justify-end gap-3">
-                <button
-                    type="button"
-                    @click="showDeleteModal = false"
-                    class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                >
-                    Cancel
-                </button>
-                <button
-                    type="button"
-                    wire:click="archive"
-                    @click="showDeleteModal = false"
-                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                >
-                    {{ __('common.archive') }}
-                </button>
-            </div>
-        </div>
-    </div>
+            Archiving hides this supplier from active lists. Historical purchase orders and vendor bills keep working. You can restore it from the "Archived" filter on the suppliers index.
+        </x-ui.action-confirm-modal>
+
+        @if($this->canDelete)
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Supplier"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Supplier"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
+            >
+                Deleting permanently removes this supplier. Only available because no purchase orders or vendor bills reference them. If you might need to recover them later, use Archive instead.
+            </x-ui.action-confirm-modal>
+        @endif
+    @endif
 
     {{-- Main Content --}}
     <div class="-mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">

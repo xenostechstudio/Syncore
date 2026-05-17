@@ -274,4 +274,71 @@ it('renders a working gear dropdown on a form edit page', function (string $rout
             ])->id;
         },
     ],
+    'purchase-suppliers' => [
+        'purchase.suppliers.edit',
+        function () {
+            return \App\Models\Purchase\Supplier::factory()->create()->id;
+        },
+    ],
+    'purchase-rfq' => [
+        'purchase.rfq.edit',
+        function () {
+            $supplier = \App\Models\Purchase\Supplier::factory()->create();
+            return \App\Models\Purchase\PurchaseRfq::create([
+                'supplier_id' => $supplier->id,
+                'order_date' => now(),
+                'expected_arrival' => now()->addDays(7),
+                'status' => 'draft',
+            ])->id;
+        },
+    ],
+    'purchase-orders' => [
+        'purchase.orders.edit',
+        function () {
+            $supplier = \App\Models\Purchase\Supplier::factory()->create();
+            return \App\Models\Purchase\PurchaseRfq::create([
+                'supplier_id' => $supplier->id,
+                'order_date' => now(),
+                'expected_arrival' => now()->addDays(7),
+                'status' => 'rfq',
+            ])->id;
+        },
+    ],
+    'invoicing-invoices' => [
+        'invoicing.invoices.edit',
+        function () {
+            $customer = \App\Models\Sales\Customer::factory()->create();
+            return \App\Models\Invoicing\Invoice::create([
+                'invoice_number' => 'STRUCT-'.uniqid(),
+                'customer_id' => $customer->id,
+                'invoice_date' => now(),
+                'due_date' => now()->addDays(30),
+                'status' => 'draft',
+            ])->id;
+        },
+    ],
+    'delivery-orders' => [
+        'delivery.orders.edit',
+        function () {
+            $customer = \App\Models\Sales\Customer::factory()->create();
+            $warehouse = \App\Models\Inventory\Warehouse::create(['name' => 'WH '.uniqid()]);
+            $order = \App\Models\Sales\SalesOrder::create([
+                'order_number' => 'STRUCT-SO-'.uniqid(),
+                'customer_id' => $customer->id,
+                'user_id' => \App\Models\User::first()?->id ?? \App\Models\User::factory()->create()->id,
+                'order_date' => now(),
+                'expected_delivery_date' => now()->addDays(7),
+                'status' => 'sales_order',
+            ]);
+            return \App\Models\Delivery\DeliveryOrder::create([
+                'delivery_number' => 'STRUCT-DO-'.uniqid(),
+                'sales_order_id' => $order->id,
+                'warehouse_id' => $warehouse->id,
+                'user_id' => \App\Models\User::first()?->id,
+                'delivery_date' => now(),
+                'shipping_address' => '123 Test St',
+                'status' => 'pending',
+            ])->id;
+        },
+    ],
 ]);

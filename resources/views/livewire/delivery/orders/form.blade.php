@@ -1,4 +1,6 @@
-<div x-data="{ activeTab: 'lines', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false }">
+<div x-data="{ activeTab: 'lines', showLogNote: false, showSendMessage: false, showScheduleActivity: false, showCancelModal: false, showDuplicateModal: false, showDeleteModal: false }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex items-center justify-between gap-4">
             {{-- Left Group: Back Button, Title, Gear Dropdown --}}
@@ -43,38 +45,39 @@
                              They are mutually exclusive by state — Cancel lives
                              in the action bar below, Delete here. --}}
                         @if($deliveryId)
-                        <flux:dropdown position="bottom" align="start">
-                            <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                <flux:icon name="cog-6-tooth" class="size-4" />
-                            </button>
-                            {{-- Items use Alpine dispatch — <x-slot:header>
-                                 renders outside wire:id so wire:click here
-                                 delegates to nothing (Settings c030520 /
-                                 SaveButtonInScopeTest). Listeners:
-                                 #[On('duplicateDelivery')] / #[On('deleteDelivery')]
-                                 on Form.php. --}}
-                            <flux:menu class="w-40">
-                                <button type="button"
-                                    x-on:click="Livewire.dispatch('duplicateDelivery')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="document-duplicate" class="size-4" />
-                                    <span>Duplicate</span>
+                        <div x-data="{}">
+                            <flux:dropdown position="bottom" align="start">
+                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                    <flux:icon name="cog-6-tooth" class="size-4" />
                                 </button>
-                                <a href="{{ route('pdf.delivery-order', $deliveryId) }}" target="_blank" rel="noopener" class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                    <flux:icon name="arrow-down-tray" class="size-4" />
-                                    <span>Download PDF</span>
-                                </a>
-                                @if($canDeleteDelivery)
-                                <flux:menu.separator />
-                                <button type="button"
-                                    x-on:click="if (confirm('Delete this pending delivery order permanently? Nothing has shipped, so there is nothing to keep — this cannot be undone.')) Livewire.dispatch('deleteDelivery')"
-                                    class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                    <flux:icon name="trash" class="size-4" />
-                                    <span>Delete</span>
-                                </button>
-                                @endif
-                            </flux:menu>
-                        </flux:dropdown>
+                                <flux:menu class="w-40">
+                                    <flux:menu.item
+                                        icon="arrow-down-tray"
+                                        :href="route('pdf.delivery-order', $deliveryId)"
+                                        target="_blank"
+                                        rel="noopener"
+                                    >
+                                        Download PDF
+                                    </flux:menu.item>
+                                    <flux:menu.item
+                                        icon="document-duplicate"
+                                        x-on:click="$dispatch('open-duplicate-modal')"
+                                    >
+                                        Duplicate
+                                    </flux:menu.item>
+                                    @if($canDeleteDelivery)
+                                        <flux:menu.separator />
+                                        <flux:menu.item
+                                            icon="trash"
+                                            variant="danger"
+                                            x-on:click="$dispatch('open-delete-modal')"
+                                        >
+                                            Delete
+                                        </flux:menu.item>
+                                    @endif
+                                </flux:menu>
+                            </flux:dropdown>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -1242,5 +1245,35 @@
                 </div>
             </div>
         </div>
+    @endif
+
+    @if($deliveryId)
+        <x-ui.action-confirm-modal
+            show="showDuplicateModal"
+            icon="document-duplicate"
+            color="zinc"
+            title="Duplicate Delivery Order"
+            subtitle="A new pending delivery will be created."
+            confirmLabel="Duplicate Delivery"
+            confirmLoadingLabel="Duplicating..."
+            confirmMethod="duplicate"
+        >
+            The new delivery will copy the customer, addresses, and all line items. The delivery number stays with the original.
+        </x-ui.action-confirm-modal>
+
+        @if($canDeleteDelivery)
+            <x-ui.action-confirm-modal
+                show="showDeleteModal"
+                icon="trash"
+                color="red"
+                title="Delete Pending Delivery"
+                subtitle="This action cannot be undone."
+                confirmLabel="Delete Delivery"
+                confirmLoadingLabel="Deleting..."
+                confirmMethod="delete"
+            >
+                Nothing has shipped on this delivery order, so there is nothing to keep. Once any item has shipped, the delivery must be Cancelled instead.
+            </x-ui.action-confirm-modal>
+        @endif
     @endif
 </div>

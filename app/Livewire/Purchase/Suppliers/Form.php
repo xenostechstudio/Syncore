@@ -7,7 +7,6 @@ use App\Livewire\Concerns\WithPermissions;
 use App\Models\Purchase\Supplier;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -145,7 +144,6 @@ class Form extends Component
      * (see canDelete). This is a true hard delete, not the recoverable
      * Archive. See "Destructive actions" in CLAUDE.md.
      */
-    #[On('deleteSupplier')]
     public function delete(): void
     {
         $this->authorizePermission('purchase.delete');
