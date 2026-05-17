@@ -148,4 +148,15 @@ it('renders a working gear dropdown on a form edit page', function (string $rout
             return $order->id;
         },
     ],
+    'crm-leads' => [
+        'crm.leads.edit',
+        function () {
+            $lead = \App\Models\CRM\Lead::create([
+                'name' => 'Struct Test Lead '.uniqid(),
+                'email' => 'struct-'.uniqid().'@example.com',
+                'status' => 'new',
+            ]);
+            return $lead->id;
+        },
+    ],
 ]);

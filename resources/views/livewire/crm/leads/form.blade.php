@@ -1,4 +1,7 @@
-<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false }">
+<div x-data="{ showLogNote: false, showSendMessage: false, showScheduleActivity: false, showDuplicateModal: false, showArchiveModal: false, showDeleteModal: false }"
+     x-on:open-duplicate-modal.window="showDuplicateModal = true"
+     x-on:open-archive-modal.window="showArchiveModal = true"
+     x-on:open-delete-modal.window="showDeleteModal = true">
     <x-slot:header>
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
@@ -12,45 +15,48 @@
                             {{ $leadId ? $name : 'New Lead' }}
                         </span>
                         @if($leadId)
-                            <flux:dropdown position="bottom" align="start">
-                                <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
-                                    <flux:icon name="cog-6-tooth" class="size-4" />
-                                </button>
-                                <flux:menu class="w-40">
-                                    <button type="button"
-                                        x-on:click="Livewire.dispatch('duplicateLead')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="document-duplicate" class="size-4" />
-                                        <span>Duplicate</span>
+                            {{-- <x-slot:header> is hoisted by module.blade.php
+                                 into <header>, outside the form's wire:id AND
+                                 the outer <div x-data>. So wire:click and bare
+                                 x-on:click are dead here. <div x-data="{}">
+                                 below provides Alpine scope so $dispatch fires;
+                                 it sits OUTSIDE <flux:dropdown> so <ui-menu>
+                                 stays a direct child of <ui-dropdown> (Flux's
+                                 popover anchor requirement). Master data is
+                                 Archived (recoverable) before Delete (hard,
+                                 only when no opportunities reference it). See
+                                 CLAUDE.md for the destructive-actions taxonomy. --}}
+                            <div x-data="{}">
+                                <flux:dropdown position="bottom" align="start">
+                                    <button class="flex items-center justify-center rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none dark:hover:bg-zinc-800 dark:hover:text-zinc-300">
+                                        <flux:icon name="cog-6-tooth" class="size-4" />
                                     </button>
-                                    {{-- Master data is Archived (recoverable
-                                         soft delete); hard Delete is offered
-                                         only when nothing references the lead.
-                                         See CLAUDE.md.
-
-                                         Items use Alpine dispatch — <x-slot:header>
-                                         renders outside wire:id so wire:click
-                                         here delegates to nothing (Settings
-                                         c030520 / SaveButtonInScopeTest).
-                                         Listeners: #[On('archiveLead')] /
-                                         #[On('deleteLead')] on Form. --}}
-                                    <flux:menu.separator />
-                                    <button type="button"
-                                        x-on:click="if (confirm('Archive this lead? It will be hidden from the list but can be restored from the Archived filter.')) Livewire.dispatch('archiveLead')"
-                                        class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                                        <flux:icon name="archive-box" class="size-4" />
-                                        <span>{{ __('common.archive') }}</span>
-                                    </button>
-                                    @if($this->canDelete)
-                                        <button type="button"
-                                            x-on:click="if (confirm('Permanently delete this lead? This cannot be undone.')) Livewire.dispatch('deleteLead')"
-                                            class="flex w-full items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20">
-                                            <flux:icon name="trash" class="size-4" />
-                                            <span>{{ __('common.delete') }}</span>
-                                        </button>
-                                    @endif
-                                </flux:menu>
-                            </flux:dropdown>
+                                    <flux:menu class="w-40">
+                                        <flux:menu.item
+                                            icon="document-duplicate"
+                                            x-on:click="$dispatch('open-duplicate-modal')"
+                                        >
+                                            Duplicate
+                                        </flux:menu.item>
+                                        <flux:menu.separator />
+                                        <flux:menu.item
+                                            icon="archive-box"
+                                            x-on:click="$dispatch('open-archive-modal')"
+                                        >
+                                            {{ __('common.archive') }}
+                                        </flux:menu.item>
+                                        @if($this->canDelete)
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                x-on:click="$dispatch('open-delete-modal')"
+                                            >
+                                                {{ __('common.delete') }}
+                                            </flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -359,4 +365,58 @@
             </div>
         </div>
     </div>
+
+    {{-- Duplicate / Archive / Delete Confirmation Modals.
+         Header-slot gear menu items dispatch open-X-modal as window
+         events; listeners on the outer <div x-data> flip showXModal
+         state. Backdrop + positioning wrapper mirrors the Confirm
+         modal pattern used on Sales Order. --}}
+    @if($leadId)
+        <div
+            x-show="showDuplicateModal"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showDuplicateModal = false"></div>
+            @include('livewire.crm.leads.modals.duplicate')
+        </div>
+
+        <div
+            x-show="showArchiveModal"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            <div class="absolute inset-0 bg-zinc-900/60" @click="showArchiveModal = false"></div>
+            @include('livewire.crm.leads.modals.archive')
+        </div>
+
+        @if($this->canDelete)
+            <div
+                x-show="showDeleteModal"
+                x-cloak
+                class="fixed inset-0 z-50 flex items-center justify-center"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+            >
+                <div class="absolute inset-0 bg-zinc-900/60" @click="showDeleteModal = false"></div>
+                @include('livewire.crm.leads.modals.delete')
+            </div>
+        @endif
+    @endif
 </div>

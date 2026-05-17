@@ -46,15 +46,14 @@ $cases = [
 
     // === Chunk 4: Accounting + CRM + Inventory ===
     'accounting-accounts delete'   => ['resources/views/livewire/accounting/accounts/form.blade.php',    \App\Livewire\Accounting\Accounts\Form::class,   'deleteAccount'],
-    // crm-leads archive/delete moved off Alpine-dispatch back to wire:click
-    // (premise reversal — see commit reverting B.2 for CRM Leads form).
+    // crm-leads swept to modal pattern — see HeaderDropdownStructureTest.
     'crm-opportunities archive'    => ['resources/views/livewire/crm/opportunities/form.blade.php',      \App\Livewire\CRM\Opportunities\Form::class,     'archiveOpportunity'],
     'crm-opportunities delete'     => ['resources/views/livewire/crm/opportunities/form.blade.php',      \App\Livewire\CRM\Opportunities\Form::class,     'deleteOpportunity'],
     'inventory-products archive'   => ['resources/views/livewire/inventory/products/form.blade.php',     \App\Livewire\Inventory\Products\Form::class,    'archiveProduct'],
     'inventory-products delete'    => ['resources/views/livewire/inventory/products/form.blade.php',     \App\Livewire\Inventory\Products\Form::class,    'deleteProduct'],
 
     // === Duplicate buttons newly wired (was static dead UI before) ===
-    // crm-leads duplicate moved off Alpine-dispatch back to wire:click.
+    // crm-leads duplicate swept to modal pattern.
     'crm-opportunities duplicate'      => ['resources/views/livewire/crm/opportunities/form.blade.php',            \App\Livewire\CRM\Opportunities\Form::class,          'duplicateOpportunity'],
     'inventory-transfers duplicate'    => ['resources/views/livewire/inventory/transfers/form.blade.php',          \App\Livewire\Inventory\Transfers\Form::class,        'duplicateTransfer'],
     'inventory-adjustments duplicate'  => ['resources/views/livewire/inventory/adjustments/form.blade.php',        \App\Livewire\Inventory\Adjustments\Form::class,      'duplicateAdjustment'],
